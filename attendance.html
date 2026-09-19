@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) - Subject-wise Attendance Monitoring for Shivam Aghao (CSE2401).">
+  <title>Subject-wise Attendance | SSGMCE Shegaon College ERP</title>
+
+  <!-- Google Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dashboard-body">
+
+  <!-- Mobile Drawer Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+  <!-- ==================== 1. LEFT SIDEBAR ==================== -->
+  <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Student Navigation">
+    
+    <!-- Sidebar Brand -->
+    <div class="sidebar-brand">
+      <div class="brand-logo-wrap">
+        <svg class="brand-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="40" height="40" rx="8" fill="#0B1F3A"/>
+          <path d="M20 7L6 14.5L20 22L34 14.5L20 7Z" fill="#FFFFFF"/>
+          <path d="M10.5 17.2V25.5C10.5 29.2 14.7 32.5 20 32.5C25.3 32.5 29.5 29.2 29.5 25.5V17.2L20 22.2L10.5 17.2Z" fill="#00A6D6" fill-opacity="0.9"/>
+          <circle cx="20" cy="21" r="2.5" fill="#F59E0B"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <span class="brand-college">SSGMCE Shegaon</span>
+        <span class="brand-erp">Autonomous ERP</span>
+      </div>
+      <!-- Mobile Close Button inside Drawer -->
+      <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
+    </div>
+
+    <!-- Student Quick Pill -->
+    <div class="sidebar-student-pill">
+      <span class="pill-dot" aria-hidden="true"></span>
+      <span class="pill-text">Shivam Aghao • CSE2401</span>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav" aria-label="Main Menu">
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="index.html" class="nav-link" data-page="home">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span class="nav-text">HOME</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#profile" class="nav-link" data-page="profile">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="nav-text">PROFILE</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#information" class="nav-link" data-page="information">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span class="nav-text">INFORMATION</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#timetable" class="nav-link" data-page="timetable">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span class="nav-text">TIMETABLE</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="attendance.html" class="nav-link active" data-page="attendance">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span class="nav-text">ATTENDANCE</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#syllabus" class="nav-link" data-page="syllabus">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span class="nav-text">SYLLABUS</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#results" class="nav-link" data-page="results">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span class="nav-text">RESULTS</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#notifications" class="nav-link" data-page="notifications">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="nav-text">NOTIFICATIONS</span>
+            <span class="badge-notif-count">3</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="index.html#settings" class="nav-link" data-page="settings">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span class="nav-text">SETTINGS</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Sidebar Bottom Logout -->
+    <div class="sidebar-footer">
+      <button type="button" class="btn-sidebar-logout" id="btnLogout" aria-label="Sign out of ERP">
+        <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ==================== MAIN WRAPPER ==================== -->
+  <div class="dashboard-main-wrapper">
+
+    <!-- ==================== 2. TOP HEADER ==================== -->
+    <header class="top-header" role="banner">
+      <div class="header-left">
+        <button type="button" class="mobile-hamburger-btn" id="mobileHamburgerBtn" aria-label="Open sidebar navigation">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="header-breadcrumb">
+          <span class="page-title">Subject-wise Attendance Monitoring</span>
+          <span class="college-sub-title">Apex Institute of Technology • Student ERP</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Back to Dashboard Link -->
+        <a href="index.html" class="btn btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.8rem; gap: 0.35rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Back to Dashboard
+        </a>
+
+        <!-- Search Bar -->
+        <div class="search-box-wrap" role="search">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="attendanceSearchInput" placeholder="Search subject code, faculty..." aria-label="Search attendance">
+        </div>
+
+        <!-- Notification Bell -->
+        <div class="header-action-wrap">
+          <button type="button" class="btn-icon-header" id="notifBellBtn" aria-label="View notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notif-badge-dot" aria-label="3 unread alerts"></span>
+          </button>
+        </div>
+
+        <!-- Student Profile Widget -->
+        <div class="header-profile-wrap" id="headerProfileTrigger" role="button" tabindex="0" aria-label="Open Shivam Aghao profile menu">
+          <div class="profile-avatar-box">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250" alt="Shivam Aghao avatar" class="header-avatar-img">
+            <span class="online-indicator" title="Student is active online"></span>
+          </div>
+          <div class="profile-meta-text">
+            <span class="student-name">Shivam Aghao</span>
+            <span class="student-roll">Roll: 21 • CSE (2R1)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== 3. MAIN DASHBOARD CONTENT ==================== -->
+    <main class="dashboard-content attendance-page-content" role="main">
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a href="index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          Dashboard
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <a href="attendance.html">Attendance</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Subject-wise Attendance (5 Subjects)</span>
+      </nav>
+
+      <!-- Page Hero Header -->
+      <section class="attendance-page-hero-header">
+        <div class="aph-title-group">
+          <h2>Subject-wise Attendance Portal</h2>
+          <p>B.Tech Computer Science & Engineering • Semester 3 (Class 2R1) • Academic Year 2025–2026</p>
+        </div>
+        <div class="aph-actions">
+          <button type="button" class="btn btn-outline" id="btnExportPDF" style="font-size: 0.82rem; gap: 0.4rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export Attendance PDF
+          </button>
+          <button type="button" class="btn btn-primary" id="btnApplyLeave" style="font-size: 0.82rem; gap: 0.4rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Apply Medical / Duty Leave
+          </button>
+        </div>
+      </section>
+
+      <!-- Summary Metrics Grid -->
+      <section class="att-hero-summary-grid" aria-label="Attendance Overview Metrics">
+        
+        <div class="att-stat-card">
+          <span class="asc-label">Overall Aggregate</span>
+          <div class="asc-value-row">
+            <span class="asc-large-val text-primary">82.2%</span>
+            <span class="badge-status-safe" style="font-size: 0.65rem; padding: 1px 6px;">Safe</span>
+          </div>
+          <span class="asc-subtext">157 Attended of 191 Lectures</span>
+        </div>
+
+        <div class="att-stat-card card-accent">
+          <span class="asc-label">Total Semester Lectures</span>
+          <div class="asc-value-row">
+            <span class="asc-large-val" style="color: #0369A1;">191</span>
+            <span class="asc-subtext" style="font-weight: 700; color: #0284C7;">Lectures</span>
+          </div>
+          <span class="asc-subtext">Across 5 Registered Engineering Courses</span>
+        </div>
+
+        <div class="att-stat-card card-orange">
+          <span class="asc-label">Exam Eligibility Status</span>
+          <div class="asc-value-row">
+            <span class="asc-large-val" style="color: #065F46;">Eligible</span>
+          </div>
+          <span class="asc-subtext">+7.2% Above 75% University Minimum</span>
+        </div>
+
+        <div class="att-stat-card card-warning">
+          <span class="asc-label">Subjects Under Warning</span>
+          <div class="asc-value-row">
+            <span class="asc-large-val text-danger">1</span>
+            <span class="asc-subtext" style="font-weight: 700; color: #DC2626;">of 5 Subjects</span>
+          </div>
+          <span class="asc-subtext">CS-305 Comp. Networks at 72% (&lt; 75%)</span>
+        </div>
+
+      </section>
+
+      <!-- Official University Norm Banner -->
+      <div class="att-regulation-notice-box">
+        <div class="arn-text-wrap">
+          <svg class="arn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          <div>
+            <div class="arn-heading">University Academic Regulation Clause 4.2: 75% Mandatory Attendance Norm</div>
+            <div class="arn-desc">Every student is required to maintain a minimum of <strong>75% aggregate attendance</strong> across each individual course to be eligible for the End-Semester Examination hall ticket.</div>
+          </div>
+        </div>
+        <span class="badge-status-safe">Student Compliant (Overall Safe)</span>
+      </div>
+
+      <!-- Filter Tabs Bar -->
+      <section class="att-filter-tabs-bar" role="tablist" aria-label="Filter subjects">
+        <button type="button" class="att-filter-tab active" data-filter="all" role="tab" aria-selected="true">
+          <span>All 5 Subjects</span>
+          <span class="att-tab-count">5</span>
+        </button>
+        <button type="button" class="att-filter-tab" data-filter="theory" role="tab" aria-selected="false">
+          <span>Core Theory Courses</span>
+          <span class="att-tab-count">4</span>
+        </button>
+        <button type="button" class="att-filter-tab" data-filter="lab" role="tab" aria-selected="false">
+          <span>Practical &amp; Labs</span>
+          <span class="att-tab-count">1</span>
+        </button>
+        <button type="button" class="att-filter-tab" data-filter="warning" role="tab" aria-selected="false">
+          <span>⚠️ Low Attendance (&lt; 75%)</span>
+          <span class="att-tab-count" style="background:#FEE2E2; color:#B91C1C;">1</span>
+        </button>
+      </section>
+
+      <!-- 5 Subject Cards Grid -->
+      <section class="att-subjects-grid" id="subjectsGrid" aria-label="Detailed Subject Attendance Cards">
+
+        <!-- CARD 1: Data Structures (CS-301) -->
+        <article class="att-subject-card" data-category="theory" data-status="safe">
+          <div class="asc-top-row">
+            <div class="asc-code-title">
+              <div class="asc-tag-row">
+                <span class="asc-code-badge">CS-301</span>
+                <span class="asc-type-badge">Theory • 4 Credits</span>
+              </div>
+              <h3 class="asc-title">Data Structures &amp; Algorithms</h3>
+              <span class="asc-faculty">Faculty: Prof. Rajesh Sharma (HOD - CSE)</span>
+            </div>
+            <span class="asc-status-pill pill-safe">Safe (85%)</span>
+          </div>
+
+          <div class="asc-metric-row">
+            <span class="asc-percentage-large text-primary">85%</span>
+          </div>
+
+          <div class="asc-progress-container">
+            <div class="asc-progress-track">
+              <div class="asc-progress-marker-75" title="75% Minimum Threshold Marker"></div>
+              <div class="asc-progress-fill" style="width: 85%;"></div>
+            </div>
+            <div class="asc-progress-labels">
+              <span>0%</span>
+              <span style="font-weight: 700; color: #0B1F3A;">75% Threshold</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="asc-stats-chips">
+            <div class="asc-chip">
+              <span class="chip-lbl">Conducted</span>
+              <span class="chip-val">40</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Attended</span>
+              <span class="chip-val" style="color: #0369A1;">34</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Buffer</span>
+              <span class="chip-val text-success">+4 Classes</span>
+            </div>
+          </div>
+
+          <div class="asc-footer-actions">
+            <span class="asc-last-log">Last marked: Yesterday (Period 1) • Present ✓</span>
+            <button type="button" class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="showSubjectLog('CS-301', 'Data Structures')">View Log</button>
+          </div>
+        </article>
+
+        <!-- CARD 2: Java Programming (CS-302) -->
+        <article class="att-subject-card" data-category="lab" data-status="safe">
+          <div class="asc-top-row">
+            <div class="asc-code-title">
+              <div class="asc-tag-row">
+                <span class="asc-code-badge">CS-302</span>
+                <span class="asc-type-badge">Theory &amp; Lab • 4 Credits</span>
+              </div>
+              <h3 class="asc-title">Java Programming &amp; OOP</h3>
+              <span class="asc-faculty">Faculty: Dr. Neha Deshmukh</span>
+            </div>
+            <span class="asc-status-pill pill-safe">Excellent (90%)</span>
+          </div>
+
+          <div class="asc-metric-row">
+            <span class="asc-percentage-large text-primary">90%</span>
+          </div>
+
+          <div class="asc-progress-container">
+            <div class="asc-progress-track">
+              <div class="asc-progress-marker-75" title="75% Minimum Threshold Marker"></div>
+              <div class="asc-progress-fill" style="width: 90%;"></div>
+            </div>
+            <div class="asc-progress-labels">
+              <span>0%</span>
+              <span style="font-weight: 700; color: #0B1F3A;">75% Threshold</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="asc-stats-chips">
+            <div class="asc-chip">
+              <span class="chip-lbl">Conducted</span>
+              <span class="chip-val">40</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Attended</span>
+              <span class="chip-val" style="color: #0369A1;">36</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Buffer</span>
+              <span class="chip-val text-success">+6 Classes</span>
+            </div>
+          </div>
+
+          <div class="asc-footer-actions">
+            <span class="asc-last-log">Last marked: Today (Period 2 Lab) • Present ✓</span>
+            <button type="button" class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="showSubjectLog('CS-302', 'Java Programming')">View Log</button>
+          </div>
+        </article>
+
+        <!-- CARD 3: Operating Systems (CS-303) -->
+        <article class="att-subject-card" data-category="theory" data-status="caution">
+          <div class="asc-top-row">
+            <div class="asc-code-title">
+              <div class="asc-tag-row">
+                <span class="asc-code-badge">CS-303</span>
+                <span class="asc-type-badge">Theory • 3 Credits</span>
+              </div>
+              <h3 class="asc-title">Operating Systems Concepts</h3>
+              <span class="asc-faculty">Faculty: Prof. Amit Kulkarni</span>
+            </div>
+            <span class="asc-status-pill pill-caution">Caution (76%)</span>
+          </div>
+
+          <div class="asc-metric-row">
+            <span class="asc-percentage-large" style="color: #C2410C;">76%</span>
+          </div>
+
+          <div class="asc-progress-container">
+            <div class="asc-progress-track">
+              <div class="asc-progress-marker-75" title="75% Minimum Threshold Marker"></div>
+              <div class="asc-progress-fill" style="width: 76%; background: linear-gradient(90deg, #EA580C 0%, #F59E0B 100%);"></div>
+            </div>
+            <div class="asc-progress-labels">
+              <span>0%</span>
+              <span style="font-weight: 700; color: #0B1F3A;">75% Threshold (Margin: +1)</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="asc-stats-chips">
+            <div class="asc-chip">
+              <span class="chip-lbl">Conducted</span>
+              <span class="chip-val">42</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Attended</span>
+              <span class="chip-val" style="color: #C2410C;">32</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Buffer</span>
+              <span class="chip-val" style="color: #C2410C;">+1 Class</span>
+            </div>
+          </div>
+
+          <div class="asc-footer-actions">
+            <span class="asc-last-log">Last marked: 15 Sep 2026 • Present ✓</span>
+            <button type="button" class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="showSubjectLog('CS-303', 'Operating Systems')">View Log</button>
+          </div>
+        </article>
+
+        <!-- CARD 4: Database Management Systems (CS-304) -->
+        <article class="att-subject-card" data-category="theory" data-status="safe">
+          <div class="asc-top-row">
+            <div class="asc-code-title">
+              <div class="asc-tag-row">
+                <span class="asc-code-badge">CS-304</span>
+                <span class="asc-type-badge">Theory &amp; Tut • 4 Credits</span>
+              </div>
+              <h3 class="asc-title">Database Management Systems</h3>
+              <span class="asc-faculty">Faculty: Prof. Sneha Verma</span>
+            </div>
+            <span class="asc-status-pill pill-safe">Safe (81%)</span>
+          </div>
+
+          <div class="asc-metric-row">
+            <span class="asc-percentage-large text-primary">81%</span>
+          </div>
+
+          <div class="asc-progress-container">
+            <div class="asc-progress-track">
+              <div class="asc-progress-marker-75" title="75% Minimum Threshold Marker"></div>
+              <div class="asc-progress-fill" style="width: 81%;"></div>
+            </div>
+            <div class="asc-progress-labels">
+              <span>0%</span>
+              <span style="font-weight: 700; color: #0B1F3A;">75% Threshold</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="asc-stats-chips">
+            <div class="asc-chip">
+              <span class="chip-lbl">Conducted</span>
+              <span class="chip-val">37</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Attended</span>
+              <span class="chip-val" style="color: #0369A1;">30</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Buffer</span>
+              <span class="chip-val text-success">+2 Classes</span>
+            </div>
+          </div>
+
+          <div class="asc-footer-actions">
+            <span class="asc-last-log">Last marked: 16 Sep 2026 • Present ✓</span>
+            <button type="button" class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="showSubjectLog('CS-304', 'Database Management')">View Log</button>
+          </div>
+        </article>
+
+        <!-- CARD 5: Computer Networks (CS-305) - LOW ATTENDANCE ALERT -->
+        <article class="att-subject-card is-warning" data-category="theory" data-status="warning">
+          <div class="asc-top-row">
+            <div class="asc-code-title">
+              <div class="asc-tag-row">
+                <span class="asc-code-badge" style="color:#B91C1C; background:#FEE2E2; border-color:#FCA5A5;">CS-305</span>
+                <span class="asc-type-badge">Theory • 3 Credits</span>
+              </div>
+              <h3 class="asc-title">Computer Networks</h3>
+              <span class="asc-faculty">Faculty: Dr. Prakash Rao</span>
+            </div>
+            <span class="asc-status-pill pill-warning">⚠️ Shortage (72%)</span>
+          </div>
+
+          <div class="asc-metric-row">
+            <span class="asc-percentage-large text-danger">72%</span>
+          </div>
+
+          <div class="asc-progress-container">
+            <div class="asc-progress-track">
+              <div class="asc-progress-marker-75" title="75% Minimum Threshold Marker"></div>
+              <div class="asc-progress-fill fill-warning" style="width: 72%;"></div>
+            </div>
+            <div class="asc-progress-labels">
+              <span>0%</span>
+              <span style="font-weight: 700; color: #DC2626;">75% Threshold (Deficit: -3%)</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="asc-stats-chips">
+            <div class="asc-chip">
+              <span class="chip-lbl">Conducted</span>
+              <span class="chip-val">36</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Attended</span>
+              <span class="chip-val text-danger">26</span>
+            </div>
+            <div class="asc-chip">
+              <span class="chip-lbl">Shortage</span>
+              <span class="chip-val text-danger">-3% Deficit</span>
+            </div>
+          </div>
+
+          <div class="asc-warning-box">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="flex-shrink:0; margin-top:1px;"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <div>
+              <strong>Action Needed:</strong> Attend the next <strong>4 consecutive lectures</strong> without absence to cross the mandatory 75% threshold.
+            </div>
+          </div>
+
+          <div class="asc-footer-actions">
+            <span class="asc-last-log" style="color:#DC2626;">Last marked: 16 Sep 2026 • Absent ✗</span>
+            <button type="button" class="btn btn-primary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background:#DC2626; border-color:#B91C1C;" onclick="openDiscrepancyModal('CS-305', 'Computer Networks')">Dispute / Leave</button>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Target Attendance "What-If" Calculator Section -->
+      <section class="att-calculator-card" aria-label="Target Attendance Calculator">
+        <div class="card-header" style="border:none; padding:0 0 1rem 0;">
+          <div class="card-title-group">
+            <span class="card-eyebrow">Academic Recovery Planner</span>
+            <h3 class="card-heading">Target Attendance "What-If" Calculator</h3>
+          </div>
+        </div>
+        <p style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          Estimate how many consecutive classes you must attend to achieve your desired target attendance percentage for any subject.
+        </p>
+
+        <div class="calc-grid">
+          <div>
+            <div class="calc-form-group">
+              <label for="calcSubjectSelect">Select Subject:</label>
+              <select id="calcSubjectSelect" class="calc-select">
+                <option value="CS-305" data-conducted="36" data-attended="26" selected>Computer Networks (CS-305) • Current: 72%</option>
+                <option value="CS-303" data-conducted="42" data-attended="32">Operating Systems (CS-303) • Current: 76%</option>
+                <option value="CS-304" data-conducted="37" data-attended="30">Database Management (CS-304) • Current: 81%</option>
+                <option value="CS-301" data-conducted="40" data-attended="34">Data Structures (CS-301) • Current: 85%</option>
+                <option value="CS-302" data-conducted="40" data-attended="36">Java Programming (CS-302) • Current: 90%</option>
+              </select>
+            </div>
+
+            <div class="calc-form-group">
+              <label for="calcTargetSelect">Desired Target Percentage:</label>
+              <select id="calcTargetSelect" class="calc-select">
+                <option value="75" selected>75% (Minimum Exam Eligibility)</option>
+                <option value="80">80% (Safe Buffer)</option>
+                <option value="85">85% (Distinction Bracket)</option>
+                <option value="90">90% (Honor Roll)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calc-result-box" id="calcResultBox">
+            <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#0369A1;">Required Action:</span>
+            <div class="cr-highlight" id="crHighlightText">Attend Next 4 Lectures</div>
+            <div class="cr-desc" id="crDescText">
+              By attending the next <strong>4 consecutive lectures</strong> without missing, your Computer Networks attendance will rise from <strong>72% to 75.0%</strong> (30/40 attended).
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Lecture Attendance Register (Date-wise Logs) -->
+      <section class="att-table-card" aria-label="Recent Lecture Logs">
+        <div class="card-header" style="border:none; padding:0 0 1rem 0;">
+          <div class="card-title-group">
+            <span class="card-eyebrow">Biometric &amp; RFID Activity Log</span>
+            <h3 class="card-heading">Recent Lecture-wise Attendance Register</h3>
+          </div>
+          <span class="badge-status-safe">Synced with College Server</span>
+        </div>
+
+        <table class="att-log-table" aria-label="Lecture attendance logs">
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Course Code &amp; Name</th>
+              <th>Type</th>
+              <th>Faculty</th>
+              <th>Room / Lab</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>17 Sep 2026</strong> • 10:15 AM</td>
+              <td><strong>Java Programming (CS-302)</strong></td>
+              <td>Lab 3</td>
+              <td>Dr. Neha Deshmukh</td>
+              <td>Computing Lab 3</td>
+              <td><span class="log-status-badge log-present">✓ Present</span></td>
+              <td><span style="color:var(--muted); font-size:0.75rem;">Verified</span></td>
+            </tr>
+            <tr>
+              <td><strong>17 Sep 2026</strong> • 09:00 AM</td>
+              <td><strong>Data Structures (CS-301)</strong></td>
+              <td>Theory</td>
+              <td>Prof. Rajesh Sharma</td>
+              <td>Hall 204</td>
+              <td><span class="log-status-badge log-present">✓ Present</span></td>
+              <td><span style="color:var(--muted); font-size:0.75rem;">Verified</span></td>
+            </tr>
+            <tr>
+              <td><strong>16 Sep 2026</strong> • 01:30 PM</td>
+              <td><strong>Computer Networks (CS-305)</strong></td>
+              <td>Theory</td>
+              <td>Dr. Prakash Rao</td>
+              <td>Hall 108</td>
+              <td><span class="log-status-badge log-absent">✗ Absent</span></td>
+              <td><button type="button" class="btn btn-outline" style="padding:2px 8px; font-size:0.7rem;" onclick="showToast('Dispute ticket raised for 16 Sep Computer Networks lecture.')">Dispute</button></td>
+            </tr>
+            <tr>
+              <td><strong>16 Sep 2026</strong> • 11:30 AM</td>
+              <td><strong>Database Mgmt (CS-304)</strong></td>
+              <td>Theory</td>
+              <td>Prof. Sneha Verma</td>
+              <td>Hall 301</td>
+              <td><span class="log-status-badge log-present">✓ Present</span></td>
+              <td><span style="color:var(--muted); font-size:0.75rem;">Verified</span></td>
+            </tr>
+            <tr>
+              <td><strong>15 Sep 2026</strong> • 02:45 PM</td>
+              <td><strong>Operating Systems (CS-303)</strong></td>
+              <td>Theory</td>
+              <td>Prof. Amit Kulkarni</td>
+              <td>Seminar Hall 1</td>
+              <td><span class="log-status-badge log-present">✓ Present</span></td>
+              <td><span style="color:var(--muted); font-size:0.75rem;">Verified</span></td>
+            </tr>
+            <tr>
+              <td><strong>15 Sep 2026</strong> • 10:15 AM</td>
+              <td><strong>Technical Seminar (CS-309)</strong></td>
+              <td>Audit</td>
+              <td>Dean Academics</td>
+              <td>Auditorium</td>
+              <td><span class="log-status-badge log-duty">🏛 Duty Leave</span></td>
+              <td><span style="color:var(--muted); font-size:0.75rem;">Approved by HOD</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Footer -->
+      <footer class="dashboard-footer" role="contentinfo">
+        <div class="footer-left">
+          <p class="footer-copyright">&copy; 2026 Apex Institute of Technology • Integrated Academic ERP System</p>
+          <p class="footer-sub">Student Portal • Computer Science &amp; Engineering Department</p>
+        </div>
+        <div class="footer-links">
+          <a href="index.html" class="footer-link">Dashboard Home</a>
+          <span class="footer-sep">&bull;</span>
+          <a href="attendance.html" class="footer-link" style="color:var(--accent);">Attendance Portal</a>
+          <span class="footer-sep">&bull;</span>
+          <a href="index.html#timetable" class="footer-link">Timetable</a>
+          <span class="footer-sep">&bull;</span>
+          <a href="#helpdesk" class="footer-link">IT Helpdesk</a>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- JavaScript -->
+  <script src="js/attendance.js"></script>
+</body>
+</html>
+
