@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initQuickAccessTiles();
   initQuickActionStrip();
   initToastSystem();
+  initCampusShowcase();
+  initCampusLightbox();
 });
 
 /* ==========================================================================
@@ -491,4 +493,63 @@ function showToast(message, type = 'info') {
       toast.remove();
     }, 300);
   }, 3200);
+}
+
+/* ==========================================================================
+   10. SSGMCE CAMPUS UNIFIED SHOWCASE & LIGHTBOX
+   ========================================================================== */
+function initCampusShowcase() {
+  const expandBtn = document.getElementById('campusExpandBtn');
+  const bgMedia = document.querySelector('.hero-unified-bg-media');
+
+  if (expandBtn) {
+    expandBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openCampusLightbox();
+    });
+  }
+
+  if (bgMedia) {
+    bgMedia.addEventListener('click', () => {
+      openCampusLightbox();
+    });
+  }
+}
+
+/* ==========================================================================
+   11. CAMPUS HIGH-RES LIGHTBOX MODAL
+   ========================================================================== */
+function openCampusLightbox() {
+  const modal = document.getElementById('campusLightboxModal');
+  if (!modal) return;
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCampusLightbox() {
+  const modal = document.getElementById('campusLightboxModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function initCampusLightbox() {
+  const modal = document.getElementById('campusLightboxModal');
+  const closeBtn = document.getElementById('lightboxCloseBtn');
+  const overlay = document.getElementById('lightboxOverlay');
+
+  if (!modal) return;
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeCampusLightbox);
+  }
+  if (overlay) {
+    overlay.addEventListener('click', closeCampusLightbox);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeCampusLightbox();
+    }
+  });
 }
