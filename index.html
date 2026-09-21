@@ -6,6 +6,9 @@
   <meta name="description" content="Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) - Autonomous Institute Student ERP Dashboard for Shivam Aghao. Real-time timetable, attendance monitoring, syllabus analytics, and academic services.">
   <title>Student Dashboard | SSGMCE Shegaon - College ERP</title>
 
+  <!-- College Logo Favicon -->
+  <link rel="icon" type="image/png" href="images/logo.png?v=2">
+
   <!-- Google Fonts: Inter & Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,18 +39,7 @@
       <!-- SSGMCE College Crest / Brand -->
       <a href="index.html" class="header-brand" aria-label="SSGMCE Home">
         <div class="brand-crest">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="crest-svg" aria-hidden="true">
-            <!-- Outer Shield with Gold Accent -->
-            <path d="M24 3L8 9V22C8 32.5 14.8 42.2 24 45C33.2 42.2 40 32.5 40 22V9L24 3Z" fill="#0B1F3A" stroke="#F59E0B" stroke-width="2"/>
-            <!-- Inner Dome & Sunburst -->
-            <circle cx="24" cy="18" r="8" fill="#0B5CAD"/>
-            <path d="M19 19C19 14.5 24 12 24 12C24 12 29 14.5 29 19H19Z" fill="#00A6D6"/>
-            <rect x="22.5" y="19" width="3" height="6" fill="#FFFFFF"/>
-            <rect x="18" y="25" width="12" height="2" rx="1" fill="#F59E0B"/>
-            <!-- Open Book / Wisdom Symbol -->
-            <path d="M16 29C19 28 22 29 24 31C26 29 29 28 32 29V36C29 35 26 36 24 38C22 36 19 35 16 36V29Z" fill="#FFFFFF"/>
-            <line x1="24" y1="31" x2="24" y2="38" stroke="#0B5CAD" stroke-width="1.5"/>
-          </svg>
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img">
         </div>
         <div class="brand-text-block">
           <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
@@ -63,17 +55,6 @@
       </div>
     </div>
 
-    <!-- Center Search Bar -->
-    <div class="header-center">
-      <div class="search-pill-container">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="globalSearchInput" class="search-input" placeholder="Search subjects, timetable, services..." aria-label="Search dashboard">
-        <kbd class="search-shortcut">⌘K</kbd>
-      </div>
-    </div>
 
     <!-- Right Controls: Notifications & Student Profile -->
     <div class="header-right">
@@ -359,36 +340,61 @@
       
       <div class="main-dashboard-full-container">
 
-        <!-- ==================== 1. HERO WELCOME CARD ==================== -->
-        <section class="hero-welcome-card" aria-label="Student Welcome Banner">
-          <div class="hero-content-left">
-            <div class="hero-welcome-badge">
-              <span class="pulse-indicator"></span>
-              <span>B.Tech Semester IV • Academic Year 2025-26</span>
+        <!-- ==================== 1. UNIFIED HERO SECTION (MERGED REAL CAMPUS & STUDENT IDENTITY) ==================== -->
+        <section class="hero-unified-card" id="heroUnifiedCard" aria-label="SSGMCE Campus Welcome Banner">
+          
+          <!-- Full Section Real Campus Image Background -->
+          <div class="hero-unified-bg-media">
+            <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-unified-campus-img" id="heroCampusImg" loading="eager">
+            <div class="hero-unified-gradient-scrim" aria-hidden="true"></div>
+          </div>
+
+          <!-- Top Overlay Bar: Campus Tag & Lightbox Zoom Button -->
+          <div class="hero-unified-top-bar">
+            <span class="campus-photo-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              SSGMCE Shegaon • Vidya Bhavan
+            </span>
+            <button type="button" class="campus-action-btn btn-highlight" id="campusExpandBtn" aria-label="View Fullscreen Photo" title="Open Fullscreen Photo Lightbox">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+              <span>Full Photo</span>
+            </button>
+          </div>
+
+          <!-- Left: Integrated Frosted Student Identity Card -->
+          <div class="hero-unified-content">
+            <div class="hero-unified-student-card">
+              <div class="hero-welcome-badge">
+                <span class="pulse-indicator"></span>
+                <span>B.Tech Semester IV • Academic Year 2025-26</span>
+              </div>
+              <h1 class="hero-title">Welcome back, Shivam!</h1>
+              <div class="hero-dept-title">Computer Science &amp; Engineering</div>
+              <div class="hero-year-sem">Second Year (Semester IV) • Class: 2R1 • Roll No: 21 (CSE2401)</div>
+              <div class="hero-accent-bar" aria-hidden="true"></div>
+              <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
+
+
+              <!-- Motto Pillars -->
+              <div class="hero-pillars-horizontal" aria-hidden="true">
+                <span>Learn</span>
+                <span class="dot">•</span>
+                <span>Innovate</span>
+                <span class="dot">•</span>
+                <span>Build</span>
+                <span class="dot">•</span>
+                <span>Lead</span>
+              </div>
             </div>
-            <h1 class="hero-title">Welcome back, Shivam!</h1>
-            <div class="hero-dept-title">Computer Science &amp; Engineering</div>
-            <div class="hero-year-sem">Second Year (Semester IV) • Class: 2R1 • Roll No: 21 (CSE2401)</div>
-            <div class="hero-accent-bar" aria-hidden="true"></div>
-            <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
           </div>
 
-          <!-- Hero Center: SSGMCE Campus Image -->
-          <div class="hero-campus-image-wrap">
-            <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon Iconic Campus Dome Building" class="hero-campus-img" loading="eager">
-            <div class="campus-overlay-glow"></div>
+          <!-- Bottom Caption: Vidya Bhavan Info -->
+          <div class="hero-unified-bottom-tag" aria-hidden="true">
+            <span class="building-name">विद्या भवन (Vidya Bhavan)</span>
+            <span class="tag-sep">•</span>
+            <span class="campus-sub">Main Academic Block</span>
           </div>
 
-          <!-- Hero Right: Vertical Pillar Motto -->
-          <div class="hero-vertical-pillar" aria-hidden="true">
-            <span class="pillar-word">Learn</span>
-            <span class="pillar-dot">•</span>
-            <span class="pillar-word">Innovate</span>
-            <span class="pillar-dot">•</span>
-            <span class="pillar-word">Build</span>
-            <span class="pillar-dot">•</span>
-            <span class="pillar-word">Lead</span>
-          </div>
         </section>
 
         <!-- ==================== 2. TODAY'S TIMETABLE (ON TOP) ==================== -->
@@ -922,6 +928,29 @@
       </footer>
 
     </main>
+  </div>
+
+  <!-- ==================== CAMPUS FULL PHOTO LIGHTBOX MODAL ==================== -->
+  <div class="campus-lightbox-modal" id="campusLightboxModal" role="dialog" aria-modal="true" aria-label="SSGMCE Campus Full Photo Viewer">
+    <div class="lightbox-overlay" id="lightboxOverlay"></div>
+    <div class="lightbox-dialog">
+      <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" aria-label="Close Lightbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="lightbox-image-wrap">
+        <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Full Campus Photograph (Vidya Bhavan)" class="lightbox-full-img">
+      </div>
+      <div class="lightbox-meta-bar">
+        <div class="lightbox-title-wrap">
+          <h4>विद्या भवन (Vidya Bhavan) • Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h4>
+          <p>Full uncropped campus photograph • Academic Complex, Central Dome, Emblem &amp; Gardens</p>
+        </div>
+        <a href="images/ssgmce_campus.jpg" target="_blank" download="SSGMCE_Campus_Vidya_Bhavan.jpg" class="lightbox-download-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Download Original Photo</span>
+        </a>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Notification Container -->
