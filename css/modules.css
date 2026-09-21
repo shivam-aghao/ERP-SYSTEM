@@ -1,0 +1,191 @@
+/* ========================================================
+   EXTRA MODULES: TIMETABLE, STUDENTS, SYLLABUS, RESULTS, ETC.
+   ======================================================== */
+
+.app-module-view {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.app-module-view.active {
+  display: block;
+}
+
+/* --------------------------------------------------------
+   TIMETABLE MODULE
+   -------------------------------------------------------- */
+.timetable-grid-card {
+  background: var(--white);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.timetable-table th, .timetable-table td {
+  border: 1px solid var(--border-light);
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.timetable-table th {
+  background-color: #F8FAFD;
+  color: var(--dark-navy);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.timetable-slot {
+  background-color: #F0F7FF;
+  border-left: 3px solid var(--primary-blue);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.timetable-slot.lab {
+  background-color: var(--accent-cyan-light);
+  border-left-color: var(--accent-cyan);
+}
+
+.slot-sub {
+  font-weight: 700;
+  color: var(--dark-navy);
+  font-size: 13px;
+}
+
+.slot-class {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.slot-room {
+  font-size: 11px;
+  color: var(--primary-blue);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------
+   STUDENTS ROSTER MODULE
+   -------------------------------------------------------- */
+.students-roster-controls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roster-search-input {
+  max-width: 320px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--white);
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-card);
+  overflow: hidden;
+}
+
+.roster-table th {
+  background-color: #F8FAFD;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dark-navy);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.roster-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #F1F5F9;
+  font-size: 13.5px;
+}
+
+.roster-table tr:hover td {
+  background-color: #F8FAFC;
+}
+
+/* --------------------------------------------------------
+   SYLLABUS MODULE
+   -------------------------------------------------------- */
+.syllabus-units-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.syllabus-unit-card {
+  background: var(--white);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+}
+
+.syllabus-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.unit-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark-navy);
+}
+
+.unit-progress-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+.topics-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.topic-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+/* --------------------------------------------------------
+   RESULTS MODULE
+   -------------------------------------------------------- */
+.results-grid-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.result-stat-box {
+  background: var(--white);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  text-align: center;
+}
+
