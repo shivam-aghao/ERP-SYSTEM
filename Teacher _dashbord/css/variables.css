@@ -1,6 +1,8 @@
 :root {
   /* ========================================================
      TEACHER ERP COLOR PALETTE
+     SSGMCE ERP DESIGN SYSTEM - UNIFIED COLOR PALETTE
+     Matches Student Dashboard Design Tokens
      ======================================================== */
   --primary-blue: #0B5CAD;
   --secondary-blue: #1565C0;
@@ -10,12 +12,50 @@
   --dark-navy: #0B1F3A;
   --dark-navy-surface: #102A4D;
   --dark-navy-border: #1B3B66;
+  /* Core Brand Tokens */
+  --primary: #0B5CAD;
+  --primary-hover: #08498b;
+  --secondary: #1565C0;
+  --secondary-hover: #0d47a1;
+  --accent: #00A6D6;
+  --accent-soft: rgba(0, 166, 214, 0.12);
+  --accent-glow: rgba(0, 166, 214, 0.25);
+  --accent-hover: #0093be;
+  --navy: #0B1F3A;
+  --navy-dark: #061325;
+  --navy-light: #132b4f;
+  --navy-surface: #102A4D;
+  --navy-border: rgba(255, 255, 255, 0.08);
+
+  /* Legacy aliases for seamless backwards compatibility */
+  --primary-blue: var(--primary);
+  --secondary-blue: var(--secondary);
+  --accent-cyan: var(--accent);
+  --accent-cyan-light: var(--accent-soft);
+  --accent-cyan-glow: var(--accent-glow);
+  --dark-navy: var(--navy);
+  --dark-navy-surface: var(--navy-surface);
+  --dark-navy-border: var(--navy-border);
+
+  /* Background & Surface Tokens */
+  --white: #FFFFFF;
   --bg-light: #F4F8FC;
   --white: #FFFFFF;
+  --light-bg: #F4F8FC;
+  --card-bg: #FFFFFF;
+  --surface-hover: #F8FAFC;
+  --border-color: #E2E8F0;
+  --border-light: #EDF2F7;
+  --border-card: #E2E8F0;
 
   /* Neutral tones */
+  /* Neutral & Typography Tones */
+  --text: #263238;
   --text-main: #1E293B;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
   --text-muted: #64748B;
+  --muted: #64748B;
   --text-light: #94A3B8;
   --border-light: #E2E8F0;
   --border-card: #E8EEF5;
@@ -23,17 +63,28 @@
   /* Status Colors */
   --success: #10B981;
   --success-bg: #ECFDF5;
+  --success-bg: rgba(16, 185, 129, 0.12);
   --warning: #F59E0B;
   --warning-bg: #FFFBEB;
+  --warning-bg: rgba(245, 158, 11, 0.12);
   --danger: #EF4444;
   --danger-bg: #FEF2F2;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --error: #EF4444;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --info: #00A6D6;
+  --info-bg: rgba(0, 166, 214, 0.12);
 
   /* Typography */
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'Poppins', var(--font-main);
 
   /* Spacing & Sizing */
   --sidebar-width: 260px;
+  /* Dimensions */
+  --sidebar-width: 280px;
   --header-height: 70px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -41,9 +92,12 @@
   --radius-full: 9999px;
 
   /* Shadows */
+  /* Shadows (Matched exactly to Student Dashboard) */
   --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.05);
   --shadow-md: 0 4px 14px rgba(11, 31, 58, 0.08);
   --shadow-lg: 0 10px 25px rgba(11, 31, 58, 0.12);
+  --shadow-md: 0 4px 14px rgba(11, 31, 58, 0.06);
+  --shadow-lg: 0 10px 25px rgba(11, 31, 58, 0.08);
   --shadow-hover: 0 8px 22px rgba(11, 92, 173, 0.14);
 
   /* Transitions */
