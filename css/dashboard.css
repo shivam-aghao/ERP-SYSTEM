@@ -51,7 +51,7 @@
 
   /* Dimensions */
   --header-height: 70px;
-  --sidebar-width: 250px;
+  --sidebar-width: 280px;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.05);
@@ -791,7 +791,7 @@ img {
   height: 100%;
   z-index: 1;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
 }
 
 .hero-unified-campus-img {

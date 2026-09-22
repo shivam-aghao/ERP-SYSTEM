@@ -500,17 +500,10 @@ function showToast(message, type = 'info') {
    ========================================================================== */
 function initCampusShowcase() {
   const expandBtn = document.getElementById('campusExpandBtn');
-  const bgMedia = document.querySelector('.hero-unified-bg-media');
 
   if (expandBtn) {
     expandBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      openCampusLightbox();
-    });
-  }
-
-  if (bgMedia) {
-    bgMedia.addEventListener('click', () => {
       openCampusLightbox();
     });
   }
