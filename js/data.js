@@ -1,4 +1,140 @@
 /* ========================================================
+   ACADEMIC DATE UTILITIES - DYNAMIC DATE HANDLING
+   ======================================================== */
+const AcademicDateUtils = {
+  monthNames: [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ],
+
+  shortMonthNames: [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ],
+
+  dayNames: [
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+  ],
+
+  shortDayNames: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+
+  getNow() {
+    return new Date();
+  },
+
+  getTodayISO(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  // Returns formatted readable date "DD Month YYYY" (e.g. "21 September 2026")
+  formatReadableDate(dateInput) {
+    let year, monthIndex, day;
+    if (!dateInput) {
+      const now = new Date();
+      year = now.getFullYear();
+      monthIndex = now.getMonth();
+      day = now.getDate();
+    } else if (typeof dateInput === 'string') {
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        year = parseInt(parts[0], 10);
+        monthIndex = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else {
+        const parsed = new Date(dateInput);
+        if (isNaN(parsed.getTime())) return dateInput;
+        year = parsed.getFullYear();
+        monthIndex = parsed.getMonth();
+        day = parsed.getDate();
+      }
+    } else if (dateInput instanceof Date) {
+      year = dateInput.getFullYear();
+      monthIndex = dateInput.getMonth();
+      day = dateInput.getDate();
+    } else {
+      const now = new Date();
+      year = now.getFullYear();
+      monthIndex = now.getMonth();
+      day = now.getDate();
+    }
+    const monthName = this.monthNames[monthIndex] || "";
+    const formattedDay = String(day).padStart(2, '0');
+    return `${formattedDay} ${monthName} ${year}`;
+  },
+
+  // Returns "Weekday, DD Month YYYY" (e.g., "Monday, 21 September 2026")
+  formatFullWeekdayDate(dateInput = new Date()) {
+    let d;
+    if (typeof dateInput === 'string') {
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      } else {
+        d = new Date(dateInput);
+      }
+    } else {
+      d = dateInput || new Date();
+    }
+    const weekday = this.dayNames[d.getDay()];
+    const formatted = this.formatReadableDate(d);
+    return `${weekday}, ${formatted}`;
+  },
+
+  // Returns relative date in "DD Month YYYY" (or short month "DD Mon YYYY")
+  getRelativeFutureDate(daysAhead, shortMonth = false) {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    const day = String(d.getDate()).padStart(2, '0');
+    const monthName = shortMonth ? this.shortMonthNames[d.getMonth()] : this.monthNames[d.getMonth()];
+    return `${day} ${monthName} ${d.getFullYear()}`;
+  },
+
+  // Dynamic Academic Term calculation
+  getCurrentAcademicTerm(d = new Date()) {
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0 = Jan, 11 = Dec
+    if (month >= 6) { // July to Dec
+      return {
+        academicYear: `${year}-${year + 1}`,
+        semesterType: "Odd",
+        semesterName: "Semester 5 (Odd)",
+        fullTerm: `${year}-${year + 1} (Odd Semester)`
+      };
+    } else { // Jan to June
+      return {
+        academicYear: `${year - 1}-${year}`,
+        semesterType: "Even",
+        semesterName: "Semester 6 (Even)",
+        fullTerm: `${year - 1}-${year} (Even Semester)`
+      };
+    }
+  },
+
+  getDayName(dateInput) {
+    let d;
+    if (!dateInput) d = new Date();
+    else if (typeof dateInput === 'string') {
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      } else {
+        d = new Date(dateInput);
+      }
+    } else {
+      d = dateInput;
+    }
+    return this.dayNames[d.getDay()] || "Monday";
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.AcademicDateUtils = AcademicDateUtils;
+}
+
+/* ========================================================
    TEACHER ERP DATA STORE - EXPANDED ACADEMIC MODEL
    ======================================================== */
 
@@ -13,12 +149,13 @@ const TeacherERPData = {
     email: "rohan.deshmukh@college.edu",
     phone: "+91 98230 45678",
     avatarInitials: "RD",
-    academicYear: "2026-2027",
-    currentSemester: "Semester 5 (Odd)"
+    academicYear: AcademicDateUtils.getCurrentAcademicTerm().academicYear,
+    currentSemester: AcademicDateUtils.getCurrentAcademicTerm().semesterName
   },
 
   institution: {
-    name: "SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING",
+    name: "Shri Sant Gajanan Maharaj College of Engineering, Shegaon",
+    subTitle: "(An Autonomous Institute)",
     shortName: "SSGMCE"
   },
 
@@ -301,6 +438,30 @@ const TeacherERPData = {
     return students;
   },
 
+  // Directory students roster getter
+  get students() {
+    return {
+      "2R1": this.getStudentsForClass("2R1").map(s => ({
+        rollNo: s.rollFormatted,
+        name: s.name,
+        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
+        attendance: 75 + (s.rollNo % 22)
+      })),
+      "2R2": this.getStudentsForClass("2R2").map(s => ({
+        rollNo: s.rollFormatted,
+        name: s.name,
+        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
+        attendance: 80 + (s.rollNo % 18)
+      })),
+      "3R": this.getStudentsForClass("3R").map(s => ({
+        rollNo: s.rollFormatted,
+        name: s.name,
+        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
+        attendance: 82 + (s.rollNo % 16)
+      }))
+    };
+  },
+
   // Today's classes schedule for Dashboard
   todayClasses: [
     {
@@ -338,6 +499,30 @@ const TeacherERPData = {
       room: "Lab 04",
       status: "upcoming",
       isCurrent: false
+    }
+  ],
+
+  // Weekly timetable schedule
+  timetable: [
+    {
+      day: "Monday",
+      slots: ["Data Structures (Room 201)", "Java Programming (Room 305)", "Free Slot", "Data Structures Lab (Lab 02)"]
+    },
+    {
+      day: "Tuesday",
+      slots: ["Free Slot", "Data Structures (Room 201)", "Database Systems (Room 304)", "Operating Systems (Lab 04)"]
+    },
+    {
+      day: "Wednesday",
+      slots: ["Operating Systems (Room 201)", "Free Slot", "Data Structures Lab (Lab 01)", "Data Structures Lab (Lab 01)"]
+    },
+    {
+      day: "Thursday",
+      slots: ["Data Structures (Room 201)", "Algorithms (Room 304)", "Free Slot", "Project Guidance (Seminar Hall)"]
+    },
+    {
+      day: "Friday",
+      slots: ["Software Engg (Room 105)", "Operating Systems (Room 201)", "Free Slot", "Faculty Meeting (Dept Library)"]
     }
   ],
 
@@ -382,6 +567,32 @@ const TeacherERPData = {
       attendanceStatus: "Completed",
       room: "Lab 04",
       semester: "Sem 5"
+    }
+  ],
+
+  syllabus: [
+    {
+      subject: "Data Structures (CS302)",
+      classCode: "CSE 2R1",
+      progress: 68,
+      units: [
+        { name: "Unit 1: Linear Data Structures & Stacks", percent: 100 },
+        { name: "Unit 2: Queues & Linked Lists", percent: 100 },
+        { name: "Unit 3: Binary Trees & BST", percent: 75 },
+        { name: "Unit 4: Graph Algorithms & Traversals", percent: 35 },
+        { name: "Unit 5: Hashing & File Structures", percent: 0 }
+      ]
+    },
+    {
+      subject: "Java Programming (CS304)",
+      classCode: "CSE 2R2",
+      progress: 55,
+      units: [
+        { name: "Unit 1: OOP Principles & Classes", percent: 100 },
+        { name: "Unit 2: Inheritance & Interfaces", percent: 80 },
+        { name: "Unit 3: Exception Handling & Multithreading", percent: 40 },
+        { name: "Unit 4: Java Collections Framework", percent: 0 }
+      ]
     }
   ],
 
@@ -459,3 +670,11 @@ const TeacherERPData = {
     }
   ]
 };
+
+if (typeof window !== 'undefined') {
+  window.AcademicDateUtils = AcademicDateUtils;
+  window.TeacherERPData = TeacherERPData;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AcademicDateUtils, TeacherERPData };
+}

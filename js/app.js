@@ -7,6 +7,8 @@ const TeacherApp = {
 
   init() {
     this.bindEvents();
+    this.renderHeaderProfile();
+    this.renderDynamicDates();
     this.renderDashboardData();
     this.renderTimetableView();
     this.renderStudentsView();
@@ -22,11 +24,202 @@ const TeacherApp = {
     }
   },
 
+  // Dynamic Date & Academic Session Rendering
+  renderDynamicDates() {
+    if (typeof AcademicDateUtils === 'undefined') return;
+
+    const now = AcademicDateUtils.getNow();
+    const todayFormatted = AcademicDateUtils.formatReadableDate(now);
+    const fullWeekdayDate = AcademicDateUtils.formatFullWeekdayDate(now);
+    const term = AcademicDateUtils.getCurrentAcademicTerm(now);
+    const currentYear = now.getFullYear();
+
+    // 1. Dashboard Welcome Banner Date
+    const todayDateElem = document.getElementById("dashboard-today-date");
+    if (todayDateElem) {
+      todayDateElem.textContent = fullWeekdayDate;
+    }
+    const todayPickerInput = document.getElementById("dashboard-date-picker-input");
+    if (todayPickerInput) {
+      todayPickerInput.value = AcademicDateUtils.getTodayISO(now);
+    }
+  },
+
+  openDashboardDatePicker() {
+    const input = document.getElementById("dashboard-date-picker-input");
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch (e) {
+        input.focus();
+        input.click();
+      }
+    } else {
+      input.focus();
+      input.click();
+    }
+  },
+
+  handleDashboardDateChange(dateVal) {
+    if (!dateVal || typeof AcademicDateUtils === 'undefined') return;
+    const parts = dateVal.split('-');
+    if (parts.length !== 3) return;
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    const fullWeekday = AcademicDateUtils.formatFullWeekdayDate(d);
+    const todayISO = AcademicDateUtils.getTodayISO();
+    const isToday = (dateVal === todayISO);
+
+    const dateElem = document.getElementById("dashboard-today-date");
+    if (dateElem) {
+      dateElem.textContent = fullWeekday;
+    }
+
+    const labelElem = document.getElementById("dashboard-date-label");
+    if (labelElem) {
+      labelElem.textContent = isToday ? "Today's Date" : "Selected Date";
+    }
+
+    // Sync with attendance module state
+    if (typeof AttendanceState !== 'undefined') {
+      AttendanceState.setDate(dateVal);
+    }
+
+    this.showToast(`Dashboard date set to: ${AcademicDateUtils.formatReadableDate(d)}`);
+
+    // 2. Dynamic Greeting based on current time
+    const hour = now.getHours();
+    const greetingText = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
+    const greetingElem = document.getElementById("welcome-greeting-text");
+    if (greetingElem) {
+      greetingElem.innerHTML = `${greetingText}, Professor 👋`;
+    }
+
+    // 3. Faculty Profile Academic Term
+    const profileTermElem = document.getElementById("profile-academic-term");
+    if (profileTermElem) {
+      profileTermElem.textContent = term.fullTerm;
+    }
+
+    // 4. Academics Hub Active Semester Description
+    const academicsTermElem = document.getElementById("academics-active-semester-desc");
+    if (academicsTermElem) {
+      academicsTermElem.innerHTML = `<strong>Academic Year:</strong> ${term.academicYear} (${term.semesterType} Term)<br><strong>Current Phase:</strong> Mid-Semester Instruction Cycle<br><strong>Accreditation Tier:</strong> NBA Accredited & Autonomous Curriculum`;
+    }
+
+    // 5. Examination Mid-Semester Exam Begins (+21 days)
+    const examDateElem = document.getElementById("exam-midsem-date");
+    if (examDateElem) {
+      examDateElem.textContent = AcademicDateUtils.getRelativeFutureDate(21);
+    }
+
+    // 6. Fees Clearance Note
+    const feesClearanceElem = document.getElementById("fees-clearance-note");
+    if (feesClearanceElem) {
+      feesClearanceElem.textContent = `Official Accounts Clearance: No pending institutional dues recorded for Academic Session ${term.academicYear}.`;
+    }
+
+    // 7. Library Next Book Renewal Date (+7 days)
+    const libraryRenewalElem = document.getElementById("library-renewal-date");
+    if (libraryRenewalElem) {
+      libraryRenewalElem.textContent = AcademicDateUtils.getRelativeFutureDate(7);
+    }
+
+    // 8. Training & Placement Technical Assessment Date (+14 days)
+    const placementDateElem = document.getElementById("placement-assessment-date");
+    if (placementDateElem) {
+      placementDateElem.textContent = `Role: GenC Elevate • Technical Assessment Date: ${AcademicDateUtils.getRelativeFutureDate(14)}`;
+    }
+
+    // 9. Footer Copyright Year
+    const footerElem = document.getElementById("footer-copyright-text");
+    if (footerElem) {
+      footerElem.innerHTML = `&copy; ${currentYear} SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.`;
+    }
+  },
+
+  // Dynamic Teacher Profile Management
+  getLoggedInTeacher() {
+    try {
+      const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn("Could not read teacher session from storage", e);
+    }
+    return (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty) ? TeacherERPData.faculty : {
+      name: "Faculty Member",
+      department: "Computer Science & Engineering",
+      departmentCode: "CSE",
+      title: "Faculty",
+      avatarInitials: "FM"
+    };
+  },
+
+  renderHeaderProfile() {
+    const teacher = this.getLoggedInTeacher();
+    if (!teacher) return;
+
+    let initials = teacher.avatarInitials;
+    if (!initials && teacher.name) {
+      const cleanName = teacher.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
+      const parts = cleanName.split(/\s+/);
+      initials = parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    const avatarElem = document.getElementById("header-profile-avatar");
+    if (avatarElem) {
+      avatarElem.innerHTML = `<span>${initials || "FM"}</span>`;
+    }
+
+    const nameElem = document.getElementById("header-profile-name");
+    if (nameElem) {
+      nameElem.textContent = teacher.name || "Faculty Member";
+    }
+
+    const deptElem = document.getElementById("header-profile-dept");
+    if (deptElem) {
+      deptElem.textContent = teacher.department || teacher.departmentCode || "Faculty Department";
+    }
+
+    const menuNameElem = document.getElementById("profile-menu-name");
+    if (menuNameElem) {
+      menuNameElem.textContent = teacher.name || "Faculty Member";
+    }
+
+    const menuTitleElem = document.getElementById("profile-menu-title");
+    if (menuTitleElem) {
+      menuTitleElem.textContent = `${teacher.title || "Faculty"} • ${teacher.departmentCode || teacher.department || ""}`;
+    }
+
+    const heroDeptElem = document.getElementById("hero-faculty-department");
+    if (heroDeptElem) {
+      heroDeptElem.textContent = teacher.department || teacher.departmentCode || "Computer Science & Engineering";
+    }
+
+    const heroNameElem = document.getElementById("hero-teacher-name");
+    if (heroNameElem) {
+      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+    }
+
+    const heroDesigElem = document.getElementById("hero-teacher-designation");
+    if (heroDesigElem) {
+      heroDesigElem.textContent = teacher.title || "Associate Professor";
+    }
+
+    const heroIdElem = document.getElementById("hero-teacher-id");
+    if (heroIdElem) {
+      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: FAC-CSE-1048";
+    }
+  },
+
   bindEvents() {
     // Mobile hamburger menu toggle
     const hamburgerBtn = document.getElementById("hamburger-btn");
     const sidebar = document.getElementById("app-sidebar");
     const overlay = document.getElementById("sidebar-overlay");
+    const sidebarCloseBtn = document.getElementById("sidebar-close-btn");
 
     if (hamburgerBtn && sidebar && overlay) {
       hamburgerBtn.addEventListener("click", () => {
@@ -38,7 +231,26 @@ const TeacherApp = {
         sidebar.classList.remove("open");
         overlay.classList.remove("active");
       });
+
+      if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          overlay.classList.remove("active");
+        });
+      }
     }
+
+    // Keyboard shortcut (Ctrl+K / Cmd+K) to focus search bar
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        const searchInput = document.getElementById("header-search-input");
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    });
 
     // Header Profile Dropdown toggle
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
@@ -52,24 +264,6 @@ const TeacherApp = {
         if (!isOpen) {
           profileMenu.classList.add("show");
           profileTrigger.classList.add("active");
-        }
-      });
-    }
-
-    // Header Notification Dropdown toggle
-    const notifBtn = document.getElementById("header-notification-btn");
-    const notifMenu = document.getElementById("notification-dropdown-menu");
-
-    if (notifBtn && notifMenu) {
-      notifBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = notifMenu.classList.contains("show");
-        this.closeAllDropdowns();
-        if (!isOpen) {
-          notifMenu.classList.add("show");
-          // Hide badge when opened
-          const badge = document.getElementById("header-notif-badge");
-          if (badge) badge.style.display = "none";
         }
       });
     }
@@ -92,11 +286,9 @@ const TeacherApp = {
   closeAllDropdowns() {
     const profileMenu = document.getElementById("profile-dropdown-menu");
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
-    const notifMenu = document.getElementById("notification-dropdown-menu");
 
     if (profileMenu) profileMenu.classList.remove("show");
     if (profileTrigger) profileTrigger.classList.remove("active");
-    if (notifMenu) notifMenu.classList.remove("show");
   },
 
   // ----------------------------------------------------
@@ -126,52 +318,95 @@ const TeacherApp = {
       pane.style.display = "none";
     });
 
-    // Update Header Page Title
+    // Update Header Page Title / Role Badge
     const titleElem = document.getElementById("header-page-title");
+    const setHeaderBadge = (text) => {
+      if (titleElem) {
+        titleElem.innerHTML = `<i data-lucide="graduation-cap" style="width:13px;height:13px;"></i> ${text}`;
+      }
+    };
 
     switch (viewName) {
       case 'dashboard':
         document.getElementById("dashboard-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Teacher Dashboard";
+        setHeaderBadge("Teacher Dashboard");
+        break;
+      case 'profile':
+        document.getElementById("profile-view").style.display = "block";
+        setHeaderBadge("Faculty Profile");
+        break;
+      case 'academics':
+        document.getElementById("academics-view").style.display = "block";
+        setHeaderBadge("Academics Hub");
         break;
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
-        if (titleElem) titleElem.textContent = "Teacher Attendance Management";
+        setHeaderBadge("Teacher Attendance");
         AttendanceWorkflow.init();
+        break;
+      case 'examination':
+        document.getElementById("examination-view").style.display = "block";
+        setHeaderBadge("Examinations");
+        break;
+      case 'fees':
+        document.getElementById("fees-view").style.display = "block";
+        setHeaderBadge("College Fees");
+        break;
+      case 'documents':
+        document.getElementById("documents-view").style.display = "block";
+        setHeaderBadge("Official Documents");
+        break;
+      case 'hostel':
+        document.getElementById("hostel-view").style.display = "block";
+        setHeaderBadge("Campus Hostel");
+        break;
+      case 'library':
+        document.getElementById("library-view").style.display = "block";
+        setHeaderBadge("Central Library");
+        break;
+      case 'placement':
+        document.getElementById("placement-view").style.display = "block";
+        setHeaderBadge("Training & Placement");
+        break;
+      case 'grievance':
+        document.getElementById("grievance-view").style.display = "block";
+        setHeaderBadge("Grievance Redressal");
+        break;
+      case 'settings':
+        document.getElementById("settings-view").style.display = "block";
+        setHeaderBadge("Settings");
         break;
       case 'timetable':
         document.getElementById("timetable-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Weekly Timetable & Schedule";
+        setHeaderBadge("Faculty Timetable");
         break;
       case 'classes':
         document.getElementById("classes-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Assigned Classes & Divisions";
+        setHeaderBadge("Assigned Classes");
         break;
       case 'students':
         document.getElementById("students-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Students Directory & Roster";
+        setHeaderBadge("Students Directory");
         break;
       case 'syllabus':
         document.getElementById("syllabus-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Curriculum & Syllabus Tracker";
+        setHeaderBadge("Syllabus Tracker");
         break;
       case 'results':
         document.getElementById("results-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Examination & Internal Results";
+        setHeaderBadge("Exam Results");
         break;
       case 'notifications':
         document.getElementById("notifications-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Faculty Notifications Center";
+        setHeaderBadge("Notifications");
         break;
-      case 'profile':
       case 'information':
-      case 'settings':
         document.getElementById("profile-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Faculty Profile & Preferences";
+        setHeaderBadge("Faculty Information");
         break;
       default:
         document.getElementById("dashboard-view").style.display = "block";
-        if (titleElem) titleElem.textContent = "Teacher Dashboard";
+        setHeaderBadge("Teacher Dashboard");
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -414,22 +649,80 @@ const TeacherApp = {
   // ----------------------------------------------------
   // TIMETABLE MODULE VIEW
   // ----------------------------------------------------
+  selectedTimetableDate: null,
+
+  handleTimetableDateChange(dateVal) {
+    if (!dateVal) return;
+    this.selectedTimetableDate = dateVal;
+    this.renderTimetableView();
+  },
+
+  resetTimetableToToday() {
+    this.selectedTimetableDate = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+    this.renderTimetableView();
+  },
+
   renderTimetableView() {
     const container = document.getElementById("timetable-content");
     if (!container) return;
 
     const timeHeaders = ["Day", "09:00 - 10:30 AM", "11:00 - 12:30 PM", "01:30 - 03:00 PM", "03:30 - 05:00 PM"];
+    const term = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getCurrentAcademicTerm()
+      : { academicYear: "2026-2027", semesterType: "Odd" };
+
+    const selectedDate = this.selectedTimetableDate || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0]);
+    const currentDayName = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getDayName(selectedDate) : "Monday";
+    const readableDate = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.formatReadableDate(selectedDate) : selectedDate;
+    const todayISO = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0];
+    const isToday = (selectedDate === todayISO);
+
+    const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
     container.innerHTML = `
       <div class="timetable-grid-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="timetable-header-toolbar">
           <div>
             <h3 style="font-size:16px; color:var(--dark-navy);">Weekly Lecture & Lab Schedule</h3>
-            <p style="font-size:12.5px; color:var(--text-muted);">Academic Term: 2026-2027 • Odd Semester</p>
+            <p style="font-size:12.5px; color:var(--text-muted);" id="timetable-academic-term">Academic Term: ${term.academicYear} • ${term.semesterType} Semester</p>
           </div>
-          <button class="quick-action-btn" onclick="window.print()">
-            <i data-lucide="printer" style="width:14px;height:14px;"></i> Print Schedule
-          </button>
+
+          <!-- Date Picker & Filter Controls -->
+          <div class="timetable-date-filter-bar">
+            <div class="timetable-picker-group">
+              <i data-lucide="calendar" style="width:15px;height:15px; color:var(--primary-blue);"></i>
+              <span style="font-size:12.5px; font-weight:600; color:var(--dark-navy);">View Date:</span>
+              <input type="date" 
+                     id="timetable-date-picker-input" 
+                     class="timetable-date-input" 
+                     value="${selectedDate}" 
+                     onchange="TeacherApp.handleTimetableDateChange(this.value)">
+            </div>
+            <button class="btn-timetable-today ${isToday ? 'active' : ''}" 
+                    type="button"
+                    onclick="TeacherApp.resetTimetableToToday()" 
+                    title="Reset to today's schedule">
+              <i data-lucide="calendar-check" style="width:13px;height:13px;"></i>
+              Today
+            </button>
+            <button class="quick-action-btn" type="button" onclick="window.print()">
+              <i data-lucide="printer" style="width:14px;height:14px;"></i> Print Schedule
+            </button>
+          </div>
+        </div>
+
+        <!-- Highlighting Banner -->
+        <div class="timetable-schedule-status-banner">
+          <div class="status-left">
+            <span class="status-pulse-indicator"></span>
+            <span>Schedule for: <strong>${currentDayName}, ${readableDate}</strong></span>
+            <span class="badge ${isToday ? 'badge-completed' : 'badge-cyan'}">${isToday ? "Today's Schedule" : "Selected Date"}</span>
+          </div>
+          <div class="status-hint">
+            ${isWeekend ? '<em>Note: Weekend - regular weekday schedule displayed below</em>' : `Highlighting <strong>${currentDayName}</strong> in the schedule`}
+          </div>
         </div>
 
         <table class="timetable-table">
@@ -439,9 +732,16 @@ const TeacherApp = {
             </tr>
           </thead>
           <tbody>
-            ${TeacherERPData.timetable.map(row => `
-              <tr>
-                <td style="font-weight:700; color:var(--dark-navy); background:#FAFCFE;">${row.day}</td>
+            ${TeacherERPData.timetable.map(row => {
+              const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
+              return `
+              <tr class="${isHighlightRow ? 'active-day-row' : ''}">
+                <td class="timetable-day-cell ${isHighlightRow ? 'active-day-cell' : ''}">
+                  <div class="day-cell-content">
+                    <span class="day-name">${row.day}</span>
+                    ${isHighlightRow ? `<span class="active-day-pill">${isToday ? 'Today' : 'Active'}</span>` : ''}
+                  </div>
+                </td>
                 ${row.slots.map(slot => {
                   if (slot === "Free Slot") {
                     return `<td style="color:var(--text-light); font-size:12px; font-style:italic;">Off / Prep</td>`;
@@ -449,7 +749,7 @@ const TeacherApp = {
                   const isLab = slot.toLowerCase().includes("lab");
                   return `
                     <td>
-                      <div class="timetable-slot ${isLab ? 'lab' : ''}">
+                      <div class="timetable-slot ${isLab ? 'lab' : ''} ${isHighlightRow ? 'active-slot' : ''}">
                         <div class="slot-sub">${slot.split('(')[0]}</div>
                         <div class="slot-room">${slot.split('(')[1] ? '(' + slot.split('(')[1] : ''}</div>
                       </div>
@@ -457,11 +757,14 @@ const TeacherApp = {
                   `;
                 }).join('')}
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
       </div>
     `;
+
+    this.initLucideIcons();
   },
 
   // ----------------------------------------------------
@@ -691,6 +994,13 @@ const TeacherApp = {
     }, 3200);
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.TeacherApp = TeacherApp;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { TeacherApp };
+}
 
 // Initialize application when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {

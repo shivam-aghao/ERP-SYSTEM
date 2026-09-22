@@ -3,12 +3,12 @@
    ======================================================== */
 
 const AttendanceCalendar = {
-  // Calendar state (defaults to September 2026)
-  viewYear: 2026,
-  viewMonth: 8, // 0-indexed: 8 is September
-  todayYear: 2026,
-  todayMonth: 8,
-  todayDate: 18, // current date in context
+  // Calendar state (defaults to current system date)
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth(), // 0-indexed
+  todayYear: new Date().getFullYear(),
+  todayMonth: new Date().getMonth(),
+  todayDate: new Date().getDate(),
 
   monthNames: [
     "January", "February", "March", "April", "May", "June",
@@ -18,12 +18,23 @@ const AttendanceCalendar = {
   dayNames: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
 
   init() {
+    const now = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getNow() : new Date();
+    this.todayYear = now.getFullYear();
+    this.todayMonth = now.getMonth();
+    this.todayDate = now.getDate();
+
     // Parse selected date from state if available
-    if (AttendanceState.selectedDate) {
+    if (AttendanceState && AttendanceState.selectedDate) {
       const parts = AttendanceState.selectedDate.split("-");
       if (parts.length === 3) {
         this.viewYear = parseInt(parts[0], 10);
         this.viewMonth = parseInt(parts[1], 10) - 1;
+      }
+    } else {
+      this.viewYear = this.todayYear;
+      this.viewMonth = this.todayMonth;
+      if (AttendanceState && typeof AcademicDateUtils !== 'undefined') {
+        AttendanceState.setDate(AcademicDateUtils.getTodayISO(now));
       }
     }
   },
@@ -33,13 +44,52 @@ const AttendanceCalendar = {
 
     const monthName = this.monthNames[this.viewMonth];
     const daysHTML = this.generateDaysGrid();
+    const todayISO = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0];
+    const isTodaySelected = (AttendanceState.selectedDate === todayISO);
+    const dateStatus = AttendanceState.getDateStatusLabel();
 
     container.innerHTML = `
       <div class="calendar-component-wrapper">
+        <!-- Quick Manual Date Input & Presets Bar -->
+        <div class="cal-quick-picker-bar">
+          <div class="cal-picker-left">
+            <label for="cal-manual-picker-input" class="cal-picker-label">
+              <i data-lucide="calendar" style="width:15px;height:15px; color:var(--primary-blue);"></i>
+              <span>Date Picker:</span>
+            </label>
+            <input type="date" 
+                   id="cal-manual-picker-input" 
+                   class="cal-manual-date-input" 
+                   value="${AttendanceState.selectedDate || todayISO}" 
+                   onchange="AttendanceCalendar.handleManualDateInput(this.value)">
+          </div>
+
+          <div class="cal-quick-chips">
+            <button type="button" 
+                    class="cal-chip-btn ${this.isRelativeSelected(-1) ? 'active' : ''}" 
+                    onclick="AttendanceCalendar.selectRelativeDays(-1)" 
+                    title="Select Yesterday's Date">
+              Yesterday
+            </button>
+            <button type="button" 
+                    class="cal-chip-btn ${this.isTodaySelected() ? 'active' : ''}" 
+                    onclick="AttendanceCalendar.goToToday()" 
+                    title="Select Today's Date">
+              Today
+            </button>
+            <button type="button" 
+                    class="cal-chip-btn ${this.isRelativeSelected(1) ? 'active' : ''}" 
+                    onclick="AttendanceCalendar.selectRelativeDays(1)" 
+                    title="Select Tomorrow's Date">
+              Tomorrow
+            </button>
+          </div>
+        </div>
+
         <!-- Calendar Header Controls -->
         <div class="calendar-header-nav">
           <div class="calendar-current-month-label">
-            <i data-lucide="calendar" style="width:18px;height:18px; color:var(--primary-blue);"></i>
+            <i data-lucide="calendar-days" style="width:18px;height:18px; color:var(--primary-blue);"></i>
             <span>${monthName} ${this.viewYear}</span>
           </div>
 
@@ -73,8 +123,9 @@ const AttendanceCalendar = {
             <span class="selection-date-text" id="selected-date-display">${AttendanceState.getFormattedDate()}</span>
           </div>
           <div class="selection-banner-status">
-            <span class="badge badge-completed">
-              <i data-lucide="check-circle" style="width:12px;height:12px;"></i> Valid Academic Session
+            <span class="badge ${isTodaySelected ? 'badge-completed' : (AttendanceState.selectedDate > todayISO ? 'badge-cyan' : 'badge-pending')}">
+              <i data-lucide="${isTodaySelected ? 'check-circle' : 'calendar'}" style="width:12px;height:12px;"></i>
+              ${dateStatus}
             </span>
           </div>
         </div>
@@ -110,9 +161,9 @@ const AttendanceCalendar = {
       `);
     }
 
-    // Parse currently selected date
-    let selYear = 2026, selMonth = 8, selDay = 17;
-    if (AttendanceState.selectedDate) {
+    // Parse currently selected date (default to today if not selected)
+    let selYear = this.todayYear, selMonth = this.todayMonth, selDay = this.todayDate;
+    if (AttendanceState && AttendanceState.selectedDate) {
       const parts = AttendanceState.selectedDate.split("-");
       if (parts.length === 3) {
         selYear = parseInt(parts[0], 10);
@@ -121,12 +172,11 @@ const AttendanceCalendar = {
       }
     }
 
-    // Current month days
+    // Current month days (all clickable - past, today, and future)
     for (let day = 1; day <= daysInMonth; day++) {
       const isSelected = (year === selYear && month === selMonth && day === selDay);
       const isToday = (year === this.todayYear && month === this.todayMonth && day === this.todayDate);
 
-      // Disable future dates beyond today (context is September 18, 2026)
       const isFuture = (year > this.todayYear) ||
                        (year === this.todayYear && month > this.todayMonth) ||
                        (year === this.todayYear && month === this.todayMonth && day > this.todayDate);
@@ -136,15 +186,19 @@ const AttendanceCalendar = {
       let cellClass = "cal-day-cell current-month";
       if (isSelected) cellClass += " selected";
       if (isToday) cellClass += " today";
-      if (isFuture) cellClass += " disabled future";
+      if (isFuture) cellClass += " future-date";
+
+      const titleAttr = isToday ? "Today's Date" : (isFuture ? "Future Session Date (Click to select)" : "Past Session Date (Click to select)");
 
       cells.push(`
         <div class="${cellClass}" 
              data-date="${dayDateStr}"
-             ${isFuture ? '' : `onclick="AttendanceCalendar.selectDate('${dayDateStr}')"`}>
+             onclick="AttendanceCalendar.selectDate('${dayDateStr}')"
+             title="${titleAttr}">
           <span class="day-number">${day}</span>
-          ${isToday ? '<span class="today-dot"></span>' : ''}
+          ${isToday ? '<span class="today-dot" title="Today"></span>' : ''}
           ${isSelected ? '<span class="selected-indicator-pill">Selected</span>' : ''}
+          ${isFuture && !isSelected ? '<span class="future-dot" title="Future"></span>' : ''}
         </div>
       `);
     }
@@ -163,7 +217,46 @@ const AttendanceCalendar = {
     return cells.join('');
   },
 
+  handleManualDateInput(dateVal) {
+    if (!dateVal) return;
+    this.selectDate(dateVal);
+  },
+
+  selectRelativeDays(deltaDays) {
+    const d = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getNow() : new Date();
+    d.setDate(d.getDate() + deltaDays);
+    const iso = (typeof AcademicDateUtils !== 'undefined') 
+      ? AcademicDateUtils.getTodayISO(d)
+      : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    this.selectDate(iso);
+  },
+
+  isTodaySelected() {
+    const todayISO = (typeof AcademicDateUtils !== 'undefined') 
+      ? AcademicDateUtils.getTodayISO() 
+      : new Date().toISOString().split('T')[0];
+    return AttendanceState.selectedDate === todayISO;
+  },
+
+  isRelativeSelected(deltaDays) {
+    const d = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getNow() : new Date();
+    d.setDate(d.getDate() + deltaDays);
+    const iso = (typeof AcademicDateUtils !== 'undefined') 
+      ? AcademicDateUtils.getTodayISO(d)
+      : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return AttendanceState.selectedDate === iso;
+  },
+
   selectDate(dateStr) {
+    if (!dateStr) return;
+
+    // Sync view year/month if selected date is in another month
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      this.viewYear = parseInt(parts[0], 10);
+      this.viewMonth = parseInt(parts[1], 10) - 1;
+    }
+
     AttendanceState.setDate(dateStr);
 
     // Re-render calendar to update selected state
@@ -206,10 +299,24 @@ const AttendanceCalendar = {
   },
 
   goToToday() {
+    const now = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getNow() : new Date();
+    this.todayYear = now.getFullYear();
+    this.todayMonth = now.getMonth();
+    this.todayDate = now.getDate();
+
     this.viewYear = this.todayYear;
     this.viewMonth = this.todayMonth;
-    const todayStr = `${this.todayYear}-${String(this.todayMonth + 1).padStart(2, '0')}-${String(this.todayDate).padStart(2, '0')}`;
+    const todayStr = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO(now)
+      : `${this.todayYear}-${String(this.todayMonth + 1).padStart(2, '0')}-${String(this.todayDate).padStart(2, '0')}`;
     this.selectDate(todayStr);
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.AttendanceCalendar = AttendanceCalendar;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AttendanceCalendar };
+}
 

@@ -160,7 +160,7 @@ const AttendanceWorkflow = {
     if (step >= 2) {
       items.push(`<span class="bc-separator">&gt;</span>`);
       items.push(`
-        <span class="bc-item ${step === 2 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(2)">
+        <span class="bc-item ${step === 2 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(1)" title="Back to Department Selection">
           ${dept}
         </span>
       `);
@@ -169,7 +169,7 @@ const AttendanceWorkflow = {
     if (step >= 3) {
       items.push(`<span class="bc-separator">&gt;</span>`);
       items.push(`
-        <span class="bc-item ${step === 3 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(3)">
+        <span class="bc-item ${step === 3 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(2)" title="Back to Class Selection">
           ${cls}
         </span>
       `);
@@ -178,7 +178,7 @@ const AttendanceWorkflow = {
     if (step >= 4) {
       items.push(`<span class="bc-separator">&gt;</span>`);
       items.push(`
-        <span class="bc-item ${step === 4 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(4)">
+        <span class="bc-item ${step === 4 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(3)" title="Click to select or change date">
           ${date}
         </span>
       `);
@@ -187,7 +187,7 @@ const AttendanceWorkflow = {
     if (step >= 5) {
       items.push(`<span class="bc-separator">&gt;</span>`);
       items.push(`
-        <span class="bc-item ${step === 5 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(5)">
+        <span class="bc-item ${step === 5 ? 'current' : 'clickable'}" onclick="AttendanceWorkflow.goToStep(4)" title="Back to Subject Selection">
           ${sub}
         </span>
       `);
@@ -369,12 +369,45 @@ const AttendanceWorkflow = {
 
     const currentSubCode = AttendanceState.selectedSubject.code;
 
+    const todayISO = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0];
+    const isToday = (AttendanceState.selectedDate === todayISO);
+
     container.innerHTML = `
       <div class="workflow-card-wrapper">
         <div class="workflow-step-heading-block">
           <span class="workflow-step-pill">04 • Subject Selection</span>
           <h2 class="workflow-main-title">Select Subject</h2>
-          <p class="workflow-subtitle">Choose the subject for today's attendance in <strong>Division ${classCode}</strong>.</p>
+          <p class="workflow-subtitle">Choose the course subject for attendance marking in <strong>Division ${classCode}</strong>.</p>
+        </div>
+
+        <!-- Active Lecture Date Banner with Inline Date Picker -->
+        <div class="step-date-banner">
+          <div class="step-date-info">
+            <div class="step-date-icon-box">
+              <i data-lucide="calendar" class="step-date-icon"></i>
+            </div>
+            <div>
+              <span class="step-date-sub">Selected Lecture Date</span>
+              <div class="step-date-val">${AttendanceState.getFormattedDate()}</div>
+            </div>
+            <span class="date-status-tag ${isToday ? 'today' : 'custom'}">
+              ${AttendanceState.getDateStatusLabel()}
+            </span>
+          </div>
+          <div class="step-date-actions">
+            <input type="date" 
+                   id="step4-inline-date-picker" 
+                   class="inline-hidden-date-picker" 
+                   value="${AttendanceState.selectedDate || todayISO}" 
+                   onchange="AttendanceWorkflow.changeDateFromAnywhere(this.value)">
+            <button class="btn-change-date-pill" 
+                    type="button"
+                    onclick="AttendanceWorkflow.triggerPicker('step4-inline-date-picker')" 
+                    title="Change Attendance Date">
+              <i data-lucide="calendar-days" style="width:14px;height:14px;"></i>
+              <span>Change Date</span>
+            </button>
+          </div>
         </div>
 
         <div class="subjects-grid">
@@ -523,11 +556,38 @@ const AttendanceWorkflow = {
           </div>
         </div>
 
+        <!-- Interactive Lecture Date Control Bar -->
+        <div class="swipe-lecture-date-strip">
+          <div class="swipe-date-info-group">
+            <i data-lucide="calendar" style="width:15px;height:15px; color:var(--primary-blue);"></i>
+            <span class="swipe-date-label">Session Date:</span>
+            <strong class="swipe-date-value">${AttendanceState.getFormattedDate()}</strong>
+            <span class="date-status-tag ${AttendanceState.selectedDate === ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '') ? 'today' : 'custom'}">
+              ${AttendanceState.getDateStatusLabel()}
+            </span>
+          </div>
+
+          <div class="swipe-date-action-group">
+            <input type="date" 
+                   id="step5-swipe-date-picker" 
+                   class="inline-hidden-date-picker" 
+                   value="${AttendanceState.selectedDate || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '')}" 
+                   onchange="AttendanceWorkflow.changeDateFromAnywhere(this.value)">
+            <button class="btn-change-date-mini" 
+                    type="button"
+                    onclick="AttendanceWorkflow.triggerPicker('step5-swipe-date-picker')" 
+                    title="Change Attendance Date">
+              <i data-lucide="calendar-days" style="width:13px;height:13px;"></i>
+              <span>Change Date</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Student Progress Header -->
         <div class="student-progress-wrapper">
           <div class="student-progress-text-row">
             <span class="student-index-label">Student <strong>${currentIndex + 1}</strong> of <strong>${total}</strong></span>
-            <span class="student-batch-label">${AttendanceState.selectedClass.code} • ${AttendanceState.selectedSubject.name}</span>
+            <span class="student-batch-label">${AttendanceState.selectedClass.code} • ${AttendanceState.selectedSubject.name} • ${AttendanceState.getFormattedDate()}</span>
             <span class="student-percent-label">${progressPercent}% Completed</span>
           </div>
           <div class="student-progress-track">
@@ -654,8 +714,23 @@ const AttendanceWorkflow = {
           <div class="roster-lecture-meta-bar">
             <span class="roster-meta-pill">Class / Division: <strong>${AttendanceState.selectedClass.code} (${AttendanceState.selectedDepartment.code})</strong></span>
             <span class="roster-meta-pill">Subject: <strong>${AttendanceState.selectedSubject.name} (${AttendanceState.selectedSubject.code})</strong></span>
-            <span class="roster-meta-pill">Lecture Slot: <strong>${AttendanceState.selectedSubject.time}</strong></span>
-            <span class="roster-meta-pill">Date: <strong>${AttendanceState.getFormattedDate()}</strong></span>
+            <span class="roster-meta-pill roster-date-interactive-pill">
+              <i data-lucide="calendar" style="width:14px;height:14px; color:var(--primary-blue);"></i>
+              <span>Date: <strong>${AttendanceState.getFormattedDate()}</strong></span>
+              <span class="date-status-tag ${AttendanceState.selectedDate === ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '') ? 'today' : 'custom'}">${AttendanceState.getDateStatusLabel()}</span>
+              <input type="date" 
+                     id="roster-date-picker" 
+                     class="inline-hidden-date-picker" 
+                     value="${AttendanceState.selectedDate || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '')}" 
+                     onchange="AttendanceWorkflow.changeDateFromAnywhere(this.value)">
+              <button class="btn-roster-date-change" 
+                      type="button"
+                      onclick="AttendanceWorkflow.triggerPicker('roster-date-picker')" 
+                      title="Change Attendance Date">
+                <i data-lucide="calendar-days" style="width:12px;height:12px;"></i>
+                <span>Change</span>
+              </button>
+            </span>
             <span class="roster-meta-pill">Teacher: <strong>${AttendanceState.selectedSubject.faculty}</strong></span>
           </div>
 
@@ -1142,7 +1217,22 @@ const AttendanceWorkflow = {
               </div>
               <div class="meta-row">
                 <span class="meta-label">Lecture Date:</span>
-                <span class="meta-val">${AttendanceState.getFormattedDate()}</span>
+                <span class="meta-val" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <strong>${AttendanceState.getFormattedDate()}</strong>
+                  <span class="date-status-tag ${AttendanceState.selectedDate === ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '') ? 'today' : 'custom'}">${AttendanceState.getDateStatusLabel()}</span>
+                  <input type="date" 
+                         id="step6-summary-date-picker" 
+                         class="inline-hidden-date-picker" 
+                         value="${AttendanceState.selectedDate || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : '')}" 
+                         onchange="AttendanceWorkflow.changeDateFromAnywhere(this.value)">
+                  <button class="btn-change-date-mini" 
+                          type="button"
+                          onclick="AttendanceWorkflow.triggerPicker('step6-summary-date-picker')" 
+                          title="Change Lecture Date">
+                    <i data-lucide="calendar-days" style="width:12px;height:12px;"></i>
+                    <span>Change</span>
+                  </button>
+                </span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">Course Subject:</span>
@@ -1643,8 +1733,65 @@ const AttendanceWorkflow = {
     if (window.lucide) lucide.createIcons();
   },
 
+  triggerPicker(elementId) {
+    const input = document.getElementById(elementId);
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch (err) {
+        input.focus();
+        input.click();
+      }
+    } else {
+      input.focus();
+      input.click();
+    }
+  },
+
+  changeDateFromAnywhere(newDateStr) {
+    if (!newDateStr) return;
+    AttendanceState.setDate(newDateStr);
+    this.updateBreadcrumb();
+
+    if (AttendanceState.currentStep === 3) {
+      const calMount = document.getElementById("calendar-mount-point");
+      if (calMount && window.AttendanceCalendar) {
+        AttendanceCalendar.selectDate(newDateStr);
+      }
+    } else {
+      const container = document.getElementById("attendance-step-content");
+      if (container) {
+        switch (AttendanceState.currentStep) {
+          case 4:
+            this.renderStep4Subjects(container);
+            break;
+          case 5:
+            this.renderStep5Students(container);
+            break;
+          case 6:
+            this.renderStep6Summary(container);
+            break;
+        }
+      }
+    }
+
+    if (window.lucide) lucide.createIcons();
+
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+      TeacherApp.showToast(`Attendance date updated to ${AttendanceState.getFormattedDate()} (${AttendanceState.getDateStatusLabel()})`);
+    }
+  },
+
   closeModals() {
     const existing = document.getElementById("attendance-modal-mount");
     if (existing) existing.remove();
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.AttendanceWorkflow = AttendanceWorkflow;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AttendanceWorkflow };
+}

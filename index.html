@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE) — Teacher Portal</title>
+  <title>Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) — Teacher ERP Portal</title>
   
   <!-- Academic Fonts: Inter & Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +23,82 @@
 </head>
 <body>
 
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name -->
+    <div class="header-left-brand">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+        <i data-lucide="menu" style="width:20px;height:20px;"></i>
+      </button>
+
+      <!-- Official SSGMCE Logo & College Title -->
+      <a href="#" class="header-college-brand" onclick="TeacherApp.switchView('dashboard'); return false;" aria-label="SSGMCE Home">
+        <div class="college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="Shri Sant Gajanan Maharaj College of Engineering, Shegaon Logo" class="official-college-logo">
+        </div>
+        <div class="college-brand-info">
+          <span class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</span>
+          <span class="college-sub-tag">(An Autonomous Institute)</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Center: Search Bar -->
+    <div class="header-center-search">
+      <div class="search-pill-wrapper">
+        <i data-lucide="search" class="search-pill-icon"></i>
+        <input type="text" class="search-pill-input" id="header-search-input" 
+               placeholder="Search subjects, timetable, students, services..." 
+               aria-label="Search dashboard">
+        <kbd class="search-shortcut-kbd">Ctrl+K</kbd>
+      </div>
+    </div>
+
+    <!-- Right: Logged-in Teacher's Name + Department + Profile Avatar + Dropdown -->
+    <div class="header-right-controls">
+      <!-- Teacher Profile Dropdown Trigger -->
+      <div class="header-profile-container">
+        <div class="header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="profile-avatar" id="header-profile-avatar">
+            <span>--</span>
+          </div>
+          <div class="profile-info">
+            <span class="profile-name" id="header-profile-name"></span>
+            <span class="profile-dept" id="header-profile-dept"></span>
+          </div>
+          <i data-lucide="chevron-down" class="profile-arrow"></i>
+        </div>
+
+        <!-- Profile Dropdown Menu -->
+        <div class="dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:12px 18px; border-bottom:1px solid var(--border-light);">
+            <div style="font-weight:700; font-size:13.5px; color:var(--dark-navy);" id="profile-menu-name"></div>
+            <div style="font-size:11.5px; color:var(--text-muted);" id="profile-menu-title"></div>
+          </div>
+          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('profile')">
+            <i data-lucide="user" style="width:16px;height:16px;"></i>
+            <span>View Profile</span>
+          </div>
+          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('information')">
+            <i data-lucide="info" style="width:16px;height:16px;"></i>
+            <span>Information</span>
+          </div>
+          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('settings')">
+            <i data-lucide="settings" style="width:16px;height:16px;"></i>
+            <span>Settings</span>
+          </div>
+          <div class="profile-dropdown-item danger" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
+            <i data-lucide="log-out" style="width:16px;height:16px;"></i>
+            <span>Logout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
   <div class="app-wrapper">
     <!-- Off-canvas Mobile Overlay -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -31,20 +107,20 @@
          2. LEFT SIDEBAR (Dark Navy #0B1F3A)
          ======================================================== -->
     <aside class="app-sidebar" id="app-sidebar">
-      <!-- Top Brand Header -->
-      <div class="sidebar-header">
-        <div class="college-logo-container">
-          <i data-lucide="graduation-cap" style="width:24px;height:24px;"></i>
+      <!-- 1. FIXED TOP SECTION: FACULTY PORTAL (Non-scrollable) -->
+      <div class="sidebar-header" id="sidebar-header">
+        <div class="sidebar-portal-badge-wrap">
+          <i data-lucide="shield-check" class="portal-badge-icon"></i>
+          <span class="faculty-portal-heading">FACULTY PORTAL</span>
         </div>
-        <div class="college-brand-text">
-          <span class="college-name">SSGMCE</span>
-          <span class="portal-tag">Teacher Portal</span>
-        </div>
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
       </div>
 
-      <!-- Navigation Links -->
-      <nav class="sidebar-nav">
-        <span class="nav-section-title">Academic Portal</span>
+      <!-- 2. STATIC MIDDLE SECTION: Academic Portal Navigation (Non-scrollable) -->
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <span class="nav-section-title">ACADEMIC PORTAL</span>
         
         <a class="nav-item active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
           <i data-lucide="layout-grid"></i>
@@ -82,7 +158,7 @@
           <span>Results</span>
         </a>
 
-        <span class="nav-section-title" style="margin-top:10px;">Preferences & Info</span>
+        <span class="nav-section-title" style="margin-top:4px;">Preferences & Info</span>
 
         <a class="nav-item" data-view="profile" onclick="TeacherApp.switchView('profile')">
           <i data-lucide="user"></i>
@@ -106,10 +182,106 @@
         </a>
       </nav>
 
-      <!-- Sidebar Footer / Logout -->
-      <div class="sidebar-footer">
-        <button class="sidebar-logout" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
-          <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+      <!-- 3. FIXED BOTTOM SECTION: College Building Logo & Motto & Logout -->
+      <div class="sidebar-fixed-footer" id="sidebar-fixed-footer">
+        <div class="footer-building-wrapper">
+          <svg class="college-building-svg" viewBox="0 0 220 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SSGMCE College Building with Dome">
+            <defs>
+              <linearGradient id="bldgCyan" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#38BDF8" />
+                <stop offset="100%" stop-color="#00A6D6" />
+              </linearGradient>
+              <linearGradient id="domeGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="rgba(56, 189, 248, 0.22)" />
+                <stop offset="100%" stop-color="rgba(0, 166, 214, 0.04)" />
+              </linearGradient>
+            </defs>
+
+            <!-- Dome & Cupola -->
+            <path d="M 94,27 C 94,14 126,14 126,27 Z" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linejoin="round" />
+            <!-- Dome Ribs -->
+            <path d="M 110,14 L 110,27" stroke="url(#bldgCyan)" stroke-width="1.2" />
+            <path d="M 102,17 C 103,20 104,24 104,27" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 118,17 C 117,20 116,24 116,27" stroke="url(#bldgCyan)" stroke-width="1" />
+
+            <!-- Spire / Finial -->
+            <path d="M 110,4 L 110,14" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" />
+            <circle cx="110" cy="7" r="1.6" fill="#38BDF8" />
+            <path d="M 108,14 L 112,14" stroke="#38BDF8" stroke-width="1.2" />
+
+            <!-- Rotunda Drum with Arched Windows -->
+            <rect x="94" y="27" width="32" height="11" fill="none" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <path d="M 99,38 L 99,33 A 2.5,2.5 0 0,1 104,33 L 104,38" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 107.5,38 L 107.5,33 A 2.5,2.5 0 0,1 112.5,33 L 112.5,38" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 116,38 L 116,33 A 2.5,2.5 0 0,1 121,33 L 121,38" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 91,27 L 129,27 M 91,29 L 129,29" stroke="url(#bldgCyan)" stroke-width="1.2" />
+
+            <!-- Neoclassical Pediment -->
+            <polygon points="86,45 110,38 134,45" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.3" stroke-linejoin="round" />
+            <path d="M 93,44 L 110,39.5 L 127,44" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 84,45 L 136,45" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linecap="round" />
+
+            <!-- Portico Columns (4 Neoclassical Pillars) -->
+            <path d="M 88,45 L 88,61 M 101,45 L 101,61 M 119,45 L 119,61 M 132,45 L 132,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
+
+            <!-- Grand Central Entrance Arch -->
+            <path d="M 105,61 L 105,52 A 5,5 0 0,1 115,52 L 115,61 Z" fill="rgba(0, 166, 214, 0.15)" stroke="url(#bldgCyan)" stroke-width="1.2" />
+
+            <!-- Left Academic Wing -->
+            <path d="M 18,44 L 86,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <path d="M 18,41 L 18,44 M 40,41 L 40,44 M 62,41 L 62,44 M 84,41 L 84,44" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 18,52 L 86,52" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 18,44 L 18,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <!-- Left Corner Pavilion Roof -->
+            <polygon points="15,44 22,38 29,44" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.2" />
+
+            <!-- Left Wing Windows (Upper Arched) -->
+            <path d="M 26,50 L 26,46 A 2,2 0 0,1 30,46 L 30,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 40,50 L 40,46 A 2,2 0 0,1 44,46 L 44,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 54,50 L 54,46 A 2,2 0 0,1 58,46 L 58,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 68,50 L 68,46 A 2,2 0 0,1 72,46 L 72,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <!-- Left Wing Windows (Ground Rectangular) -->
+            <rect x="26" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="40" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="54" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="68" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+
+            <!-- Right Academic Wing -->
+            <path d="M 134,44 L 202,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <path d="M 136,41 L 136,44 M 158,41 L 158,44 M 180,41 L 180,44 M 202,41 L 202,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <path d="M 134,52 L 202,52" stroke="url(#bldgCyan)" stroke-width="1" />
+            <path d="M 202,44 L 202,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <!-- Right Corner Pavilion Roof -->
+            <polygon points="191,44 198,38 205,44" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.2" />
+
+            <!-- Right Wing Windows (Upper Arched) -->
+            <path d="M 148,50 L 148,46 A 2,2 0 0,1 152,46 L 152,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 162,50 L 162,46 A 2,2 0 0,1 166,46 L 166,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 176,50 L 176,46 A 2,2 0 0,1 180,46 L 180,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <path d="M 190,50 L 190,46 A 2,2 0 0,1 194,46 L 194,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <!-- Right Wing Windows (Ground Rectangular) -->
+            <rect x="148" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="162" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="176" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+            <rect x="190" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
+
+            <!-- Base Plinth & Steps -->
+            <line x1="12" y1="61" x2="208" y2="61" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <line x1="8" y1="64" x2="212" y2="64" stroke="url(#bldgCyan)" stroke-width="1.3" />
+            <line x1="4" y1="67" x2="216" y2="67" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linecap="round" />
+            <!-- Portico Steps -->
+            <line x1="82" y1="62.5" x2="138" y2="62.5" stroke="#38BDF8" stroke-width="1.2" />
+          </svg>
+        </div>
+        <div class="sidebar-footer-motto">
+          <span>DISCIPLINE</span>
+          <span class="motto-sep">•</span>
+          <span>DEVELOPMENT</span>
+          <span class="motto-sep">•</span>
+          <span>DEDICATION</span>
+        </div>
+        <button class="sidebar-logout-btn" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
+          <i data-lucide="log-out" style="width:14px;height:14px;"></i>
           <span>Logout</span>
         </button>
       </div>
@@ -119,89 +291,6 @@
          MAIN CONTENT WRAPPER
          ======================================================== -->
     <div class="app-main">
-      
-      <!-- ========================================================
-           4. TOP HEADER (Sticky White)
-           ======================================================== -->
-      <header class="app-header">
-        <div class="header-left">
-          <!-- Mobile Hamburger Menu Button -->
-          <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle Navigation Menu">
-            <i data-lucide="menu" style="width:20px;height:20px;"></i>
-          </button>
-
-          <!-- Dynamic Page Title -->
-          <div class="header-title-container">
-            <h1 class="header-page-title" id="header-page-title">Teacher Dashboard</h1>
-          </div>
-
-          <!-- Search Bar -->
-          <div class="header-search-bar">
-            <i data-lucide="search" class="header-search-icon"></i>
-            <input type="text" class="header-search-input" id="header-search-input" 
-                   placeholder="Search students, classes, subjects...">
-          </div>
-        </div>
-
-        <div class="header-right">
-          <!-- Interactive Notification Icon & Badge -->
-          <div class="notification-btn-wrapper">
-            <button class="header-icon-btn" id="header-notification-btn" aria-label="View notifications">
-              <i data-lucide="bell" style="width:18px;height:18px;"></i>
-              <span class="header-notification-badge" id="header-notif-badge"></span>
-            </button>
-
-            <!-- 15. Notification Dropdown -->
-            <div class="dropdown-menu-popover notification-popover" id="notification-dropdown-menu">
-              <div class="dropdown-header">
-                <span class="dropdown-title">Notifications</span>
-                <span class="dropdown-count-tag">4 New</span>
-              </div>
-              <div class="notification-items-container" id="notification-items-list">
-                <!-- Injected by JS -->
-              </div>
-            </div>
-          </div>
-
-          <!-- 5. Teacher Profile Dropdown Trigger -->
-          <div style="position:relative;">
-            <div class="header-profile-trigger" id="profile-dropdown-trigger">
-              <div class="profile-avatar">
-                <span>RD</span>
-              </div>
-              <div class="profile-info">
-                <span class="profile-name">Dr. Rohan Deshmukh</span>
-                <span class="profile-dept">Computer Science</span>
-              </div>
-              <i data-lucide="chevron-down" class="profile-arrow"></i>
-            </div>
-
-            <!-- Profile Dropdown Menu -->
-            <div class="dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
-              <div style="padding:12px 18px; border-bottom:1px solid var(--border-light);">
-                <div style="font-weight:700; font-size:13.5px; color:var(--dark-navy);">Dr. Rohan Deshmukh</div>
-                <div style="font-size:11.5px; color:var(--text-muted);">Associate Professor • CSE</div>
-              </div>
-              <div class="profile-dropdown-item" onclick="TeacherApp.switchView('profile')">
-                <i data-lucide="user" style="width:16px;height:16px;"></i>
-                <span>View Profile</span>
-              </div>
-              <div class="profile-dropdown-item" onclick="TeacherApp.switchView('information')">
-                <i data-lucide="info" style="width:16px;height:16px;"></i>
-                <span>Information</span>
-              </div>
-              <div class="profile-dropdown-item" onclick="TeacherApp.switchView('settings')">
-                <i data-lucide="settings" style="width:16px;height:16px;"></i>
-                <span>Settings</span>
-              </div>
-              <div class="profile-dropdown-item danger" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
-                <i data-lucide="log-out" style="width:16px;height:16px;"></i>
-                <span>Logout</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <!-- ========================================================
            MAIN DASHBOARD CONTENT AREA
@@ -213,29 +302,79 @@
              ======================================================== -->
         <section id="dashboard-view" class="view-section-pane" style="display:block;">
           
-          <!-- 6. WELCOME SECTION BANNER (#0B5CAD with subtle #00A6D6 shapes) -->
+          <!-- 6. HERO SECTION: FULL-WIDTH IMMERSIVE CAMPUS BACKGROUND -->
           <div class="welcome-banner">
-            <div class="welcome-content">
-              <h2 class="welcome-title">Good Morning, Professor 👋</h2>
-              <p class="welcome-subtitle">
-                Welcome back to your College ERP dashboard. Here's what's happening today.
-              </p>
+            <!-- College Building Background Image & Gradient Overlay -->
+            <img src="images/college_building.jpg" alt="College Building" class="hero-bg-image">
+            <div class="hero-overlay"></div>
+
+            <!-- Top Area: Greeting, Teacher Info, Subtitle & Date Widget -->
+            <div class="welcome-hero-top">
+              <div class="welcome-content">
+                <div class="hero-faculty-meta">
+                  <span class="hero-badge-pill">
+                    <span class="pulse-indicator"></span>
+                    <span id="hero-faculty-department">Computer Science & Engineering</span>
+                  </span>
+                  <span class="hero-meta-divider">•</span>
+                  <span class="hero-faculty-sub" id="hero-faculty-role">Faculty Portal</span>
+                </div>
+                <h2 class="welcome-title" id="welcome-greeting-text">Good Morning, Professor 👋</h2>
+                <div class="hero-teacher-meta-row">
+                  <span class="hero-teacher-name" id="hero-teacher-name">Dr. Rohan Deshmukh</span>
+                  <span class="hero-meta-dot">•</span>
+                  <span class="hero-teacher-designation" id="hero-teacher-designation">Associate Professor</span>
+                  <span class="hero-meta-dot">•</span>
+                  <span class="hero-teacher-id" id="hero-teacher-id">FAC-CSE-1048</span>
+                </div>
+                <p class="welcome-subtitle">
+                  Welcome back to your College ERP dashboard. Here's what's happening today.
+                </p>
+              </div>
             </div>
-            
-            <div class="welcome-date-widget">
+
+            <!-- Middle Area: Horizontal Quick-Access / Statistics Cards -->
+            <div class="stats-grid hero-stats-grid" id="stats-cards-container">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+          <!-- ========================================================
+               LOWER DASHBOARD SECTION: DATE & SCHEDULE BAR (BELOW HERO)
+               ======================================================== -->
+          <div class="dashboard-date-strip">
+            <div class="date-strip-heading-wrap">
+              <span class="date-strip-badge">
+                <span class="pulse-indicator"></span>
+                <span>Active Semester • B.Tech 2025-26</span>
+              </span>
+              <h3 class="date-strip-title">
+                <i data-lucide="calendar-check-2" style="width:20px;height:20px;color:var(--primary-blue);"></i>
+                Academic Operations &amp; Daily Schedule
+              </h3>
+            </div>
+
+            <!-- Today's Date Calendar Card (Repositioned Below Hero) -->
+            <div class="welcome-date-widget" id="welcome-date-widget" onclick="TeacherApp.openDashboardDatePicker()" title="Click to view or change dashboard date">
               <div class="date-widget-icon">
                 <i data-lucide="calendar" style="width:20px;height:20px;"></i>
               </div>
               <div class="date-widget-text">
-                <span class="date-day-label">Today's Date</span>
-                <span class="date-full-string">Thursday, 17 September 2026</span>
+                <span class="date-day-label" id="dashboard-date-label">Today's Date</span>
+                <span class="date-full-string" id="dashboard-today-date">Current Date</span>
               </div>
+              <input type="date" 
+                     id="dashboard-date-picker-input" 
+                     class="dashboard-hidden-date-input" 
+                     onclick="event.stopPropagation()"
+                     onchange="TeacherApp.handleDashboardDateChange(this.value)">
+              <button class="btn-dashboard-date-picker" 
+                      type="button" 
+                      onclick="event.stopPropagation(); TeacherApp.openDashboardDatePicker();" 
+                      title="Select date">
+                <i data-lucide="calendar-days" style="width:14px;height:14px;"></i>
+              </button>
             </div>
-          </div>
-
-          <!-- 7. STATISTICS CARDS (4 Cards Grid) -->
-          <div class="stats-grid" id="stats-cards-container">
-            <!-- Injected by JS -->
           </div>
 
           <!-- 8 & 9. TWO-COLUMN DASHBOARD SECTIONS (Today's Classes & Attendance) -->
@@ -278,10 +417,10 @@
           </div>
 
           <!-- 11 & 12. CLASS OVERVIEW SECTION -->
-          <div style="margin-top:28px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <h3 style="font-size:17px; font-weight:700; color:var(--dark-navy); display:flex; align-items:center; gap:8px;">
-                <i data-lucide="layout-grid" style="color:var(--primary-blue); width:18px;height:18px;"></i>
+          <div class="dashboard-section-block">
+            <div class="section-header-row">
+              <h3 class="section-heading">
+                <i data-lucide="layout-grid" style="color:var(--primary-blue); width:20px;height:20px;"></i>
                 Class Overview
               </h3>
               <a class="card-action-link" href="javascript:void(0)" onclick="TeacherApp.switchView('classes')">
@@ -295,10 +434,10 @@
           </div>
 
           <!-- 13. RECENT ACTIVITY SECTION -->
-          <div class="card" style="margin-top:28px;">
+          <div class="card dashboard-section-block">
             <div class="card-header">
               <h3 class="card-title">
-                <i data-lucide="history" style="color:var(--primary-blue); width:18px;height:18px;"></i>
+                <i data-lucide="history" style="color:var(--primary-blue); width:20px;height:20px;"></i>
                 Recent Activity
               </h3>
               <a class="card-action-link" href="javascript:void(0)" onclick="TeacherApp.showToast('All 24 faculty activity logs loaded.')">
@@ -313,8 +452,8 @@
           </div>
 
           <!-- 14. QUICK ACTIONS SECTION -->
-          <div style="margin-top:28px;">
-            <h4 style="font-size:15px; font-weight:700; color:var(--dark-navy); margin-bottom:12px;">
+          <div class="dashboard-section-block">
+            <h4 class="section-subheading">
               Quick Actions
             </h4>
             <div class="quick-actions-bar">
@@ -540,7 +679,298 @@
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">2026-2027 (Odd Semester)</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">2026-2027 (Odd Semester)</div>
+              </div>
+            </div>
+          </div>
+        <!-- ========================================================
+             PANE 10: ACADEMICS HUB VIEW
+             ======================================================== -->
+        <section id="academics-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Academics Management Hub</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Curriculum delivery, assigned subjects, timetable scheduling, and syllabus progress.</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="quick-action-btn primary" onclick="TeacherApp.switchView('timetable')">
+                  <i data-lucide="calendar" style="width:14px;height:14px;"></i> View Timetable
+                </button>
+                <button class="quick-action-btn secondary" onclick="TeacherApp.switchView('syllabus')">
+                  <i data-lucide="book-open" style="width:14px;height:14px;"></i> Syllabus Tracker
+                </button>
+              </div>
+            </div>
+            <div class="dashboard-grid-two-col">
+              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+                <h4 style="font-size:14px; color:var(--primary-blue); font-weight:700; margin-bottom:10px;">Active Academic Semester</h4>
+                <p style="font-size:13px; color:var(--text-dark); line-height:1.5;" id="academics-active-semester-desc"><strong>Academic Year:</strong> 2026-2027 (Odd Term)<br><strong>Current Phase:</strong> Mid-Semester Instruction Cycle<br><strong>Accreditation Tier:</strong> NBA Accredited & Autonomous Curriculum</p>
+              </div>
+              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+                <h4 style="font-size:14px; color:var(--accent-cyan); font-weight:700; margin-bottom:10px;">Quick Academic Operations</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="module-filter-chip active" onclick="TeacherApp.switchView('classes')">Assigned Classes</button>
+                  <button class="module-filter-chip" onclick="TeacherApp.switchView('attendance')">Class Attendance</button>
+                  <button class="module-filter-chip" onclick="TeacherApp.switchView('students')">Students Directory</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 11: EXAMINATION & ASSESSMENTS VIEW
+             ======================================================== -->
+        <section id="examination-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Examinations & Continuous Evaluation</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Internal tests, mid-semester exams, practical submissions, and semester-end grade cards.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.switchView('results')">
+                <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Open Marksheets & Results
+              </button>
+            </div>
+            <div class="results-grid-summary" style="margin-bottom:24px;">
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">IA - 1</div>
+                <div style="font-size:12px; color:var(--text-muted);">Current Evaluation Phase</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--success);">Completed</div>
+                <div style="font-size:12px; color:var(--text-muted);">Marks Moderation Status</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--dark-navy);" id="exam-midsem-date">14 Oct 2026</div>
+                <div style="font-size:12px; color:var(--text-muted);">Mid-Semester Exam Begins</div>
+              </div>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:var(--radius-md); padding:16px;">
+              <h4 style="font-size:13.5px; font-weight:700; color:var(--dark-navy); margin-bottom:8px;">Autonomous Examination Cell Notice</h4>
+              <p style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">All internal assessment marks for Semester 5 are moderated following autonomous curriculum rules. Hall tickets and seating allotments are automatically synced with the SSGMCE student portal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 12: FEES & ACCOUNTS VIEW
+             ======================================================== -->
+        <section id="fees-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">College Fees & Payment Accounts</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Academic fees, institutional ledger, online payment receipts, and scholarship adjustment status.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Fee reconciliation statement downloaded.')">
+                <i data-lucide="download" style="width:14px;height:14px;"></i> Download Ledger (.PDF)
+              </button>
+            </div>
+            <div class="stats-grid" style="margin-bottom:24px;">
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Academic Fee Status</span>
+                  <span class="stat-value" style="color:var(--success); font-size:18px;">Verified Paid</span>
+                </div>
+                <div class="stat-icon-wrapper cyan"><i data-lucide="check-circle" style="width:22px;height:22px;"></i></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Exam Fee Clearance</span>
+                  <span class="stat-value" style="color:var(--primary-blue); font-size:18px;">Cleared (100%)</span>
+                </div>
+                <div class="stat-icon-wrapper blue"><i data-lucide="credit-card" style="width:22px;height:22px;"></i></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Scholarship / Freeship</span>
+                  <span class="stat-value" style="color:var(--dark-navy); font-size:18px;">EBC Approved</span>
+                </div>
+                <div class="stat-icon-wrapper navy"><i data-lucide="award" style="width:22px;height:22px;"></i></div>
+              </div>
+            </div>
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <i data-lucide="shield-check" style="color:var(--success); width:20px;height:20px;"></i>
+                <span style="font-size:13px; font-weight:600; color:#166534;" id="fees-clearance-note">Official Accounts Clearance: No pending institutional dues recorded for Academic Session 2026-2027.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 13: DOCUMENTS & CERTIFICATES VIEW
+             ======================================================== -->
+        <section id="documents-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Official Documents & Verification</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Bonafide certificates, institutional ID verification, transcripts, and approval documents.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Document request forwarded to registrar office.')">
+                <i data-lucide="file-plus" style="width:14px;height:14px;"></i> Request New Document
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+              <div style="padding:16px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                  <i data-lucide="file-text" style="color:var(--primary-blue); width:22px;height:22px;"></i>
+                  <span style="font-weight:700; font-size:14px; color:var(--dark-navy);">Bonafide Certificate</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Digitally signed institutional bonafide with autonomous institute seal.</p>
+                <button class="quick-action-btn secondary" style="font-size:12px; padding:6px 12px;" onclick="TeacherApp.showToast('Generating signed Bonafide PDF...')">
+                  <i data-lucide="download" style="width:13px;height:13px;"></i> Download PDF
+                </button>
+              </div>
+              <div style="padding:16px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                  <i data-lucide="credit-card" style="color:var(--accent-cyan); width:22px;height:22px;"></i>
+                  <span style="font-weight:700; font-size:14px; color:var(--dark-navy);">Digital Identity Card</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Verified smart campus RFID credential & digital barcode verification.</p>
+                <button class="quick-action-btn secondary" style="font-size:12px; padding:6px 12px;" onclick="TeacherApp.showToast('Displaying digital RFID smart ID...')">
+                  <i data-lucide="eye" style="width:13px;height:13px;"></i> View Smart Card
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 14: HOSTEL MANAGEMENT VIEW
+             ======================================================== -->
+        <section id="hostel-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Campus Hostel Administration</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Hostel room allocation, dining mess calendar, gate pass approvals, and warden directory.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Gate pass application submitted for warden approval.')">
+                <i data-lucide="send" style="width:14px;height:14px;"></i> Apply for Gate Pass
+              </button>
+            </div>
+            <div class="dashboard-grid-two-col">
+              <div style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px; background:var(--bg-light);">
+                <h4 style="font-size:14px; font-weight:700; color:var(--primary-blue); margin-bottom:12px;">Room & Block Information</h4>
+                <p style="font-size:13px; line-height:1.6; color:var(--dark-navy);"><strong>Hostel Block:</strong> Block-B (Senior Engineering Wing)<br><strong>Room Allotment:</strong> B-312 (Double Occupancy)<br><strong>Resident Warden:</strong> Prof. M. S. Patil (Ext: 2105)</p>
+              </div>
+              <div style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px; background:var(--bg-light);">
+                <h4 style="font-size:14px; font-weight:700; color:var(--accent-cyan); margin-bottom:12px;">Mess & Amenities Schedule</h4>
+                <p style="font-size:13px; line-height:1.6; color:var(--dark-navy);"><strong>Breakfast:</strong> 07:30 AM – 09:00 AM<br><strong>Lunch:</strong> 12:30 PM – 02:00 PM<br><strong>Dinner:</strong> 07:45 PM – 09:30 PM</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 15: LIBRARY & E-RESOURCES VIEW
+             ======================================================== -->
+        <section id="library-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Central Library & Digital Knowledge Hub</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Book borrowing ledger, e-journal catalog, IEEE / Springer access, and return due dates.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Searching Central Library catalog...')">
+                <i data-lucide="search" style="width:14px;height:14px;"></i> Search OPAC Catalog
+              </button>
+            </div>
+            <div class="results-grid-summary" style="margin-bottom:20px;">
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">04</div>
+                <div style="font-size:12px; color:var(--text-muted);">Books Currently Issued</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--success);">0</div>
+                <div style="font-size:12px; color:var(--text-muted);">Overdue / Fine Incurred</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--accent-cyan);" id="library-renewal-date">28 Sep 2026</div>
+                <div style="font-size:12px; color:var(--text-muted);">Next Book Renewal Date</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 16: TRAINING & PLACEMENT (T&P) VIEW
+             ======================================================== -->
+        <section id="placement-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Training & Placement (T&P) Cell</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Campus recruitment drives, aptitude training modules, resume approvals, and interview rounds.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('T&P Corporate Drive Schedule 2026-27 opened.')">
+                <i data-lucide="calendar" style="width:14px;height:14px;"></i> Campus Drives Schedule
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+              <div style="padding:18px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; color:var(--dark-navy); font-size:15px;">Tata Consultancy Services (TCS)</span>
+                  <span class="badge badge-completed">Shortlisting Active</span>
+                </div>
+                <p style="font-size:12.5px; color:var(--text-muted);">Role: System Engineer • Eligibility: 60%+ in B.Tech • Package: ₹7.0 – ₹9.0 LPA</p>
+              </div>
+              <div style="padding:18px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; color:var(--dark-navy); font-size:15px;">Cognizant Technologies</span>
+                  <span class="badge badge-pending">Registration Open</span>
+                </div>
+                <p style="font-size:12.5px; color:var(--text-muted);" id="placement-assessment-date">Role: GenC Elevate • Technical Assessment Date: 05 October 2026</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 17: GRIEVANCE REDRESSAL VIEW
+             ======================================================== -->
+        <section id="grievance-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Student Grievance Redressal Cell</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Autonomous institute grievance committee, submit petitions, and track resolution progress.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Grievance ticket registered. Committee reference ID #GRV-8821.')">
+                <i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Register New Grievance
+              </button>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+              <h4 style="font-size:13.5px; font-weight:700; color:var(--dark-navy); margin-bottom:8px;">Confidential Redressal Guarantee</h4>
+              <p style="font-size:12.5px; color:var(--text-muted); line-height:1.6;">SSGMCE maintains a zero-tolerance policy against academic harassment, ragging, and unfair evaluation. All submissions are directly reviewed by the autonomous Grievance Redressal Committee chaired by the Institute Principal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 18: SETTINGS VIEW
+             ======================================================== -->
+        <section id="settings-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700; margin-bottom:16px;">Portal Preferences & Security Settings</h2>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--bg-light); border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div>
+                  <div style="font-weight:700; color:var(--dark-navy); font-size:14px;">SMS & Email Alerts for Attendance Updates</div>
+                  <div style="font-size:12px; color:var(--text-muted);">Receive instant notifications upon successful attendance or session sync.</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary-blue);">
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--bg-light); border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div>
+                  <div style="font-weight:700; color:var(--dark-navy); font-size:14px;">Two-Factor Authentication (2FA)</div>
+                  <div style="font-size:12px; color:var(--text-muted);">Enforce OTP validation when accessing sensitive examination records.</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary-blue);">
               </div>
             </div>
           </div>
@@ -591,7 +1021,7 @@
         </div>
 
         <div class="footer-bottom">
-          <span>&copy; 2026 SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.</span>
+          <span id="footer-copyright-text">&copy; 2026 SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.</span>
           <span>Designed with <span style="color:var(--accent-cyan);">&hearts;</span> for College Faculty</span>
         </div>
       </footer>

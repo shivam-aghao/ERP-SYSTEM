@@ -19,7 +19,7 @@ const AttendanceState = {
     name: "Second Year CSE - Div 1",
     studentsCount: 60
   },
-  selectedDate: "2026-09-17", // Default to academic calendar date
+  selectedDate: (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0],
   selectedSubject: {
     code: "CS302",
     name: "Data Structures",
@@ -28,11 +28,17 @@ const AttendanceState = {
     icon: "book-open"
   },
 
+  // Flag indicating teacher explicitly picked a custom date
+  isUserSelectedDate: false,
+
   // Student Marking State
   students: [],
   currentIndex: 0,
   attendanceMap: {}, // rollNo -> 'present' | 'absent'
   historyStack: [],  // Array of { index, rollNo, previousStatus } for Undo
+
+  // Multi-session record cache: "${date}_${classCode}_${subjectCode}" -> session state
+  recordsBySession: {},
 
   // Mode Flags
   markingMode: 'swipe', // 'swipe' (SWIP Card) | 'roster' (Roster List)
@@ -43,37 +49,82 @@ const AttendanceState = {
   // Submitted Sessions Log for Duplicate Prevention
   submittedSessions: [
     {
-      sessionId: "ATT-20260917-2R1-CS302-PREV",
-      date: "2026-09-17",
+      sessionId: `ATT-${(typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO().replace(/-/g, '') : 'REC'}-2R1-CS302-PREV`,
+      date: (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0],
       classCode: "2R1",
       departmentCode: "CSE",
       subjectCode: "CS302",
       subjectName: "Data Structures",
-      lectureTime: "09:00 AM – 10:00 AM",
+      lectureTime: "08:00 AM – 09:00 AM",
       teacher: "Dr. Rohan Deshmukh",
-      submittedAt: "2026-09-17T10:00:00"
+      submittedAt: new Date().toISOString()
     }
   ],
 
-  // Initializer
+  // Initializer - automatically selects today unless user manually chose another date
   init() {
+    if (!this.selectedDate || !this.isUserSelectedDate) {
+      this.selectedDate = (typeof AcademicDateUtils !== 'undefined')
+        ? AcademicDateUtils.getTodayISO()
+        : new Date().toISOString().split('T')[0];
+    }
     this.loadStudentsForCurrentClass();
+  },
+
+  getSessionKey(date = this.selectedDate, classCode = (this.selectedClass ? this.selectedClass.code : '2R1'), subjectCode = (this.selectedSubject ? this.selectedSubject.code : 'CS302')) {
+    return `${date || 'current'}_${classCode || '2R1'}_${subjectCode || 'CS302'}`;
+  },
+
+  saveCurrentSessionRecord() {
+    const key = this.getSessionKey();
+    this.recordsBySession[key] = {
+      attendanceMap: { ...this.attendanceMap },
+      currentIndex: this.currentIndex,
+      historyStack: [ ...this.historyStack ],
+      isSubmitted: this.isSubmitted,
+      isDraftSaved: this.isDraftSaved
+    };
+  },
+
+  loadRecordForSession(date = this.selectedDate, classCode = (this.selectedClass ? this.selectedClass.code : '2R1'), subjectCode = (this.selectedSubject ? this.selectedSubject.code : 'CS302')) {
+    const key = this.getSessionKey(date, classCode, subjectCode);
+    const existingSubmitted = this.submittedSessions.find(s => 
+      s.date === date &&
+      s.classCode === classCode &&
+      s.subjectCode === subjectCode
+    );
+
+    if (this.recordsBySession[key]) {
+      const rec = this.recordsBySession[key];
+      this.attendanceMap = { ...rec.attendanceMap };
+      this.currentIndex = rec.currentIndex;
+      this.historyStack = [ ...rec.historyStack ];
+      this.isSubmitted = rec.isSubmitted;
+      this.isDraftSaved = rec.isDraftSaved;
+    } else if (existingSubmitted) {
+      this.isSubmitted = true;
+      this.isDraftSaved = false;
+      this.currentIndex = this.students.length;
+      this.attendanceMap = {};
+      this.students.forEach(st => {
+        this.attendanceMap[st.rollNo] = (st.rollNo % 8 === 0) ? 'absent' : 'present';
+      });
+    } else {
+      this.currentIndex = 0;
+      this.attendanceMap = {};
+      this.historyStack = [];
+      this.isSubmitted = false;
+      this.isDraftSaved = false;
+      this.students.forEach(st => {
+        this.attendanceMap[st.rollNo] = null;
+      });
+    }
   },
 
   loadStudentsForCurrentClass() {
     if (!TeacherERPData || !TeacherERPData.getStudentsForClass) return;
     this.students = TeacherERPData.getStudentsForClass(this.selectedClass.code);
-    this.currentIndex = 0;
-    this.attendanceMap = {};
-    this.historyStack = [];
-    this.isPaused = false;
-    this.isDraftSaved = false;
-    this.isSubmitted = false;
-
-    // Initialize all to unmarked or empty
-    this.students.forEach(st => {
-      this.attendanceMap[st.rollNo] = null;
-    });
+    this.loadRecordForSession(this.selectedDate, this.selectedClass.code, this.selectedSubject.code);
   },
 
   setDepartment(code) {
@@ -105,7 +156,18 @@ const AttendanceState = {
   },
 
   setDate(dateStr) {
+    if (!dateStr || dateStr === this.selectedDate) return;
+    this.saveCurrentSessionRecord();
     this.selectedDate = dateStr;
+    this.isUserSelectedDate = true;
+    this.loadRecordForSession(this.selectedDate, this.selectedClass.code, this.selectedSubject.code);
+  },
+
+  getDateStatusLabel() {
+    const today = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0];
+    if (this.selectedDate === today) return "Today's Lecture";
+    if (this.selectedDate < today) return "Past Session";
+    return "Scheduled Future Session";
   },
 
   setSubject(subjectCode) {
@@ -221,7 +283,17 @@ const AttendanceState = {
   },
 
   getFormattedDate() {
-    if (!this.selectedDate) return "17 September 2026";
+    if (typeof AcademicDateUtils !== 'undefined') {
+      return AcademicDateUtils.formatReadableDate(this.selectedDate);
+    }
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    if (!this.selectedDate) {
+      const now = new Date();
+      return `${String(now.getDate()).padStart(2, '0')} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    }
     const parts = this.selectedDate.split("-");
     if (parts.length !== 3) return this.selectedDate;
 
@@ -229,12 +301,15 @@ const AttendanceState = {
     const monthIndex = parseInt(parts[1], 10) - 1;
     const day = parseInt(parts[2], 10);
 
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-
-    return `${day} ${monthNames[monthIndex] || "September"} ${year}`;
+    const formattedDay = String(day).padStart(2, '0');
+    return `${formattedDay} ${monthNames[monthIndex] || ""} ${year}`;
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.AttendanceState = AttendanceState;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AttendanceState };
+}
 
