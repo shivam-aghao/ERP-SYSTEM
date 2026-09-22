@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    .app-top-header,
+    .sidebar {
+  background-color: #0B1F3A  !important;
+   }
+.notification-badge {
+  border-color: #0B1F3A  !important;
+}
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSGMCE, Shegaon - Teacher Attendance ERP Portal</title>
+  <link rel="stylesheet" href="css/styles.css?v=2.6">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="app-root">
+  <!-- ====================================================================
+       TWO-PART TOP HEADER
+       ==================================================================== -->
+  <header class="app-top-header">
+    <div class="header-left-part">
+      <button class="menu-toggle-btn" id="mobileMenuToggle" aria-label="Toggle Sidebar Menu">
+        ☰
+      </button>
+      <img src="assets/ssgmce_logo.jpg" alt="SSGMCE College Logo" class="header-college-logo">
+      <div class="header-college-info">
+        <h1 class="header-college-title">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
+        <span class="header-college-tagline">(An Autonomous Institute)</span>
+      </div>
+      <div class="header-erp-divider"></div>
+      <div class="header-erp-tag-box">
+        <span class="header-erp-tag">ERP</span>
+        <span class="header-erp-motto">Learn | Grow | Excel</span>
+      </div>
+    </div>
+
+    <div class="header-right-part">
+      <button class="header-action-btn" id="notificationsBtn" title="Notifications">
+        <span class="notif-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </span>
+        <span class="notification-badge" id="notifBadge">3</span>
+      </button>
+
+      <div class="header-vertical-divider"></div>
+
+      <div class="teacher-profile-widget" id="profileWidget" title="Teacher Account">
+        <div class="teacher-avatar" id="teacherAvatar">RS</div>
+        <div class="teacher-profile-details">
+          <div class="teacher-name-row">
+            <span class="teacher-name" id="teacherName">Prof. Rajesh Sharma</span>
+            <span class="dropdown-caret">▼</span>
+          </div>
+          <span class="teacher-portal-label">Associate Professor • CSE</span>
+        </div>
+      </div>
+
+      <button class="btn-header-logout" id="headerLogoutBtn" title="Logout Session">
+        <span>Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       APPLICATION BODY LAYOUT (SIDEBAR + MAIN CONTENT)
+       ==================================================================== -->
+  <div class="app-body-layout">
+    <!-- FIXED SIDEBAR (#061325) -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-nav">
+        <div class="nav-category">Main Navigation</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#dashboard" class="nav-link" data-nav="dashboard">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+              </span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#profile" class="nav-link" data-nav="profile">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="7" r="4"/>
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                </svg>
+              </span>
+              <span>Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#information" class="nav-link" data-nav="information">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 16v-4"/>
+                  <path d="M12 8h.01"/>
+                </svg>
+              </span>
+              <span>Information</span>
+            </a>
+          </li>
+          <!-- Highlighted in #0B5CAD with subtle right active indicator in #00A6D6 -->
+          <li class="nav-item active">
+            <a href="#attendance" class="nav-link" data-nav="attendance">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                  <path d="m9 14 2 2 4-4"/>
+                </svg>
+              </span>
+              <span>Attendance</span>
+              <span class="active-indicator"></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#timetable" class="nav-link" data-nav="timetable">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2"/>
+                  <line x1="16" x2="16" y1="2" y2="6"/>
+                  <line x1="8" x2="8" y1="2" y2="6"/>
+                  <line x1="3" x2="21" y1="10" y2="10"/>
+                  <path d="M8 14h.01"/>
+                  <path d="M12 14h.01"/>
+                  <path d="M16 14h.01"/>
+                  <path d="M8 18h.01"/>
+                  <path d="M12 18h.01"/>
+                  <path d="M16 18h.01"/>
+                </svg>
+              </span>
+              <span>Timetable</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#classes" class="nav-link" data-nav="classes">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
+              </span>
+              <span>Classes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#students" class="nav-link" data-nav="students">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </span>
+              <span>Students</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#syllabus" class="nav-link" data-nav="syllabus">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </span>
+              <span>Syllabus</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#results" class="nav-link" data-nav="results">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" x2="18" y1="20" y2="10"/>
+                  <line x1="12" x2="12" y1="20" y2="4"/>
+                  <line x1="6" x2="6" y1="20" y2="14"/>
+                </svg>
+              </span>
+              <span>Results</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#notifications" class="nav-link" data-nav="notifications">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+              </span>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#settings" class="nav-link" data-nav="settings">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </span>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-motto-block">
+          <div class="motto-dome-icon">
+            <svg width="46" height="34" viewBox="0 0 46 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 3 C16 3 13 10 13 15 L33 15 C33 10 30 3 23 3 Z" stroke="#38BDF8" stroke-width="1.3" fill="none"/>
+              <line x1="23" y1="0.5" x2="23" y2="3" stroke="#38BDF8" stroke-width="1.3"/>
+              <circle cx="23" cy="0.8" r="0.7" fill="#38BDF8"/>
+              <rect x="11" y="15" width="24" height="2.5" rx="0.5" stroke="#38BDF8" stroke-width="1" fill="none"/>
+              <line x1="14" y1="17.5" x2="14" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
+              <line x1="19.5" y1="17.5" x2="19.5" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
+              <line x1="26.5" y1="17.5" x2="26.5" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
+              <line x1="32" y1="17.5" x2="32" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
+              <rect x="9" y="27.5" width="28" height="2.5" rx="0.5" stroke="#38BDF8" stroke-width="1" fill="none"/>
+            </svg>
+          </div>
+          <div class="sidebar-motto-text">DISCIPLINE • DEVELOPMENT • DEDICATION</div>
+        </div>
+        <button class="sidebar-logout" id="sidebarLogoutBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+          <span>Logout Session</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN APPLICATION WRAPPER -->
+    <div class="main-wrapper">
+      <!-- CONTENT TOP BAR: BREADCRUMBS & BACK BUTTON -->
+      <div class="content-topbar">
+        <nav class="breadcrumbs-container" id="breadcrumbs">
+          <span class="breadcrumb-item active" data-step="1">Attendance</span>
+        </nav>
+        <button class="btn-step-back" id="globalBackBtn" style="display: none;">
+          <span>←</span>
+          <span>Back</span>
+        </button>
+      </div>
+
+    <!-- PROGRESS STEPPER BAR -->
+    <div class="stepper-container" id="stepperContainer">
+      <div class="stepper-progress-bar">
+        <div class="stepper-track-bg"></div>
+        <div class="stepper-track-fill" id="stepperTrackFill" style="width: 0%;"></div>
+
+        <div class="step-node active" data-step="1">
+          <div class="step-circle">1</div>
+          <span class="step-label">Date</span>
+        </div>
+        <div class="step-node" data-step="2">
+          <div class="step-circle">2</div>
+          <span class="step-label">My Classes</span>
+        </div>
+        <div class="step-node" data-step="3">
+          <div class="step-circle">3</div>
+          <span class="step-label">Attendance</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT VIEWPORT -->
+    <main class="content-viewport">
+
+      <!-- ================================================================
+           STEP 1: ATTENDANCE HOME & RECENT SESSIONS
+           ================================================================ -->
+      <section class="step-view" id="step-home-view">
+        <div class="home-hero-card">
+          <div class="hero-left">
+            <span class="hero-badge">Teacher Attendance Module</span>
+            <h2>Attendance Management</h2>
+            
+            <button class="btn-start-attendance" id="btnStartFlow">
+              <span>Mark Today's Attendance</span>
+              <span>→</span>
+            </button>
+          </div>
+          <div class="hero-right">
+            <div class="quick-metric">
+              <div class="metric-num" id="statTodayCount">4</div>
+              <div class="metric-lbl">Sessions Today</div>
+            </div>
+            <div class="quick-metric">
+              <div class="metric-num" id="statAvgAttendance">88.5%</div>
+              <div class="metric-lbl">Avg. Attendance</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Attendance Section -->
+        <div class="recent-attendance-section">
+          <div class="section-header-bar">
+            <div>
+              <h3>Recent Attendance Records</h3>
+              <p style="color: var(--text-muted); font-size: 13px;">Previously marked and submitted classroom attendance logs</p>
+            </div>
+            <button class="btn-table-action" id="btnRefreshRecent">↻ Refresh</button>
+          </div>
+          <div class="table-responsive">
+            <table class="erp-table" id="recentAttendanceTable">
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Date</th>
+                  <th>Dept / Class</th>
+                  <th>Subject</th>
+                  <th>Attendance</th>
+                  <th>Status</th>
+                  <th>Timestamp</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="recentAttendanceTbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           STEP 2: DATE SELECTION (MODERN CALENDAR)
+           ================================================================ -->
+      <section class="step-view hidden" id="step-date-view">
+        <div class="view-header text-center" style="text-align: center; margin-bottom: 20px;">
+          <h1>Select Attendance Date</h1>
+          <p>Pick the lecture date according to the academic calendar timetable.</p>
+        </div>
+
+        <div class="calendar-wrapper-card">
+          <div class="calendar-top-controls">
+            <h2 class="calendar-month-title" id="calMonthYear">September 2026</h2>
+            <div class="calendar-nav-buttons">
+              <button class="btn-cal-today" id="calTodayBtn">Today</button>
+              <button class="btn-cal-nav" id="calPrevBtn" title="Previous Month">‹</button>
+              <button class="btn-cal-nav" id="calNextBtn" title="Next Month">›</button>
+            </div>
+          </div>
+
+          <div class="calendar-grid" id="calendarDaysGrid">
+            <!-- Day labels and cells inserted via JS -->
+          </div>
+
+          <div class="calendar-summary-bar">
+            <div class="cal-selected-display">
+              <h4>Selected Date</h4>
+              <div class="selected-date-text" id="selectedDateDisplay">17 September 2026</div>
+            </div>
+            <button class="btn-continue-subject" id="btnContinueToCards">
+              <span>Continue to My Classes</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           STEP 3: MY CLASS CARDS (REPLACES OLD DEPT, CLASS & SUBJECT VIEWS)
+           ================================================================ -->
+      <section class="step-view hidden" id="step-cards-view">
+        <div class="cards-view-header">
+          <div class="cards-view-title-group">
+            <h1>My Class Cards</h1>
+            <p>Select your class card to start student attendance marking for <strong id="cardsViewSelectedDate" class="selected-date-highlight">17 September 2026</strong>.</p>
+          </div>
+          <div class="cards-view-actions">
+            <button class="btn-change-date" id="btnChangeDateFromCards" title="Choose a different date">
+              <span>📅 Change Date</span>
+            </button>
+            <button class="btn-create-card-primary" id="btnOpenCreateCardModal">
+              <span class="btn-icon">+</span>
+              <span>Create Card</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Class Cards Grid (Includes saved cards and + Create Card tile) -->
+        <div class="class-cards-grid" id="classCardsGrid">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Empty State (Shown when teacher has 0 cards) -->
+        <div class="class-cards-empty-state hidden" id="classCardsEmptyState">
+          <div class="empty-state-icon">📋</div>
+          <h3>No cards yet</h3>
+          <p>Create your first class card to start marking attendance with one click.</p>
+          <button class="btn-create-card-primary" id="btnEmptyCreateCard">
+            <span class="btn-icon">+</span>
+            <span>Create Class Card</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           STEP 6: STUDENT ATTENDANCE MARKING (SWIPE CARD DECK & ROSTER)
+           ================================================================ -->
+      <section class="step-view hidden" id="step-attendance-view">
+        <div class="attendance-workspace">
+
+          <!-- Counters & Progress Strip -->
+          <div class="attendance-stats-strip">
+            <div class="stat-pill pill-present">
+              <div class="stat-pill-num" id="statLivePresent">0</div>
+              <div class="stat-pill-label">Present</div>
+            </div>
+            <div class="stat-pill pill-absent">
+              <div class="stat-pill-num" id="statLiveAbsent">0</div>
+              <div class="stat-pill-label">Absent</div>
+            </div>
+            <div class="stat-pill pill-remaining">
+              <div class="stat-pill-num" id="statLiveRemaining">60</div>
+              <div class="stat-pill-label">Remaining</div>
+            </div>
+          </div>
+
+          <!-- Progress Bar Card -->
+          <div class="student-progress-card">
+            <div class="progress-info-row">
+              <span class="progress-student-count" id="progressStudentText">Student 1 of 60</span>
+              <span class="progress-percentage" id="progressPctText">0%</span>
+            </div>
+            <div class="attendance-progress-track">
+              <div class="attendance-progress-fill" id="attendanceProgressFill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- View Mode Toggle & Bulk Attendance Actions -->
+          <div class="view-mode-toggle">
+            <div class="mode-pills">
+              <button class="btn-mode-pill active" id="btnModeSwipe">🗂️ Card Swipe Deck</button>
+              <button class="btn-mode-pill" id="btnModeRoster">📋 Roster List</button>
+            </div>
+            <div class="bulk-actions-group">
+              <button class="btn-bulk-action btn-bulk-present" id="btnMarkAllPresent" title="Mark all students as Present">
+                <span>✓ Mark All Present</span>
+              </button>
+              <button class="btn-bulk-action btn-bulk-absent" id="btnMarkAllAbsent" title="Mark all students as Absent">
+                <span>✕ Mark All Absent</span>
+              </button>
+              <button class="btn-bulk-action btn-bulk-default" id="btnResetDefault" title="Reset all students to default unassigned status">
+                <span>↺ Default</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE 1: PURE SWIPE CARD DECK (NO AVATAR / PROFILE PIC) -->
+          <div class="swipe-deck-container" id="swipeDeckContainer">
+            <!-- Dynamic swipe card stack generated by SwipeAttendanceEngine -->
+          </div>
+
+          <!-- MODE 2: COLLEGE ERP ATTENDANCE ROSTER LIST (DUAL BLOCK SPREADSHEET) -->
+          <div class="roster-list-view hidden" id="rosterListView">
+            <div class="roster-container">
+              <!-- Centered Header Title -->
+              <h3 class="erp-page-title">Attendance List</h3>
+              <div class="provisional-note">* Provisionally Admitted Student</div>
+
+              <!-- Metadata Information Bar -->
+              <div class="meta-top-bar">
+                <div class="meta-box-teacher" id="rosterTeacherInfo">
+                  Mr. K.V. Kulthe (1039226014) Teaching Assistant CSE
+                </div>
+                <div class="meta-box-subject">
+                  <span id="rosterClassText"><strong>Class:</strong> SY-CSE-A</span>
+                  <span id="rosterSubjectText"><strong>Subject:</strong> 3CS205MD Database Management (THEORY)</span>
+                  <span id="rosterTimeText"><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
+                  <span id="rosterDateText"><strong>Date:</strong> 22/09/2026</span>
+                  <span><strong>Type:</strong> [REGULAR]</span>
+                </div>
+              </div>
+
+              <!-- Sub-header Controls Bar & Attendance Counts -->
+              <div class="controls-bar">
+                <div class="stat-counters">
+                  <span class="stat-item stat-total">Total Stud. : <strong id="rosterTotalCount">0</strong></span>
+                  <span class="stat-item stat-present">Present : <strong id="rosterPresentCount">0</strong></span>
+                  <span class="stat-item stat-absent">Absent : <strong id="rosterAbsentCount">0</strong></span>
+                  <span class="stat-item stat-cwork">C-Work : <strong>0</strong></span>
+
+                  <label class="all-absent-check">
+                    <input type="checkbox" id="rosterToggleAllAbsent">
+                    <span>ALL ABSENT</span>
+                  </label>
+                </div>
+
+                <!-- Pure CSS Legend -->
+                <div class="attendance-legend">
+                  <span class="legend-item">
+                    <span class="circle-present"></span>
+                    <span>Present</span>
+                  </span>
+                  <span class="legend-item">
+                    <span class="circle-absent"></span>
+                    <span>(hashed) Absent</span>
+                  </span>
+                </div>
+
+                <!-- Period / Remark -->
+                <div class="period-remark-group">
+                  <label for="rosterPeriodSelect" style="font-weight: 600; color: #475569;">Period:</label>
+                  <select id="rosterPeriodSelect" class="form-select">
+                    <option>Period 4 (02:15 - 03:15)</option>
+                    <option>Period 1 (09:00 - 10:00)</option>
+                    <option>Period 2 (10:15 - 11:15)</option>
+                    <option>Period 3 (11:30 - 12:30)</option>
+                  </select>
+                  <input type="text" placeholder="Enter Remark..." class="form-input" style="width: 140px;">
+                </div>
+              </div>
+
+              <!-- Side-by-Side Dual Blocks of Student Tables -->
+              <div class="roster-grid-wrapper">
+                
+                <!-- LEFT BLOCK -->
+                <div class="table-block">
+                  <table class="roster-table" id="leftRosterTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 36px;">Sr No</th>
+                        <th style="width: 86px;">Student Code</th>
+                        <th>Student</th>
+                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
+                        <th style="width: 52px;">Roll No.</th>
+                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="leftTableBody">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- RIGHT BLOCK -->
+                <div class="table-block">
+                  <table class="roster-table" id="rightRosterTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 36px;">Sr No</th>
+                        <th style="width: 86px;">Student Code</th>
+                        <th>Student</th>
+                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
+                        <th style="width: 52px;">Roll No.</th>
+                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="rightTableBody">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+              <!-- Bottom Footer / Actions -->
+              <div class="roster-footer">
+                <div class="topic-controls">
+                  <span class="topic-label">Topics:</span>
+                  <label class="topic-check-item">
+                    <input type="checkbox" checked>
+                    <span>Topic Taught</span>
+                  </label>
+                  <input type="text" value="ER Diagram Normalization & Relational Schema" class="form-input" style="width: 260px;">
+                  <label class="topic-check-item">
+                    <input type="checkbox">
+                    <span>Additional Topics</span>
+                  </label>
+                </div>
+
+                <div class="action-buttons">
+                  <button type="button" class="btn-export" onclick="window.print()">Print / PDF</button>
+                  <button type="button" class="btn-save" id="btnRosterSaveDraft">Save</button>
+                  <button type="button" class="btn-submit" id="btnRosterSubmitAll">Submit All Records</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DESKTOP CONTROLS & SHORTCUTS -->
+          <div class="desktop-controls-bar" id="desktopControlsBar">
+            <button class="btn-control-absent" id="btnSwipeAbsent" title="Swipe Left / Absent">
+              <span>←</span>
+              <span>ABSENT</span>
+            </button>
+            <button class="btn-control-present" id="btnSwipePresent" title="Swipe Right / Present">
+              <span>PRESENT</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <div class="auxiliary-controls">
+            <button class="btn-aux" id="btnSwipeUndo">
+              <span>↺</span>
+              <span>Undo Last (Backspace)</span>
+            </button>
+            <div class="keyboard-shortcuts-hint">
+              <span>Keys:</span>
+              <kbd class="kbd-badge">←</kbd>
+              <kbd class="kbd-badge">→</kbd>
+              <kbd class="kbd-badge">Space</kbd>
+            </div>
+            <button class="btn-aux" id="btnFinishEarly">
+              <span>Summary</span>
+              <span>→</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================
+           STEP 7: ATTENDANCE SUMMARY & REVIEW
+           ================================================================ -->
+      <section class="step-view hidden" id="step-summary-view">
+        <div class="summary-container">
+
+          <div class="view-header">
+            <h1>Attendance Summary & Review</h1>
+            <p id="summarySubtitleText">Review student attendance statistics before final submission.</p>
+          </div>
+
+          <!-- Overview Card with Doughnut Chart -->
+          <div class="summary-overview-card">
+            <div class="summary-chart-column">
+              <div class="chart-wrapper">
+                <svg class="doughnut-svg" viewBox="0 0 100 100">
+                  <circle class="doughnut-circle-bg" cx="50" cy="50" r="38"></circle>
+                  <circle class="doughnut-circle-present" id="chartPresentCircle" cx="50" cy="50" r="38"
+                    stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle>
+                  <circle class="doughnut-circle-absent" id="chartAbsentCircle" cx="50" cy="50" r="38"
+                    stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle>
+                </svg>
+                <div class="chart-center-text">
+                  <div class="chart-pct" id="summaryChartPct">86.7%</div>
+                  <div class="chart-sub">ATTENDANCE</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-metrics-grid">
+              <div class="summary-metric-card m-total">
+                <div class="m-val" id="sumValTotal">60</div>
+                <div class="m-lbl">Total Students</div>
+              </div>
+              <div class="summary-metric-card m-present">
+                <div class="m-val" id="sumValPresent">52</div>
+                <div class="m-lbl">Present Students</div>
+              </div>
+              <div class="summary-metric-card m-absent">
+                <div class="m-val" id="sumValAbsent">8</div>
+                <div class="m-lbl">Absent Students</div>
+              </div>
+              <div class="summary-metric-card m-rate">
+                <div class="m-val" id="sumValRate">86.67%</div>
+                <div class="m-lbl">Attendance Rate</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two Lists: Present Students vs Absent Students -->
+          <div class="summary-lists-grid">
+            <!-- Present Students List -->
+            <div class="attendance-list-card">
+              <div class="list-card-header header-present">
+                <h3>
+                  <span>✓</span>
+                  <span>Present Students</span>
+                </h3>
+                <span class="list-count-badge" id="sumPresentBadge">52 Students</span>
+              </div>
+              <div class="list-scroll-body" id="sumPresentList">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <!-- Absent Students List -->
+            <div class="attendance-list-card">
+              <div class="list-card-header header-absent">
+                <h3>
+                  <span>✕</span>
+                  <span>Absent Students</span>
+                </h3>
+                <span class="list-count-badge" id="sumAbsentBadge">8 Students</span>
+              </div>
+              <div class="list-scroll-body" id="sumAbsentList">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Actions Bar -->
+          <div class="summary-actions-bar">
+            <button class="btn-action-edit" id="btnOpenEditModal">
+              <span>✏️</span>
+              <span>Edit Attendance</span>
+            </button>
+
+            <div class="right-action-group">
+              <button class="btn-action-save" id="btnOpenSaveModal">
+                <span>💾</span>
+                <span>Save Attendance</span>
+              </button>
+              <button class="btn-action-submit" id="btnOpenSubmitModal">
+                <span>🚀</span>
+                <span>Submit Attendance</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+</div>
+
+<!-- ====================================================================
+     MODAL 1: EDIT ATTENDANCE TABLE MODAL
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modalEditAttendance">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Student Attendance</h3>
+      <button class="modal-close-btn" data-close-modal="modalEditAttendance">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="edit-table-search" id="editStudentSearch" placeholder="Search by roll number or student name...">
+      <div class="table-responsive" style="max-height: 380px;">
+        <table class="erp-table">
+          <thead>
+            <tr>
+              <th>Roll No.</th>
+              <th>Student Name</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="editStudentsTbody">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-action-save" id="btnSaveEditChanges">Done Editing</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 2: SAVE ATTENDANCE MODAL
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modalSaveAttendance">
+  <div class="modal-box" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>Save Attendance Draft</h3>
+      <button class="modal-close-btn" data-close-modal="modalSaveAttendance">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 14px; color: var(--text-muted);">
+        Saving attendance stores your progress as a draft so you can resume or modify it later before official submission.
+      </p>
+      <div class="confirm-details-box" id="saveConfirmDetails">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-step-back" data-close-modal="modalSaveAttendance">Cancel</button>
+      <button class="btn-action-submit" id="btnConfirmSave">Save Attendance</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 3: SUBMIT ATTENDANCE MODAL
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modalSubmitAttendance">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3>Submit Attendance</h3>
+      <button class="modal-close-btn" data-close-modal="modalSubmitAttendance">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 40px; margin-bottom: 8px;">⚠️</div>
+        <h4 style="font-size: 18px; color: var(--navy);">Are you sure you want to submit attendance?</h4>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+          Once submitted, official records will be finalized in the College ERP database. Duplicate submissions for this session will be locked.
+        </p>
+      </div>
+      <div class="confirm-details-box" id="submitConfirmDetails">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-step-back" data-close-modal="modalSubmitAttendance">Cancel</button>
+      <button class="btn-action-submit" id="btnConfirmSubmit">Submit Attendance</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 4: CREATE / EDIT CLASS CARD MODAL
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modalClassCard">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 id="cardModalTitle">Create Class Card</h3>
+      <button class="modal-close-btn" data-close-modal="modalClassCard">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 13px;">
+        Pick your Department, Class, and Subject to create a quick-access class card.
+      </p>
+
+      <div class="card-modal-error-alert hidden" id="cardModalError">
+        <span class="error-alert-icon">⚠️</span>
+        <span id="cardModalErrorText">A card for this Department, Class, and Subject already exists.</span>
+      </div>
+
+      <form id="formClassCard" onsubmit="return false;">
+        <input type="hidden" id="cardModalCardId" value="">
+        <div class="form-group-card">
+          <label for="cardModalDept">Department <span class="required-star">*</span></label>
+          <select id="cardModalDept" class="form-select-card" required>
+            <option value="">-- Select Department --</option>
+          </select>
+        </div>
+
+        <div class="form-group-card">
+          <label for="cardModalClass">Class / Division <span class="required-star">*</span></label>
+          <select id="cardModalClass" class="form-select-card" required disabled>
+            <option value="">-- Select Class --</option>
+          </select>
+        </div>
+
+        <div class="form-group-card">
+          <label for="cardModalSubject">Subject <span class="required-star">*</span></label>
+          <select id="cardModalSubject" class="form-select-card" required disabled>
+            <option value="">-- Select Subject --</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-step-back" data-close-modal="modalClassCard" id="btnCancelCardModal">Cancel</button>
+      <button class="btn-action-submit" id="btnSaveCardModal">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 5: DELETE CLASS CARD CONFIRMATION
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modalDeleteCard">
+  <div class="modal-box" style="max-width: 460px;">
+    <div class="modal-header">
+      <h3>Delete Class Card</h3>
+      <button class="modal-close-btn" data-close-modal="modalDeleteCard">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align: center; margin-bottom: 14px;">
+        <div style="font-size: 36px; margin-bottom: 8px;">🗑️</div>
+        <h4 style="font-size: 17px; color: var(--navy); margin-bottom: 6px;">Delete this Class Card?</h4>
+        <p style="color: var(--text-muted); font-size: 13px;">
+          This will only remove the quick-access card. <strong>Past attendance records will NOT be deleted.</strong>
+        </p>
+      </div>
+      <div class="confirm-details-box" id="deleteCardDetails">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-step-back" data-close-modal="modalDeleteCard">Cancel</button>
+      <button class="btn-action-danger" id="btnConfirmDeleteCard">Delete Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     TOAST NOTIFICATIONS CONTAINER
+     ==================================================================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Scripts -->
+<script src="js/data.js"></script>
+<script src="js/attendanceService.js"></script>
+<script src="js/swipeEngine.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
+
