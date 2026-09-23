@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initSyllabusProgressChart();
   initSubjectAttendanceToggle();
   initMobileDrawer();
-  initSidebarLinks();
   initDropdowns();
   initGlobalSearch();
   initQuickAccessTiles();
@@ -303,58 +302,6 @@ function initMobileDrawer() {
     link.addEventListener('click', () => {
       if (window.innerWidth <= 768) {
         closeDrawer();
-      }
-    });
-  });
-}
-
-/* ==========================================================================
-   4b. SIDEBAR INTERACTIVE MODULE LINKS & FEEDBACK
-   ========================================================================== */
-function initSidebarLinks() {
-  const sidebar = document.getElementById('dashboardSidebar');
-  if (!sidebar) return;
-
-  const moduleMessages = {
-    'dashboard': 'Navigating to Student Dashboard...',
-    'attendance': 'Displaying Semester IV Subject-wise Attendance Breakdown...',
-    'syllabus': 'Displaying Semester IV Syllabus & Subject Progress...',
-    'fees': 'Accessing Student Accounts & Academic Fees Portal...',
-    'profile': 'Opening Shivam Aghao - Verified Student Profile...',
-    'elearning': 'Connecting to SSGMCE E-Learning & LMS...',
-    'change-info': 'Opening Student Change of Information Application...',
-    'update-info': 'Opening Student Information Verification & Updation Form...',
-    'dwallet': 'Opening SSGMCE D-Wallet (Digital Credentials & Balance)...',
-    'examination': 'Accessing Examination Cell, Hall Ticket & Exam Timetable...',
-    'course-choices': 'Opening Autonomous Course Choices Application Form...',
-    'internal-marks': 'Loading Semester IV Continuous Internal Evaluation (CIE) Marks...',
-    'documents': 'Accessing Student Documents Repository & Certificates...',
-    'hostel': 'Connecting to Campus Hostel Management...',
-    'library': 'Connecting to Central Digital Library & OPAC...',
-    'training': 'Opening Training & Placement Cell Portal...',
-    'grievance': 'Opening Student Grievance Redressal Cell...',
-    'settings': 'Opening Portal Account Preferences & Settings...'
-  };
-
-  const navLinks = sidebar.querySelectorAll('.sidebar-link');
-  navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      const navKey = link.getAttribute('data-nav');
-      const href = link.getAttribute('href');
-
-      navLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-
-      if (href && href.startsWith('#')) {
-        const targetCard = document.querySelector(href);
-        if (targetCard) {
-          e.preventDefault();
-          targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          targetCard.classList.add('card-highlight-pulse');
-          setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 1500);
-        } else if (moduleMessages[navKey]) {
-          showToast(moduleMessages[navKey], 'info');
-        }
       }
     });
   });

@@ -26,73 +26,95 @@
   <!-- ========================================================
        TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
        ======================================================== -->
-  <header class="app-header" id="app-header" role="banner">
-    <!-- Left: College Logo & Full College Name -->
-    <div class="header-left-brand">
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
       <!-- Mobile Hamburger Toggle Button -->
-      <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
-        <i data-lucide="menu" style="width:20px;height:20px;"></i>
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
 
       <!-- Official SSGMCE Logo & College Title -->
-      <a href="#" class="header-college-brand" onclick="TeacherApp.switchView('dashboard'); return false;" aria-label="SSGMCE Home">
-        <div class="college-logo-crest">
-          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="Shri Sant Gajanan Maharaj College of Engineering, Shegaon Logo" class="official-college-logo">
+      <a href="#" class="header-brand header-college-brand" onclick="TeacherApp.switchView('dashboard'); return false;" aria-label="SSGMCE Home">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
         </div>
-        <div class="college-brand-info">
-          <span class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</span>
-          <span class="college-sub-tag">(An Autonomous Institute)</span>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
         </div>
       </a>
-    </div>
 
-    <!-- Center: Search Bar -->
-    <div class="header-center-search">
-      <div class="search-pill-wrapper">
-        <i data-lucide="search" class="search-pill-icon"></i>
-        <input type="text" class="search-pill-input" id="header-search-input" 
-               placeholder="Search subjects, timetable, students, services..." 
-               aria-label="Search dashboard">
-        <kbd class="search-shortcut-kbd">Ctrl+K</kbd>
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
       </div>
     </div>
 
-    <!-- Right: Logged-in Teacher's Name + Department + Profile Avatar + Dropdown -->
-    <div class="header-right-controls">
-      <!-- Teacher Profile Dropdown Trigger -->
-      <div class="header-profile-container">
-        <div class="header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
-          <div class="profile-avatar" id="header-profile-avatar">
-            <span>--</span>
+    <!-- Right Controls: Notifications & Teacher Profile -->
+    <div class="header-right header-right-controls">
+      <!-- Hidden Search Input to preserve Ctrl+K and JS search handlers without cluttering header -->
+      <div style="display:none;" aria-hidden="true">
+        <input type="text" id="header-search-input">
+      </div>
+
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button type="button" class="header-icon-btn" id="notifBtn" onclick="TeacherApp.switchView('notifications')" aria-label="Notifications, 4 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge">4</span>
+        </button>
+      </div>
+
+      <!-- Teacher Profile Pill Trigger & Menu -->
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="avatar-circle profile-avatar" id="header-profile-avatar">
+            <span>RD</span>
           </div>
-          <div class="profile-info">
-            <span class="profile-name" id="header-profile-name"></span>
-            <span class="profile-dept" id="header-profile-dept"></span>
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="header-profile-name">Dr. Rohan Deshmukh</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">Associate Professor • CSE</span>
           </div>
-          <i data-lucide="chevron-down" class="profile-arrow"></i>
-        </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
 
         <!-- Profile Dropdown Menu -->
-        <div class="dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
-          <div style="padding:12px 18px; border-bottom:1px solid var(--border-light);">
-            <div style="font-weight:700; font-size:13.5px; color:var(--dark-navy);" id="profile-menu-name"></div>
-            <div style="font-size:11.5px; color:var(--text-muted);" id="profile-menu-title"></div>
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Dr. Rohan Deshmukh</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Associate Professor • CSE</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">Faculty ID: FAC-CSE-1048</div>
           </div>
-          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('profile')">
-            <i data-lucide="user" style="width:16px;height:16px;"></i>
-            <span>View Profile</span>
-          </div>
-          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('information')">
-            <i data-lucide="info" style="width:16px;height:16px;"></i>
-            <span>Information</span>
-          </div>
-          <div class="profile-dropdown-item" onclick="TeacherApp.switchView('settings')">
-            <i data-lucide="settings" style="width:16px;height:16px;"></i>
-            <span>Settings</span>
-          </div>
-          <div class="profile-dropdown-item danger" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
-            <i data-lucide="log-out" style="width:16px;height:16px;"></i>
-            <span>Logout</span>
+          <div class="p-links">
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('profile')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>View Profile</span>
+            </div>
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('information')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span>Information</span>
+            </div>
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('settings')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </div>
+            <div class="p-divider"></div>
+            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Logout</span>
+            </div>
           </div>
         </div>
       </div>
@@ -106,184 +128,200 @@
     <!-- ========================================================
          2. LEFT SIDEBAR (Dark Navy #0B1F3A)
          ======================================================== -->
-    <aside class="app-sidebar" id="app-sidebar">
-      <!-- 1. FIXED TOP SECTION: FACULTY PORTAL (Non-scrollable) -->
-      <div class="sidebar-header" id="sidebar-header">
-        <div class="sidebar-portal-badge-wrap">
-          <i data-lucide="shield-check" class="portal-badge-icon"></i>
-          <span class="faculty-portal-heading">FACULTY PORTAL</span>
-        </div>
+    <aside class="app-sidebar dashboard-sidebar" id="app-sidebar" aria-label="Faculty Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
         <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
-          <i data-lucide="x" style="width:18px;height:18px;"></i>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
-      </div>
 
-      <!-- 2. STATIC MIDDLE SECTION: Academic Portal Navigation (Non-scrollable) -->
-      <nav class="sidebar-nav" id="sidebar-nav">
-        <span class="nav-section-title">ACADEMIC PORTAL</span>
-        
-        <a class="nav-item active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
-          <i data-lucide="layout-grid"></i>
-          <span>Dashboard</span>
-        </a>
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard (Active) - At Very Top! -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
-          <i data-lucide="calendar-check"></i>
-          <span>Attendance</span>
-          <span class="nav-badge">02 Pending</span>
-        </a>
+            <!-- TEACHER MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">TEACHER MODULE</span>
+              </div>
+            </li>
 
-        <a class="nav-item" data-view="timetable" onclick="TeacherApp.switchView('timetable')">
-          <i data-lucide="calendar"></i>
-          <span>Timetable</span>
-        </a>
+            <!-- 2. Attendance (with badge & chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+                <span class="nav-badge">02 Pending</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="classes" onclick="TeacherApp.switchView('classes')">
-          <i data-lucide="presentation"></i>
-          <span>Classes</span>
-        </a>
+            <!-- 3. Timetable (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="timetable" onclick="TeacherApp.switchView('timetable')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Timetable</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="students" onclick="TeacherApp.switchView('students')">
-          <i data-lucide="users"></i>
-          <span>Students</span>
-        </a>
+            <!-- 4. Classes (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="classes" onclick="TeacherApp.switchView('classes')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h20"></path>
+                  <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+                  <path d="m7 21 5-5 5 5"></path>
+                </svg>
+                <span class="nav-label">Classes</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="syllabus" onclick="TeacherApp.switchView('syllabus')">
-          <i data-lucide="book-open"></i>
-          <span>Syllabus</span>
-        </a>
+            <!-- 5. Students (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="students" onclick="TeacherApp.switchView('students')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="nav-label">Students</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="results" onclick="TeacherApp.switchView('results')">
-          <i data-lucide="bar-chart-2"></i>
-          <span>Results</span>
-        </a>
+            <!-- 6. Syllabus (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="syllabus" onclick="TeacherApp.switchView('syllabus')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <span class="nav-section-title" style="margin-top:4px;">Preferences & Info</span>
+            <!-- 7. Results (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="results" onclick="TeacherApp.switchView('results')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="nav-label">Results</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="profile" onclick="TeacherApp.switchView('profile')">
-          <i data-lucide="user"></i>
-          <span>Profile</span>
-        </a>
+            <!-- Preferences & Info Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Preferences &amp; Info</span>
+            </li>
 
-        <a class="nav-item" data-view="information" onclick="TeacherApp.switchView('information')">
-          <i data-lucide="info"></i>
-          <span>Information</span>
-        </a>
+            <!-- 8. Profile -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="profile" onclick="TeacherApp.switchView('profile')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="notifications" onclick="TeacherApp.switchView('notifications')">
-          <i data-lucide="bell"></i>
-          <span>Notifications</span>
-          <span class="nav-badge" style="background:#00A6D6;">4</span>
-        </a>
+            <!-- 9. Information -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="information" onclick="TeacherApp.switchView('information')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="nav-label">Information</span>
+              </a>
+            </li>
 
-        <a class="nav-item" data-view="settings" onclick="TeacherApp.switchView('settings')">
-          <i data-lucide="settings"></i>
-          <span>Settings</span>
-        </a>
-      </nav>
+            <!-- 10. Notifications -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="notifications" onclick="TeacherApp.switchView('notifications')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="nav-label">Notifications</span>
+                <span class="nav-badge" style="background:#00A6D6;color:#fff;">4</span>
+              </a>
+            </li>
 
-      <!-- 3. FIXED BOTTOM SECTION: College Building Logo & Motto & Logout -->
-      <div class="sidebar-fixed-footer" id="sidebar-fixed-footer">
-        <div class="footer-building-wrapper">
-          <svg class="college-building-svg" viewBox="0 0 220 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SSGMCE College Building with Dome">
-            <defs>
-              <linearGradient id="bldgCyan" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#38BDF8" />
-                <stop offset="100%" stop-color="#00A6D6" />
-              </linearGradient>
-              <linearGradient id="domeGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="rgba(56, 189, 248, 0.22)" />
-                <stop offset="100%" stop-color="rgba(0, 166, 214, 0.04)" />
-              </linearGradient>
-            </defs>
+            <!-- 11. Settings -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="settings" onclick="TeacherApp.switchView('settings')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
 
-            <!-- Dome & Cupola -->
-            <path d="M 94,27 C 94,14 126,14 126,27 Z" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linejoin="round" />
-            <!-- Dome Ribs -->
-            <path d="M 110,14 L 110,27" stroke="url(#bldgCyan)" stroke-width="1.2" />
-            <path d="M 102,17 C 103,20 104,24 104,27" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 118,17 C 117,20 116,24 116,27" stroke="url(#bldgCyan)" stroke-width="1" />
-
-            <!-- Spire / Finial -->
-            <path d="M 110,4 L 110,14" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" />
-            <circle cx="110" cy="7" r="1.6" fill="#38BDF8" />
-            <path d="M 108,14 L 112,14" stroke="#38BDF8" stroke-width="1.2" />
-
-            <!-- Rotunda Drum with Arched Windows -->
-            <rect x="94" y="27" width="32" height="11" fill="none" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <path d="M 99,38 L 99,33 A 2.5,2.5 0 0,1 104,33 L 104,38" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 107.5,38 L 107.5,33 A 2.5,2.5 0 0,1 112.5,33 L 112.5,38" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 116,38 L 116,33 A 2.5,2.5 0 0,1 121,33 L 121,38" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 91,27 L 129,27 M 91,29 L 129,29" stroke="url(#bldgCyan)" stroke-width="1.2" />
-
-            <!-- Neoclassical Pediment -->
-            <polygon points="86,45 110,38 134,45" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.3" stroke-linejoin="round" />
-            <path d="M 93,44 L 110,39.5 L 127,44" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 84,45 L 136,45" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linecap="round" />
-
-            <!-- Portico Columns (4 Neoclassical Pillars) -->
-            <path d="M 88,45 L 88,61 M 101,45 L 101,61 M 119,45 L 119,61 M 132,45 L 132,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
-
-            <!-- Grand Central Entrance Arch -->
-            <path d="M 105,61 L 105,52 A 5,5 0 0,1 115,52 L 115,61 Z" fill="rgba(0, 166, 214, 0.15)" stroke="url(#bldgCyan)" stroke-width="1.2" />
-
-            <!-- Left Academic Wing -->
-            <path d="M 18,44 L 86,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <path d="M 18,41 L 18,44 M 40,41 L 40,44 M 62,41 L 62,44 M 84,41 L 84,44" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 18,52 L 86,52" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 18,44 L 18,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <!-- Left Corner Pavilion Roof -->
-            <polygon points="15,44 22,38 29,44" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.2" />
-
-            <!-- Left Wing Windows (Upper Arched) -->
-            <path d="M 26,50 L 26,46 A 2,2 0 0,1 30,46 L 30,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 40,50 L 40,46 A 2,2 0 0,1 44,46 L 44,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 54,50 L 54,46 A 2,2 0 0,1 58,46 L 58,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 68,50 L 68,46 A 2,2 0 0,1 72,46 L 72,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <!-- Left Wing Windows (Ground Rectangular) -->
-            <rect x="26" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="40" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="54" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="68" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-
-            <!-- Right Academic Wing -->
-            <path d="M 134,44 L 202,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <path d="M 136,41 L 136,44 M 158,41 L 158,44 M 180,41 L 180,44 M 202,41 L 202,44" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <path d="M 134,52 L 202,52" stroke="url(#bldgCyan)" stroke-width="1" />
-            <path d="M 202,44 L 202,61" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <!-- Right Corner Pavilion Roof -->
-            <polygon points="191,44 198,38 205,44" fill="url(#domeGlow)" stroke="url(#bldgCyan)" stroke-width="1.2" />
-
-            <!-- Right Wing Windows (Upper Arched) -->
-            <path d="M 148,50 L 148,46 A 2,2 0 0,1 152,46 L 152,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 162,50 L 162,46 A 2,2 0 0,1 166,46 L 166,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 176,50 L 176,46 A 2,2 0 0,1 180,46 L 180,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <path d="M 190,50 L 190,46 A 2,2 0 0,1 194,46 L 194,50 Z" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <!-- Right Wing Windows (Ground Rectangular) -->
-            <rect x="148" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="162" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="176" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-            <rect x="190" y="54" width="4" height="5" stroke="url(#bldgCyan)" stroke-width="0.9" />
-
-            <!-- Base Plinth & Steps -->
-            <line x1="12" y1="61" x2="208" y2="61" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <line x1="8" y1="64" x2="212" y2="64" stroke="url(#bldgCyan)" stroke-width="1.3" />
-            <line x1="4" y1="67" x2="216" y2="67" stroke="url(#bldgCyan)" stroke-width="1.4" stroke-linecap="round" />
-            <!-- Portico Steps -->
-            <line x1="82" y1="62.5" x2="138" y2="62.5" stroke="#38BDF8" stroke-width="1.2" />
-          </svg>
+        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+        <div class="sidebar-footer-artwork">
+          <div class="ssgmce-dome-illustration" aria-hidden="true">
+            <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
+              <!-- Central Dome Outline -->
+              <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
+              <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
+              <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
+              <!-- Pediment Triangle -->
+              <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
+              <!-- Portico Columns -->
+              <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <!-- Base Foundation Steps -->
+              <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
+              <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
+              <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="sidebar-motto-text">
+            <span>Discipline</span>
+            <span class="dot">•</span>
+            <span>Development</span>
+            <span class="dot">•</span>
+            <span>Dedication</span>
+          </div>
         </div>
-        <div class="sidebar-footer-motto">
-          <span>DISCIPLINE</span>
-          <span class="motto-sep">•</span>
-          <span>DEVELOPMENT</span>
-          <span class="motto-sep">•</span>
-          <span>DEDICATION</span>
-        </div>
-        <button class="sidebar-logout-btn" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
-          <i data-lucide="log-out" style="width:14px;height:14px;"></i>
-          <span>Logout</span>
-        </button>
       </div>
     </aside>
 
@@ -305,8 +343,16 @@
           <!-- 6. HERO SECTION: FULL-WIDTH IMMERSIVE CAMPUS BACKGROUND -->
           <div class="welcome-banner">
             <!-- College Building Background Image & Gradient Overlay -->
-            <img src="images/college_building.jpg" alt="College Building" class="hero-bg-image">
-            <div class="hero-overlay"></div>
+            <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-bg-image" id="heroCampusImg" loading="eager">
+            <div class="hero-overlay" aria-hidden="true"></div>
+
+            <!-- Top Overlay Bar: Campus Tag -->
+            <div class="hero-unified-top-bar">
+              <span class="campus-photo-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                SSGMCE Shegaon • Vidya Bhavan
+              </span>
+            </div>
 
             <!-- Top Area: Greeting, Teacher Info, Subtitle & Date Widget -->
             <div class="welcome-hero-top">
@@ -327,16 +373,31 @@
                   <span class="hero-meta-dot">•</span>
                   <span class="hero-teacher-id" id="hero-teacher-id">FAC-CSE-1048</span>
                 </div>
-                <p class="welcome-subtitle">
-                  Welcome back to your College ERP dashboard. Here's what's happening today.
-                </p>
+                <div class="hero-accent-bar" aria-hidden="true"></div>
+                <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
+                <div class="hero-pillars-horizontal" aria-hidden="true">
+                  <span>Learn</span>
+                  <span class="dot">•</span>
+                  <span>Innovate</span>
+                  <span class="dot">•</span>
+                  <span>Build</span>
+                  <span class="dot">•</span>
+                  <span>Lead</span>
+                </div>
               </div>
             </div>
 
-            <!-- Middle Area: Horizontal Quick-Access / Statistics Cards -->
-            <div class="stats-grid hero-stats-grid" id="stats-cards-container">
-              <!-- Injected by JS -->
+            <!-- Bottom Caption: Vidya Bhavan Info -->
+            <div class="hero-unified-bottom-tag" aria-hidden="true">
+              <span class="building-name">विद्या भवन (Vidya Bhavan)</span>
+              <span class="tag-sep">•</span>
+              <span class="campus-sub">Main Academic Block</span>
             </div>
+          </div>
+
+          <!-- Middle Area: Horizontal Quick-Access / Statistics Cards (Below Campus Photo) -->
+          <div class="stats-grid hero-stats-grid faculty-stats-strip" id="stats-cards-container">
+            <!-- Injected by JS -->
           </div>
 
           <!-- ========================================================
