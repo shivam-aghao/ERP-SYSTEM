@@ -87,8 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
       this.pendingDeleteCardId = null;
 
       // Step 4 Elements (Attendance & Swipe Deck)
+      this.attendanceWorkspace = document.getElementById("attendanceWorkspace");
+      this.attendanceStatsStrip = document.getElementById("attendanceStatsStrip");
+      this.studentProgressCard = document.getElementById("studentProgressCard");
       this.swipeDeckContainer = document.getElementById("swipeDeckContainer");
       this.rosterListView = document.getElementById("rosterListView");
+      this.desktopControlsBar = document.getElementById("desktopControlsBar");
+      this.auxiliaryControls = document.getElementById("auxiliaryControls");
       this.btnModeSwipe = document.getElementById("btnModeSwipe");
       this.btnModeRoster = document.getElementById("btnModeRoster");
       this.btnMarkAllPresent = document.getElementById("btnMarkAllPresent");
@@ -395,6 +400,11 @@ document.addEventListener("DOMContentLoaded", () => {
         this.initStudentAttendance();
       } else if (stepNumber === 5) {
         this.renderSummaryReview();
+      }
+
+      if (stepNumber !== 4) {
+        const viewport = document.querySelector(".content-viewport");
+        if (viewport) viewport.classList.remove("roster-expanded-viewport");
       }
 
       this.updateNavigationUI();
@@ -1113,26 +1123,55 @@ document.addEventListener("DOMContentLoaded", () => {
       this.swipeEngine.render();
       this.updateLiveStats();
 
-      if (this.state.attendanceViewMode === "roster") {
-        this.renderRosterList();
-      }
+      // Apply initial view mode (defaults to swipe)
+      this.setAttendanceMode(this.state.attendanceViewMode || "swipe");
     },
 
     setAttendanceMode(mode) {
       this.state.attendanceViewMode = mode;
+      const viewport = document.querySelector(".content-viewport");
+
       if (mode === "swipe") {
         this.btnModeSwipe.classList.add("active");
         this.btnModeRoster.classList.remove("active");
-        this.swipeDeckContainer.classList.remove("hidden");
-        this.rosterListView.classList.add("hidden");
-        document.getElementById("desktopControlsBar").classList.remove("hidden");
+
+        if (this.attendanceWorkspace) {
+          this.attendanceWorkspace.classList.remove("mode-roster");
+          this.attendanceWorkspace.classList.add("mode-swipe");
+        }
+        if (viewport) viewport.classList.remove("roster-expanded-viewport");
+
+        // SHOW swipe deck elements
+        if (this.swipeDeckContainer) this.swipeDeckContainer.classList.remove("hidden");
+        if (this.desktopControlsBar) this.desktopControlsBar.classList.remove("hidden");
+        if (this.auxiliaryControls) this.auxiliaryControls.classList.remove("hidden");
+        if (this.attendanceStatsStrip) this.attendanceStatsStrip.classList.remove("hidden");
+        if (this.studentProgressCard) this.studentProgressCard.classList.remove("hidden");
+
+        // HIDE roster list completely
+        if (this.rosterListView) this.rosterListView.classList.add("hidden");
+
         if (this.swipeEngine) this.swipeEngine.render();
       } else {
         this.btnModeRoster.classList.add("active");
         this.btnModeSwipe.classList.remove("active");
-        this.swipeDeckContainer.classList.add("hidden");
-        this.rosterListView.classList.remove("hidden");
-        document.getElementById("desktopControlsBar").classList.add("hidden");
+
+        if (this.attendanceWorkspace) {
+          this.attendanceWorkspace.classList.remove("mode-swipe");
+          this.attendanceWorkspace.classList.add("mode-roster");
+        }
+        if (viewport) viewport.classList.add("roster-expanded-viewport");
+
+        // HIDE swipe cards and all swipe-specific controls completely
+        if (this.swipeDeckContainer) this.swipeDeckContainer.classList.add("hidden");
+        if (this.desktopControlsBar) this.desktopControlsBar.classList.add("hidden");
+        if (this.auxiliaryControls) this.auxiliaryControls.classList.add("hidden");
+        if (this.attendanceStatsStrip) this.attendanceStatsStrip.classList.add("hidden");
+        if (this.studentProgressCard) this.studentProgressCard.classList.add("hidden");
+
+        // SHOW only the complete roster list
+        if (this.rosterListView) this.rosterListView.classList.remove("hidden");
+
         this.renderRosterList();
       }
     },
@@ -1321,7 +1360,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!s.status) s.status = "present";
           });
           this.updateLiveStats();
-          this.showSummary();
+          this.goToStep(5);
         });
       }
     },
