@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Profile | SSGMCE ERP</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: #f4f7fc;
+            color: #1e293b;
+        }
+
+
+        /* =========================================
+           TOP HEADER
+        ========================================= */
+
+        .top-header {
+
+            height: 64px;
+
+            background: linear-gradient(
+                135deg,
+                #172554,
+                #243b80
+            );
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 24px;
+
+            color: white;
+
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+
+        /* Menu */
+
+        .menu-btn {
+
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            margin-right: 8px;
+
+            font-size: 20px;
+
+            transition: 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+
+        /* =========================================
+           COLLEGE LOGO
+        ========================================= */
+
+        .college-logo {
+
+            width: 48px;
+            height: 48px;
+
+            background: white;
+
+            border-radius: 6px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+
+            margin-right: 12px;
+
+            flex-shrink: 0;
+        }
+
+        .college-logo img {
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            display: block;
+        }
+
+
+        /* College name */
+
+        .logo-text {
+
+            font-size: 20px;
+
+            font-weight: 600;
+
+            letter-spacing: 0.1px;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================
+           HEADER RIGHT
+        ========================================= */
+
+        .header-right {
+
+            margin-left: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+        }
+
+
+        /* Notification */
+
+        .notification {
+
+            width: 38px;
+            height: 38px;
+
+            border-radius: 8px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            position: relative;
+
+            cursor: pointer;
+
+            font-size: 17px;
+        }
+
+        .notification:hover {
+
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+
+        .notification-badge {
+
+            position: absolute;
+
+            top: 1px;
+            right: 1px;
+
+            width: 17px;
+            height: 17px;
+
+            background: #ef4444;
+
+            border-radius: 50%;
+
+            font-size: 9px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================================
+           STUDENT HEADER
+        ========================================= */
+
+        .student-header {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 5px 10px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+        }
+
+        .student-header:hover {
+
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+
+        .header-avatar {
+
+            width: 36px;
+            height: 36px;
+
+            border-radius: 50%;
+
+            background: #dbeafe;
+
+            color: #1e3a8a;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 12px;
+
+            font-weight: 800;
+        }
+
+
+        .student-name {
+
+            font-size: 13px;
+
+            font-weight: 600;
+        }
+
+
+        .student-role {
+
+            font-size: 10px;
+
+            color: #cbd5e1;
+
+            margin-top: 2px;
+        }
+
+
+        /* =========================================
+           MAIN CONTAINER
+        ========================================= */
+
+        .main-container {
+
+            max-width: 1350px;
+
+            margin: auto;
+
+            padding: 25px;
+        }
+
+
+        /* =========================================
+           PAGE HEADER
+        ========================================= */
+
+        .page-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 22px;
+        }
+
+
+        .page-title {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+
+        .page-title-icon {
+
+            width: 45px;
+            height: 45px;
+
+            border-radius: 12px;
+
+            background: #dbeafe;
+
+            color: #1d4ed8;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 19px;
+        }
+
+
+        .page-title h1 {
+
+            font-size: 24px;
+
+            color: #172554;
+
+            font-weight: 800;
+        }
+
+
+        .page-title p {
+
+            font-size: 12px;
+
+            color: #64748b;
+
+            margin-top: 4px;
+        }
+
+
+        /* Edit button */
+
+        .edit-btn {
+
+            border: none;
+
+            background: #2563eb;
+
+            color: white;
+
+            padding: 10px 17px;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            transition: 0.2s;
+        }
+
+
+        .edit-btn:hover {
+
+            background: #1d4ed8;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================================
+           PROFILE SUMMARY CARD
+        ========================================= */
+
+        .profile-card {
+
+            background: white;
+
+            border-radius: 14px;
+
+            border: 1px solid #e2e8f0;
+
+            box-shadow:
+                0 5px 20px rgba(15, 23, 42, 0.06);
+
+            overflow: hidden;
+
+            margin-bottom: 22px;
+        }
+
+
+        .profile-top {
+
+            padding: 25px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 25px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eff6ff,
+                    #ffffff
+                );
+
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+
+        /* =========================================
+           STUDENT PHOTO
+        ========================================= */
+
+        .profile-image-container {
+
+            position: relative;
+
+            width: 125px;
+            height: 145px;
+
+            flex-shrink: 0;
+        }
+
+
+        .profile-image {
+
+            width: 125px;
+            height: 145px;
+
+            border-radius: 10px;
+
+            border: 3px solid white;
+
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.15);
+
+            object-fit: cover;
+
+            background: #e2e8f0;
+
+            display: block;
+        }
+
+
+        /* Active status */
+
+        .status-dot {
+
+            position: absolute;
+
+            width: 17px;
+            height: 17px;
+
+            background: #22c55e;
+
+            border: 3px solid white;
+
+            border-radius: 50%;
+
+            bottom: 7px;
+            right: 7px;
+        }
+
+
+        /* =========================================
+           PHOTO UPLOAD BUTTON
+        ========================================= */
+
+        .photo-upload-btn {
+
+            position: absolute;
+
+            right: -9px;
+            bottom: -9px;
+
+            width: 39px;
+            height: 39px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            color: white;
+
+            border: 3px solid white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 4px 10px rgba(0, 0, 0, 0.20);
+
+            transition: 0.2s;
+        }
+
+
+        .photo-upload-btn:hover {
+
+            background: #1d4ed8;
+
+            transform: scale(1.08);
+        }
+
+
+        /* =========================================
+           PROFILE DETAILS
+        ========================================= */
+
+        .profile-info {
+
+            flex: 1;
+        }
+
+
+        .profile-info h2 {
+
+            font-size: 24px;
+
+            color: #172554;
+
+            margin-bottom: 7px;
+        }
+
+
+        .profile-id {
+
+            display: inline-block;
+
+            background: #dbeafe;
+
+            color: #1d4ed8;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            padding: 5px 10px;
+
+            border-radius: 20px;
+
+            margin-bottom: 13px;
+        }
+
+
+        .profile-details {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 18px 25px;
+        }
+
+
+        .profile-detail {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            color: #475569;
+
+            font-size: 13px;
+        }
+
+
+        .profile-detail i {
+
+            color: #2563eb;
+
+            width: 16px;
+        }
+
+
+        /* =========================================
+           SECTION CARD
+        ========================================= */
+
+        .section-card {
+
+            background: white;
+
+            border-radius: 14px;
+
+            border: 1px solid #e2e8f0;
+
+            box-shadow:
+                0 5px 20px rgba(15, 23, 42, 0.05);
+
+            margin-bottom: 22px;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================
+           SECTION HEADER
+        ========================================= */
+
+        .section-header {
+
+            min-height: 52px;
+
+            padding: 0 20px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            background: #f8fafc;
+
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+
+        .section-icon {
+
+            width: 32px;
+            height: 32px;
+
+            border-radius: 8px;
+
+            background: #dbeafe;
+
+            color: #1d4ed8;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 14px;
+        }
+
+
+        .section-header h3 {
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            color: #172554;
+        }
+
+
+        .section-body {
+
+            padding: 22px;
+        }
+
+
+        /* =========================================
+           INFORMATION GRID
+        ========================================= */
+
+        .info-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 15px 35px;
+        }
+
+
+        .info-item {
+
+            display: grid;
+
+            grid-template-columns:
+                175px 15px 1fr;
+
+            min-height: 38px;
+
+            align-items: center;
+        }
+
+
+        .info-label {
+
+            font-size: 12px;
+
+            color: #64748b;
+
+            font-weight: 600;
+        }
+
+
+        .info-colon {
+
+            color: #94a3b8;
+
+            text-align: center;
+        }
+
+
+        .info-value {
+
+            font-size: 13px;
+
+            color: #1e293b;
+
+            font-weight: 600;
+
+            word-break: break-word;
+        }
+
+
+        .info-value.highlight {
+
+            color: #2563eb;
+        }
+
+
+        /* =========================================
+           STATUS BADGE
+        ========================================= */
+
+        .status-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            padding: 4px 9px;
+
+            border-radius: 20px;
+
+            background: #dcfce7;
+
+            color: #15803d;
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================================
+           TWO COLUMN
+        ========================================= */
+
+        .two-column {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 22px;
+        }
+
+
+        /* =========================================
+           CONTACT
+        ========================================= */
+
+        .contact-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+        }
+
+
+        .contact-card {
+
+            padding: 17px;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 10px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            transition: 0.2s;
+        }
+
+
+        .contact-card:hover {
+
+            border-color: #93c5fd;
+
+            box-shadow:
+                0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+
+
+        .contact-icon {
+
+            width: 40px;
+            height: 40px;
+
+            border-radius: 10px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+        }
+
+
+        .contact-label {
+
+            font-size: 10px;
+
+            color: #94a3b8;
+
+            margin-bottom: 4px;
+
+            font-weight: 600;
+        }
+
+
+        .contact-value {
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            color: #334155;
+
+            word-break: break-word;
+        }
+
+
+        /* =========================================
+           DOCUMENTS
+        ========================================= */
+
+        .documents {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+        }
+
+
+        .document {
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 10px;
+
+            padding: 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            transition: 0.2s;
+        }
+
+
+        .document:hover {
+
+            border-color: #93c5fd;
+
+            transform: translateY(-1px);
+        }
+
+
+        .document-icon {
+
+            width: 40px;
+            height: 40px;
+
+            background: #fee2e2;
+
+            color: #dc2626;
+
+            border-radius: 9px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+        }
+
+
+        .document-name {
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            color: #334155;
+        }
+
+
+        .document-status {
+
+            font-size: 10px;
+
+            color: #16a34a;
+
+            margin-top: 3px;
+        }
+
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        .footer {
+
+            background: #172554;
+
+            color: #cbd5e1;
+
+            min-height: 50px;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            font-size: 11px;
+
+            margin-top: 30px;
+
+            text-align: center;
+
+            padding: 10px;
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1000px) {
+
+            .info-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .contact-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .documents {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            .two-column {
+
+                grid-template-columns: 1fr;
+            }
+
+            .logo-text {
+
+                font-size: 16px;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .top-header {
+
+                padding: 0 12px;
+            }
+
+            .college-logo {
+
+                width: 42px;
+                height: 42px;
+            }
+
+            .logo-text {
+
+                font-size: 13px;
+
+                white-space: normal;
+            }
+
+            .header-right {
+
+                gap: 5px;
+            }
+
+            .student-name,
+            .student-role {
+
+                display: none;
+            }
+
+            .nav-bar {
+
+                padding: 0 10px;
+            }
+
+            .nav-item {
+
+                padding: 0 12px;
+            }
+
+            .main-container {
+
+                padding: 15px;
+            }
+
+            .page-header {
+
+                align-items: flex-start;
+
+                gap: 10px;
+            }
+
+            .page-title h1 {
+
+                font-size: 20px;
+            }
+
+            .edit-btn {
+
+                padding: 9px 12px;
+            }
+
+            .edit-btn span {
+
+                display: none;
+            }
+
+            .profile-top {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+            }
+
+            .profile-info h2 {
+
+                font-size: 21px;
+            }
+
+            .info-item {
+
+                grid-template-columns:
+                    125px 10px 1fr;
+            }
+
+            .info-label {
+
+                font-size: 11px;
+            }
+
+            .info-value {
+
+                font-size: 12px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         TOP HEADER
+    ========================================== -->
+
+    <header class="top-header">
+
+
+        <!-- Menu -->
+
+        <div class="menu-btn">
+
+            <i class="fa-solid fa-bars"></i>
+
+        </div>
+
+
+        <!-- =====================================
+             COLLEGE LOGO
+             SAME LOGO AS LOGIN PAGE
+        ====================================== -->
+
+        <div class="college-logo">
+
+            <img
+                src="SSGMCElogo.png"
+                alt="SSGMCE College Logo"
+            >
+
+        </div>
+
+
+        <!-- College Name -->
+
+        <div class="logo-text">
+
+            Shri Sant Gajanan Maharaj College of Engineering, Shegaon
+
+        </div>
+
+
+        <!-- Header Right -->
+
+        <div class="header-right">
+
+
+            <!-- Notification -->
+
+            <div class="notification">
+
+                <i class="fa-regular fa-bell"></i>
+
+                <span class="notification-badge">
+                    3
+                </span>
+
+            </div>
+
+
+            <!-- Student -->
+
+            <div class="student-header">
+
+
+                <div class="header-avatar">
+                    NK
+                </div>
+
+
+                <div>
+
+                    <div class="student-name">
+                        Neha Kailash Badokar
+                    </div>
+
+                    <div class="student-role">
+                        Student
+                    </div>
+
+                </div>
+
+
+                <i
+                    class="fa-solid fa-chevron-down"
+                    style="font-size:10px"
+                ></i>
+
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    
+
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
+
+    <main class="main-container">
+
+
+        <!-- =====================================
+             PAGE HEADER
+        ====================================== -->
+
+        <div class="page-header">
+
+
+            <div class="page-title">
+
+
+                <div class="page-title-icon">
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h1>
+                        Student Profile
+                    </h1>
+
+                    <p>
+                        View and manage your personal and academic information
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+            <button
+                class="edit-btn"
+                onclick="editProfile()"
+            >
+
+                <i class="fa-solid fa-pen"></i>
+
+                <span>
+                    Edit Profile
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =====================================
+             PROFILE SUMMARY
+        ====================================== -->
+
+        <div class="profile-card">
+
+
+            <div class="profile-top">
+
+
+                <!-- =================================
+                     STUDENT PHOTO
+                ================================== -->
+
+                <div class="profile-image-container">
+
+
+                    <img
+                        id="studentPhoto"
+                        src="logo.png"
+                        alt="Student Photo"
+                        class="profile-image"
+                    >
+
+
+                    <!-- Active -->
+
+                    <span class="status-dot"></span>
+
+
+                    <!-- Upload Photo -->
+
+                    <label
+                        for="photoUpload"
+                        class="photo-upload-btn"
+                        title="Change profile photo"
+                    >
+
+                        <i class="fa-solid fa-camera"></i>
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="photoUpload"
+                        accept="image/*"
+                        hidden
+                    >
+
+
+                </div>
+
+
+
+                <!-- =================================
+                     STUDENT INFORMATION
+                ================================== -->
+
+                <div class="profile-info">
+
+
+                    <h2>
+                        Neha Kailash Badokar
+                    </h2>
+
+
+                    <span class="profile-id">
+
+                        Student ID: 308703
+
+                    </span>
+
+
+                    <div class="profile-details">
+
+
+                        <div class="profile-detail">
+
+                            <i class="fa-solid fa-graduation-cap"></i>
+
+                            TY B.E. Information Technology
+
+                        </div>
+
+
+                        <div class="profile-detail">
+
+                            <i class="fa-solid fa-layer-group"></i>
+
+                            Section A
+
+                        </div>
+
+
+                        <div class="profile-detail">
+
+                            <i class="fa-solid fa-calendar"></i>
+
+                            Academic Year 2026-27
+
+                        </div>
+
+
+                        <div class="profile-detail">
+
+                            <span class="status-badge">
+
+                                <i
+                                    class="fa-solid fa-circle"
+                                    style="font-size:6px"
+                                ></i>
+
+                                Active Student
+
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =========================================
+             ADMISSION DETAILS
+        ========================================== -->
+
+        <div class="section-card">
+
+
+            <div class="section-header">
+
+
+                <div class="section-icon">
+
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                </div>
+
+
+                <h3>
+                    Admission Details
+                </h3>
+
+
+            </div>
+
+
+            <div class="section-body">
+
+
+                <div class="info-grid">
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Student Code
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value highlight">
+                            308703
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Admission Status
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            Confirmed
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Course
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            B.E. Information Technology
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Admission Pattern
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            Regular
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Current Year
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            Third Year
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Current Semester
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            Semester V
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Admission Year
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            2024-2025
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Current Academic Year
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            2026-2027
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Section
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            TY B.E. Information Technology - A
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <div class="info-label">
+                            Date of Admission
+                        </div>
+
+                        <div class="info-colon">
+                            :
+                        </div>
+
+                        <div class="info-value">
+                            2024
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =========================================
+             PERSONAL + ACADEMIC
+        ========================================== -->
+
+        <div class="two-column">
+
+
+            <!-- PERSONAL -->
+
+            <div class="section-card">
+
+
+                <div class="section-header">
+
+
+                    <div class="section-icon">
+
+                        <i class="fa-solid fa-user"></i>
+
+                    </div>
+
+
+                    <h3>
+                        Personal Information
+                    </h3>
+
+
+                </div>
+
+
+                <div class="section-body">
+
+
+                    <div
+                        class="info-grid"
+                        style="grid-template-columns:1fr;"
+                    >
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Date of Birth
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                11/11/2005
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Gender
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Female
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Nationality
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Indian
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Blood Group
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                O+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Category
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                General
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ACADEMIC -->
+
+            <div class="section-card">
+
+
+                <div class="section-header">
+
+
+                    <div class="section-icon">
+
+                        <i class="fa-solid fa-book-open"></i>
+
+                    </div>
+
+
+                    <h3>
+                        Academic Information
+                    </h3>
+
+
+                </div>
+
+
+                <div class="section-body">
+
+
+                    <div
+                        class="info-grid"
+                        style="grid-template-columns:1fr;"
+                    >
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                University
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Sant Gadge Baba Amravati University
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Branch
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Information Technology
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Roll Number
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                308703
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Enrollment Number
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Not Available
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Semester
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                V
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =========================================
+             CONTACT INFORMATION
+        ========================================== -->
+
+        <div class="section-card">
+
+
+            <div class="section-header">
+
+
+                <div class="section-icon">
+
+                    <i class="fa-solid fa-address-book"></i>
+
+                </div>
+
+
+                <h3>
+                    Contact Information
+                </h3>
+
+
+            </div>
+
+
+            <div class="section-body">
+
+
+                <div class="contact-grid">
+
+
+                    <div class="contact-card">
+
+
+                        <div class="contact-icon">
+
+                            <i class="fa-solid fa-phone"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="contact-label">
+                                MOBILE NUMBER
+                            </div>
+
+                            <div class="contact-value">
+                                8080214166
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="contact-card">
+
+
+                        <div class="contact-icon">
+
+                            <i class="fa-solid fa-envelope"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="contact-label">
+                                EMAIL ADDRESS
+                            </div>
+
+                            <div class="contact-value">
+                                student@ssgmce.ac.in
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="contact-card">
+
+
+                        <div class="contact-icon">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="contact-label">
+                                CITY
+                            </div>
+
+                            <div class="contact-value">
+                                Shegaon, Maharashtra
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =========================================
+             ADDRESS + PARENT
+        ========================================== -->
+
+        <div class="two-column">
+
+
+            <!-- ADDRESS -->
+
+            <div class="section-card">
+
+
+                <div class="section-header">
+
+
+                    <div class="section-icon">
+
+                        <i class="fa-solid fa-house"></i>
+
+                    </div>
+
+
+                    <h3>
+                        Address Information
+                    </h3>
+
+
+                </div>
+
+
+                <div class="section-body">
+
+
+                    <div
+                        class="info-grid"
+                        style="grid-template-columns:1fr;"
+                    >
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Permanent Address
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                At + Post Shegaon , Shegoan
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                District
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Buldhana
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                State
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Maharashtra
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                PIN Code
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                444203
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- PARENT -->
+
+            <div class="section-card">
+
+
+                <div class="section-header">
+
+
+                    <div class="section-icon">
+
+                        <i class="fa-solid fa-people-roof"></i>
+
+                    </div>
+
+
+                    <h3>
+                        Parent / Guardian Information
+                    </h3>
+
+
+                </div>
+
+
+                <div class="section-body">
+
+
+                    <div
+                        class="info-grid"
+                        style="grid-template-columns:1fr;"
+                    >
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Father's Name
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Kailash Badokar
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Mother's Name
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Parent Name
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-label">
+                                Parent Contact
+                            </div>
+
+                            <div class="info-colon">
+                                :
+                            </div>
+
+                            <div class="info-value">
+                                Not Available
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =========================================
+             DOCUMENTS
+        ========================================== -->
+
+        <div class="section-card">
+
+
+            <div class="section-header">
+
+
+                <div class="section-icon">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                </div>
+
+
+                <h3>
+                    Student Documents
+                </h3>
+
+
+            </div>
+
+
+            <div class="section-body">
+
+
+                <div class="documents">
+
+
+                    
+                    <div class="document">
+
+
+                        <div class="document-icon">
+
+                            <i class="fa-solid fa-id-card"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="document-name">
+                                Identity Card
+                            </div>
+
+                            <div class="document-status">
+                                Available
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="document">
+
+
+                        <div class="document-icon">
+
+                            <i class="fa-solid fa-file-lines"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="document-name">
+                                Academic Documents
+                            </div>
+
+                            <div class="document-status">
+                                Available
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="footer">
+
+        © 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon
+        &nbsp; | &nbsp;
+        College ERP System
+
+    </footer>
+
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================== -->
+
+    <script>
+
+
+        /* =========================================
+           PROFILE PHOTO UPLOAD
+        ========================================== */
+
+        const photoUpload =
+            document.getElementById("photoUpload");
+
+
+        const studentPhoto =
+            document.getElementById("studentPhoto");
+
+
+        photoUpload.addEventListener(
+            "change",
+            function(event) {
+
+                const file =
+                    event.target.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                /* Check file type */
+
+                if (!file.type.startsWith("image/")) {
+
+                    alert(
+                        "Please select a valid image file."
+                    );
+
+                    photoUpload.value = "";
+
+                    return;
+                }
+
+
+                /* Maximum 2 MB */
+
+                if (file.size > 2 * 1024 * 1024) {
+
+                    alert(
+                        "Image size should be less than 2 MB."
+                    );
+
+                    photoUpload.value = "";
+
+                    return;
+                }
+
+
+                /* Preview */
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function(e) {
+
+                        studentPhoto.src =
+                            e.target.result;
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+            }
+        );
+
+
+
+        /* =========================================
+           EDIT PROFILE
+        ========================================== */
+
+        function editProfile() {
+
+            alert(
+                "Profile editing functionality will be connected to the ERP backend."
+            );
+
+        }
+
+
+
+        
+
+
+    </script>
+
+
+</body>
+
+</html>
