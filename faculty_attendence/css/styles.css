@@ -746,6 +746,10 @@ a {
   animation: fadeIn 0.25s ease-out;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .step-view.hidden {
   display: none !important;
 }
@@ -1899,6 +1903,21 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  transition: max-width 0.2s ease;
+}
+
+.attendance-workspace.mode-swipe {
+  max-width: 640px;
+}
+
+.attendance-workspace.mode-roster {
+  max-width: 1600px;
+  width: 100%;
+}
+
+.content-viewport.roster-expanded-viewport,
+.content-viewport:has(.attendance-workspace.mode-roster) {
+  max-width: 1650px;
 }
 
 /* Live Counters Bar */
@@ -2570,7 +2589,7 @@ a {
   overflow-x: auto;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1250px) {
   .roster-grid-wrapper {
     grid-template-columns: 1fr;
   }
@@ -2583,7 +2602,7 @@ a {
   width: 100%;
   border: 1px solid #CBD5E1;
   border-radius: 4px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 /* Spreadsheet Table Design */

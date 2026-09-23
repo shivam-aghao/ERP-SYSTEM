@@ -294,7 +294,7 @@
       <section class="step-view" id="step-home-view">
         <div class="home-hero-card">
           <div class="hero-left">
-            <span class="hero-badge">Teacher Attendance Module</span>
+            <span class="hero-badge">Mark Student Attendance</span>
             <h2>Attendance Management</h2>
             
             <button class="btn-start-attendance" id="btnStartFlow">
@@ -422,10 +422,10 @@
            STEP 6: STUDENT ATTENDANCE MARKING (SWIPE CARD DECK & ROSTER)
            ================================================================ -->
       <section class="step-view hidden" id="step-attendance-view">
-        <div class="attendance-workspace">
+        <div class="attendance-workspace" id="attendanceWorkspace">
 
           <!-- Counters & Progress Strip -->
-          <div class="attendance-stats-strip">
+          <div class="attendance-stats-strip" id="attendanceStatsStrip">
             <div class="stat-pill pill-present">
               <div class="stat-pill-num" id="statLivePresent">0</div>
               <div class="stat-pill-label">Present</div>
@@ -441,7 +441,7 @@
           </div>
 
           <!-- Progress Bar Card -->
-          <div class="student-progress-card">
+          <div class="student-progress-card" id="studentProgressCard">
             <div class="progress-info-row">
               <span class="progress-student-count" id="progressStudentText">Student 1 of 60</span>
               <span class="progress-percentage" id="progressPctText">0%</span>
@@ -614,7 +614,7 @@
             </button>
           </div>
 
-          <div class="auxiliary-controls">
+          <div class="auxiliary-controls" id="auxiliaryControls">
             <button class="btn-aux" id="btnSwipeUndo">
               <span>↺</span>
               <span>Undo Last (Backspace)</span>
