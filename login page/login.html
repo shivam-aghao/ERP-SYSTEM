@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SSGMCE | College ERP</title>
+
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           COLOR VARIABLES
+        ===================================================== */
+
+        :root {
+
+            --primary-dark: #0B5CAD;
+
+            --primary: #1565C0;
+
+            --accent: #00A6D5;
+
+            --dark-text: #081c30;
+
+            --normal-text: #647F9C;
+
+            --border: #D9E6F1;
+
+            --white: #FFFFFF;
+
+        }
+
+
+        /* =====================================================
+           RESET
+        ===================================================== */
+
+        * {
+
+            margin: 0;
+
+            padding: 0;
+
+            box-sizing: border-box;
+
+        }
+
+
+        html {
+
+            width: 100%;
+
+            min-height: 100%;
+
+        }
+
+
+        body {
+
+            width: 100%;
+
+            min-height: 100vh;
+
+            font-family: "Inter", sans-serif;
+
+            background: #EAF5FB;
+
+        }
+
+
+        /* =====================================================
+           MAIN PAGE
+        ===================================================== */
+   .page {
+    position: relative;
+
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+
+    overflow: hidden;
+
+    background-image: url("./ssgmce1.png");
+
+    /* IMPORTANT */
+    background-size: 100% 100%;
+
+    background-position: center center;
+
+    background-repeat: no-repeat;
+}
+
+
+        /* =====================================================
+           SOFT IMAGE OVERLAY
+
+           Very light overlay so clouds/building stay visible.
+        ===================================================== */
+
+        .page::before {
+
+            content: "";
+
+            position: absolute;
+
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    90deg,
+
+                    rgba(4, 55, 105, 0.38) 0%,
+
+                    rgba(11, 92, 173, 0.16) 35%,
+
+                    rgba(255, 255, 255, 0.02) 72%,
+
+                    rgba(255, 255, 255, 0.10) 100%
+                );
+
+            pointer-events: none;
+
+            z-index: 0;
+
+        }
+
+
+        /* =====================================================
+           LEFT SECTION
+        ===================================================== */
+
+        .left-side {
+
+            position: relative;
+
+            z-index: 2;
+
+            width: 53%;
+
+            min-height: 100vh;
+
+            color: white;
+
+        }
+
+
+        .left-content {
+
+            width: 100%;
+
+            padding:
+                clamp(45px, 7vh, 80px)
+                clamp(25px, 5vw, 75px);
+
+        }
+
+
+        /* =====================================================
+           COLLEGE HEADER
+        ===================================================== */
+
+        .college-header {
+
+            display: grid;
+
+            grid-template-columns:
+                110px minmax(0, 1fr);
+
+            align-items: start;
+
+            column-gap: 24px;
+
+            max-width: 760px;
+
+        }
+
+
+        /* =====================================================
+           LEFT LOGO
+        ===================================================== */
+
+        .left-logo-container {
+
+            width: 110px;
+
+            height: 110px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .left-logo {
+
+            width: 105px;
+
+            height: 105px;
+
+            display: block;
+
+            object-fit: contain;
+
+            filter:
+                drop-shadow(
+                    0 4px 8px
+                    rgba(0, 0, 0, 0.22)
+                );
+
+        }
+
+
+        /* =====================================================
+           COLLEGE DETAILS
+        ===================================================== */
+
+        .college-details {
+
+            min-width: 0;
+
+            padding-top: 3px;
+
+        }
+
+
+        .sanstha-name {
+
+            font-size:
+                clamp(12px, 1.1vw, 15px);
+
+            line-height: 1.4;
+
+            font-weight: 500;
+
+            color: rgba(255, 255, 255, 0.97);
+
+            margin-bottom: 5px;
+
+            text-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.25);
+
+        }
+
+
+        .college-name {
+
+            font-size:
+                clamp(24px, 2.25vw, 34px);
+
+            line-height: 1.16;
+
+            font-weight: 800;
+
+            color: #FFFFFF;
+
+            text-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.30);
+
+        }
+
+
+        /* =====================================================
+           ACCENT LINE
+        ===================================================== */
+
+        .accent-line {
+
+            width: 100%;
+
+            max-width: 450px;
+
+            height: 3px;
+
+            margin-top: 13px;
+
+            background:
+                linear-gradient(
+                    to right,
+
+                    var(--accent) 0 72px,
+
+                    rgba(255, 255, 255, 0.65)
+                    72px 100%
+                );
+
+            box-shadow:
+                0 1px 5px
+                rgba(0, 166, 213, 0.30);
+
+        }
+
+
+        /* =====================================================
+           COLLEGE META
+        ===================================================== */
+
+        .college-meta {
+
+            margin-top: 10px;
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            align-items: center;
+
+            gap: 0;
+
+            font-size:
+                clamp(10px, 1vw, 13px);
+
+            line-height: 1.5;
+
+            font-weight: 500;
+
+            color: rgba(255, 255, 255, 0.97);
+
+            text-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.20);
+
+        }
+
+
+        .college-meta span {
+
+            white-space: nowrap;
+
+        }
+
+
+        .separator {
+
+            margin: 0 10px;
+
+            opacity: 0.85;
+
+        }
+
+
+        /* =====================================================
+           TAGLINE
+        ===================================================== */
+
+        .tagline-container {
+
+            width: 100%;
+
+            margin-top:
+                clamp(50px, 8vh, 90px);
+
+            margin-left: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+        }
+
+
+        .tagline {
+
+            font-size:
+                clamp(14px, 1.3vw, 19px);
+
+            line-height: 1.5;
+
+            font-weight: 500;
+
+            color: #FFFFFF;
+
+            text-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.30);
+
+            white-space: nowrap;
+
+        }
+
+
+        .tagline span {
+
+            margin: 0 8px;
+
+            opacity: 0.9;
+
+        }
+
+
+        .tagline-line {
+
+            width: 60px;
+
+            height: 3px;
+
+            margin-top: 12px;
+
+            margin-left: 0;
+
+            background: var(--accent);
+
+            box-shadow:
+                0 1px 5px
+                rgba(0, 166, 213, 0.45);
+
+        }
+
+
+        /* =====================================================
+           RIGHT SECTION
+        ===================================================== */
+
+        .right-side {
+
+            position: relative;
+
+            z-index: 3;
+
+            width: 47%;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding:
+                35px
+                clamp(25px, 5vw, 70px);
+
+        }
+
+
+        /* =====================================================
+           PREMIUM LOGIN CARD
+        ===================================================== */
+
+        .login-card {
+
+            position: relative;
+
+            width: 100%;
+
+            max-width: 500px;
+
+            padding:
+                30px 36px 31px;
+
+            border-radius: 20px;
+
+            /*
+                Premium glass effect
+            */
+
+            background:
+                linear-gradient(
+                    145deg,
+
+                    rgba(255, 255, 255, 0.96),
+
+                    rgba(248, 252, 255, 0.88)
+                );
+
+            backdrop-filter: blur(16px);
+
+            -webkit-backdrop-filter: blur(16px);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.95);
+
+            box-shadow:
+
+                0 25px 70px
+                rgba(4, 55, 105, 0.26),
+
+                0 8px 25px
+                rgba(11, 92, 173, 0.12);
+
+            overflow: hidden;
+
+        }
+
+
+        /* =====================================================
+           LOGIN CARD TOP ACCENT
+        ===================================================== */
+
+        .login-card::before {
+        display: none;
+        }
+
+    
+        /* =====================================================
+           CARD DECORATION
+        ===================================================== */
+
+        .login-card::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 180px;
+
+            height: 180px;
+
+            right: -100px;
+
+            bottom: -100px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(0, 166, 213, 0.06);
+
+            pointer-events: none;
+
+        }
+
+
+        /* =====================================================
+           RIGHT LOGO
+        ===================================================== */
+
+        .right-logo-container {
+
+            width: 88px;
+
+            height: 88px;
+
+            margin:
+                0 auto 7px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+
+        .right-logo {
+
+            width: 84px;
+
+            height: 84px;
+
+            object-fit: contain;
+
+            display: block;
+
+            filter:
+                drop-shadow(
+                    0 3px 7px
+                    rgba(11, 92, 173, 0.18)
+                );
+
+        }
+
+
+        /* =====================================================
+           RIGHT COLLEGE NAME
+        ===================================================== */
+
+        .right-college-name {
+
+            text-align: center;
+
+            color: var(--primary-dark);
+
+            font-size:
+                clamp(15px, 1.35vw, 18px);
+
+            line-height: 1.35;
+
+            font-weight: 700;
+
+            margin-bottom: 24px;
+
+        }
+
+
+        /* =====================================================
+           WELCOME
+        ===================================================== */
+
+        .welcome {
+
+            text-align: center;
+
+            color: var(--primary-dark);
+
+            font-size:
+                clamp(26px, 2.4vw, 32px);
+
+            line-height: 1.2;
+
+            font-weight: 800;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .welcome-text {
+
+            text-align: center;
+
+            color: #7A91AA;
+
+            font-size: 14px;
+
+            margin-bottom: 27px;
+
+        }
+
+
+        /* =====================================================
+           FORM GROUP
+        ===================================================== */
+
+        .form-group {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .form-label {
+
+            display: block;
+
+            color: var(--primary-dark);
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        /* =====================================================
+           INPUT
+        ===================================================== */
+
+        .input-box {
+
+            position: relative;
+
+            width: 100%;
+
+        }
+
+
+        .input-icon {
+
+            position: absolute;
+
+            left: 17px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            color: #7896B4;
+
+            font-size: 16px;
+
+            pointer-events: none;
+
+            z-index: 2;
+
+        }
+
+
+        .input {
+
+            width: 100%;
+
+            height: 48px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.92);
+
+            padding:
+                0 48px 0 49px;
+
+            outline: none;
+
+            color: #183F68;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease,
+                transform 0.2s ease;
+
+        }
+
+
+        .input::placeholder {
+
+            color: #91A7BB;
+
+        }
+
+
+        .input:hover {
+
+            border-color: #BCD2E5;
+
+        }
+
+
+        .input:focus {
+
+            background: #FFFFFF;
+
+            border-color: var(--accent);
+
+            box-shadow:
+                0 0 0 3px
+                rgba(0, 166, 213, 0.12);
+
+        }
+
+
+        /* =====================================================
+           PASSWORD EYE
+        ===================================================== */
+
+        .eye-button {
+
+            position: absolute;
+
+            right: 14px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            width: 30px;
+
+            height: 30px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border: none;
+
+            background: transparent;
+
+            color: #7891AC;
+
+            cursor: pointer;
+
+            border-radius: 50%;
+
+            transition:
+                color 0.2s ease,
+                background 0.2s ease;
+
+        }
+
+
+        .eye-button:hover {
+
+            color: var(--primary);
+
+            background:
+                rgba(21, 101, 192, 0.08);
+
+        }
+
+
+        /* =====================================================
+           REMEMBER / FORGOT
+        ===================================================== */
+
+        .options {
+
+            width: 100%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-top: 2px;
+
+            margin-bottom: 22px;
+
+        }
+
+
+        .remember {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #687F98;
+
+            font-size: 12px;
+
+            cursor: pointer;
+
+            user-select: none;
+
+        }
+
+
+        .remember input {
+
+            width: 17px;
+
+            height: 17px;
+
+            margin: 0;
+
+            accent-color: var(--primary);
+
+            cursor: pointer;
+
+        }
+
+
+        .forgot {
+
+            color: var(--primary);
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            text-decoration: none;
+
+        }
+
+
+        .forgot:hover {
+
+            color: var(--accent);
+
+            text-decoration: underline;
+
+        }
+
+
+        /* =====================================================
+           LOGIN BUTTON
+        ===================================================== */
+
+        .login-button {
+
+            width: 100%;
+
+            height: 48px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+
+                    var(--primary-dark),
+
+                    var(--primary)
+                );
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 12px;
+
+            font-family: inherit;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 8px 20px
+                rgba(11, 92, 173, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+
+        }
+
+
+        .login-button:hover {
+
+            background:
+                linear-gradient(
+                    90deg,
+
+                    var(--primary),
+
+                    var(--accent)
+                );
+
+            transform:
+                translateY(-2px);
+
+            box-shadow:
+                0 12px 28px
+                rgba(0, 166, 213, 0.28);
+
+        }
+
+
+        .login-button:active {
+
+            transform:
+                translateY(0);
+
+        }
+
+
+        .login-button i {
+
+            font-size: 13px;
+
+            transition:
+                transform 0.2s ease;
+
+        }
+
+
+        .login-button:hover i {
+
+            transform:
+                translateX(4px);
+
+        }
+
+
+        /* =====================================================
+           CONTACT ADMIN
+        ===================================================== */
+
+        .contact {
+
+            text-align: center;
+
+            margin-top: 27px;
+
+            color: #7A91A8;
+
+            font-size: 12px;
+
+        }
+
+
+        .contact a {
+
+            color: var(--primary);
+
+            font-weight: 600;
+
+            text-decoration: underline;
+
+            text-underline-offset: 2px;
+
+        }
+
+
+        .contact a:hover {
+
+            color: var(--accent);
+
+        }
+
+
+        /* =====================================================
+           COPYRIGHT
+        ===================================================== */
+
+        .copyright {
+
+            position: absolute;
+
+            right: 0;
+
+            bottom: 16px;
+
+            width: 47%;
+
+            text-align: center;
+
+            color:
+                rgba(20, 70, 115, 0.70);
+
+            font-size: 11px;
+
+            font-weight: 500;
+
+            z-index: 5;
+
+        }
+
+
+        /* =====================================================
+           LARGE DESKTOP
+        ===================================================== */
+
+        @media (min-width: 1400px) {
+
+            .left-content {
+
+                padding-left: 90px;
+
+            }
+
+
+            .college-header {
+
+                grid-template-columns:
+                    125px minmax(0, 1fr);
+
+                column-gap: 28px;
+
+            }
+
+
+            .left-logo-container {
+
+                width: 125px;
+
+                height: 125px;
+
+            }
+
+
+            .left-logo {
+
+                width: 120px;
+
+                height: 120px;
+
+            }
+
+
+            .college-name {
+
+                font-size: 34px;
+
+            }
+
+
+            .login-card {
+
+                max-width: 520px;
+
+                padding:
+                    34px 40px 35px;
+
+            }
+
+
+            .tagline-container {
+
+                width: 100%;
+
+                margin-left: 0;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           LAPTOP
+        ===================================================== */
+
+        @media (max-width: 1200px) {
+
+            .left-content {
+
+                padding-left: 45px;
+
+                padding-right: 25px;
+
+            }
+
+
+            .college-header {
+
+                grid-template-columns:
+                    90px minmax(0, 1fr);
+
+                column-gap: 17px;
+
+            }
+
+
+            .left-logo-container {
+
+                width: 90px;
+
+                height: 90px;
+
+            }
+
+
+            .left-logo {
+
+                width: 87px;
+
+                height: 87px;
+
+            }
+
+
+            .college-name {
+
+                font-size: 25px;
+
+            }
+
+
+            .college-meta {
+
+                font-size: 11px;
+
+            }
+
+
+            .right-side {
+
+                padding:
+                    30px 30px;
+
+            }
+
+
+            .login-card {
+
+                padding:
+                    27px 30px 30px;
+
+            }
+
+
+            .tagline-container {
+
+                width: 100%;
+
+                margin-left: 0;
+
+                align-items: center;
+
+                text-align: center;
+
+            }
+
+
+            .tagline-line {
+
+                margin-left: 0;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           TABLET
+        ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .page {
+
+                overflow-y: auto;
+
+            }
+
+
+            .left-side {
+
+                width: 50%;
+
+            }
+
+
+            .right-side {
+
+                width: 50%;
+
+                padding:
+                    25px 20px;
+
+            }
+
+
+            .left-content {
+
+                padding:
+                    45px 25px;
+
+            }
+
+
+            .college-header {
+
+                grid-template-columns:
+                    70px minmax(0, 1fr);
+
+                column-gap: 13px;
+
+            }
+
+
+            .left-logo-container {
+
+                width: 70px;
+
+                height: 70px;
+
+            }
+
+
+            .left-logo {
+
+                width: 68px;
+
+                height: 68px;
+
+            }
+
+
+            .sanstha-name {
+
+                font-size: 10px;
+
+            }
+
+
+            .college-name {
+
+                font-size: 19px;
+
+            }
+
+
+            .college-meta {
+
+                font-size: 9px;
+
+            }
+
+
+            .separator {
+
+                margin:
+                    0 5px;
+
+            }
+
+
+            .tagline-container {
+
+                width: 100%;
+
+                margin-left: 0;
+
+                margin-top: 50px;
+
+                align-items: center;
+
+                text-align: center;
+
+            }
+
+
+            .tagline {
+
+                font-size: 14px;
+
+                white-space: nowrap;
+
+            }
+
+
+            .tagline-line {
+
+                margin-left: 0;
+
+            }
+
+
+            .login-card {
+
+                padding:
+                    25px 23px 27px;
+
+            }
+
+
+            .right-logo-container {
+
+                width: 72px;
+
+                height: 72px;
+
+            }
+
+
+            .right-logo {
+
+                width: 70px;
+
+                height: 70px;
+
+            }
+
+
+            .right-college-name {
+
+                font-size: 14px;
+
+                margin-bottom: 20px;
+
+            }
+
+
+            .welcome {
+
+                font-size: 25px;
+
+            }
+
+
+            .welcome-text {
+
+                font-size: 12px;
+
+                margin-bottom: 22px;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 700px) {
+
+            body {
+
+                overflow-x: hidden;
+
+            }
+
+
+            .page {
+
+                min-height: 100vh;
+
+                display: block;
+
+                overflow-y: auto;
+
+                overflow-x: hidden;
+
+                /*
+                    Mobile image positioning.
+                    Keeps building and clouds visible.
+                */
+
+                background-position:
+                    center center;
+
+            }
+
+
+            /* -------------------------------------------------
+               LEFT
+            ------------------------------------------------- */
+
+            .left-side {
+
+                width: 100%;
+
+                min-height: auto;
+
+            }
+
+
+            .left-content {
+
+                padding:
+                    38px 22px 35px;
+
+            }
+
+
+            .college-header {
+
+                grid-template-columns:
+                    75px minmax(0, 1fr);
+
+                column-gap: 15px;
+
+                max-width: none;
+
+            }
+
+
+            .left-logo-container {
+
+                width: 75px;
+
+                height: 75px;
+
+            }
+
+
+            .left-logo {
+
+                width: 73px;
+
+                height: 73px;
+
+            }
+
+
+            .sanstha-name {
+
+                font-size: 10px;
+
+                margin-bottom: 4px;
+
+            }
+
+
+            .college-name {
+
+                font-size:
+                    clamp(18px, 5vw, 24px);
+
+                line-height: 1.18;
+
+            }
+
+
+            .accent-line {
+
+                margin-top: 10px;
+
+            }
+
+
+            .college-meta {
+
+                font-size: 9px;
+
+                line-height: 1.6;
+
+            }
+
+
+            .tagline-container {
+
+                width: 100%;
+
+                margin:
+                    38px 0 0 0;
+
+                padding: 0 5px;
+
+                display: flex;
+
+                align-items: center;
+
+                justify-content: center;
+
+                text-align: center;
+
+            }
+
+
+            .tagline {
+
+                font-size: 14px;
+
+                white-space: nowrap;
+
+            }
+
+
+            .tagline span {
+
+                margin: 0 7px;
+
+            }
+
+
+            .tagline-line {
+
+                width: 60px;
+
+                margin-left: 0;
+
+            }
+
+
+            /* -------------------------------------------------
+               RIGHT
+            ------------------------------------------------- */
+
+            .right-side {
+
+                position: relative;
+
+                width: 100%;
+
+                min-height: auto;
+
+                padding:
+                    10px 18px 65px;
+
+                display: flex;
+
+                align-items: flex-start;
+
+                justify-content: center;
+
+            }
+
+
+            .login-card {
+
+                width: 100%;
+
+                max-width: 520px;
+
+                padding:
+                    28px 24px 30px;
+
+                border-radius: 16px;
+
+            }
+
+
+            .right-logo-container {
+
+                width: 76px;
+
+                height: 76px;
+
+                margin-bottom: 6px;
+
+            }
+
+
+            .right-logo {
+
+                width: 74px;
+
+                height: 74px;
+
+            }
+
+
+            .right-college-name {
+
+                font-size: 15px;
+
+                margin-bottom: 22px;
+
+            }
+
+
+            .welcome {
+
+                font-size: 27px;
+
+            }
+
+
+            .welcome-text {
+
+                font-size: 13px;
+
+                margin-bottom: 25px;
+
+            }
+
+
+            .form-label {
+
+                font-size: 12px;
+
+            }
+
+
+            .input {
+
+                height: 48px;
+
+            }
+
+
+            .login-button {
+
+                height: 48px;
+
+            }
+
+
+            .copyright {
+
+                position: absolute;
+
+                bottom: 17px;
+
+                left: 0;
+
+                width: 100%;
+
+                font-size: 10px;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           SMALL MOBILE
+        ===================================================== */
+
+        @media (max-width: 420px) {
+
+            .left-content {
+
+                padding:
+                    30px 17px 28px;
+
+            }
+
+
+            .college-header {
+
+                grid-template-columns:
+                    62px minmax(0, 1fr);
+
+                column-gap: 11px;
+
+            }
+
+
+            .left-logo-container {
+
+                width: 62px;
+
+                height: 62px;
+
+            }
+
+
+            .left-logo {
+
+                width: 60px;
+
+                height: 60px;
+
+            }
+
+
+            .sanstha-name {
+
+                font-size: 8px;
+
+            }
+
+
+            .college-name {
+
+                font-size: 17px;
+
+            }
+
+
+            .college-meta {
+
+                font-size: 7.5px;
+
+            }
+
+
+            .separator {
+
+                margin:
+                    0 3px;
+
+            }
+
+
+            .tagline-container {
+
+                width: 100%;
+
+                margin-top: 32px;
+
+                margin-left: 0;
+
+                padding:
+                    0 2px;
+
+                align-items: center;
+
+                text-align: center;
+
+            }
+
+
+            .tagline {
+
+                font-size: 12px;
+
+                white-space: nowrap;
+
+            }
+
+
+            .tagline span {
+
+                margin: 0 5px;
+
+            }
+
+
+            .tagline-line {
+
+                width: 50px;
+
+                margin-left: 0;
+
+            }
+
+
+            .right-side {
+
+                padding:
+                    5px 12px 60px;
+
+            }
+
+
+            .login-card {
+
+                padding:
+                    25px 18px 27px;
+
+                border-radius: 14px;
+
+            }
+
+
+            .right-logo-container {
+
+                width: 70px;
+
+                height: 70px;
+
+            }
+
+
+            .right-logo {
+
+                width: 68px;
+
+                height: 68px;
+
+            }
+
+
+            .right-college-name {
+
+                font-size: 14px;
+
+            }
+
+
+            .welcome {
+
+                font-size: 25px;
+
+            }
+
+
+            .welcome-text {
+
+                font-size: 12px;
+
+            }
+
+
+            .options {
+
+                gap: 8px;
+
+            }
+
+
+            .remember,
+            .forgot {
+
+                font-size: 11px;
+
+            }
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="page">
+
+
+        <!-- =================================================
+             LEFT SIDE
+        ================================================== -->
+
+        <section class="left-side">
+
+
+            <div class="left-content">
+
+
+                <div class="college-header">
+
+
+                    <!-- COLLEGE LOGO -->
+
+                    <div class="left-logo-container">
+
+                        <img
+                            src="./SSGMCElogo.png"
+                            alt="SSGMCE College Logo"
+                            class="left-logo"
+                        >
+
+                    </div>
+
+
+                    <!-- COLLEGE INFORMATION -->
+
+                    <div class="college-details">
+
+
+                        <div class="sanstha-name">
+
+                            Shri Gajanan Shikshan Sanstha's
+
+                        </div>
+
+
+                        <h1 class="college-name">
+
+                            Shri Sant Gajanan Maharaj
+
+                            <br>
+
+                            College of Engineering, Shegaon
+
+                        </h1>
+
+
+                        <div class="accent-line"></div>
+
+
+                        <div class="college-meta">
+
+
+                            <span>
+                                Autonomous Institute
+                            </span>
+
+
+                            <span class="separator">
+                                |
+                            </span>
+
+
+                            <span>
+                                NAAC A+ Accredited
+                            </span>
+
+
+                            <span class="separator">
+                                |
+                            </span>
+
+
+                            <span>
+                                Estd. 1983
+                            </span>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- TAGLINE -->
+
+                <div class="tagline-container">
+
+
+                    <div class="tagline">
+
+                        Learn
+
+                        <span>|</span>
+
+                        Grow
+
+                        <span>|</span>
+
+                        Build Your Future
+
+                    </div>
+
+
+                    <div class="tagline-line"></div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             RIGHT SIDE
+        ================================================== -->
+
+        <section class="right-side">
+
+
+            <!-- LOGIN CARD -->
+
+            <div class="login-card">
+
+
+                <!-- LOGO -->
+
+                <div class="right-logo-container">
+
+                    <img
+                        src="./SSGMCElogo.png"
+                        alt="SSGMCE Logo"
+                        class="right-logo"
+                    >
+
+                </div>
+
+
+                <!-- COLLEGE NAME -->
+
+                <div class="right-college-name">
+
+                    Shri Sant Gajanan Maharaj
+
+                    <br>
+
+                    College of Engineering, Shegaon
+
+                </div>
+
+
+                <!-- WELCOME -->
+
+                <h2 class="welcome">
+
+                    Welcome Back
+
+                </h2>
+
+
+                <p class="welcome-text">
+
+                    Sign in to College ERP
+
+                </p>
+
+
+                <!-- LOGIN FORM -->
+
+                <form
+                    id="loginForm"
+                    onsubmit="handleLogin(event)"
+                >
+
+
+                    <!-- USER ID -->
+
+                    <div class="form-group">
+
+
+                        <label
+                            for="userId"
+                            class="form-label"
+                        >
+
+                            Enrollment / User ID
+
+                        </label>
+
+
+                        <div class="input-box">
+
+
+                            <i
+                                class="fa-regular fa-user input-icon"
+                            ></i>
+
+
+                            <input
+                                type="text"
+                                id="userId"
+                                name="userId"
+                                class="input"
+                                placeholder="Enter your User ID"
+                                autocomplete="username"
+                                required
+                            >
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+
+                        <label
+                            for="password"
+                            class="form-label"
+                        >
+
+                            Password
+
+                        </label>
+
+
+                        <div class="input-box">
+
+
+                            <i
+                                class="fa-solid fa-lock input-icon"
+                            ></i>
+
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="input"
+                                placeholder="Enter your password"
+                                minlength="8"
+                                maxlength="20"
+                                autocomplete="current-password"
+                                required
+                            >
+
+
+                            <button
+                                type="button"
+                                class="eye-button"
+                                onclick="togglePassword()"
+                                aria-label="Show password"
+                            >
+
+                                <i
+                                    class="fa-regular fa-eye"
+                                    id="eyeIcon"
+                                ></i>
+
+                            </button>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- REMEMBER / FORGOT -->
+
+                    <div class="options">
+
+
+                        <label class="remember">
+
+
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                            >
+
+
+                            <span>
+
+                                Remember me
+
+                            </span>
+
+
+                        </label>
+
+
+                        <a
+                            href="#"
+                            class="forgot"
+                            onclick="forgotPassword(event)"
+                        >
+
+                            Forgot Password?
+
+                        </a>
+
+
+                    </div>
+
+
+                    <!-- LOGIN BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="login-button"
+                    >
+
+                        <span>
+
+                            LOGIN
+
+                        </span>
+
+
+                        <i
+                            class="fa-solid fa-arrow-right"
+                        ></i>
+
+
+                    </button>
+
+
+                </form>
+
+
+                <!-- CONTACT ADMIN -->
+
+                <div class="contact">
+
+                    Need help?
+
+
+                    <a
+                        href="#"
+                        onclick="contactAdmin(event)"
+                    >
+
+                        Contact Admin
+
+                    </a>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- COPYRIGHT -->
+
+            <div class="copyright">
+
+                © 2026 College ERP
+
+            </div>
+
+
+        </section>
+
+
+    </div>
+
+
+    <script>
+
+
+        /* =====================================================
+           PASSWORD SHOW / HIDE
+        ===================================================== */
+
+        function togglePassword() {
+
+
+            const password =
+                document.getElementById("password");
+
+
+            const eyeIcon =
+                document.getElementById("eyeIcon");
+
+
+            if (password.type === "password") {
+
+
+                password.type = "text";
+
+
+                eyeIcon.classList.remove(
+                    "fa-eye"
+                );
+
+
+                eyeIcon.classList.add(
+                    "fa-eye-slash"
+                );
+
+
+            } else {
+
+
+                password.type = "password";
+
+
+                eyeIcon.classList.remove(
+                    "fa-eye-slash"
+                );
+
+
+                eyeIcon.classList.add(
+                    "fa-eye"
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           LOGIN
+        ===================================================== */
+
+        function handleLogin(event) {
+
+
+            event.preventDefault();
+
+
+            const userId =
+                document
+                    .getElementById("userId")
+                    .value
+                    .trim();
+
+
+            const password =
+                document
+                    .getElementById("password")
+                    .value;
+
+
+            /* USER ID VALIDATION */
+
+            if (!userId) {
+
+
+                alert(
+                    "Please enter your Enrollment / User ID."
+                );
+
+
+                return;
+
+            }
+
+
+            /* PASSWORD MINIMUM */
+
+            if (password.length < 8) {
+
+
+                alert(
+                    "Password must contain at least 8 characters."
+                );
+
+
+                return;
+
+            }
+
+
+            /* PASSWORD MAXIMUM */
+
+            if (password.length > 20) {
+
+
+                alert(
+                    "Password cannot contain more than 20 characters."
+                );
+
+
+                return;
+
+            }
+
+
+            /*
+                LOGIN API WILL BE CONNECTED HERE.
+
+                Example:
+
+                fetch("/api/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        password: password
+                    })
+                });
+            */
+
+
+            alert(
+                "Login API can now be connected."
+            );
+
+        }
+
+
+        /* =====================================================
+           FORGOT PASSWORD
+        ===================================================== */
+
+        function forgotPassword(event) {
+
+
+            event.preventDefault();
+
+
+            alert(
+                "Please contact the College ERP Administrator to reset your password."
+            );
+
+        }
+
+
+        /* =====================================================
+           CONTACT ADMIN
+        ===================================================== */
+
+        function contactAdmin(event) {
+
+
+            event.preventDefault();
+
+
+            alert(
+                "Please contact the College ERP Administrator."
+            );
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>
