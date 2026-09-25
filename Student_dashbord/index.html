@@ -175,8 +175,32 @@
               </div>
             </li>
 
-            <!-- 1. Attendance (with chevron) -->
-            <li class="sidebar-item">
+
+            <!-- Timetable Tab (Dedicated Item) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="timetable">
+              <a href="#timetableCard" class="sidebar-link" data-nav="timetable">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <path d="M8 14h.01"></path>
+                  <path d="M12 14h.01"></path>
+                  <path d="M16 14h.01"></path>
+                </svg>
+                <span class="nav-label">Timetable</span>
+                <span class="nav-badge-pill">DAILY</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="timetable" data-subtab="today"><span class="dropdown-subtab-dot submenu-dot"></span>Today's Timetable</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="timetable" data-subtab="weekly"><span class="dropdown-subtab-dot submenu-dot"></span>Weekly Overview</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="timetable" data-subtab="rooms"><span class="dropdown-subtab-dot submenu-dot"></span>Classroom &amp; Labs</a></li>
+              </ul>
+            </li>
+
+            <!-- 1. Attendance (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="attendance">
               <a href="#attendanceCard" class="sidebar-link" data-nav="attendance">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -186,33 +210,51 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
+                <span class="nav-badge-pill pct-pill">82%</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="attendance" data-subtab="subject-wise"><span class="dropdown-subtab-dot submenu-dot"></span>Subject-wise Attendance</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="attendance" data-subtab="eligibility"><span class="dropdown-subtab-dot submenu-dot"></span>Eligibility Status (75%)</a></li>
+                <li><a href="attendance.html" class="dropdown-subtab-link submenu-link"><span class="dropdown-subtab-dot submenu-dot"></span>Full Attendance Sheet &rarr;</a></li>
+              </ul>
             </li>
 
-            <!-- 2. Syllabus (with chevron) -->
-            <li class="sidebar-item">
+            <!-- 2. Syllabus (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="syllabus">
               <a href="#syllabusCard" class="sidebar-link" data-nav="syllabus">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                 </svg>
                 <span class="nav-label">Syllabus</span>
+                <span class="dropdown-count-badge">3</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="syllabus" data-subtab="subject"><span class="dropdown-subtab-dot submenu-dot"></span>Subject</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="syllabus" data-subtab="faculty"><span class="dropdown-subtab-dot submenu-dot"></span>Faculty</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="syllabus" data-subtab="university-syllabus"><span class="dropdown-subtab-dot submenu-dot"></span>University Syllabus</a></li>
+              </ul>
             </li>
 
-            <!-- 3. Fees (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#fees" class="sidebar-link" data-nav="fees">
+            <!-- 3. Fees (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="fees">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="fees">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
                   <circle cx="7" cy="15" r="1"></circle>
                 </svg>
                 <span class="nav-label">Fees</span>
+                <span class="dropdown-count-badge">3</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="fees" data-subtab="payable-fee"><span class="dropdown-subtab-dot submenu-dot"></span>Payable Fee</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="fees" data-subtab="online-payment"><span class="dropdown-subtab-dot submenu-dot"></span>Online Payment</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="fees" data-subtab="payment-receipt"><span class="dropdown-subtab-dot submenu-dot"></span>Payment Receipt</a></li>
+              </ul>
             </li>
 
             <!-- 4. Profile -->
@@ -226,9 +268,9 @@
               </a>
             </li>
 
-            <!-- 5. E-Learning (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#elearning" class="sidebar-link" data-nav="elearning">
+            <!-- 5. E-Learning (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="elearning">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="elearning">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                   <line x1="8" y1="21" x2="16" y2="21"></line>
@@ -236,51 +278,76 @@
                   <polygon points="10 8 15 10 10 12"></polygon>
                 </svg>
                 <span class="nav-label">E-Learning</span>
+                <span class="dropdown-count-badge">3</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="elearning" data-subtab="assignments"><span class="dropdown-subtab-dot submenu-dot"></span>Assignments</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="elearning" data-subtab="e-content"><span class="dropdown-subtab-dot submenu-dot"></span>E-Content</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="elearning" data-subtab="quizzes"><span class="dropdown-subtab-dot submenu-dot"></span>Quizzes</a></li>
+              </ul>
             </li>
 
-            <!-- 6. Change of Information (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#change-info" class="sidebar-link" data-nav="change-info">
+            <!-- 6. Change of Information (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="change-info">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="change-info">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="8.5" cy="7" r="4"></circle>
                   <polyline points="17 11 19 13 23 9"></polyline>
                 </svg>
-                <span class="nav-label">Change of Information</span>
+                <span class="nav-label">Change Information</span>
+                <span class="dropdown-count-badge">4</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="change-info" data-subtab="name"><span class="dropdown-subtab-dot submenu-dot"></span>Name</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="change-info" data-subtab="employee"><span class="dropdown-subtab-dot submenu-dot"></span>Employee</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="change-info" data-subtab="caste"><span class="dropdown-subtab-dot submenu-dot"></span>Caste</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="change-info" data-subtab="personal-photo"><span class="dropdown-subtab-dot submenu-dot"></span>Personal Photo</a></li>
+              </ul>
             </li>
 
-            <!-- 7. Updation of Information (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#update-info" class="sidebar-link" data-nav="update-info">
+            <!-- 7. Updation of Information (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="update-info">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="update-info">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
-                <span class="nav-label">Updation of Information</span>
+                <span class="nav-label">Updation Information</span>
+                <span class="dropdown-count-badge">4</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="update-info" data-subtab="industrial-visit"><span class="dropdown-subtab-dot submenu-dot"></span>Industrial Visit</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="update-info" data-subtab="seminar"><span class="dropdown-subtab-dot submenu-dot"></span>Seminar</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="update-info" data-subtab="workshop"><span class="dropdown-subtab-dot submenu-dot"></span>Workshop</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="update-info" data-subtab="activities"><span class="dropdown-subtab-dot submenu-dot"></span>Activities</a></li>
+              </ul>
             </li>
 
-            <!-- 8. D-Wallet (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#dwallet" class="sidebar-link" data-nav="dwallet">
+            <!-- 8. D-Wallet (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="dwallet">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="dwallet">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
                   <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
                   <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
                 </svg>
                 <span class="nav-label">D-Wallet</span>
+                <span class="dropdown-count-badge">2</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="dwallet" data-subtab="upload-document"><span class="dropdown-subtab-dot submenu-dot"></span>Upload Document</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="dwallet" data-subtab="download-document"><span class="dropdown-subtab-dot submenu-dot"></span>Download Document</a></li>
+              </ul>
             </li>
 
-            <!-- 9. Examination (with chevron) -->
-            <li class="sidebar-item">
-              <a href="#examination" class="sidebar-link" data-nav="examination">
+            <!-- 9. Examination (with dropdown) -->
+            <li class="sidebar-item has-dropdown has-submenu" data-module="examination">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="examination">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
@@ -289,32 +356,53 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 <span class="nav-label">Examination</span>
+                <span class="dropdown-count-badge">3</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="examination" data-subtab="view-marks"><span class="dropdown-subtab-dot submenu-dot"></span>View Marks</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="examination" data-subtab="revaluation"><span class="dropdown-subtab-dot submenu-dot"></span>Application for Revaluation</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="examination" data-subtab="backlog"><span class="dropdown-subtab-dot submenu-dot"></span>Backlog</a></li>
+              </ul>
             </li>
 
             <!-- 10. Course Choices Application -->
-            <li class="sidebar-item">
-              <a href="#course-choices" class="sidebar-link" data-nav="course-choices">
+            <li class="sidebar-item has-dropdown has-submenu" data-module="course-choices">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="course-choices">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 11 12 14 22 4"></polyline>
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                 </svg>
                 <span class="nav-label">Course Choices Application</span>
+                <span class="dropdown-count-badge">3</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="course-choices" data-subtab="electives"><span class="dropdown-subtab-dot submenu-dot"></span>Professional Elective I</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="course-choices" data-subtab="open-elective"><span class="dropdown-subtab-dot submenu-dot"></span>Open Elective I</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="course-choices" data-subtab="honors"><span class="dropdown-subtab-dot submenu-dot"></span>Honors / Minors</a></li>
+              </ul>
             </li>
 
             <!-- 11. Internal Mark -->
-            <li class="sidebar-item">
-              <a href="#internal-marks" class="sidebar-link" data-nav="internal-marks">
+            <li class="sidebar-item has-dropdown has-submenu" data-module="internal-marks">
+              <a href="javascript:void(0)" class="sidebar-link" data-nav="internal-marks">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
                   <line x1="6" y1="20" x2="6" y2="14"></line>
                 </svg>
                 <span class="nav-label">Internal Mark</span>
+                <span class="dropdown-count-badge">3</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
+              <ul class="sidebar-dropdown-menu sidebar-submenu" role="menu">
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="internal-marks" data-subtab="cie1"><span class="dropdown-subtab-dot submenu-dot"></span>CIE Test 1 (30M)</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="internal-marks" data-subtab="cie2"><span class="dropdown-subtab-dot submenu-dot"></span>CIE Test 2 (30M)</a></li>
+                <li><a href="javascript:void(0)" class="dropdown-subtab-link submenu-link" data-module="internal-marks" data-subtab="assessment"><span class="dropdown-subtab-dot submenu-dot"></span>Teacher Assessment (10M)</a></li>
+              </ul>
             </li>
+
 
             <!-- CAMPUS SERVICES Section Divider -->
             <li class="sidebar-item">
@@ -497,13 +585,25 @@
                 Today's Timetable
               </h3>
             </div>
+
             <div class="timetable-header-tags">
-              <span class="schedule-day-badge">Thursday • 5 Periods Scheduled</span>
+              <span class="schedule-day-badge" id="scheduleDayBadge">Thursday • 5 Periods Scheduled</span>
               <span class="schedule-live-pill"><span class="pulse-ring"></span> Live Class in Session</span>
             </div>
           </div>
 
-          <div class="timetable-horizontal-grid">
+          <!-- Interactive Day Switcher Tabs -->
+          <div class="timetable-day-tabs" id="timetableDayTabs">
+            <button type="button" class="day-tab-btn" data-day="monday">Mon</button>
+            <button type="button" class="day-tab-btn" data-day="tuesday">Tue</button>
+            <button type="button" class="day-tab-btn" data-day="wednesday">Wed</button>
+            <button type="button" class="day-tab-btn active" data-day="thursday">Thu (Today)</button>
+            <button type="button" class="day-tab-btn" data-day="friday">Fri</button>
+            <button type="button" class="day-tab-btn" data-day="saturday">Sat</button>
+          </div>
+
+          <div class="timetable-horizontal-grid" id="timetableHorizontalGrid">
+
             
             <!-- Period 1: Completed -->
             <div class="timetable-period completed">
@@ -782,9 +882,28 @@
                   </svg>
                   Syllabus Completed
                 </h3>
+
               </div>
-              <span class="badge-syllabus-pct">76% Average</span>
+              <div class="syllabus-head-actions">
+                <div class="card-tab-dropdown-wrap">
+                  <button type="button" class="btn-card-dropdown-toggle" onclick="toggleCardTabDropdown('syllabusDropdownMenu', event)">
+                    <span>Syllabus Tabs ▾</span>
+                  </button>
+                  <div class="card-dropdown-menu" id="syllabusDropdownMenu">
+                    <button type="button" class="card-dropdown-item" onclick="openStudentModule('syllabus', 'subject'); toggleCardTabDropdown('syllabusDropdownMenu', event)">Subject Overview</button>
+                    <button type="button" class="card-dropdown-item" onclick="openStudentModule('syllabus', 'faculty'); toggleCardTabDropdown('syllabusDropdownMenu', event)">Faculty Directory</button>
+                    <button type="button" class="card-dropdown-item" onclick="openStudentModule('syllabus', 'university-syllabus'); toggleCardTabDropdown('syllabusDropdownMenu', event)">University Scheme &amp; PDF</button>
+                  </div>
+                </div>
+                <div class="syllabus-quick-btns">
+                  <button type="button" class="btn-syllabus-tab" onclick="openStudentModule('syllabus', 'subject')">Subject</button>
+                  <button type="button" class="btn-syllabus-tab" onclick="openStudentModule('syllabus', 'faculty')">Faculty</button>
+                  <button type="button" class="btn-syllabus-tab" onclick="openStudentModule('syllabus', 'university-syllabus')">University Syllabus</button>
+                </div>
+                <span class="badge-syllabus-pct">76% Average</span>
+              </div>
             </div>
+
 
             <div class="syllabus-card-body">
               <div class="syllabus-metric-summary">
@@ -1038,7 +1157,978 @@
     </div>
   </div>
 
+
+  <!-- ==================== STUDENT MODULE MODAL DIALOG (ALL 7 TABS + TIMETABLE) ==================== -->
+  <div class="student-module-modal" id="studentModuleModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Student ERP Module Dialog">
+    <div class="module-modal-overlay" onclick="closeStudentModule()"></div>
+    <div class="module-modal-dialog">
+      <!-- Modal Header -->
+      <div class="module-modal-header">
+        <div class="modal-header-info">
+          <div class="modal-header-icon" id="modalHeaderIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="modalTitle">Module Title</h3>
+            <p class="modal-subtitle" id="modalSubtitle">Academic Services &amp; Submodules</p>
+          </div>
+        </div>
+
+        <div class="modal-header-actions">
+          <!-- Dropdown Tab Selector (Clicking main tab shows all tabs in dropdown) -->
+          <div class="modal-tab-dropdown-wrap">
+            <button type="button" class="modal-tab-dropdown-btn" id="modalTabDropdownBtn" onclick="toggleModalTabDropdown(event)" title="Show all tabs in dropdown">
+              <span id="modalTabDropdownLabel">All Tabs</span>
+              <svg class="dropdown-arrow-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="modal-tab-dropdown-menu" id="modalTabDropdownMenu" role="menu">
+              <!-- Dynamically populated or switchable -->
+            </div>
+          </div>
+
+          <button type="button" class="module-modal-close-btn" onclick="closeStudentModule()" aria-label="Close dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Horizontal Pill Tabs Bar -->
+      <div class="module-modal-tab-bar" id="modalSubtabBar" role="tablist">
+        <!-- Injected dynamically by JS -->
+      </div>
+
+      <!-- Modal Content Body -->
+      <div class="module-modal-body" id="modalModuleContainer">
+
+        <!-- 1. SYLLABUS MODULE -->
+        <div class="module-content-pane" data-module="syllabus">
+          <!-- Subtab 1: Subject -->
+          <div class="subtab-pane active" data-subpane="subject">
+            <div class="pane-section-header">
+              <h4>Semester VI - Registered Engineering Courses</h4>
+              <span class="badge-status-safe">Autonomous B.Tech R-2023</span>
+            </div>
+            <div class="table-responsive-wrapper">
+              <table class="attendance-data-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course Title</th>
+                    <th>Credits</th>
+                    <th>Type</th>
+                    <th>Faculty Advisor</th>
+                    <th>Syllabus Progress</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>CS-301</strong></td>
+                    <td>Data Structures &amp; Algorithms</td>
+                    <td>4.0</td>
+                    <td>Core Theory + Lab</td>
+                    <td>Prof. Rajesh Sharma</td>
+                    <td><span class="badge badge-cyan">82% Covered</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CS-302</strong></td>
+                    <td>Java &amp; Object Oriented Programming</td>
+                    <td>3.5</td>
+                    <td>Theory + Lab</td>
+                    <td>Dr. Rohan Deshmukh</td>
+                    <td><span class="badge badge-cyan">80% Covered</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CS-303</strong></td>
+                    <td>Operating Systems Concepts</td>
+                    <td>3.0</td>
+                    <td>Core Theory</td>
+                    <td>Prof. Priya Patil</td>
+                    <td><span class="badge badge-cyan">75% Covered</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CS-304</strong></td>
+                    <td>Database Management Systems</td>
+                    <td>4.0</td>
+                    <td>Core Theory + Lab</td>
+                    <td>Dr. Vikram Joshi</td>
+                    <td><span class="badge badge-cyan">78% Covered</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CS-305</strong></td>
+                    <td>Computer Networks &amp; Security</td>
+                    <td>3.0</td>
+                    <td>Core Theory</td>
+                    <td>Dr. Ananya Sen</td>
+                    <td><span class="badge badge-warning">65% Covered</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Faculty -->
+          <div class="subtab-pane" data-subpane="faculty">
+            <div class="pane-section-header">
+              <h4>Department Faculty Mentors &amp; Office Hours</h4>
+              <span class="badge-status-safe">CSE Faculty Directory</span>
+            </div>
+            <div class="modal-grid-two-col">
+              <div class="faculty-contact-card">
+                <div class="fac-avatar">RD</div>
+                <div class="fac-details">
+                  <h5>Dr. Rohan Deshmukh</h5>
+                  <p class="fac-designation">Associate Professor &amp; HOD</p>
+                  <p class="fac-meta">Course: Java Programming (CS-302) • Cabin LH-204</p>
+                  <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link">rohan.deshmukh@ssgmce.ac.in</a>
+                </div>
+              </div>
+              <div class="faculty-contact-card">
+                <div class="fac-avatar">RS</div>
+                <div class="fac-details">
+                  <h5>Prof. Rajesh Sharma</h5>
+                  <p class="fac-designation">Assistant Professor</p>
+                  <p class="fac-meta">Course: Data Structures (CS-301) • Cabin LH-201</p>
+                  <a href="mailto:rajesh.sharma@ssgmce.ac.in" class="fac-email-link">rajesh.sharma@ssgmce.ac.in</a>
+                </div>
+              </div>
+              <div class="faculty-contact-card">
+                <div class="fac-avatar">AS</div>
+                <div class="fac-details">
+                  <h5>Dr. Ananya Sen</h5>
+                  <p class="fac-designation">Associate Professor</p>
+                  <p class="fac-meta">Course: Computer Networks (CS-305) • Cabin LH-108</p>
+                  <a href="mailto:ananya.sen@ssgmce.ac.in" class="fac-email-link">ananya.sen@ssgmce.ac.in</a>
+                </div>
+              </div>
+              <div class="faculty-contact-card">
+                <div class="fac-avatar">VJ</div>
+                <div class="fac-details">
+                  <h5>Dr. Vikram Joshi</h5>
+                  <p class="fac-designation">Assistant Professor</p>
+                  <p class="fac-meta">Course: DBMS (CS-304) • Lab 3 Annex</p>
+                  <a href="mailto:vikram.joshi@ssgmce.ac.in" class="fac-email-link">vikram.joshi@ssgmce.ac.in</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 3: University Syllabus -->
+          <div class="subtab-pane" data-subpane="university-syllabus">
+            <div class="pane-section-header">
+              <h4>Sant Gadge Baba Amravati University (SGBAU) Curriculum Documents</h4>
+              <span class="badge-status-safe">Autonomous Regulations R-2023</span>
+            </div>
+            <div class="doc-download-grid">
+              <div class="doc-item-card">
+                <div class="doc-icon-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
+                <div class="doc-info">
+                  <h5>B.Tech Computer Science Semester VI Full Syllabus</h5>
+                  <p>Includes complete unit course objectives, textbooks, reference materials &amp; laboratory scheme.</p>
+                  <span class="file-size-tag">PDF • 2.4 MB • Updated Jan 2026</span>
+                </div>
+                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading B.Tech CSE Semester VI Syllabus PDF...', 'info')">
+                  Download PDF
+                </a>
+              </div>
+              <div class="doc-item-card">
+                <div class="doc-icon-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                </div>
+                <div class="doc-info">
+                  <h5>Autonomous Academic Examination Scheme &amp; Regulations</h5>
+                  <p>Grading criteria, Continuous Internal Evaluation (CIE), and End Semester Exam (ESE) weightages.</p>
+                  <span class="file-size-tag">PDF • 1.1 MB • Official Autonomous Gazette</span>
+                </div>
+                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading Academic Regulations PDF...', 'info')">
+                  Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. FEES MODULE -->
+        <div class="module-content-pane" data-module="fees">
+          <!-- Subtab 1: Payable Fee -->
+          <div class="subtab-pane active" data-subpane="payable-fee">
+            <div class="fee-summary-banner">
+              <div class="fee-stat-box">
+                <span class="fee-label">Total Annual Fee</span>
+                <span class="fee-val">₹85,000</span>
+              </div>
+              <div class="fee-stat-box">
+                <span class="fee-label">Amount Paid</span>
+                <span class="fee-val text-success">₹60,000</span>
+              </div>
+              <div class="fee-stat-box">
+                <span class="fee-label">Outstanding Balance</span>
+                <span class="fee-val text-warning">₹25,000</span>
+              </div>
+              <div class="fee-stat-box">
+                <span class="fee-label">Due Date</span>
+                <span class="fee-val text-accent">15 April 2026</span>
+              </div>
+            </div>
+            <div class="table-responsive-wrapper">
+              <table class="attendance-data-table">
+                <thead>
+                  <tr>
+                    <th>Fee Head</th>
+                    <th>Total Amount</th>
+                    <th>Paid Amount</th>
+                    <th>Outstanding</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Tuition Fee (Semester IV)</td>
+                    <td>₹68,500</td>
+                    <td>₹50,000</td>
+                    <td>₹18,500</td>
+                    <td><span class="badge badge-warning">Partial</span></td>
+                  </tr>
+                  <tr>
+                    <td>Development &amp; Gymkhana Fee</td>
+                    <td>₹12,000</td>
+                    <td>₹10,000</td>
+                    <td>₹2,000</td>
+                    <td><span class="badge badge-warning">Partial</span></td>
+                  </tr>
+                  <tr>
+                    <td>Autonomous Examination Fee</td>
+                    <td>₹2,500</td>
+                    <td>₹0</td>
+                    <td>₹2,500</td>
+                    <td><span class="badge badge-danger">Due</span></td>
+                  </tr>
+                  <tr>
+                    <td>Central Library &amp; Laboratory Deposit</td>
+                    <td>₹2,000</td>
+                    <td>₹0</td>
+                    <td>₹2,000</td>
+                    <td><span class="badge badge-danger">Due</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Online Payment -->
+          <div class="subtab-pane" data-subpane="online-payment">
+            <div class="payment-gateway-card">
+              <div class="payment-header">
+                <h4>SSGMCE Autonomous Secure Payment Gateway</h4>
+                <p>Powered by BillDesk &amp; SBI e-Pay • 256-bit Institutional SSL Encryption</p>
+              </div>
+              <form class="payment-form" onsubmit="handleOnlinePayment(event)">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Student Roll Number</label>
+                    <input type="text" class="form-control" value="21 (CSE2401)" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label>Student Name</label>
+                    <input type="text" class="form-control" value="Shivam Aghao" readonly>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Payment Purpose</label>
+                    <select class="form-control" id="paymentHeadSelect">
+                      <option value="balance">Full Outstanding Balance (₹25,000)</option>
+                      <option value="tuition">Tuition Fee Clearance (₹18,500)</option>
+                      <option value="exam">Examination Fee (₹2,500)</option>
+                      <option value="custom">Other / Custom Amount</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Amount to Pay (INR)</label>
+                    <input type="number" class="form-control" id="payAmountInput" value="25000" min="500">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Select Payment Mode</label>
+                  <div class="payment-modes-grid">
+                    <label class="mode-pill"><input type="radio" name="paymode" value="upi" checked> UPI (GPay / PhonePe / Paytm)</label>
+                    <label class="mode-pill"><input type="radio" name="paymode" value="netbanking"> Net Banking (SBI / HDFC / Axis)</label>
+                    <label class="mode-pill"><input type="radio" name="paymode" value="card"> Credit / Debit Card</label>
+                  </div>
+                </div>
+                <button type="submit" class="btn-proceed-pay">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                  Proceed to Secure Checkout &rarr;
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Payment Receipt -->
+          <div class="subtab-pane" data-subpane="payment-receipt">
+            <div class="pane-section-header">
+              <h4>Verified Payment Receipts History</h4>
+              <span class="badge-status-safe">Official College Counterfoil</span>
+            </div>
+            <div class="receipts-list">
+              <div class="receipt-item">
+                <div class="receipt-meta">
+                  <span class="receipt-id">Receipt #SSGMCE-2025-8821</span>
+                  <span class="receipt-date">Paid on 14 Jan 2026 • 11:32 AM</span>
+                  <span class="receipt-head">Tuition Installment 2 (B.Tech Sem IV)</span>
+                </div>
+                <div class="receipt-amount-block">
+                  <span class="receipt-val">₹30,000</span>
+                  <button type="button" class="btn-receipt-dl" onclick="showToast('Downloading Receipt #SSGMCE-2025-8821 PDF...', 'success')">
+                    Download Receipt PDF
+                  </button>
+                </div>
+              </div>
+              <div class="receipt-item">
+                <div class="receipt-meta">
+                  <span class="receipt-id">Receipt #SSGMCE-2025-4109</span>
+                  <span class="receipt-date">Paid on 18 Aug 2025 • 03:15 PM</span>
+                  <span class="receipt-head">Semester III Admission &amp; Tuition Fee</span>
+                </div>
+                <div class="receipt-amount-block">
+                  <span class="receipt-val">₹30,000</span>
+                  <button type="button" class="btn-receipt-dl" onclick="showToast('Downloading Receipt #SSGMCE-2025-4109 PDF...', 'success')">
+                    Download Receipt PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. E-LEARNING MODULE -->
+        <div class="module-content-pane" data-module="elearning">
+          <!-- Subtab 1: Assignments -->
+          <div class="subtab-pane active" data-subpane="assignments">
+            <div class="pane-section-header">
+              <h4>Active &amp; Submitted Subject Assignments</h4>
+              <span class="badge-status-safe">4 Tasks Tracked</span>
+            </div>
+            <div class="assignments-list">
+              <div class="assignment-card">
+                <div class="as-head">
+                  <span class="as-course">Data Structures (CS-301)</span>
+                  <span class="badge badge-success">Submitted ✓</span>
+                </div>
+                <h5>Assignment 3: Balanced Binary Search Trees (AVL &amp; Red-Black Trees)</h5>
+                <p>Implementation of self-balancing algorithms in C++ with test cases and complexity graphs.</p>
+                <div class="as-footer">
+                  <span class="as-due">Submitted: March 20, 2026 • Grade: Pending</span>
+                  <button type="button" class="btn-sm-action" onclick="showToast('Viewing submission for CS-301 Assignment 3', 'info')">View Submission</button>
+                </div>
+              </div>
+
+              <div class="assignment-card">
+                <div class="as-head">
+                  <span class="as-course">Database Management (CS-304)</span>
+                  <span class="badge badge-warning">Due in 3 Days</span>
+                </div>
+                <h5>Assignment 2: Schema Normalization &amp; BCNF Decomposition</h5>
+                <p>Solve normalization problems 1 to 5 from university question bank and write relational algebra queries.</p>
+                <div class="as-footer">
+                  <span class="as-due text-warning">Deadline: March 27, 2026 • 11:59 PM</span>
+                  <button type="button" class="btn-sm-action primary-btn" onclick="showToast('Opening assignment upload dialog...', 'info')">Upload Solution</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: E-Content -->
+          <div class="subtab-pane" data-subpane="e-content">
+            <div class="pane-section-header">
+              <h4>Digital Learning Repositories &amp; Recorded Lectures</h4>
+              <span class="badge-status-safe">LMS Cloud</span>
+            </div>
+            <div class="econtent-grid">
+              <div class="econtent-card">
+                <span class="econtent-tag">Lecture Slides</span>
+                <h5>CS-302: Java Concurrency &amp; Multithreading (Unit 4)</h5>
+                <p>Complete instructor presentation slides with runnable code samples and thread pool diagrams.</p>
+                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Accessing Java Unit 4 Lecture Slides...', 'info')">Open Resource &rarr;</a>
+              </div>
+              <div class="econtent-card">
+                <span class="econtent-tag">Recorded Video</span>
+                <h5>CS-305: Subnetting &amp; CIDR Addressing Tutorial</h5>
+                <p>Step-by-step lecture walkthrough with FLSM/VLSM numerical problem solving by Dr. Ananya Sen.</p>
+                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Streaming Subnetting Video Lecture...', 'info')">Watch Video &rarr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Quizzes -->
+          <div class="subtab-pane" data-subpane="quizzes">
+            <div class="pane-section-header">
+              <h4>Autonomous Internal Quizzes &amp; Mock Tests</h4>
+              <span class="badge-status-safe">Continuous Internal Evaluation</span>
+            </div>
+            <div class="quiz-grid">
+              <div class="quiz-item-card">
+                <div class="quiz-badge">Active Quiz</div>
+                <h5>Operating Systems Unit 3: Deadlocks &amp; Concurrency</h5>
+                <p>20 Multiple Choice Questions • 30 Minutes • Max Marks: 20</p>
+                <button type="button" class="btn-start-quiz" onclick="showToast('Starting OS Unit 3 Online Quiz... Good Luck!', 'success')">Start Quiz Now &rarr;</button>
+              </div>
+              <div class="quiz-item-card">
+                <div class="quiz-badge badge-past">Completed</div>
+                <h5>Data Structures Unit 2: Trees and Traversals</h5>
+                <p>Score: 18 / 20 (90%) • Completed on March 12, 2026</p>
+                <button type="button" class="btn-review-quiz" onclick="showToast('Opening quiz score review sheet...', 'info')">Review Responses</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. CHANGE OF INFORMATION MODULE -->
+        <div class="module-content-pane" data-module="change-info">
+          <!-- Subtab 1: Name -->
+          <div class="subtab-pane active" data-subpane="name">
+            <div class="info-form-card">
+              <h4>Application for Correction in Student Name</h4>
+              <p>Apply for corrections in college records as per 10th/12th Board marksheet or Government Gazette.</p>
+              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Name change request submitted to Registrar Office for verification.', 'success')">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Current Name in College Record</label>
+                    <input type="text" class="form-control" value="Shivam Aghao" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label>Requested Name (As per 10th Marksheet)</label>
+                    <input type="text" class="form-control" placeholder="Enter corrected full name" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Supporting Document (10th Marksheet / Gazette Copy)</label>
+                  <input type="file" class="form-control" accept=".pdf,.jpg,.png">
+                </div>
+                <button type="submit" class="btn-submit-form">Submit Name Correction Request</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Employee -->
+          <div class="subtab-pane" data-subpane="employee">
+            <div class="info-form-card">
+              <h4>Student / Guardian Employment Status Update</h4>
+              <p>Update employment details for scholarship schemes and autonomous verification records.</p>
+              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Employment details successfully updated.', 'success')">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Parent / Guardian Occupation</label>
+                    <input type="text" class="form-control" value="Business / Agriculture" placeholder="Occupation">
+                  </div>
+                  <div class="form-group">
+                    <label>Organization / Employer Name</label>
+                    <input type="text" class="form-control" placeholder="Employer Name">
+                  </div>
+                </div>
+                <button type="submit" class="btn-submit-form">Update Employment Record</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Caste -->
+          <div class="subtab-pane" data-subpane="caste">
+            <div class="info-form-card">
+              <h4>Caste &amp; Social Category Verification Record</h4>
+              <p>Submit updated Caste Validity Certificate or EWS / Non-Creamy Layer documents.</p>
+              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Category document uploaded for review by Scholarship Cell.', 'success')">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Current Category</label>
+                    <input type="text" class="form-control" value="OBC (Other Backward Classes)" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label>Caste Certificate Number</label>
+                    <input type="text" class="form-control" placeholder="e.g. CC-MH-2024-91823" required>
+                  </div>
+                </div>
+                <button type="submit" class="btn-submit-form">Submit Caste Validity Record</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 4: Personal Photo -->
+          <div class="subtab-pane" data-subpane="personal-photo">
+            <div class="photo-update-card">
+              <h4>Update Official Student ID Photograph</h4>
+              <p>Photo will be reflected on College ID Card, Hall Ticket, and Autonomous Grade Cards.</p>
+              <div class="photo-preview-layout">
+                <div class="photo-preview-circle" id="studentPhotoPreview">
+                  <span class="preview-initials" id="previewInitials">SA</span>
+                </div>
+                <div class="photo-upload-controls">
+                  <label class="btn-choose-file">
+                    <input type="file" id="studentPhotoInput" accept="image/*" onchange="handlePhotoUploadPreview(event)">
+                    Choose Image File (JPG/PNG)
+                  </label>
+                  <p class="photo-guideline">White background recommended • Max file size: 2MB • Passport ratio (35mm x 45mm)</p>
+                  <button type="button" class="btn-save-photo" onclick="showToast('Student ID photograph updated successfully!', 'success')">Save as Profile Photo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. UPDATION OF INFORMATION MODULE -->
+        <div class="module-content-pane" data-module="update-info">
+          <!-- Subtab 1: Industrial Visit -->
+          <div class="subtab-pane active" data-subpane="industrial-visit">
+            <div class="pane-section-header">
+              <h4>Industrial Visits &amp; Practical Field Experiences</h4>
+              <span class="badge-status-safe">Autonomous Industrial Credit</span>
+            </div>
+            <div class="iv-list">
+              <div class="iv-item-card">
+                <span class="iv-badge">Completed ✓</span>
+                <h5>Infosys Development Center &amp; Campus Tour (Pune Hinjewadi)</h5>
+                <p>3-day industrial study on Large Scale Enterprise Cloud Infrastructure and Agile DevOps pipelines.</p>
+                <span class="iv-date">Date: 12 - 14 Feb 2026 • Certificate Issued</span>
+              </div>
+              <div class="iv-item-card">
+                <span class="iv-badge badge-cyan">Upcoming</span>
+                <h5>Tata Consultancy Services (TCS) Mihan Innovation Hub (Nagpur)</h5>
+                <p>Industrial exposure on Autonomous AI Systems, Cybersecurity Operations, and Big Data Analytics.</p>
+                <span class="iv-date text-accent">Scheduled: April 2026 • Registration Confirmed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Seminar -->
+          <div class="subtab-pane" data-subpane="seminar">
+            <div class="info-form-card">
+              <h4>Technical Seminar Presentation Submission</h4>
+              <p>Third Year B.Tech Technical Seminar Topic Registration &amp; Mentor Allocation.</p>
+              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Technical seminar topic registered successfully with Mentor Dr. Rohan Deshmukh.', 'success')">
+                <div class="form-group">
+                  <label>Seminar Topic Title</label>
+                  <input type="text" class="form-control" value="Federated Learning in Edge AI for Autonomous Vehicular Networks" required>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Allocated Guide / Faculty</label>
+                    <input type="text" class="form-control" value="Dr. Rohan Deshmukh (CSE)" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label>Seminar Stage</label>
+                    <input type="text" class="form-control" value="Stage 1 - Synopsis Approved" readonly>
+                  </div>
+                </div>
+                <button type="submit" class="btn-submit-form">Update Seminar Details</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Workshop -->
+          <div class="subtab-pane" data-subpane="workshop">
+            <div class="pane-section-header">
+              <h4>Technical Workshops &amp; Skill Certifications</h4>
+              <span class="badge-status-safe">3 Completed</span>
+            </div>
+            <div class="workshop-grid">
+              <div class="workshop-card">
+                <span class="ws-tag">Certification</span>
+                <h5>AWS Cloud Architect Practitioner Workshop</h5>
+                <p>3-day intensive boot camp covering EC2, S3, IAM, Lambda, and CloudFormation architectures.</p>
+                <span class="ws-hours">24 Hours • Issued by AWS Academy</span>
+              </div>
+              <div class="workshop-card">
+                <span class="ws-tag">Hands-on</span>
+                <h5>Generative AI &amp; LLM Engineering with Python</h5>
+                <p>Building Retrieval-Augmented Generation (RAG) pipelines, LangChain agents, and vector embeddings.</p>
+                <span class="ws-hours">16 Hours • SSGMCE ACM Student Chapter</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 4: Activities -->
+          <div class="subtab-pane" data-subpane="activities">
+            <div class="aicte-activity-card">
+              <div class="activity-top">
+                <h4>AICTE 100 Activity Points Tracker</h4>
+                <span class="badge-status-safe">68 / 100 Points Earned</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-fill" style="width: 68%;"></div>
+              </div>
+              <p class="progress-info">You need <strong>32 more activity points</strong> before Semester VIII to satisfy the B.Tech Autonomous degree award requirement.</p>
+              <div class="activity-breakdown-row">
+                <div class="act-pill">NSS &amp; Community Service: <strong>20 Pts</strong></div>
+                <div class="act-pill">Sports &amp; Cultural: <strong>18 Pts</strong></div>
+                <div class="act-pill">Technical Hackathons: <strong>30 Pts</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. D-WALLET MODULE -->
+        <div class="module-content-pane" data-module="dwallet">
+          <!-- Subtab 1: Upload Document -->
+          <div class="subtab-pane active" data-subpane="upload-document">
+            <div class="wallet-upload-box">
+              <h4>Upload Verified Document to Digital Locker</h4>
+              <p>Store marksheets, caste validity, income certificates, and Aadhar securely on SSGMCE cloud vault.</p>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Document Category</label>
+                  <select class="form-control" id="dwalletDocType">
+                    <option value="10th">10th SSC Marksheet</option>
+                    <option value="12th">12th HSC Marksheet</option>
+                    <option value="aadhar">Aadhar Card Copy</option>
+                    <option value="caste">Caste Validity Certificate</option>
+                    <option value="domicile">Domicile Certificate</option>
+                    <option value="income">Income Certificate 2025-26</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Document Reference Number</label>
+                  <input type="text" class="form-control" id="dwalletDocNum" placeholder="e.g. MH-DOC-98213">
+                </div>
+              </div>
+              <div class="dropzone-area" onclick="document.getElementById('dwalletFileInput').click()">
+                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <p>Click to select or drag and drop verified PDF or Image here</p>
+                <span class="file-hint">PDF, JPG, PNG up to 5MB</span>
+                <input type="file" id="dwalletFileInput" style="display:none" onchange="handleDWalletUpload(event)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Download Document -->
+          <div class="subtab-pane" data-subpane="download-document">
+            <div class="pane-section-header">
+              <h4>Available Verified Institutional Credentials</h4>
+              <span class="badge-status-safe">D-Wallet Cloud Vault</span>
+            </div>
+            <div class="wallet-download-list">
+              <div class="wallet-doc-item">
+                <div class="w-doc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                </div>
+                <div class="w-doc-info">
+                  <h5>Semester III Autonomous Grade Card</h5>
+                  <p>Official SGPA: 8.64 • Digitally Signed by Controller of Examinations</p>
+                  <span class="file-size-tag">Verified PDF • 420 KB</span>
+                </div>
+                <button type="button" class="btn-download-action" onclick="showToast('Downloading Semester III Grade Card PDF...', 'success')">Download PDF</button>
+              </div>
+
+              <div class="wallet-doc-item">
+                <div class="w-doc-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                </div>
+                <div class="w-doc-info">
+                  <h5>Institutional Bonafide Certificate</h5>
+                  <p>Issued for Passport and Education Loan Verification • Valid for 2025-26</p>
+                  <span class="file-size-tag">Verified PDF • 210 KB</span>
+                </div>
+                <button type="button" class="btn-download-action" onclick="showToast('Downloading Bonafide Certificate PDF...', 'success')">Download PDF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. EXAMINATION MODULE -->
+        <div class="module-content-pane" data-module="examination">
+          <!-- Subtab 1: View Marks -->
+          <div class="subtab-pane active" data-subpane="view-marks">
+            <div class="exam-marks-banner">
+              <div class="marks-stat">
+                <span class="ms-lbl">Current Cumulative CGPA</span>
+                <span class="ms-val">8.64</span>
+              </div>
+              <div class="marks-stat">
+                <span class="ms-lbl">Total Credits Earned</span>
+                <span class="ms-val text-accent">68 / 160</span>
+              </div>
+              <div class="marks-stat">
+                <span class="ms-lbl">Active Backlogs</span>
+                <span class="ms-val text-success">0 (Clear)</span>
+              </div>
+            </div>
+            <div class="pane-section-header">
+              <h4>Semester IV Continuous Internal Evaluation (CIE) Marks</h4>
+              <span class="badge badge-cyan">Mid-Sem Progress</span>
+            </div>
+            <div class="table-responsive-wrapper">
+              <table class="attendance-data-table">
+                <thead>
+                  <tr>
+                    <th>Subject Code &amp; Title</th>
+                    <th>Class Test 1 (20)</th>
+                    <th>Class Test 2 (20)</th>
+                    <th>Teacher Assessment (10)</th>
+                    <th>Total CIE (50)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CS-301 Data Structures</td>
+                    <td>18</td>
+                    <td>17</td>
+                    <td>9</td>
+                    <td><strong>44 / 50</strong></td>
+                  </tr>
+                  <tr>
+                    <td>CS-302 Java Programming</td>
+                    <td>19</td>
+                    <td>18</td>
+                    <td>10</td>
+                    <td><strong>47 / 50</strong></td>
+                  </tr>
+                  <tr>
+                    <td>CS-303 Operating Systems</td>
+                    <td>16</td>
+                    <td>15</td>
+                    <td>8</td>
+                    <td><strong>39 / 50</strong></td>
+                  </tr>
+                  <tr>
+                    <td>CS-304 Database Systems</td>
+                    <td>17</td>
+                    <td>18</td>
+                    <td>9</td>
+                    <td><strong>44 / 50</strong></td>
+                  </tr>
+                  <tr>
+                    <td>CS-305 Computer Networks</td>
+                    <td>15</td>
+                    <td>14</td>
+                    <td>8</td>
+                    <td><strong>37 / 50</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Application for Revaluation -->
+          <div class="subtab-pane" data-subpane="revaluation">
+            <div class="reval-card">
+              <h4>Apply for Autonomous End-Sem Answer Book Revaluation / Verification</h4>
+              <p>Revaluation Fee: ₹300 per subject • Max 2 subjects per student per semester.</p>
+              <form class="academic-form" onsubmit="handleRevaluationSubmit(event)">
+                <div class="subject-select-list">
+                  <label class="reval-check-label">
+                    <input type="checkbox" name="revalSubject" value="CS-301" onchange="calculateRevalFee()">
+                    <span><strong>CS-301 Data Structures</strong> • End-Sem Marks: 58/70 (Fee: ₹300)</span>
+                  </label>
+                  <label class="reval-check-label">
+                    <input type="checkbox" name="revalSubject" value="CS-303" onchange="calculateRevalFee()">
+                    <span><strong>CS-303 Operating Systems</strong> • End-Sem Marks: 46/70 (Fee: ₹300)</span>
+                  </label>
+                  <label class="reval-check-label">
+                    <input type="checkbox" name="revalSubject" value="CS-305" onchange="calculateRevalFee()">
+                    <span><strong>CS-305 Computer Networks</strong> • End-Sem Marks: 42/70 (Fee: ₹300)</span>
+                  </label>
+                </div>
+                <div class="reval-total-box">
+                  <span>Selected Subjects Fee:</span>
+                  <strong class="total-fee" id="revalFeeDisplay">₹0</strong>
+                </div>
+                <button type="submit" class="btn-submit-form" id="btnSubmitReval" disabled>
+                  Submit Revaluation Application &rarr;
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Backlog -->
+          <div class="subtab-pane" data-subpane="backlog">
+            <div class="backlog-status-card">
+              <div class="backlog-icon-safe">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <h4>All Clear Academic Record!</h4>
+              <p>You have <strong>0 active backlogs</strong>. All registered autonomous semester courses have been successfully passed in the first attempt.</p>
+              <span class="badge-status-safe">Degree Eligibility: Outstanding</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. TIMETABLE MODULE -->
+        <div class="module-content-pane" data-module="timetable">
+          <!-- Subtab 1: Today -->
+          <div class="subtab-pane active" data-subpane="today">
+            <div class="pane-section-header">
+              <h4>Today's Schedule • Thursday</h4>
+              <span class="badge-status-safe">5 Periods</span>
+            </div>
+            <div class="modal-timetable-list">
+              <div class="modal-time-period completed">
+                <div class="mt-slot">Period 1 • 09:00 - 10:00 AM</div>
+                <div class="mt-title">Data Structures (CS-301)</div>
+                <div class="mt-meta">Lecture Hall 204 • Prof. Rajesh Sharma • Attended ✓</div>
+              </div>
+              <div class="modal-time-period active-now">
+                <div class="mt-slot">Period 2 • 10:00 - 11:00 AM (Live)</div>
+                <div class="mt-title">Java Programming (CS-302)</div>
+                <div class="mt-meta">Computer Lab 2 • Dr. Rohan Deshmukh • In Progress</div>
+              </div>
+              <div class="modal-time-period upcoming">
+                <div class="mt-slot">Period 3 • 11:15 AM - 12:15 PM</div>
+                <div class="mt-title">Operating Systems (CS-303)</div>
+                <div class="mt-meta">Lecture Hall 204 • Prof. Priya Patil</div>
+              </div>
+              <div class="modal-time-period upcoming">
+                <div class="mt-slot">Period 4 • 01:30 - 02:30 PM</div>
+                <div class="mt-title">Computer Networks (CS-305)</div>
+                <div class="mt-meta">Lecture Hall 108 • Dr. Ananya Sen</div>
+              </div>
+              <div class="modal-time-period upcoming">
+                <div class="mt-slot">Period 5 • 02:45 - 03:45 PM</div>
+                <div class="mt-title">Database Management Tutorial (CS-304)</div>
+                <div class="mt-meta">Seminar Hall 1 • Batch B Tutorial</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Weekly -->
+          <div class="subtab-pane" data-subpane="weekly">
+            <div class="pane-section-header">
+              <h4>Weekly Timetable Matrix • Monday to Saturday</h4>
+              <span class="badge-status-safe">B.Tech CSE 2R1</span>
+            </div>
+            <div class="table-responsive-wrapper">
+              <table class="attendance-data-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>09:00 - 10:00</th>
+                    <th>10:00 - 11:00</th>
+                    <th>11:15 - 12:15</th>
+                    <th>01:30 - 02:30</th>
+                    <th>02:45 - 04:45</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Monday</strong></td>
+                    <td>CS-301 (Theory)</td>
+                    <td>CS-304 (Theory)</td>
+                    <td>CS-303 (Theory)</td>
+                    <td>CS-305 (Theory)</td>
+                    <td>Lab: CS-301 Batch A / CS-302 Batch B</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Tuesday</strong></td>
+                    <td>CS-302 (Theory)</td>
+                    <td>CS-305 (Theory)</td>
+                    <td>CS-301 (Theory)</td>
+                    <td>CS-304 (Theory)</td>
+                    <td>Library / Self Study</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Wednesday</strong></td>
+                    <td>CS-303 (Theory)</td>
+                    <td>CS-301 (Theory)</td>
+                    <td>CS-302 (Theory)</td>
+                    <td>CS-305 (Theory)</td>
+                    <td>Lab: CS-304 Batch A / CS-305 Batch B</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Thursday</strong></td>
+                    <td>CS-301 (Theory)</td>
+                    <td>CS-302 (Lab)</td>
+                    <td>CS-303 (Theory)</td>
+                    <td>CS-305 (Theory)</td>
+                    <td>CS-304 Tutorial</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Friday</strong></td>
+                    <td>CS-304 (Theory)</td>
+                    <td>CS-302 (Theory)</td>
+                    <td>CS-305 (Theory)</td>
+                    <td>CS-303 (Theory)</td>
+                    <td>Technical Seminar / Mentoring</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Saturday</strong></td>
+                    <td>CS-301 Remedial</td>
+                    <td>CS-303 Tutorial</td>
+                    <td>Co-curricular Activities</td>
+                    <td>-</td>
+                    <td>-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Classroom & Labs -->
+          <div class="subtab-pane" data-subpane="rooms">
+            <div class="pane-section-header">
+              <h4>Vidya Bhavan Academic Block - Lecture Halls &amp; Computing Labs</h4>
+              <span class="badge-status-safe">Campus Location Map</span>
+            </div>
+            <div class="modal-grid-two-col">
+              <div class="room-guide-card">
+                <h5>Lecture Hall 204 (LH-204)</h5>
+                <p>Second Floor • Vidya Bhavan • Capacity: 80 Students • Smart Interactive Projector &amp; Audio</p>
+                <span class="room-tag">Primary Classroom for CSE 2R1</span>
+              </div>
+              <div class="room-guide-card">
+                <h5>Computer Center Lab 2</h5>
+                <p>Ground Floor • High Performance Intel i7 Workstations • Linux / Windows Dual Boot • Dedicated 1Gbps LAN</p>
+                <span class="room-tag">Data Structures &amp; Java Programming Lab</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. ATTENDANCE MODULE -->
+        <div class="module-content-pane" data-module="attendance">
+          <!-- Subtab 1: Subject-wise -->
+          <div class="subtab-pane active" data-subpane="subject-wise">
+            <div class="pane-section-header">
+              <h4>Subject-wise Attendance Progress</h4>
+              <a href="attendance.html" class="sub-col-link">Open Full Attendance Page &rarr;</a>
+            </div>
+            <div class="modal-att-summary-list">
+              <div class="att-row-pill">
+                <span>CS-301 Data Structures</span>
+                <strong>34 / 40 (85%)</strong>
+              </div>
+              <div class="att-row-pill">
+                <span>CS-302 Java Programming</span>
+                <strong>36 / 40 (90%)</strong>
+              </div>
+              <div class="att-row-pill">
+                <span>CS-303 Operating Systems</span>
+                <strong>32 / 42 (76%)</strong>
+              </div>
+              <div class="att-row-pill">
+                <span>CS-304 Database Systems</span>
+                <strong>30 / 37 (81%)</strong>
+              </div>
+              <div class="att-row-pill warning">
+                <span>CS-305 Computer Networks</span>
+                <strong class="text-warning">26 / 36 (72% - Warning)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Eligibility -->
+          <div class="subtab-pane" data-subpane="eligibility">
+            <div class="backlog-status-card">
+              <h4>Autonomous 75% Attendance Requirement</h4>
+              <p>Overall Attendance: <strong>82%</strong> (157 Present / 34 Absent out of 191 total lectures).</p>
+              <span class="badge-status-safe">Status: Eligible for End-Semester Examinations</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
+
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
   <!-- Dashboard JavaScript -->
