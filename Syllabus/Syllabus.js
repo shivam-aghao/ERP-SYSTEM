@@ -1,72 +1,99 @@
+/* =========================================================
+   SSGMCE COLLEGE ERP
+   SYLLABUS MODULE
+   JAVASCRIPT
+========================================================= */
+
+
+/* =========================================================
+   HELPER
+========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+
+/* =========================================================
+   SUBJECT DATA
+========================================================= */
+
 const subjects = [
+
     {
+        id: 1,
         name: "Database Management Systems",
         code: "5IT220PC",
         type: "Core",
         credits: 3,
         faculty: "M. Faizan I. Khandwani",
-        short: "DBMS"
+        short: "Database systems, SQL, normalization, transactions and indexing."
     },
 
     {
+        id: 2,
         name: "Operating Systems",
         code: "5IT221PC",
         type: "Core",
         credits: 3,
         faculty: "Sumit Muddalkar",
-        short: "OS"
+        short: "Processes, memory management, file systems and OS security."
     },
 
     {
+        id: 3,
         name: "Theory of Computation",
         code: "5IT222PC",
         type: "Core",
         credits: 3,
         faculty: "Sumit Muddalkar",
-        short: "ToC"
+        short: "Automata, regular languages, grammars, PDA and Turing machines."
     },
 
     {
+        id: 4,
         name: "Data Science & Statistics",
         code: "5IT223PE",
         type: "PE1",
         credits: 3,
         faculty: "A. S. Manekar",
-        short: "Data Science"
+        short: "Statistics, data analysis, visualization and predictive analytics."
     },
 
     {
+        id: 5,
         name: "Computer Networks",
         code: "5IT227MD",
         type: "MD",
         credits: 3,
         faculty: "Rahul Patil",
-        short: "Computer Networks"
+        short: "Networking models, LAN, routing, transport and application protocols."
     },
 
     {
+        id: 6,
         name: "Object Oriented Programming",
         code: "5IT228MD",
         type: "MD",
         credits: 3,
         faculty: "Sneha Kulkarni",
-        short: "OOP"
+        short: "Classes, objects, inheritance, polymorphism, collections and design."
     },
 
     {
+        id: 7,
         name: "Fundamentals of Cyber Security",
         code: "5IT230OE",
         type: "OE",
         credits: 3,
         faculty: "Rohit Joshi",
-        short: "Cyber Security"
+        short: "Cyber threats, cryptography, network security and secure practices."
     }
+
 ];
 
 
-/* ==========================================
+/* =========================================================
    FACULTY DATA
-========================================== */
+========================================================= */
 
 const faculty = [
 
@@ -124,248 +151,275 @@ const faculty = [
         subjects: "Information Technology Department",
         email: "sdpadiya@ssgmce.ac.in",
         tag: "HOD"
-    },
+    }
 
-   
 ];
 
 
-/* ==========================================
-   SYLLABUS DATA
-========================================== */
+/* =========================================================
+   UNIVERSITY SYLLABUS DATA
+========================================================= */
 
 const syllabusData = {
 
-    /* ================================
-       DBMS
-    ================================ */
-
     "5IT220PC": {
+
+        name: "Database Management Systems",
+        code: "5IT220PC",
+        type: "Core",
+        credits: 3,
 
         units: [
 
-            [
-                "Unit I · Introduction to DBMS",
-                7,
-                [
+            {
+                title: "Unit I — Introduction to DBMS",
+                hours: 7,
+
+                topics: [
                     "Database system concepts and architecture",
                     "Data models and database schemas",
                     "ER model and ER diagrams",
                     "Relational model, keys and constraints",
                     "Relational algebra fundamentals"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · SQL & Normalization",
-                8,
-                [
+            {
+                title: "Unit II — SQL & Normalization",
+                hours: 8,
+
+                topics: [
                     "SQL, DDL, DML and DCL",
                     "Operators, aggregate functions, GROUP BY and HAVING",
                     "Joins and nested queries",
                     "Functional dependencies",
                     "1NF, 2NF, 3NF and BCNF"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Transactions & Concurrency",
-                7,
-                [
+            {
+                title: "Unit III — Transactions & Concurrency",
+                hours: 7,
+
+                topics: [
                     "Transaction concepts and states",
                     "ACID properties",
                     "Serializability and schedules",
                     "Lock-based concurrency control",
                     "Deadlocks and recovery"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Indexing & Storage",
-                6,
-                [
+            {
+                title: "Unit IV — Indexing & Storage",
+                hours: 6,
+
+                topics: [
                     "File and storage organization",
                     "Primary and secondary indexes",
                     "Dense and sparse indexes",
                     "B-tree and B+ tree",
                     "Hashing techniques"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · NoSQL & Emerging Trends",
-                6,
-                [
+            {
+                title: "Unit V — NoSQL & Emerging Trends",
+                hours: 6,
+
+                topics: [
                     "Need for NoSQL databases",
                     "Document and key-value databases",
                     "Column-family and graph databases",
                     "Distributed database concepts",
                     "Emerging database technologies"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
-            "Design an ER model for a database application",
-            "Write SQL queries for database operations",
-            "Apply normalization using functional dependencies",
-            "Explain transactions and concurrency control"
+            "Design an ER model",
+            "Write SQL queries",
+            "Apply normalization",
+            "Explain transactions and concurrency"
         ],
 
         books: [
-            "Abraham Silberschatz, Henry Korth & S. Sudarshan — Database System Concepts",
-            "Ramez Elmasri & Shamkant Navathe — Fundamentals of Database Systems"
+            "Silberschatz, Korth & Sudarshan — Database System Concepts",
+            "Elmasri & Navathe — Fundamentals of Database Systems"
         ]
+
     },
 
 
-    /* ================================
-       OPERATING SYSTEM
-    ================================ */
+    /* =====================================================
+       OPERATING SYSTEMS
+    ===================================================== */
 
     "5IT221PC": {
 
+        name: "Operating Systems",
+        code: "5IT221PC",
+        type: "Core",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · Operating System Basics",
-                7,
-                [
+            {
+                title: "Unit I — OS Basics",
+                hours: 7,
+
+                topics: [
                     "OS functions and services",
                     "System calls and system programs",
                     "OS structures and architectures",
                     "Processes and process states"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Process Management",
-                8,
-                [
-                    "Process scheduling",
-                    "Threads and multithreading",
+            {
+                title: "Unit II — Process Management",
+                hours: 8,
+
+                topics: [
+                    "CPU scheduling",
+                    "Threads",
                     "Inter-process communication",
-                    "Synchronization and critical sections"
+                    "Process synchronization"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Memory Management",
-                7,
-                [
-                    "Contiguous allocation",
+            {
+                title: "Unit III — Memory Management",
+                hours: 7,
+
+                topics: [
+                    "Contiguous memory allocation",
                     "Paging and segmentation",
                     "Virtual memory",
                     "Page replacement algorithms"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · File & Storage Management",
-                6,
-                [
-                    "File system concepts",
-                    "Directory structures",
+            {
+                title: "Unit IV — File & Storage",
+                hours: 6,
+
+                topics: [
+                    "File systems",
+                    "Directories",
                     "File allocation methods",
                     "Disk scheduling"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Protection & Security",
-                6,
-                [
+            {
+                title: "Unit V — Protection & Security",
+                hours: 6,
+
+                topics: [
                     "Protection mechanisms",
                     "Access control",
                     "Security threats",
-                    "Authentication and system security"
+                    "Authentication and security"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
             "Explain OS structures and services",
-            "Apply CPU scheduling concepts",
+            "Apply CPU scheduling techniques",
             "Explain memory management and virtual memory",
             "Understand file, storage and protection mechanisms"
         ],
 
         books: [
             "Silberschatz, Galvin & Gagne — Operating System Concepts",
-            "Andrew S. Tanenbaum — Modern Operating Systems"
+            "Tanenbaum — Modern Operating Systems"
         ]
+
     },
 
 
-    /* ================================
+    /* =====================================================
        THEORY OF COMPUTATION
-    ================================ */
+    ===================================================== */
 
     "5IT222PC": {
 
+        name: "Theory of Computation",
+        code: "5IT222PC",
+        type: "Core",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · Finite Automata",
-                7,
-                [
+            {
+                title: "Unit I — Finite Automata",
+                hours: 7,
+
+                topics: [
                     "Alphabet, strings and languages",
                     "DFA and NFA",
                     "Regular expressions",
                     "Equivalence of automata"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Regular Languages",
-                7,
-                [
+            {
+                title: "Unit II — Regular Languages",
+                hours: 7,
+
+                topics: [
                     "Regular grammars",
                     "Closure properties",
                     "Pumping lemma",
                     "Applications of regular languages"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Context Free Grammars",
-                8,
-                [
+            {
+                title: "Unit III — Context Free Grammar",
+                hours: 8,
+
+                topics: [
                     "CFG and derivations",
                     "Parse trees",
                     "Ambiguity",
                     "Normal forms"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Pushdown Automata",
-                7,
-                [
-                    "PDA definition",
+            {
+                title: "Unit IV — Pushdown Automata",
+                hours: 7,
+
+                topics: [
+                    "Definition of PDA",
                     "Acceptance by PDA",
                     "CFG and PDA equivalence",
                     "Deterministic PDA"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Turing Machines",
-                6,
-                [
-                    "TM model and languages",
+            {
+                title: "Unit V — Turing Machines",
+                hours: 6,
+
+                topics: [
+                    "Turing machine model and languages",
                     "Variants of Turing machines",
                     "Decidability",
                     "Undecidability and complexity basics"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
-            "Construct finite automata for regular languages",
+            "Construct finite automata",
             "Use regular expressions and grammars",
             "Design and analyze pushdown automata",
             "Explain Turing machines and decidability"
@@ -375,232 +429,267 @@ const syllabusData = {
             "John C. Martin — Introduction to Languages and the Theory of Computation",
             "Michael Sipser — Introduction to the Theory of Computation"
         ]
+
     },
 
 
-    /* ================================
+    /* =====================================================
        DATA SCIENCE
-    ================================ */
+    ===================================================== */
 
     "5IT223PE": {
 
+        name: "Data Science & Statistics",
+        code: "5IT223PE",
+        type: "PE1",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · Data Science Foundations",
-                7,
-                [
+            {
+                title: "Unit I — Foundations",
+                hours: 7,
+
+                topics: [
                     "Data science lifecycle",
-                    "Types of data",
+                    "Data types",
                     "Data collection and cleaning",
                     "Exploratory data analysis"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Statistics",
-                7,
-                [
+            {
+                title: "Unit II — Statistics",
+                hours: 7,
+
+                topics: [
                     "Descriptive statistics",
-                    "Probability distributions",
+                    "Probability",
                     "Sampling and estimation",
                     "Hypothesis testing"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Data Visualization",
-                6,
-                [
-                    "Visualization principles",
+            {
+                title: "Unit III — Visualization",
+                hours: 6,
+
+                topics: [
+                    "Principles of data visualization",
                     "Charts and plots",
                     "Dashboards",
-                    "Storytelling with data"
+                    "Data storytelling"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Predictive Analytics",
-                8,
-                [
+            {
+                title: "Unit IV — Predictive Analytics",
+                hours: 8,
+
+                topics: [
                     "Correlation and regression",
-                    "Classification basics",
+                    "Classification",
                     "Model evaluation",
                     "Feature preparation"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Practical Data Science",
-                6,
-                [
-                    "Python data tools",
+            {
+                title: "Unit V — Practical",
+                hours: 6,
+
+                topics: [
+                    "Python tools for data science",
                     "Case studies",
-                    "Data ethics",
-                    "Communicating results"
+                    "Ethics in data science",
+                    "Communicating analytical results"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
             "Prepare and explore datasets",
-            "Apply basic statistical methods",
+            "Apply statistical techniques",
             "Create meaningful visualizations",
-            "Interpret analytical results"
+            "Interpret data science results"
         ],
 
         books: [
             "Wes McKinney — Python for Data Analysis",
             "Joel Grus — Data Science from Scratch"
         ]
+
     },
 
 
-    /* ================================
+    /* =====================================================
        COMPUTER NETWORKS
-    ================================ */
+    ===================================================== */
 
     "5IT227MD": {
 
+        name: "Computer Networks",
+        code: "5IT227MD",
+        type: "MD",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · Networking Foundations",
-                7,
-                [
+            {
+                title: "Unit I — Foundations",
+                hours: 7,
+
+                topics: [
                     "Network models and protocols",
                     "OSI and TCP/IP models",
-                    "Physical and data link concepts"
+                    "Physical layer",
+                    "Data link layer"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Data Link & LAN",
-                7,
-                [
+            {
+                title: "Unit II — Data Link & LAN",
+                hours: 7,
+
+                topics: [
                     "Ethernet and switching",
                     "MAC addressing",
                     "Error detection",
-                    "LAN technologies"
+                    "Local Area Networks"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Network Layer",
-                8,
-                [
+            {
+                title: "Unit III — Network Layer",
+                hours: 8,
+
+                topics: [
                     "IPv4 and IPv6",
-                    "Routing concepts",
+                    "Routing",
                     "ARP and ICMP",
                     "Routing algorithms"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Transport Layer",
-                7,
-                [
+            {
+                title: "Unit IV — Transport",
+                hours: 7,
+
+                topics: [
                     "TCP and UDP",
-                    "Flow and congestion control",
+                    "Flow control",
+                    "Congestion control",
                     "Ports and sockets"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Application Layer",
-                6,
-                [
+            {
+                title: "Unit V — Application",
+                hours: 6,
+
+                topics: [
                     "DNS and HTTP",
                     "Email protocols",
                     "DHCP",
-                    "Network applications"
+                    "Common network applications"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
             "Explain network architectures and protocols",
-            "Understand LAN and routing concepts",
+            "Understand LAN technologies and routing",
             "Compare TCP and UDP",
-            "Explain common application protocols"
+            "Explain common application layer protocols"
         ],
 
         books: [
-            "Andrew S. Tanenbaum — Computer Networks",
-            "Behrouz A. Forouzan — Data Communications and Networking"
+            "Tanenbaum — Computer Networks",
+            "Forouzan — Data Communications and Networking"
         ]
+
     },
 
 
-    /* ================================
+    /* =====================================================
        OOP
-    ================================ */
+    ===================================================== */
 
     "5IT228MD": {
 
+        name: "Object Oriented Programming",
+        code: "5IT228MD",
+        type: "MD",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · OOP Fundamentals",
-                7,
-                [
+            {
+                title: "Unit I — OOP Fundamentals",
+                hours: 7,
+
+                topics: [
                     "Objects and classes",
                     "Encapsulation",
                     "Abstraction",
                     "Constructors and methods"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Inheritance & Polymorphism",
-                7,
-                [
-                    "Inheritance types",
+            {
+                title: "Unit II — Inheritance & Polymorphism",
+                hours: 7,
+
+                topics: [
+                    "Types of inheritance",
                     "Method overriding",
                     "Polymorphism",
                     "Interfaces"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Exception & File Handling",
-                7,
-                [
+            {
+                title: "Unit III — Exception & File Handling",
+                hours: 7,
+
+                topics: [
                     "Exception hierarchy",
                     "Custom exceptions",
                     "Streams and files",
                     "Serialization"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Collections & Generics",
-                7,
-                [
-                    "Collections framework",
+            {
+                title: "Unit IV — Collections & Generics",
+                hours: 7,
+
+                topics: [
+                    "Collection framework",
                     "Lists, sets and maps",
                     "Generics",
                     "Iterators"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Software Design",
-                6,
-                [
+            {
+                title: "Unit V — Software Design",
+                hours: 6,
+
+                topics: [
                     "Packages and modules",
-                    "Design principles",
+                    "Software design principles",
                     "Reusable components",
-                    "Basic testing"
+                    "Testing"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
-            "Apply object-oriented principles",
+            "Apply object-oriented programming concepts",
             "Use inheritance and polymorphism",
             "Handle exceptions and files",
             "Build reusable object-oriented programs"
@@ -610,151 +699,222 @@ const syllabusData = {
             "Herbert Schildt — Java: The Complete Reference",
             "Robert C. Martin — Clean Code"
         ]
+
     },
 
 
-    /* ================================
+    /* =====================================================
        CYBER SECURITY
-    ================================ */
+    ===================================================== */
 
     "5IT230OE": {
 
+        name: "Fundamentals of Cyber Security",
+        code: "5IT230OE",
+        type: "OE",
+        credits: 3,
+
         units: [
 
-            [
-                "Unit I · Cyber Security Foundations",
-                7,
-                [
+            {
+                title: "Unit I — Foundations",
+                hours: 7,
+
+                topics: [
                     "Security goals and principles",
                     "Threats and vulnerabilities",
                     "Security policies",
-                    "Risk basics"
+                    "Risk management"
                 ]
-            ],
+            },
 
-            [
-                "Unit II · Cryptography",
-                7,
-                [
-                    "Symmetric encryption",
-                    "Asymmetric encryption",
+            {
+                title: "Unit II — Cryptography",
+                hours: 7,
+
+                topics: [
+                    "Symmetric cryptography",
+                    "Asymmetric cryptography",
                     "Hash functions",
                     "Digital signatures"
                 ]
-            ],
+            },
 
-            [
-                "Unit III · Network Security",
-                7,
-                [
+            {
+                title: "Unit III — Network Security",
+                hours: 7,
+
+                topics: [
                     "Firewalls",
                     "IDS and IPS",
                     "Secure protocols",
                     "Wireless security"
                 ]
-            ],
+            },
 
-            [
-                "Unit IV · Application Security",
-                7,
-                [
-                    "Web threats",
+            {
+                title: "Unit IV — Application Security",
+                hours: 7,
+
+                topics: [
+                    "Web security threats",
                     "Authentication and authorization",
                     "Secure coding",
                     "Data protection"
                 ]
-            ],
+            },
 
-            [
-                "Unit V · Cyber Law & Best Practices",
-                6,
-                [
-                    "Cyber incidents",
-                    "Privacy principles",
+            {
+                title: "Unit V — Cyber Law & Best Practices",
+                hours: 6,
+
+                topics: [
+                    "Cyber security incidents",
+                    "Privacy",
                     "Cyber law basics",
                     "Security awareness"
                 ]
-            ]
+            }
 
         ],
 
         outcomes: [
-            "Identify common cyber threats",
-            "Explain basic cryptographic mechanisms",
+            "Identify common cyber security threats",
+            "Explain cryptographic techniques",
             "Understand network security controls",
             "Apply secure computing practices"
         ],
 
         books: [
             "William Stallings — Cryptography and Network Security",
-            "William Easttom — Computer Security Fundamentals"
+            "Easttom — Computer Security Fundamentals"
         ]
+
     }
 
 };
 
 
-/* ==========================================
-   HELPER FUNCTIONS
-========================================== */
+/* =========================================================
+   INITIALS
+========================================================= */
 
-const $ = id => document.getElementById(id);
+function initials(name) {
+
+    if (!name) {
+        return "NA";
+    }
+
+    const words = name
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (words.length === 1) {
+        return words[0]
+            .substring(0, 2)
+            .toUpperCase();
+    }
+
+    return (
+        words[0][0] +
+        words[words.length - 1][0]
+    ).toUpperCase();
+}
 
 
-const initials = name =>
-    name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(x => x[0])
-        .join("")
-        .toUpperCase();
-
-
-/* ==========================================
+/* =========================================================
    RENDER SUBJECTS
-========================================== */
+========================================================= */
 
 function renderSubjects() {
 
-    const query =
-        $("subjectSearch")
-            .value
-            .toLowerCase()
-            .trim();
+    const tbody = $("subjectTableBody");
 
-    const type =
-        $("subjectTypeFilter").value;
+    if (!tbody) {
+        return;
+    }
 
 
-    const rows = subjects.filter(subject =>
+    const searchInput = $("subjectSearch");
 
-        (type === "all" || subject.type === type)
-
-        &&
-
-        (
-            !query ||
-
-            `${subject.name}
-             ${subject.code}
-             ${subject.faculty}`
-                .toLowerCase()
-                .includes(query)
-        )
-
-    );
+    const filterInput = $("subjectTypeFilter");
 
 
-    $("subjectTableBody").innerHTML =
+    const search = searchInput
+        ? searchInput.value.trim().toLowerCase()
+        : "";
 
-        rows.map((subject, index) => `
+
+    const filter = filterInput
+        ? filterInput.value
+        : "all";
+
+
+    const filteredSubjects = subjects.filter((subject) => {
+
+        const matchesSearch =
+            subject.name.toLowerCase().includes(search) ||
+            subject.code.toLowerCase().includes(search) ||
+            subject.type.toLowerCase().includes(search) ||
+            subject.faculty.toLowerCase().includes(search);
+
+
+        const matchesFilter =
+            filter === "all" ||
+            subject.type === filter;
+
+
+        return matchesSearch && matchesFilter;
+
+    });
+
+
+    if (filteredSubjects.length === 0) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    style="
+                        text-align:center;
+                        padding:35px;
+                        color:#647F9C;
+                    "
+                >
+
+                    <i
+                        class="fa-solid fa-magnifying-glass"
+                        style="
+                            margin-right:6px;
+                            color:#0B5CAD;
+                        "
+                    ></i>
+
+                    No subjects found.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+    }
+
+
+    tbody.innerHTML = filteredSubjects.map((subject, index) => {
+
+        return `
 
             <tr>
 
                 <td>
                     ${String(index + 1).padStart(2, "0")}
                 </td>
+
 
                 <td>
 
@@ -768,6 +928,7 @@ function renderSubjects() {
 
                 </td>
 
+
                 <td>
 
                     <span class="subject-code">
@@ -775,6 +936,7 @@ function renderSubjects() {
                     </span>
 
                 </td>
+
 
                 <td>
 
@@ -784,14 +946,21 @@ function renderSubjects() {
 
                 </td>
 
+
                 <td>
-                    <b>${subject.credits}</b>
+
+                    <strong>
+                        ${subject.credits}
+                    </strong>
+
                 </td>
+
 
                 <td>
 
                     <button
                         class="action-btn"
+                        type="button"
                         onclick="openSyllabus('${subject.code}')"
                     >
 
@@ -805,286 +974,402 @@ function renderSubjects() {
 
             </tr>
 
-        `).join("")
-
-        ||
-
-        `
-            <tr>
-
-                <td
-                    colspan="6"
-                    style="
-                        text-align:center;
-                        padding:35px;
-                        color:#8aa0b3;
-                    "
-                >
-                    No subjects found.
-                </td>
-
-            </tr>
         `;
+
+    }).join("");
+
 }
 
 
-/* ==========================================
+/* =========================================================
    RENDER FACULTY
-========================================== */
+========================================================= */
 
 function renderFaculty() {
 
-    const query =
-        $("facultySearch")
-            .value
-            .toLowerCase()
-            .trim();
+    const container = $("facultyTableBody");
 
-
-    $("facultyTableBody").innerHTML =
-
-        faculty
-
-            .filter(member =>
-
-                `${member.name}
-                 ${member.subjects}
-                 ${member.tag}`
-                    .toLowerCase()
-                    .includes(query)
-
-            )
-
-            .map(member => `
-
-                <article class="faculty-card">
-
-                    <div class="faculty-top">
-
-                        <div class="faculty-avatar">
-                            ${initials(member.name)}
-                        </div>
-
-                        <div>
-
-                            <div class="faculty-name">
-                                ${member.name}
-                            </div>
-
-                            <div class="faculty-role">
-                                ${member.role}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="faculty-subject">
-
-                        <i class="fa-solid fa-book-open"></i>
-
-                        &nbsp;
-
-                        ${member.subjects}
-
-                    </div>
-
-
-                    <div class="faculty-meta">
-
-                        <span class="meta-pill">
-
-                            <i class="fa-regular fa-envelope"></i>
-
-                            ${member.email}
-
-                        </span>
-
-
-                        <span class="meta-pill">
-
-                            ${member.tag}
-
-                        </span>
-
-                    </div>
-
-                </article>
-
-            `)
-
-            .join("")
-
-        ||
-
-        `
-            <div
-                style="
-                    padding:30px;
-                    color:#8aa0b3;
-                "
-            >
-                No faculty found.
-            </div>
-        `;
-}
-
-
-/* ==========================================
-   SUBJECT DROPDOWN
-========================================== */
-
-function populateSubjectDropdown() {
-
-    $("syllabusSubjectSelect").innerHTML =
-
-        subjects.map(subject => `
-
-            <option value="${subject.code}">
-
-                ${subject.name}
-                ·
-                ${subject.code}
-
-            </option>
-
-        `).join("");
-}
-
-
-/* ==========================================
-   RENDER SYLLABUS
-========================================== */
-
-function renderSyllabus(
-    code = $("syllabusSubjectSelect").value
-) {
-
-    const subject =
-        subjects.find(
-            item => item.code === code
-        );
-
-
-    const data =
-        syllabusData[code];
-
-
-    if (!subject || !data) {
+    if (!container) {
         return;
     }
 
 
-    /* SUMMARY */
+    const searchInput = $("facultySearch");
 
-    $("subjectSummary").innerHTML = `
-
-        <span class="summary-pill">
-
-            <strong>Code</strong>
-
-            ${subject.code}
-
-        </span>
+    const search = searchInput
+        ? searchInput.value.trim().toLowerCase()
+        : "";
 
 
-        <span class="summary-pill">
+    const filteredFaculty = faculty.filter((person) => {
 
-            <strong>Credits</strong>
+        return (
+            person.name.toLowerCase().includes(search) ||
+            person.role.toLowerCase().includes(search) ||
+            person.subjects.toLowerCase().includes(search) ||
+            person.email.toLowerCase().includes(search) ||
+            person.tag.toLowerCase().includes(search)
+        );
 
-            ${subject.credits}
-
-        </span>
-
-
-        <span class="summary-pill">
-
-            <strong>Type</strong>
-
-            ${subject.type}
-
-        </span>
-
-    `;
+    });
 
 
-    /* SYLLABUS BODY */
+    if (filteredFaculty.length === 0) {
 
-    $("syllabusBody").innerHTML = `
+        container.innerHTML = `
+
+            <div
+                style="
+                    grid-column:1/-1;
+                    text-align:center;
+                    padding:40px;
+                    color:#647F9C;
+                    font-size:11px;
+                "
+            >
+
+                <i
+                    class="fa-solid fa-user-slash"
+                    style="
+                        display:block;
+                        font-size:24px;
+                        color:#0B5CAD;
+                        margin-bottom:10px;
+                    "
+                ></i>
+
+                No faculty found.
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = filteredFaculty.map((person) => {
+
+        return `
+
+            <article class="faculty-card">
+
+
+                <div class="faculty-top">
+
+                    <div class="faculty-avatar">
+                        ${initials(person.name)}
+                    </div>
+
+
+                    <div>
+
+                        <div class="faculty-name">
+                            ${person.name}
+                        </div>
+
+                        <div class="faculty-role">
+                            ${person.role}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="faculty-subject">
+
+                    <i class="fa-solid fa-book-open"></i>
+
+                    ${person.subjects}
+
+                </div>
+
+
+
+                <div class="faculty-meta">
+
+                    <span class="meta-pill">
+
+                        <i class="fa-regular fa-envelope"></i>
+
+                        ${person.email}
+
+                    </span>
+
+
+                    <span class="meta-pill">
+
+                        ${person.tag}
+
+                    </span>
+
+                </div>
+
+
+            </article>
+
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   POPULATE SUBJECT DROPDOWN
+========================================================= */
+
+function populateSubjectDropdown() {
+
+    const select = $("syllabusSubjectSelect");
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML = subjects.map((subject) => {
+
+        return `
+
+            <option value="${subject.code}">
+                ${subject.name} (${subject.code})
+            </option>
+
+        `;
+
+    }).join("");
+
+
+    if (subjects.length > 0) {
+
+        select.value =
+            subjects[0].code;
+
+    }
+
+}
+
+
+/* =========================================================
+   RENDER SYLLABUS
+========================================================= */
+
+function renderSyllabus(code) {
+
+    const body = $("syllabusBody");
+
+    const summary = $("subjectSummary");
+
+
+    if (!body) {
+        return;
+    }
+
+
+    const data = syllabusData[code];
+
+
+    if (!data) {
+
+        body.innerHTML = `
+
+            <div
+                style="
+                    padding:40px;
+                    text-align:center;
+                    color:#647F9C;
+                "
+            >
+                Syllabus not available.
+            </div>
+
+        `;
+
+        if (summary) {
+            summary.innerHTML = "";
+        }
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       SUMMARY
+    ----------------------------------------- */
+
+    if (summary) {
+
+        summary.innerHTML = `
+
+            <span class="summary-pill">
+
+                <strong>
+                    Code:
+                </strong>
+
+                ${data.code}
+
+            </span>
+
+
+            <span class="summary-pill">
+
+                <strong>
+                    Type:
+                </strong>
+
+                ${data.type}
+
+            </span>
+
+
+            <span class="summary-pill">
+
+                <strong>
+                    Credits:
+                </strong>
+
+                ${data.credits}
+
+            </span>
+
+        `;
+
+    }
+
+
+    /* -----------------------------------------
+       UNITS
+    ----------------------------------------- */
+
+    const unitsHTML = data.units.map((unit) => {
+
+        const topicsHTML = unit.topics.map((topic) => {
+
+            return `
+                <li>
+                    ${topic}
+                </li>
+            `;
+
+        }).join("");
+
+
+        return `
+
+            <div class="syllabus-section">
+
+
+                <div class="syllabus-section-head">
+
+                    <strong>
+                        ${unit.title}
+                    </strong>
+
+
+                    <span class="hours">
+                        ${unit.hours} Hrs
+                    </span>
+
+                </div>
+
+
+                <ul>
+                    ${topicsHTML}
+                </ul>
+
+
+            </div>
+
+        `;
+
+    }).join("");
+
+
+    /* -----------------------------------------
+       OUTCOMES
+    ----------------------------------------- */
+
+    const outcomesHTML = data.outcomes.map((outcome, index) => {
+
+        return `
+
+            <div class="outcome">
+
+                <b>
+                    CO${index + 1}
+                </b>
+
+                ${outcome}
+
+            </div>
+
+        `;
+
+    }).join("");
+
+
+    /* -----------------------------------------
+       BOOKS
+    ----------------------------------------- */
+
+    const booksHTML = data.books.map((book) => {
+
+        return `
+
+            <div class="book">
+
+                <i class="fa-solid fa-book"></i>
+
+                ${book}
+
+            </div>
+
+        `;
+
+    }).join("");
+
+
+    /* -----------------------------------------
+       COMPLETE SYLLABUS
+    ----------------------------------------- */
+
+    body.innerHTML = `
+
+
+        <!-- Syllabus Hero -->
 
         <div class="syllabus-hero">
 
             <div class="code">
-
-                ${subject.code}
-                ·
-                ${subject.type}
-
+                ${data.code}
             </div>
 
 
             <h3>
-                ${subject.name}
+                ${data.name}
             </h3>
 
 
             <p>
-                B.E. Information Technology
-                ·
-                Semester V
-                ·
-                Academic Year 2026–27
+                Semester V · Information Technology ·
+                ${data.credits} Credits · ${data.type}
             </p>
 
         </div>
 
 
-        ${
 
-            data.units.map(unit => `
+        <!-- Course Units -->
 
-                <div class="syllabus-section">
-
-                    <div class="syllabus-section-head">
-
-                        <strong>
-                            ${unit[0]}
-                        </strong>
-
-                        <span class="hours">
-
-                            ${unit[1]} Hrs
-
-                        </span>
-
-                    </div>
+        ${unitsHTML}
 
 
-                    <ul>
 
-                        ${
-
-                            unit[2]
-                                .map(topic => `
-                                    <li>
-                                        ${topic}
-                                    </li>
-                                `)
-                                .join("")
-
-                        }
-
-                    </ul>
-
-                </div>
-
-            `).join("")
-
-        }
-
-
-        <!-- COURSE OUTCOMES -->
+        <!-- Course Outcomes -->
 
         <div class="syllabus-section">
 
@@ -1094,39 +1379,24 @@ function renderSyllabus(
                     Course Outcomes
                 </strong>
 
+                <span class="hours">
+                    CO
+                </span>
+
             </div>
 
 
             <div class="outcomes">
 
-                ${
-
-                    data.outcomes
-                        .map(
-                            (outcome, index) => `
-
-                                <div class="outcome">
-
-                                    <b>
-                                        CO${index + 1}
-                                    </b>
-
-                                    ${outcome}
-
-                                </div>
-
-                            `
-                        )
-                        .join("")
-
-                }
+                ${outcomesHTML}
 
             </div>
 
         </div>
 
 
-        <!-- BOOKS -->
+
+        <!-- Reference Books -->
 
         <div class="syllabus-section">
 
@@ -1136,302 +1406,453 @@ function renderSyllabus(
                     Recommended Books
                 </strong>
 
+                <span class="hours">
+                    References
+                </span>
+
             </div>
 
 
             <div class="book-list">
 
-                ${
-
-                    data.books
-                        .map(
-                            book => `
-
-                                <div class="book">
-
-                                    <i
-                                        class="fa-solid fa-book"
-                                    ></i>
-
-                                    ${book}
-
-                                </div>
-
-                            `
-                        )
-                        .join("")
-
-                }
+                ${booksHTML}
 
             </div>
 
         </div>
 
     `;
+
 }
 
 
-/* ==========================================
-   OPEN SYLLABUS
-========================================== */
+/* =========================================================
+   SHOW VIEW
+========================================================= */
 
-function openSyllabus(code) {
+function showView(viewName) {
 
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(item => {
-
-            item.classList.toggle(
-                "active",
-                item.dataset.view === "university"
-            );
-
-        });
+    const views = document.querySelectorAll(".view");
 
 
-    document
-        .querySelectorAll(".view")
-        .forEach(view => {
+    views.forEach((view) => {
 
-            view.classList.remove("active");
-
-        });
-
-
-    $("view-university")
-        .classList.add("active");
-
-
-    $("syllabusSubjectSelect").value =
-        code;
-
-
-    renderSyllabus(code);
-
-
-    window.scrollTo({
-
-        top: 0,
-
-        behavior: "smooth"
+        view.classList.remove("active");
 
     });
-}
 
 
-/* ==========================================
-   TOAST
-========================================== */
-
-function showToast(message) {
-
-    $("toast")
-        .querySelector("span")
-        .textContent = message;
+    const target = $(`view-${viewName}`);
 
 
-    $("toast")
-        .classList.add("show");
+    if (target) {
+
+        target.classList.add("active");
+
+    }
 
 
-    setTimeout(() => {
+    /* -----------------------------------------
+       Update Sidebar
+    ----------------------------------------- */
 
-        $("toast")
-            .classList.remove("show");
-
-    }, 2200);
-}
-
-
-/* ==========================================
-   DOM READY
-========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        /* SUBJECTS */
-
-        renderSubjects();
+    const navItems =
+        document.querySelectorAll(".nav-item");
 
 
-        /* FACULTY */
+    navItems.forEach((item) => {
 
-        renderFaculty();
+        item.classList.remove("active");
 
-
-        /* DROPDOWN */
-
-        populateSubjectDropdown();
+    });
 
 
-        /* DEFAULT SYLLABUS */
-
-        renderSyllabus(
-            subjects[0].code
+    const activeItem =
+        document.querySelector(
+            `.nav-item[data-view="${viewName}"]`
         );
 
 
-        /* SEARCH */
+    if (activeItem) {
 
-        $("subjectSearch")
-            .addEventListener(
-                "input",
-                renderSubjects
-            );
+        activeItem.classList.add("active");
+
+    }
 
 
-        /* SUBJECT FILTER */
+    /* -----------------------------------------
+       Scroll to top
+    ----------------------------------------- */
 
-        $("subjectTypeFilter")
-            .addEventListener(
-                "change",
-                renderSubjects
-            );
-
-
-        /* FACULTY SEARCH */
-
-        $("facultySearch")
-            .addEventListener(
-                "input",
-                renderFaculty
-            );
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
 
-        /* SYLLABUS SELECT */
+    /* -----------------------------------------
+       Close mobile sidebar
+    ----------------------------------------- */
 
-        $("syllabusSubjectSelect")
-            .addEventListener(
-                "change",
-                event => {
-
-                    renderSyllabus(
-                        event.target.value
-                    );
-
-                }
-            );
+    const sidebar = $("sidebar");
 
 
-        /* NAVIGATION */
+    if (sidebar) {
 
-        document
-            .querySelectorAll(".nav-item")
-            .forEach(button => {
+        sidebar.classList.remove("open");
 
-                button.addEventListener(
-                    "click",
-                    () => {
+    }
 
-                        document
-                            .querySelectorAll(
-                                ".nav-item"
-                            )
-                            .forEach(item => {
-
-                                item.classList.remove(
-                                    "active"
-                                );
-
-                            });
+}
 
 
-                        button.classList.add(
-                            "active"
-                        );
+/* =========================================================
+   OPEN SYLLABUS
+========================================================= */
+
+function openSyllabus(code) {
+
+    const select = $("syllabusSubjectSelect");
 
 
-                        document
-                            .querySelectorAll(
-                                ".view"
-                            )
-                            .forEach(view => {
+    if (select && code) {
 
-                                view.classList.remove(
-                                    "active"
-                                );
+        select.value = code;
 
-                            });
+    }
 
 
-                        $(
-                            "view-" +
-                            button.dataset.view
-                        )
-                            .classList.add(
-                                "active"
-                            );
+    showView("university");
 
 
-                        /* MOBILE */
+    if (code) {
 
-                        if (
-                            window.innerWidth <= 800
-                        ) {
+        renderSyllabus(code);
 
-                            $("sidebar")
-                                .classList.remove(
-                                    "open"
-                                );
+    } else if (select) {
 
-                        }
+        renderSyllabus(select.value);
 
-                    }
-                );
+    }
 
-            });
+}
 
 
-        /* MOBILE MENU */
+/* =========================================================
+   TOAST
+========================================================= */
 
-        $("menuToggle")
-            .addEventListener(
-                "click",
-                () => {
-
-                    $("sidebar")
-                        .classList.toggle(
-                            "open"
-                        );
-
-                }
-            );
+let toastTimer;
 
 
-        /* PRINT */
+function showToast(message) {
 
-        $("printSyllabus")
-            .addEventListener(
-                "click",
-                () => {
-
-                    window.print();
-
-                }
-            );
+    const toast = $("toast");
 
 
-        /* STAT COUNTS */
-
-        $("facultyCount")
-            .textContent =
-            faculty.length;
+    if (!toast) {
+        return;
+    }
 
 
-        $("subjectCount")
-            .textContent =
-            String(subjects.length)
-                .padStart(2, "0");
+    const text = toast.querySelector("span");
 
 
-        $("coreCount")
-            .textContent =
+    if (text) {
+
+        text.textContent = message;
+
+    }
+
+
+    toast.classList.add("show");
+
+
+    clearTimeout(toastTimer);
+
+
+    toastTimer = setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 2200);
+
+}
+
+
+/* =========================================================
+   DOM CONTENT LOADED
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+
+    /* =========================================
+       INITIAL RENDER
+    ========================================== */
+
+    renderSubjects();
+
+    renderFaculty();
+
+    populateSubjectDropdown();
+
+
+    const subjectSelect =
+        $("syllabusSubjectSelect");
+
+
+    if (subjectSelect) {
+
+        renderSyllabus(
+            subjectSelect.value
+        );
+
+    }
+
+
+    /* =========================================
+       STAT COUNTS
+    ========================================== */
+
+    const subjectCount =
+        $("subjectCount");
+
+
+    const coreCount =
+        $("coreCount");
+
+
+    const facultyCount =
+        $("facultyCount");
+
+
+    if (subjectCount) {
+
+        subjectCount.textContent =
+            String(subjects.length).padStart(2, "0");
+
+    }
+
+
+    if (coreCount) {
+
+        coreCount.textContent =
             subjects.filter(
-                subject =>
-                    subject.type === "Core"
+                subject => subject.type === "Core"
             ).length;
 
     }
-);
+
+
+    if (facultyCount) {
+
+        facultyCount.textContent =
+            faculty.length;
+
+    }
+
+
+    /* =========================================
+       SUBJECT SEARCH
+    ========================================== */
+
+    const subjectSearch =
+        $("subjectSearch");
+
+
+    if (subjectSearch) {
+
+        subjectSearch.addEventListener(
+            "input",
+            renderSubjects
+        );
+
+    }
+
+
+    /* =========================================
+       SUBJECT FILTER
+    ========================================== */
+
+    const subjectTypeFilter =
+        $("subjectTypeFilter");
+
+
+    if (subjectTypeFilter) {
+
+        subjectTypeFilter.addEventListener(
+            "change",
+            renderSubjects
+        );
+
+    }
+
+
+    /* =========================================
+       FACULTY SEARCH
+    ========================================== */
+
+    const facultySearch =
+        $("facultySearch");
+
+
+    if (facultySearch) {
+
+        facultySearch.addEventListener(
+            "input",
+            renderFaculty
+        );
+
+    }
+
+
+    /* =========================================
+       SYLLABUS SELECT
+    ========================================== */
+
+    if (subjectSelect) {
+
+        subjectSelect.addEventListener(
+            "change",
+            () => {
+
+                renderSyllabus(
+                    subjectSelect.value
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =========================================
+       SIDEBAR NAVIGATION
+    ========================================== */
+
+    const navItems =
+        document.querySelectorAll(".nav-item");
+
+
+    navItems.forEach((item) => {
+
+        item.addEventListener(
+            "click",
+            () => {
+
+                const view =
+                    item.dataset.view;
+
+
+                if (view) {
+
+                    showView(view);
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /* =========================================
+       MOBILE MENU
+    ========================================== */
+
+    const menuToggle =
+        $("menuToggle");
+
+
+    const sidebar =
+        $("sidebar");
+
+
+    if (menuToggle && sidebar) {
+
+        menuToggle.addEventListener(
+            "click",
+            () => {
+
+                sidebar.classList.toggle("open");
+
+            }
+        );
+
+    }
+
+
+    /* =========================================
+       PRINT SYLLABUS
+    ========================================== */
+
+    const printButton =
+        $("printSyllabus");
+
+
+    if (printButton) {
+
+        printButton.addEventListener(
+            "click",
+            () => {
+
+                window.print();
+
+            }
+        );
+
+    }
+
+
+    /* =========================================
+       CLOSE SIDEBAR WHEN CLICKING OUTSIDE
+       ON MOBILE
+    ========================================== */
+
+    document.addEventListener(
+        "click",
+        (event) => {
+
+            if (
+                window.innerWidth <= 800 &&
+                sidebar &&
+                sidebar.classList.contains("open")
+            ) {
+
+                const clickedInsideSidebar =
+                    sidebar.contains(event.target);
+
+
+                const clickedMenu =
+                    menuToggle &&
+                    menuToggle.contains(event.target);
+
+
+                if (
+                    !clickedInsideSidebar &&
+                    !clickedMenu
+                ) {
+
+                    sidebar.classList.remove("open");
+
+                }
+
+            }
+
+        }
+    );
+
+
+});
+
+
+/* =========================================================
+   MAKE FUNCTIONS AVAILABLE TO HTML
+========================================================= */
+
+window.openSyllabus = openSyllabus;
+
+window.showToast = showToast;
+
+window.showView = showView;

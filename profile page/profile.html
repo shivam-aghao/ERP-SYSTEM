@@ -25,16 +25,79 @@
 
     <style>
 
+        /* =========================================
+           COLOR ROOT
+        ========================================= */
+
+        :root {
+
+            --primary-blue: #0B5CAD;
+            --secondary-blue: #1565C0;
+            --accent-cyan: #00A6D6;
+
+            --accent-cyan-light: rgba(0, 166, 214, 0.12);
+            --accent-cyan-glow: rgba(0, 166, 214, 0.25);
+
+            --dark-navy: #0B1F3A;
+            --dark-navy-surface: #102A4D;
+            --dark-navy-border: #1B3B66;
+
+            --primary: #0B5CAD;
+            --primary-hover: #08498b;
+
+            --secondary: #1565C0;
+            --secondary-hover: #0d47a1;
+
+            --accent: #00A6D6;
+            --accent-soft: rgba(0, 166, 214, 0.12);
+            --accent-glow: rgba(0, 166, 214, 0.25);
+            --accent-hover: #0093be;
+
+            --navy: #0B1F3A;
+            --navy-dark: #061325;
+            --navy-light: #132b4f;
+            --navy-surface: #102A4D;
+            --navy-border: rgba(255, 255, 255, 0.08);
+
+            --white: #FFFFFF;
+
+            --bg-light: #F4F8FC;
+            --light-bg: #F4F8FC;
+            --card-bg: #FFFFFF;
+            --surface-hover: #F8FAFC;
+
+            --border-color: #E2E8F0;
+            --border-light: #EDF2F7;
+            --border-card: #E8EEF5;
+
+            --text: #263238;
+            --text-main: #1E293B;
+            --text-primary: #1E293B;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --muted: #64748B;
+            --text-light: #94A3B8;
+
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-bg-soft: rgba(16, 185, 129, 0.12);
+        }
+
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+
         body {
+
             font-family: "Inter", sans-serif;
-            background: #f4f7fc;
-            color: #1e293b;
+
+            background: var(--bg-light);
+
+            color: var(--text-main);
         }
 
 
@@ -48,21 +111,25 @@
 
             background: linear-gradient(
                 135deg,
-                #172554,
-                #243b80
+                var(--navy-dark),
+                var(--dark-navy)
             );
 
             display: flex;
+
             align-items: center;
 
             padding: 0 24px;
 
-            color: white;
+            color: var(--white);
 
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            box-shadow:
+                0 3px 10px rgba(6, 19, 37, 0.18);
 
             position: sticky;
+
             top: 0;
+
             z-index: 1000;
         }
 
@@ -75,6 +142,7 @@
             height: 40px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
@@ -89,8 +157,10 @@
             transition: 0.2s;
         }
 
+
         .menu-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+
+            background: var(--navy-light);
         }
 
 
@@ -103,11 +173,12 @@
             width: 48px;
             height: 48px;
 
-            background: white;
+            background: var(--white);
 
             border-radius: 6px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
@@ -117,6 +188,7 @@
 
             flex-shrink: 0;
         }
+
 
         .college-logo img {
 
@@ -169,6 +241,7 @@
             border-radius: 8px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
@@ -179,9 +252,10 @@
             font-size: 17px;
         }
 
+
         .notification:hover {
 
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--navy-light);
         }
 
 
@@ -202,6 +276,7 @@
             font-size: 9px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
@@ -228,9 +303,10 @@
             cursor: pointer;
         }
 
+
         .student-header:hover {
 
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--navy-light);
         }
 
 
@@ -241,17 +317,20 @@
 
             border-radius: 50%;
 
-            background: #dbeafe;
+            background: var(--accent-cyan-light);
 
-            color: #1e3a8a;
+            color: var(--accent-cyan);
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
             font-size: 12px;
 
             font-weight: 800;
+
+            border: 1px solid var(--accent-cyan-glow);
         }
 
 
@@ -267,7 +346,7 @@
 
             font-size: 10px;
 
-            color: #cbd5e1;
+            color: var(--text-light);
 
             margin-top: 2px;
         }
@@ -320,17 +399,18 @@
 
             border-radius: 12px;
 
-            background: #dbeafe;
+            background: var(--accent-cyan-light);
 
-            color: #1d4ed8;
+            color: var(--primary-blue);
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             font-size: 19px;
+
+            border: 1px solid var(--accent-cyan-glow);
         }
 
 
@@ -338,7 +418,7 @@
 
             font-size: 24px;
 
-            color: #172554;
+            color: var(--dark-navy);
 
             font-weight: 800;
         }
@@ -348,7 +428,7 @@
 
             font-size: 12px;
 
-            color: #64748b;
+            color: var(--text-muted);
 
             margin-top: 4px;
         }
@@ -360,9 +440,9 @@
 
             border: none;
 
-            background: #2563eb;
+            background: var(--primary-blue);
 
-            color: white;
+            color: var(--white);
 
             padding: 10px 17px;
 
@@ -381,12 +461,15 @@
             gap: 8px;
 
             transition: 0.2s;
+
+            box-shadow:
+                0 4px 12px rgba(11, 92, 173, 0.18);
         }
 
 
         .edit-btn:hover {
 
-            background: #1d4ed8;
+            background: var(--primary-hover);
 
             transform: translateY(-1px);
         }
@@ -398,14 +481,14 @@
 
         .profile-card {
 
-            background: white;
+            background: var(--card-bg);
 
             border-radius: 14px;
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-card);
 
             box-shadow:
-                0 5px 20px rgba(15, 23, 42, 0.06);
+                0 5px 20px rgba(11, 31, 58, 0.06);
 
             overflow: hidden;
 
@@ -426,11 +509,11 @@
             background:
                 linear-gradient(
                     135deg,
-                    #eff6ff,
-                    #ffffff
+                    var(--accent-cyan-light),
+                    var(--white)
                 );
 
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
 
@@ -456,14 +539,14 @@
 
             border-radius: 10px;
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
             box-shadow:
-                0 4px 15px rgba(0, 0, 0, 0.15);
+                0 4px 15px rgba(11, 31, 58, 0.15);
 
             object-fit: cover;
 
-            background: #e2e8f0;
+            background: var(--border-light);
 
             display: block;
         }
@@ -478,9 +561,9 @@
             width: 17px;
             height: 17px;
 
-            background: #22c55e;
+            background: var(--success);
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
             border-radius: 50%;
 
@@ -505,22 +588,21 @@
 
             border-radius: 50%;
 
-            background: #2563eb;
+            background: var(--primary-blue);
 
-            color: white;
+            color: var(--white);
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             cursor: pointer;
 
             box-shadow:
-                0 4px 10px rgba(0, 0, 0, 0.20);
+                0 4px 10px rgba(11, 31, 58, 0.20);
 
             transition: 0.2s;
         }
@@ -528,7 +610,7 @@
 
         .photo-upload-btn:hover {
 
-            background: #1d4ed8;
+            background: var(--primary-hover);
 
             transform: scale(1.08);
         }
@@ -548,7 +630,7 @@
 
             font-size: 24px;
 
-            color: #172554;
+            color: var(--dark-navy);
 
             margin-bottom: 7px;
         }
@@ -558,9 +640,9 @@
 
             display: inline-block;
 
-            background: #dbeafe;
+            background: var(--accent-cyan-light);
 
-            color: #1d4ed8;
+            color: var(--primary-blue);
 
             font-size: 11px;
 
@@ -571,6 +653,8 @@
             border-radius: 20px;
 
             margin-bottom: 13px;
+
+            border: 1px solid var(--accent-cyan-glow);
         }
 
 
@@ -592,7 +676,7 @@
 
             gap: 7px;
 
-            color: #475569;
+            color: var(--text-secondary);
 
             font-size: 13px;
         }
@@ -600,7 +684,7 @@
 
         .profile-detail i {
 
-            color: #2563eb;
+            color: var(--primary-blue);
 
             width: 16px;
         }
@@ -612,14 +696,14 @@
 
         .section-card {
 
-            background: white;
+            background: var(--card-bg);
 
             border-radius: 14px;
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-card);
 
             box-shadow:
-                0 5px 20px rgba(15, 23, 42, 0.05);
+                0 5px 20px rgba(11, 31, 58, 0.05);
 
             margin-bottom: 22px;
 
@@ -643,9 +727,9 @@
 
             gap: 10px;
 
-            background: #f8fafc;
+            background: var(--surface-hover);
 
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
 
@@ -656,17 +740,18 @@
 
             border-radius: 8px;
 
-            background: #dbeafe;
+            background: var(--accent-cyan-light);
 
-            color: #1d4ed8;
+            color: var(--primary-blue);
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             font-size: 14px;
+
+            border: 1px solid var(--accent-cyan-glow);
         }
 
 
@@ -676,7 +761,7 @@
 
             font-weight: 700;
 
-            color: #172554;
+            color: var(--dark-navy);
         }
 
 
@@ -718,7 +803,7 @@
 
             font-size: 12px;
 
-            color: #64748b;
+            color: var(--text-muted);
 
             font-weight: 600;
         }
@@ -726,7 +811,7 @@
 
         .info-colon {
 
-            color: #94a3b8;
+            color: var(--text-light);
 
             text-align: center;
         }
@@ -736,7 +821,7 @@
 
             font-size: 13px;
 
-            color: #1e293b;
+            color: var(--text-main);
 
             font-weight: 600;
 
@@ -746,7 +831,7 @@
 
         .info-value.highlight {
 
-            color: #2563eb;
+            color: var(--primary-blue);
         }
 
 
@@ -766,9 +851,9 @@
 
             border-radius: 20px;
 
-            background: #dcfce7;
+            background: var(--success-bg);
 
-            color: #15803d;
+            color: #059669;
 
             font-size: 11px;
 
@@ -809,7 +894,7 @@
 
             padding: 17px;
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
             border-radius: 10px;
 
@@ -825,10 +910,10 @@
 
         .contact-card:hover {
 
-            border-color: #93c5fd;
+            border-color: var(--accent-cyan);
 
             box-shadow:
-                0 4px 12px rgba(37, 99, 235, 0.08);
+                0 4px 12px rgba(0, 166, 214, 0.08);
         }
 
 
@@ -839,14 +924,13 @@
 
             border-radius: 10px;
 
-            background: #eff6ff;
+            background: var(--accent-cyan-light);
 
-            color: #2563eb;
+            color: var(--primary-blue);
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             flex-shrink: 0;
@@ -857,7 +941,7 @@
 
             font-size: 10px;
 
-            color: #94a3b8;
+            color: var(--text-light);
 
             margin-bottom: 4px;
 
@@ -871,7 +955,7 @@
 
             font-weight: 600;
 
-            color: #334155;
+            color: var(--text-secondary);
 
             word-break: break-word;
         }
@@ -894,7 +978,7 @@
 
         .document {
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
             border-radius: 10px;
 
@@ -912,7 +996,7 @@
 
         .document:hover {
 
-            border-color: #93c5fd;
+            border-color: var(--accent-cyan);
 
             transform: translateY(-1px);
         }
@@ -923,16 +1007,15 @@
             width: 40px;
             height: 40px;
 
-            background: #fee2e2;
+            background: var(--accent-cyan-light);
 
-            color: #dc2626;
+            color: var(--primary-blue);
 
             border-radius: 9px;
 
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             flex-shrink: 0;
@@ -945,7 +1028,7 @@
 
             font-weight: 600;
 
-            color: #334155;
+            color: var(--text-secondary);
         }
 
 
@@ -953,7 +1036,7 @@
 
             font-size: 10px;
 
-            color: #16a34a;
+            color: var(--success);
 
             margin-top: 3px;
         }
@@ -965,9 +1048,9 @@
 
         .footer {
 
-            background: #172554;
+            background: var(--navy-dark);
 
-            color: #cbd5e1;
+            color: var(--text-light);
 
             min-height: 50px;
 
@@ -1136,106 +1219,134 @@
          TOP HEADER
     ========================================== -->
 
-    <header class="top-header">
+   <header class="ssgmce-top-header" role="banner">
+    <div class="header-left">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
 
-
-        <!-- Menu -->
-
-        <div class="menu-btn">
-
-            <i class="fa-solid fa-bars"></i>
-
+      <!-- SSGMCE College Crest / Brand -->
+      <a href="index.html" class="header-brand" aria-label="SSGMCE Home">
+        <div class="brand-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img">
         </div>
-
-
-        <!-- =====================================
-             COLLEGE LOGO
-             SAME LOGO AS LOGIN PAGE
-        ====================================== -->
-
-        <div class="college-logo">
-
-            <img
-                src="SSGMCElogo.png"
-                alt="SSGMCE College Logo"
-            >
-
+        <div class="brand-text-block">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
         </div>
+      </a>
+
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
+      </div>
+    </div>
 
 
-        <!-- College Name -->
-
-        <div class="logo-text">
-
-            Shri Sant Gajanan Maharaj College of Engineering, Shegaon
-
+    <!-- Right Controls: Notifications & Student Profile -->
+    <div class="header-right">
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 3 unread" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge">3</span>
+        </button>
+        <!-- Notification Dropdown Popover -->
+        <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
+          <div class="panel-header">
+            <h4>Notifications</h4>
+            <span class="unread-tag">3 New</span>
+          </div>
+          <ul class="notif-list">
+            <li class="notif-item unread">
+              <span class="notif-bullet bg-error"></span>
+              <div class="notif-info">
+                <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
+                <span class="notif-time">10 mins ago • Examination Cell</span>
+              </div>
+            </li>
+            <li class="notif-item unread">
+              <span class="notif-bullet bg-warning"></span>
+              <div class="notif-info">
+                <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
+                <span class="notif-time">2 hours ago • Academic Cell</span>
+              </div>
+            </li>
+            <li class="notif-item unread">
+              <span class="notif-bullet bg-success"></span>
+              <div class="notif-info">
+                <p class="notif-msg">Assignment 2 for Data Structures uploaded to portal.</p>
+                <span class="notif-time">Yesterday • Prof. R. Sharma</span>
+              </div>
+            </li>
+          </ul>
+          <div class="panel-footer">
+            <button type="button" class="btn-link-action" id="markAllReadBtn">Mark all as read</button>
+          </div>
         </div>
+      </div>
 
-
-        <!-- Header Right -->
-
-        <div class="header-right">
-
-
-            <!-- Notification -->
-
-            <div class="notification">
-
-                <i class="fa-regular fa-bell"></i>
-
-                <span class="notification-badge">
-                    3
-                </span>
-
+      <!-- Student Profile Pill -->
+      <div class="profile-wrapper" id="profileWrapper">
+        <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Shivam Aghao Profile Menu" aria-haspopup="true" aria-expanded="false">
+          <div class="avatar-circle">SA</div>
+          <div class="profile-details">
+            <span class="student-name">Shivam Aghao</span>
+            <span class="student-meta">Roll: 21 • CSE 2R1 (CSE2401)</span>
+          </div>
+          <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <!-- Profile Dropdown Popover -->
+        <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
+          <div class="profile-panel-header">
+            <div class="large-avatar">SA</div>
+            <div>
+              <div class="p-name">Shivam Aghao</div>
+              <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
+              <div class="p-roll">Roll No: 21 • Class: 2R1 • Sem IV (CSE2401)</div>
             </div>
-
-
-            <!-- Student -->
-
-            <div class="student-header">
-
-
-                <div class="header-avatar">
-                    NK
-                </div>
-
-
-                <div>
-
-                    <div class="student-name">
-                        Neha Kailash Badokar
-                    </div>
-
-                    <div class="student-role">
-                        Student
-                    </div>
-
-                </div>
-
-
-                <i
-                    class="fa-solid fa-chevron-down"
-                    style="font-size:10px"
-                ></i>
-
-
-            </div>
-
-
+          </div>
+          <div class="p-links">
+            <a href="#profile" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              My Student Profile
+            </a>
+            <a href="attendance.html" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Subject-wise Attendance (82%)
+            </a>
+            <a href="#settings" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Account Settings
+            </a>
+            <div class="p-divider"></div>
+            <button type="button" class="p-link-item text-danger" id="logoutBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Sign Out
+            </button>
+          </div>
         </div>
-
-
-    </header>
-
-
-
-    
+      </div>
+    </div>
+  </header>
 
 
 
     <!-- =========================================
          MAIN CONTENT
-    ========================================== -->
+    =========================================== -->
 
     <main class="main-container">
 
@@ -1290,7 +1401,6 @@
         </div>
 
 
-
         <!-- =====================================
              PROFILE SUMMARY
         ====================================== -->
@@ -1343,7 +1453,6 @@
 
 
                 </div>
-
 
 
                 <!-- =================================
@@ -1421,7 +1530,6 @@
 
 
         </div>
-
 
 
         <!-- =========================================
@@ -1633,7 +1741,6 @@
         </div>
 
 
-
         <!-- =========================================
              PERSONAL + ACADEMIC
         ========================================== -->
@@ -1767,7 +1874,6 @@
             </div>
 
 
-
             <!-- ACADEMIC -->
 
             <div class="section-card">
@@ -1897,7 +2003,6 @@
         </div>
 
 
-
         <!-- =========================================
              CONTACT INFORMATION
         ========================================== -->
@@ -1955,7 +2060,6 @@
                     </div>
 
 
-
                     <div class="contact-card">
 
 
@@ -1980,7 +2084,6 @@
 
 
                     </div>
-
 
 
                     <div class="contact-card">
@@ -2016,7 +2119,6 @@
 
 
         </div>
-
 
 
         <!-- =========================================
@@ -2135,7 +2237,6 @@
             </div>
 
 
-
             <!-- PARENT -->
 
             <div class="section-card">
@@ -2231,7 +2332,6 @@
         </div>
 
 
-
         <!-- =========================================
              DOCUMENTS
         ========================================== -->
@@ -2263,7 +2363,6 @@
                 <div class="documents">
 
 
-                    
                     <div class="document">
 
 
@@ -2288,7 +2387,6 @@
 
 
                     </div>
-
 
 
                     <div class="document">
@@ -2329,7 +2427,6 @@
     </main>
 
 
-
     <!-- =========================================
          FOOTER
     ========================================== -->
@@ -2341,7 +2438,6 @@
         College ERP System
 
     </footer>
-
 
 
     <!-- =========================================
@@ -2425,7 +2521,6 @@
         );
 
 
-
         /* =========================================
            EDIT PROFILE
         ========================================== */
@@ -2437,10 +2532,6 @@
             );
 
         }
-
-
-
-        
 
 
     </script>

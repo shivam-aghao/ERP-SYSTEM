@@ -1,116 +1,179 @@
+/* =========================================================
+   SSGMCE COLLEGE ERP
+   SYLLABUS MODULE
+   COMPLETE MODIFIED CSS
+========================================================= */
+
+
+/* =========================================================
+   ROOT
+========================================================= */
+
 :root {
-    --primary-dark: #081c30;
-    --primary: #0B5CAD;
-    --primary-light: #1565C0;
-    --accent: #00A6D5;
+    --primary-blue: #0B5CAD;
+    --secondary-blue: #1565C0;
+    --accent-cyan: #00A6D6;
 
-    --dark-text: #081c30;
-    --normal-text: #647F9C;
+    /* SAME DARK BLUE FAMILY */
+    --dark-blue: #061A33;
+    --dark-blue-2: #061A33;
+    --dark-blue-hover: #0B2342;
+    --dark-blue-border: #17385F;
 
-    --border: #D9E6F1;
-    --page-bg: #EAF5FB;
-    --white: #fff;
-    --light: #F4FAFD;
-    --hover: #EDF7FC;
+    --active-blue: #0B5CAD;
 
-    --shadow: 0 10px 30px rgba(8, 28, 48, .08);
+    --white: #FFFFFF;
+
+    --bg-light: #F4F8FC;
+    --card-bg: #FFFFFF;
+
+    --border-color: #E2E8F0;
+    --border-light: #EDF2F7;
+
+    --text-main: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+
+    --success: #10B981;
+    --warning: #F59E0B;
+
+    --shadow:
+        0 8px 25px rgba(11, 31, 58, 0.07);
+
+    --shadow-small:
+        0 4px 15px rgba(11, 31, 58, 0.06);
 }
 
 
-/* ================================
-   GLOBAL
-================================ */
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     margin: 0;
-    font-family: Inter, Arial, sans-serif;
-    color: var(--dark-text);
-    background: var(--page-bg);
+    font-family: "Inter", Arial, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-main);
+    font-size: 13px;
+    overflow-x: hidden;
 }
 
 button,
 input,
 select {
-    font: inherit;
+    font-family: inherit;
 }
+
+button {
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
 
 .app-shell {
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-light);
 }
 
 
-/* ================================
+/* =========================================================
    TOPBAR
-================================ */
+========================================================= */
 
 .topbar {
     height: 68px;
-    background: linear-gradient(
-        135deg,
-        #081c30 0%,
-        #0B5CAD 100%
-    );
 
-    color: #fff;
+    background: #061A33;
+
+    color: #FFFFFF;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    padding: 0 24px;
+    padding: 0 18px 0 16px;
 
     position: sticky;
     top: 0;
-
-    z-index: 100;
+    z-index: 200;
 
     box-shadow:
-        0 5px 20px rgba(8, 28, 48, .25);
+        0 3px 12px rgba(6, 19, 37, 0.18);
 }
 
-.topbar-left,
-.topbar-right {
+
+/* =========================================================
+   TOPBAR LEFT
+========================================================= */
+
+.topbar-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
+    min-width: 0;
 }
 
 
-/* ================================
+/* =========================================================
    ICON BUTTON
-================================ */
+========================================================= */
 
 .icon-btn {
-    border: 0;
+    border: none;
+    outline: none;
 
-    background: rgba(255, 255, 255, .1);
-
-    color: #fff;
-
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
 
     border-radius: 10px;
 
-    cursor: pointer;
+    display: grid;
+    place-items: center;
 
-    transition: .2s;
+    background: #0B2342;
+    color: #FFFFFF;
+
+    transition: 0.2s ease;
 }
 
 .icon-btn:hover {
-    background: rgba(255, 255, 255, .18);
+    background: #0B2342;
+}
 
-    transform: translateY(-1px);
+.icon-btn i {
+    font-size: 16px;
 }
 
 
-/* ================================
+/* =========================================================
    LOGO
-================================ */
+========================================================= */
 
 .brand-logo {
     width: 42px;
@@ -118,100 +181,125 @@ select {
 
     border-radius: 10px;
 
-    background: rgba(255, 255, 255, .1);
+    background: #0B2342;
 
-    border: 1px solid rgba(255, 255, 255, .22);
+    border: 1px solid #17385F;
 
-    padding: 5px;
+    display: grid;
+    place-items: center;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
+
+    flex-shrink: 0;
 }
 
 .brand-logo img {
-    width: 100%;
-    height: 100%;
-
+    width: 34px;
+    height: 34px;
     object-fit: contain;
 }
 
 
-/* ================================
+/* =========================================================
    BRAND TEXT
-================================ */
+========================================================= */
 
 .brand-text {
     display: flex;
     flex-direction: column;
-
-    line-height: 1.15;
+    justify-content: center;
+    min-width: 0;
 }
 
 .brand-text strong {
-    font-size: 16px;
+    font-size: 14px;
+    line-height: 1.25;
+
+    font-weight: 800;
+
+    color: #FFFFFF;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .brand-text span {
-    font-size: 11px;
-
-    color: #cfe4f8;
-
-    margin-top: 3px;
+    font-size: 9px;
+    color: #B7C9DB;
+    margin-top: 2px;
 }
 
 
-/* ================================
+/* =========================================================
+   TOPBAR RIGHT
+========================================================= */
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* =========================================================
    NOTIFICATION
-================================ */
+========================================================= */
 
 .notification-btn {
     position: relative;
+    width: 40px;
+    height: 40px;
 }
 
 .notification-btn span {
     position: absolute;
 
-    width: 7px;
-    height: 7px;
-
-    background: #00d4ff;
+    width: 6px;
+    height: 6px;
 
     border-radius: 50%;
 
-    right: 9px;
-    top: 8px;
+    background: #00A6D6;
 
-    border: 1px solid #0B5CAD;
+    top: 9px;
+    right: 10px;
+
+    border: 1px solid #061A33;
 }
 
 
-/* ================================
+/* =========================================================
    STUDENT CHIP
-================================ */
+========================================================= */
 
 .student-chip {
+    height: 46px;
+    min-width: 180px;
+
+    padding: 4px 10px 4px 5px;
+
     display: flex;
     align-items: center;
 
     gap: 9px;
 
-    padding: 5px 10px 5px 5px;
-
-    border: 1px solid rgba(255, 255, 255, .16);
-
-    background: rgba(255, 255, 255, .08);
-
     border-radius: 13px;
+
+    background: #0B2342;
+
+    border: 1px solid #17385F;
+
+    color: #FFFFFF;
 }
 
 .student-chip .avatar {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
 
-    border-radius: 10px;
+    border-radius: 9px;
 
-    background: #fff;
+    background: #FFFFFF;
 
     color: #0B5CAD;
 
@@ -219,294 +307,424 @@ select {
     place-items: center;
 
     font-weight: 800;
-}
-
-.student-chip strong {
-    display: block;
-    font-size: 12px;
-}
-
-.student-chip small {
-    display: block;
-
-    color: #cfe4f8;
-
-    font-size: 10px;
-
-    margin-top: 2px;
-}
-
-.student-chip > i {
-    font-size: 10px;
-
-    color: #cfe4f8;
-
-    margin-left: 4px;
-}
-
-
-/* ================================
-   MAIN LAYOUT
-================================ */
-
-.layout {
-    display: flex;
-
-    min-height: calc(100vh - 68px);
-}
-
-
-/* ================================
-   SIDEBAR
-================================ */
-
-.sidebar {
-    width: 245px;
-
-    background: #fff;
-
-    border-right: 1px solid var(--border);
-
-    padding: 22px 14px;
-
-    display: flex;
-    flex-direction: column;
-
-    transition: .25s;
+    font-size: 14px;
 
     flex-shrink: 0;
 }
 
-.sidebar-title {
+.student-chip > div:nth-child(2) {
     display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
 
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 0 10px 13px;
-
-    color: #8aa0b5;
-
+.student-chip strong {
     font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.student-chip small {
+    font-size: 8px;
+    color: #B7C9DB;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+.student-chip > i {
+    margin-left: auto;
+    font-size: 9px;
+    color: #9DB5CB;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.layout {
+    flex: 1;
+    display: flex;
+    min-height: calc(100vh - 68px);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ONE DARK BLUE SHADE
+========================================================= */
+
+.sidebar {
+    width: 170px;
+
+    flex-shrink: 0;
+
+    min-height: calc(100vh - 68px);
+
+    background: #061A33;
+
+    color: #FFFFFF;
+
+    padding: 12px 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+
+    border-right: 1px solid #061A33;
+
+    transition:
+        left 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+/* =========================================================
+   SIDEBAR SCROLL
+========================================================= */
+
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #061A33;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #17385F;
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   SIDEBAR TITLE
+========================================================= */
+
+.sidebar-title {
+    padding: 13px 10px 8px;
+
+    color: #8FA9C3;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    font-size: 8px;
 
     font-weight: 800;
 
     letter-spacing: 1px;
+
+    text-transform: uppercase;
 }
 
 .sidebar-title i {
-    color: var(--primary);
+    color: #8FA9C3;
+    font-size: 11px;
 }
 
 
-/* ================================
-   NAV ITEMS
-================================ */
+/* =========================================================
+   NAV ITEM
+========================================================= */
 
 .nav-item {
     width: 100%;
 
-    display: flex;
-    align-items: center;
+    min-height: 36px;
 
-    gap: 12px;
-
-    border: 0;
+    border: none;
+    outline: none;
 
     background: transparent;
 
-    color: #607a92;
+    color: #D5E1ED;
 
-    padding: 13px 12px;
+    display: flex;
+    align-items: center;
 
-    border-radius: 11px;
+    gap: 9px;
 
-    margin: 3px 0;
+    padding: 8px 10px;
+
+    margin: 2px 0;
+
+    border-radius: 7px;
 
     cursor: pointer;
 
     text-align: left;
 
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 9px;
+
     font-weight: 600;
 
-    font-size: 13px;
-
-    transition: .2s;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
+
+
+/* =========================================================
+   NAV ICON
+========================================================= */
 
 .nav-item i:first-child {
-    width: 19px;
+    width: 16px;
+    min-width: 16px;
 
     text-align: center;
+
+    font-size: 11px;
+
+    color: #9DB5CB;
 }
+
+
+/* =========================================================
+   NAV ARROW
+========================================================= */
 
 .nav-item .arrow {
     margin-left: auto;
 
-    font-size: 10px;
+    font-size: 8px;
 
-    opacity: .5;
+    color: #8FA9C3;
 }
+
+
+/* =========================================================
+   NAV HOVER
+========================================================= */
 
 .nav-item:hover {
-    background: var(--hover);
-
-    color: var(--primary);
+    background: #0B2342;
+    color: #FFFFFF;
 }
+
+.nav-item:hover i:first-child {
+    color: #FFFFFF;
+}
+
+.nav-item:hover .arrow {
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   ACTIVE
+   SINGLE SOLID BLUE
+========================================================= */
 
 .nav-item.active {
-    background: linear-gradient(
-        90deg,
-        #e8f4fd,
-        #f4fbff
-    );
+    background: #0B5CAD;
 
-    color: var(--primary);
+    color: #FFFFFF;
 
-    box-shadow:
-        inset 3px 0 0 var(--primary);
+    box-shadow: none;
+}
+
+.nav-item.active i:first-child {
+    color: #FFFFFF;
+}
+
+.nav-item.active .arrow {
+    color: #FFFFFF;
 }
 
 
-/* ================================
+/* =========================================================
    SIDEBAR FOOTER
-================================ */
+========================================================= */
 
 .sidebar-footer {
     margin-top: auto;
 
-    border: 1px solid var(--border);
+    border-top:
+        1px solid #17385F;
 
-    background: var(--light);
-
-    border-radius: 13px;
-
-    padding: 12px;
+    padding:
+        13px 7px 4px;
 
     display: flex;
 
-    gap: 9px;
-
     align-items: center;
+
+    gap: 8px;
 }
+
+
+/* =========================================================
+   FOOTER ICON
+========================================================= */
 
 .secure-icon {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
 
-    border-radius: 9px;
+    border-radius: 8px;
 
-    background: #dff3fb;
+    background: #0B2342;
 
-    color: var(--primary);
+    border:
+        1px solid #17385F;
+
+    color: #00A6D6;
 
     display: grid;
-
     place-items: center;
+
+    flex-shrink: 0;
 }
+
+.secure-icon i {
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   FOOTER TEXT
+========================================================= */
 
 .sidebar-footer strong {
     display: block;
 
-    font-size: 11px;
+    color: #FFFFFF;
+
+    font-size: 8px;
+
+    font-weight: 700;
 }
 
 .sidebar-footer small {
-    color: var(--normal-text);
+    display: block;
 
-    font-size: 9px;
+    color: #7189A3;
+
+    font-size: 6.5px;
+
+    margin-top: 3px;
 }
 
 
-/* ================================
+/* =========================================================
    CONTENT
-================================ */
+========================================================= */
 
 .content {
     flex: 1;
 
-    padding: 28px;
-
     min-width: 0;
+
+    padding: 30px;
+
+    background: #F4F8FC;
+
+    overflow-x: hidden;
 }
 
 
-/* ================================
+/* =========================================================
    PAGE HEADING
-================================ */
+========================================================= */
 
 .page-heading {
     display: flex;
 
-    justify-content: space-between;
-
     align-items: flex-end;
+
+    justify-content: space-between;
 
     gap: 20px;
 
-    margin-bottom: 23px;
+    margin-bottom: 24px;
 }
 
 .eyebrow {
-    font-size: 10px;
+    color: #0B5CAD;
+
+    font-size: 9px;
 
     font-weight: 800;
 
-    letter-spacing: 1.5px;
-
-    color: var(--primary);
+    letter-spacing: 1.2px;
 
     margin-bottom: 6px;
 }
 
 .page-heading h1 {
-    font-size: 27px;
+    color: #10233D;
 
-    margin: 0 0 7px;
+    font-size: 28px;
 
-    letter-spacing: -.6px;
+    line-height: 1.15;
+
+    font-weight: 800;
+
+    margin-bottom: 7px;
 }
 
 .page-heading p {
-    margin: 0;
-
-    color: var(--normal-text);
-
-    font-size: 12px;
-}
-
-
-/* ================================
-   SESSION BADGE
-================================ */
-
-.session-badge {
-    background: #fff;
-
-    border: 1px solid var(--border);
-
-    padding: 10px 13px;
-
-    border-radius: 11px;
-
-    color: var(--primary);
+    color: #71839A;
 
     font-size: 11px;
 
-    font-weight: 700;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   SESSION BADGE
+========================================================= */
+
+.session-badge {
+    min-width: 98px;
+
+    height: 38px;
+
+    padding: 0 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    background: #FFFFFF;
+
+    border:
+        1px solid #E2E8F0;
+
+    border-radius: 10px;
 
     box-shadow:
-        0 3px 10px rgba(8, 28, 48, .04);
+        0 4px 14px rgba(11, 31, 58, 0.05);
+
+    color: #0B5CAD;
+
+    font-size: 10px;
+
+    font-weight: 700;
 }
 
 .session-badge i {
-    margin-right: 6px;
+    font-size: 11px;
 }
 
 
-/* ================================
-   VIEWS
-================================ */
+/* =========================================================
+   VIEW
+========================================================= */
 
 .view {
     display: none;
@@ -514,220 +732,334 @@ select {
 
 .view.active {
     display: block;
+
+    animation:
+        fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
-/* ================================
-   STAT CARDS
-================================ */
+/* =========================================================
+   STATS
+========================================================= */
 
 .stats-grid {
     display: grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(4, minmax(0, 1fr));
 
     gap: 14px;
 
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 
+
+/* =========================================================
+   STAT CARD
+========================================================= */
+
 .stat-card {
-    background: #fff;
+    min-height: 82px;
 
-    border: 1px solid var(--border);
+    background: #FFFFFF;
 
-    border-radius: 15px;
+    border:
+        1px solid #E2E8F0;
 
-    padding: 16px;
+    border-radius: 13px;
+
+    box-shadow:
+        0 6px 20px rgba(11, 31, 58, 0.06);
+
+    padding:
+        13px 15px;
 
     display: flex;
 
     align-items: center;
 
-    gap: 12px;
+    gap: 11px;
 
-    box-shadow:
-        0 4px 14px rgba(8, 28, 48, .04);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.stat-icon {
-    width: 42px;
-    height: 42px;
+.stat-card:hover {
+    transform: translateY(-2px);
 
-    border-radius: 12px;
+    box-shadow:
+        0 10px 24px
+        rgba(11, 31, 58, 0.09);
+}
+
+
+/* =========================================================
+   STAT ICON
+========================================================= */
+
+.stat-icon {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 11px;
 
     display: grid;
-
     place-items: center;
 
+    flex-shrink: 0;
+}
+
+.stat-icon i {
     font-size: 16px;
 }
 
 .stat-icon.blue {
-    background: #e7f1fb;
+    background:
+        rgba(11, 92, 173, 0.10);
 
-    color: #0B5CAD;
+    color:
+        #0B5CAD;
 }
 
 .stat-icon.cyan {
-    background: #e4f8fc;
+    background:
+        rgba(0, 166, 214, 0.12);
 
-    color: #009bc8;
+    color:
+        #00A6D6;
 }
 
 .stat-icon.navy {
-    background: #e9eef4;
+    background:
+        rgba(6, 26, 51, 0.08);
 
-    color: #081c30;
+    color:
+        #061A33;
 }
 
 .stat-icon.sky {
-    background: #edf7ff;
+    background:
+        rgba(21, 101, 192, 0.09);
 
-    color: #1565C0;
+    color:
+        #1565C0;
 }
+
+
+/* =========================================================
+   STAT TEXT
+========================================================= */
 
 .stat-card span {
     display: block;
 
-    color: var(--normal-text);
+    color: #71839A;
 
-    font-size: 10px;
+    font-size: 9px;
 
-    font-weight: 600;
+    margin-bottom: 4px;
 }
 
 .stat-card strong {
-    display: block;
+    color: #10233D;
 
     font-size: 20px;
 
-    margin-top: 3px;
+    font-weight: 800;
 }
 
 
-/* ================================
+/* =========================================================
    PANEL
-================================ */
+========================================================= */
 
 .panel {
-    background: #fff;
+    background: #FFFFFF;
 
-    border: 1px solid var(--border);
+    border:
+        1px solid #E2E8F0;
 
-    border-radius: 17px;
+    border-radius: 14px;
+
+    box-shadow:
+        0 7px 25px rgba(11, 31, 58, 0.06);
 
     overflow: hidden;
-
-    box-shadow: var(--shadow);
 }
 
-.panel-header {
-    padding: 19px 20px;
 
-    border-bottom: 1px solid var(--border);
+/* =========================================================
+   PANEL HEADER
+========================================================= */
+
+.panel-header {
+    padding:
+        18px 20px;
 
     display: flex;
-
-    justify-content: space-between;
 
     align-items: center;
 
+    justify-content: space-between;
+
     gap: 15px;
+
+    border-bottom:
+        1px solid #EDF2F7;
 }
 
 .panel-header h2 {
-    font-size: 16px;
+    color: #10233D;
 
-    margin: 0 0 4px;
+    font-size: 15px;
+
+    font-weight: 800;
+
+    margin-bottom: 4px;
 }
 
 .panel-header p {
-    font-size: 10px;
+    color: #7B8EA4;
 
-    color: var(--normal-text);
-
-    margin: 0;
+    font-size: 9px;
 }
+
+
+/* =========================================================
+   PANEL TOOLS
+========================================================= */
 
 .panel-tools {
     display: flex;
+
+    align-items: center;
 
     gap: 9px;
 }
 
 
-/* ================================
+/* =========================================================
    SEARCH
-================================ */
+========================================================= */
 
 .search-box {
+    min-width: 230px;
+
     height: 38px;
 
-    min-width: 240px;
-
-    border: 1px solid var(--border);
-
-    background: #fbfdff;
+    border:
+        1px solid #E2E8F0;
 
     border-radius: 9px;
+
+    background: #FFFFFF;
 
     display: flex;
 
     align-items: center;
 
-    padding: 0 11px;
+    padding:
+        0 11px;
 
     gap: 8px;
 
-    color: #89a0b3;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.search-box:focus-within {
+    border-color: #73A8D8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(11, 92, 173, 0.07);
+}
+
+.search-box i {
+    color: #8AA0B7;
+
+    font-size: 11px;
 }
 
 .search-box input {
-    border: 0;
+    width: 100%;
 
-    outline: 0;
+    border: none;
+
+    outline: none;
 
     background: transparent;
 
-    width: 100%;
+    color: #1E293B;
 
-    font-size: 11px;
+    font-size: 9px;
+}
 
-    color: var(--dark-text);
+.search-box input::placeholder {
+    color: #9AAABD;
 }
 
 
-/* ================================
+/* =========================================================
    SELECT
-================================ */
+========================================================= */
 
 select {
     height: 38px;
 
-    border: 1px solid var(--border);
+    min-width: 150px;
 
-    background: #fff;
+    padding:
+        0 30px 0 11px;
 
-    color: #47657e;
+    border:
+        1px solid #E2E8F0;
 
     border-radius: 9px;
 
-    padding: 0 11px;
+    background: #FFFFFF;
 
-    font-size: 11px;
+    color: #475569;
 
-    outline: 0;
+    outline: none;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #73A8D8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(11, 92, 173, 0.07);
 }
 
 
-/* ================================
+/* =========================================================
    TABLE
-================================ */
+========================================================= */
 
 .table-wrap {
-    overflow: auto;
+    width: 100%;
+
+    overflow-x: auto;
 }
 
 table {
@@ -735,227 +1067,329 @@ table {
 
     border-collapse: collapse;
 
-    min-width: 720px;
+    min-width: 760px;
 }
 
-th {
+thead {
+    background: #F4F7FB;
+}
+
+thead th {
+    height: 43px;
+
+    padding:
+        0 18px;
+
     text-align: left;
 
-    background: #f3f8fc;
+    color: #5E7188;
 
-    color: #5d7890;
+    font-size: 8px;
 
-    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
 
     text-transform: uppercase;
 
-    letter-spacing: .5px;
-
-    padding: 13px 16px;
-
-    border-bottom: 1px solid var(--border);
+    border-bottom:
+        1px solid #E2E8F0;
 }
 
-td {
-    padding: 14px 16px;
+tbody td {
+    padding:
+        13px 18px;
 
-    border-bottom: 1px solid #edf3f7;
+    border-bottom:
+        1px solid #EDF2F7;
 
-    font-size: 11px;
+    color: #4E6279;
 
-    color: #4c667d;
+    font-size: 9px;
+
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr {
+    transition:
+        background 0.15s ease;
 }
 
 tbody tr:hover {
-    background: #fbfdff;
-}
-
-td:first-child {
-    color: #9ab0c1;
+    background: #F8FBFE;
 }
 
 
-/* ================================
+/* =========================================================
    SUBJECT
-================================ */
+========================================================= */
 
 .subject-name {
-    font-weight: 700;
-
-    color: var(--dark-text);
-
     display: block;
+
+    color: #17304D;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    margin-bottom: 3px;
 }
 
 .subject-desc {
-    font-size: 9px;
+    display: block;
 
-    color: #8aa0b3;
+    color: #9AAABD;
 
-    margin-top: 4px;
+    font-size: 7.5px;
 }
+
+
+/* =========================================================
+   SUBJECT CODE
+========================================================= */
 
 .subject-code {
-    font-family: monospace;
+    display: inline-flex;
 
-    font-size: 10px;
+    align-items: center;
 
-    color: var(--primary);
-
-    font-weight: 700;
-
-    background: #eef7fd;
-
-    padding: 5px 7px;
+    padding:
+        5px 8px;
 
     border-radius: 6px;
-}
 
-.type-badge {
-    font-size: 9px;
+    background: #EAF3FB;
+
+    color: #2771A9;
+
+    font-size: 8px;
 
     font-weight: 700;
-
-    padding: 5px 8px;
-
-    border-radius: 20px;
-
-    background: #edf6fc;
-
-    color: var(--primary);
 }
 
 
-/* ================================
+/* =========================================================
+   TYPE BADGE
+========================================================= */
+
+.type-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        5px 9px;
+
+    border-radius: 999px;
+
+    background: #E1F4FA;
+
+    color: #1684B2;
+
+    font-size: 8px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
    ACTION BUTTON
-================================ */
+========================================================= */
 
 .action-btn {
-    border: 1px solid var(--border);
+    height: 31px;
 
-    background: #fff;
+    padding:
+        0 10px;
 
-    color: var(--primary);
+    border:
+        1px solid #E0E8F0;
 
     border-radius: 8px;
 
-    padding: 7px 9px;
+    background: #FFFFFF;
 
-    cursor: pointer;
+    color: #246DA4;
 
-    font-size: 10px;
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    font-size: 8px;
 
     font-weight: 700;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .action-btn:hover {
-    background: var(--primary);
+    background: #EEF7FD;
 
-    color: #fff;
+    border-color: #B8D7EC;
 
-    border-color: var(--primary);
+    color: #0B5CAD;
 }
 
 
-/* ================================
-   FACULTY
-================================ */
+/* =========================================================
+   FACULTY GRID
+========================================================= */
 
 .faculty-grid {
-    padding: 20px;
+    padding: 18px;
 
     display: grid;
 
     grid-template-columns:
-        repeat(3, 1fr);
+        repeat(2, minmax(0, 1fr));
 
-    gap: 14px;
+    gap: 13px;
 }
 
+
+/* =========================================================
+   FACULTY CARD
+========================================================= */
+
 .faculty-card {
-    border: 1px solid var(--border);
+    border:
+        1px solid #E2E8F0;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
-    padding: 16px;
+    padding: 15px;
 
-    background:
-        linear-gradient(
-            145deg,
-            #fff,
-            #f8fcff
-        );
+    background: #FFFFFF;
 
-    transition: .2s;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .faculty-card:hover {
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
+
+    border-color:
+        #C9DDEC;
 
     box-shadow:
-        0 8px 22px rgba(8, 28, 48, .07);
+        0 8px 22px
+        rgba(11, 31, 58, 0.07);
 }
+
+
+/* =========================================================
+   FACULTY TOP
+========================================================= */
 
 .faculty-top {
     display: flex;
 
-    gap: 11px;
-
     align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 13px;
 }
 
 .faculty-avatar {
-    width: 43px;
-    height: 43px;
+    width: 40px;
+    height: 40px;
 
-    border-radius: 12px;
+    border-radius: 10px;
 
     background:
-        linear-gradient(
-            135deg,
-            #0B5CAD,
-            #00A6D5
-        );
+        #E7F2FA;
 
-    color: #fff;
+    color:
+        #0B5CAD;
 
     display: grid;
-
     place-items: center;
 
+    font-size: 11px;
+
     font-weight: 800;
+
+    flex-shrink: 0;
 }
 
 .faculty-name {
-    font-weight: 800;
-
-    font-size: 12px;
-}
-
-.faculty-role {
-    font-size: 9px;
-
-    color: var(--normal-text);
-
-    margin-top: 3px;
-}
-
-.faculty-subject {
-    margin: 15px 0 12px;
-
-    padding: 9px;
-
-    background: #f1f8fc;
-
-    border-radius: 9px;
+    color: #17304D;
 
     font-size: 10px;
 
-    color: #31566f;
+    font-weight: 800;
+
+    margin-bottom: 3px;
 }
+
+.faculty-role {
+    color: #7D90A6;
+
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   FACULTY SUBJECT
+========================================================= */
+
+.faculty-subject {
+    min-height: 36px;
+
+    padding:
+        9px 10px;
+
+    background: #F5F9FC;
+
+    border-radius: 8px;
+
+    color: #526A83;
+
+    font-size: 8px;
+
+    line-height: 1.4;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 10px;
+}
+
+.faculty-subject i {
+    color: #0B5CAD;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   FACULTY META
+========================================================= */
 
 .faculty-meta {
     display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
 
     gap: 7px;
 
@@ -963,32 +1397,94 @@ td:first-child {
 }
 
 .meta-pill {
-    font-size: 9px;
+    display: inline-flex;
 
-    color: #637f96;
+    align-items: center;
 
-    border: 1px solid var(--border);
+    gap: 5px;
 
-    padding: 5px 7px;
+    color: #8093A8;
 
-    border-radius: 7px;
+    font-size: 7px;
+}
+
+.meta-pill i {
+    color: #6B9BC2;
 }
 
 
-/* ================================
+/* =========================================================
+   SYLLABUS
+========================================================= */
+
+.syllabus-panel {
+    overflow: visible;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
+
+.primary-btn {
+    height: 36px;
+
+    padding:
+        0 13px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #0B5CAD;
+
+    color: #FFFFFF;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 5px 12px
+        rgba(11, 92, 173, 0.20);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.primary-btn:hover {
+    background: #0B5CAD;
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================================================
    SYLLABUS SELECTOR
-================================ */
+========================================================= */
 
 .syllabus-selector {
-    padding: 18px 20px;
+    padding:
+        16px 20px;
 
-    background: #f8fcff;
+    background: #F8FAFC;
 
-    border-bottom: 1px solid var(--border);
+    border-bottom:
+        1px solid #E7EDF3;
 
     display: flex;
 
-    align-items: end;
+    align-items: flex-end;
 
     justify-content: space-between;
 
@@ -998,350 +1494,482 @@ td:first-child {
 .syllabus-selector label {
     display: block;
 
-    font-size: 10px;
+    color: #566B82;
+
+    font-size: 8px;
 
     font-weight: 800;
 
-    color: #668198;
-
-    margin-bottom: 7px;
+    margin-bottom: 6px;
 }
 
 .syllabus-selector select {
-    min-width: 330px;
+    min-width: 300px;
 }
 
 
-/* ================================
-   SUMMARY
-================================ */
+/* =========================================================
+   SUBJECT SUMMARY
+========================================================= */
 
 .subject-summary {
     display: flex;
 
+    align-items: center;
+
+    justify-content: flex-end;
+
     gap: 7px;
 
     flex-wrap: wrap;
-
-    justify-content: flex-end;
 }
 
 .summary-pill {
-    padding: 7px 9px;
+    padding:
+        6px 9px;
 
-    background: #fff;
+    border-radius: 7px;
 
-    border: 1px solid var(--border);
+    background: #EAF3FB;
 
-    border-radius: 8px;
+    color: #36739F;
 
-    font-size: 9px;
+    font-size: 7.5px;
 
-    color: #5e778c;
+    white-space: nowrap;
 }
 
 .summary-pill strong {
-    color: var(--primary);
-
-    margin-right: 3px;
+    color: #1B5D8E;
 }
 
 
-/* ================================
+/* =========================================================
    SYLLABUS BODY
-================================ */
+========================================================= */
 
 .syllabus-body {
-    padding: 22px;
+    padding: 20px;
 }
 
 
-/* ================================
+/* =========================================================
    SYLLABUS HERO
-================================ */
+========================================================= */
 
 .syllabus-hero {
-    border-radius: 13px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #081c30,
-            #0B5CAD
-        );
-
-    color: #fff;
-
-    padding: 20px;
-
-    margin-bottom: 18px;
-}
-
-.syllabus-hero .code {
-    font-size: 10px;
-
-    color: #cbe5f8;
-
-    font-family: monospace;
-}
-
-.syllabus-hero h3 {
-    margin: 7px 0;
-
-    font-size: 19px;
-}
-
-.syllabus-hero p {
-    margin: 0;
-
-    font-size: 10px;
-
-    color: #d5e7f4;
-}
-
-
-/* ================================
-   SYLLABUS SECTIONS
-================================ */
-
-.syllabus-section {
-    border: 1px solid var(--border);
+    padding: 18px;
 
     border-radius: 12px;
 
-    margin-bottom: 13px;
+    background: #0B5CAD;
+
+    color: #FFFFFF;
+
+    margin-bottom: 16px;
+
+    position: relative;
 
     overflow: hidden;
 }
 
-.syllabus-section-head {
-    padding: 12px 14px;
+.syllabus-hero::after {
+    content: "";
 
-    background: #f5faff;
+    position: absolute;
 
-    display: flex;
+    width: 170px;
+    height: 170px;
 
-    justify-content: space-between;
+    right: -60px;
+    top: -80px;
 
-    align-items: center;
-}
-
-.syllabus-section-head strong {
-    font-size: 11px;
-}
-
-.hours {
-    font-size: 9px;
-
-    color: var(--primary);
-
-    font-weight: 800;
-
-    background: #e7f4fb;
-
-    padding: 5px 7px;
-
-    border-radius: 7px;
-}
-
-.syllabus-section ul {
-    margin: 0;
-
-    padding: 13px 28px;
-}
-
-.syllabus-section li {
-    font-size: 10px;
-
-    color: #5c758a;
-
-    margin: 7px 0;
-
-    line-height: 1.45;
-}
-
-
-/* ================================
-   OUTCOMES
-================================ */
-
-.outcomes {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 10px;
-
-    padding: 14px;
-}
-
-.outcome {
-    padding: 11px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 9px;
-
-    font-size: 10px;
-
-    color: #607b90;
-
-    background: #fff;
-}
-
-.outcome b {
-    color: var(--primary);
-
-    margin-right: 5px;
-}
-
-
-/* ================================
-   BOOKS
-================================ */
-
-.book-list {
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 9px;
-
-    padding: 14px;
-}
-
-.book {
-    padding: 11px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 9px;
-
-    font-size: 10px;
-
-    color: #607b90;
-}
-
-
-/* ================================
-   PRIMARY BUTTON
-================================ */
-
-.primary-btn {
-    height: 38px;
-
-    border: 0;
+    border-radius: 50%;
 
     background:
-        linear-gradient(
-            135deg,
-            #0B5CAD,
-            #1565C0
-        );
+        rgba(255, 255, 255, 0.08);
+}
 
-    color: #fff;
+.syllabus-hero .code {
+    display: inline-flex;
 
-    border-radius: 9px;
+    padding:
+        5px 8px;
 
-    padding: 0 13px;
+    border-radius: 6px;
 
-    font-size: 11px;
+    background:
+        rgba(255, 255, 255, 0.15);
+
+    font-size: 8px;
 
     font-weight: 700;
 
-    cursor: pointer;
+    margin-bottom: 8px;
+}
 
-    box-shadow:
-        0 5px 12px rgba(11, 92, 173, .2);
+.syllabus-hero h3 {
+    font-size: 17px;
+
+    font-weight: 800;
+
+    margin-bottom: 6px;
+
+    position: relative;
+
+    z-index: 1;
+}
+
+.syllabus-hero p {
+    color: #DCEEFF;
+
+    font-size: 8px;
+
+    position: relative;
+
+    z-index: 1;
 }
 
 
-/* ================================
+/* =========================================================
+   SYLLABUS SECTION
+========================================================= */
+
+.syllabus-section {
+    border:
+        1px solid #E2E8F0;
+
+    border-radius: 11px;
+
+    margin-bottom: 12px;
+
+    overflow: hidden;
+
+    background: #FFFFFF;
+}
+
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.syllabus-section-head {
+    min-height: 43px;
+
+    padding:
+        0 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    background: #F6F9FC;
+
+    border-bottom:
+        1px solid #E7EDF3;
+}
+
+.syllabus-section-head strong {
+    color: #17304D;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+.hours {
+    padding:
+        4px 7px;
+
+    border-radius: 6px;
+
+    background: #E7F3FA;
+
+    color: #24739F;
+
+    font-size: 7px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   SYLLABUS LIST
+========================================================= */
+
+.syllabus-section ul {
+    list-style: none;
+
+    padding:
+        8px 14px 10px;
+}
+
+.syllabus-section li {
+    position: relative;
+
+    padding:
+        7px 5px 7px 18px;
+
+    color: #596E84;
+
+    font-size: 8px;
+
+    line-height: 1.5;
+
+    border-bottom:
+        1px solid #F0F3F6;
+}
+
+.syllabus-section li:last-child {
+    border-bottom: none;
+}
+
+.syllabus-section li::before {
+    content: "";
+
+    position: absolute;
+
+    width: 5px;
+    height: 5px;
+
+    border-radius: 50%;
+
+    background: #0B8BC5;
+
+    left: 3px;
+    top: 13px;
+}
+
+
+/* =========================================================
+   OUTCOMES
+========================================================= */
+
+.outcomes {
+    padding:
+        12px 14px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+}
+
+.outcome {
+    padding: 10px;
+
+    border:
+        1px solid #E7EDF3;
+
+    border-radius: 8px;
+
+    color: #5C7085;
+
+    font-size: 8px;
+
+    line-height: 1.5;
+
+    background: #FBFCFD;
+}
+
+.outcome b {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 26px;
+
+    height: 20px;
+
+    margin-right: 5px;
+
+    border-radius: 5px;
+
+    background: #E4F2FA;
+
+    color: #0B6BA8;
+
+    font-size: 7px;
+}
+
+
+/* =========================================================
+   BOOKS
+========================================================= */
+
+.book-list {
+    padding:
+        10px 14px 13px;
+
+    display: grid;
+
+    gap: 7px;
+}
+
+.book {
+    min-height: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        8px 10px;
+
+    border:
+        1px solid #E8EDF2;
+
+    border-radius: 7px;
+
+    color: #61748A;
+
+    font-size: 8px;
+
+    background: #FCFDFE;
+}
+
+.book i {
+    color: #0B5CAD;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
    TOAST
-================================ */
+========================================================= */
 
 .toast {
     position: fixed;
 
-    right: 24px;
+    right: 22px;
+    bottom: 22px;
 
-    bottom: 24px;
+    min-width: 220px;
+    max-width: 320px;
 
-    background: #081c30;
+    padding:
+        11px 14px;
 
-    color: #fff;
+    border-radius: 9px;
 
-    border-radius: 10px;
+    background: #061A33;
 
-    padding: 11px 15px;
-
-    font-size: 11px;
+    color: #FFFFFF;
 
     display: flex;
 
-    gap: 9px;
-
     align-items: center;
 
-    transform: translateY(80px);
+    gap: 8px;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.20);
+
+    font-size: 9px;
 
     opacity: 0;
+    visibility: hidden;
 
-    transition: .25s;
+    transform:
+        translateY(10px);
 
-    z-index: 200;
-}
+    transition: 0.25s ease;
 
-.toast.show {
-    transform: translateY(0);
-
-    opacity: 1;
+    z-index: 500;
 }
 
 .toast i {
-    color: #4dd6ff;
+    color: #00A6D6;
+
+    font-size: 12px;
+}
+
+.toast.show {
+    opacity: 1;
+
+    visibility: visible;
+
+    transform:
+        translateY(0);
 }
 
 
-/* ================================
+/* =========================================================
    TABLET
-================================ */
+========================================================= */
 
-@media (max-width: 1050px) {
+@media (max-width: 1100px) {
+
+    .sidebar {
+        width: 165px;
+    }
+
+    .content {
+        padding: 24px;
+    }
 
     .stats-grid {
         grid-template-columns:
-            repeat(2, 1fr);
+            repeat(2, minmax(0, 1fr));
     }
 
     .faculty-grid {
         grid-template-columns:
-            repeat(2, 1fr);
+            repeat(2, minmax(0, 1fr));
     }
 }
 
 
-/* ================================
-   MOBILE
-================================ */
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
 
 @media (max-width: 800px) {
+
+    .topbar {
+        height: 64px;
+
+        padding:
+            0 10px;
+    }
+
+    .layout {
+        min-height:
+            calc(100vh - 64px);
+    }
 
     .sidebar {
         position: fixed;
 
-        left: -260px;
+        top: 64px;
 
-        top: 68px;
+        left: -185px;
 
-        height: calc(100vh - 68px);
+        width: 175px;
 
-        z-index: 90;
+        height:
+            calc(100vh - 64px);
+
+        min-height: 0;
+
+        z-index: 150;
+
+        background: #061A33;
 
         box-shadow:
-            10px 0 25px rgba(8, 28, 48, .1);
+            8px 0 25px
+            rgba(4, 19, 38, 0.28);
     }
 
     .sidebar.open {
@@ -1349,36 +1977,89 @@ td:first-child {
     }
 
     .content {
-        padding: 20px;
+        width: 100%;
+
+        padding:
+            20px 16px;
     }
 
-    .student-chip > div:not(.avatar),
+    .brand-text strong {
+        max-width: 220px;
+
+        font-size: 11px;
+    }
+
+    .brand-text span {
+        font-size: 8px;
+    }
+
+    .student-chip {
+        min-width: auto;
+
+        width: 42px;
+
+        padding: 3px;
+    }
+
+    .student-chip > div:nth-child(2),
     .student-chip > i {
         display: none;
     }
 
-    .page-heading {
-        align-items: flex-start;
+    .student-chip .avatar {
+        width: 34px;
+        height: 34px;
     }
 
-    .panel-header {
+    .notification-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .page-heading {
         align-items: flex-start;
 
         flex-direction: column;
+
+        margin-bottom: 18px;
+    }
+
+    .session-badge {
+        align-self: flex-start;
+    }
+
+    .panel-header {
+        flex-direction: column;
+
+        align-items: flex-start;
     }
 
     .panel-tools {
         width: 100%;
+
+        flex-direction: row;
     }
 
     .search-box {
         flex: 1;
+
+        min-width: 0;
+    }
+
+    .panel-tools select {
+        min-width: 130px;
     }
 
     .syllabus-selector {
-        align-items: stretch;
-
         flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .syllabus-selector select {
+        width: 100%;
+
+        min-width: 0;
     }
 
     .subject-summary {
@@ -1391,102 +2072,258 @@ td:first-child {
 }
 
 
-/* ================================
-   SMALL MOBILE
-================================ */
+/* =========================================================
+   MOBILE
+========================================================= */
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
 
     .topbar {
-        padding: 0 12px;
+        gap: 5px;
     }
 
-    .brand-text {
-        display: none;
-    }
-
-    .stats-grid {
-        grid-template-columns:
-            1fr 1fr;
-
-        gap: 9px;
-    }
-
-    .stat-card {
-        padding: 12px;
-    }
-
-    .page-heading h1 {
-        font-size: 22px;
-    }
-
-    .session-badge {
-        display: none;
-    }
-
-    .content {
-        padding: 14px;
-    }
-
-    .panel-header,
-    .syllabus-body {
-        padding: 15px;
-    }
-
-    .panel-tools {
-        flex-direction: column;
-    }
-
-    .search-box,
-    .panel-tools select {
-        width: 100%;
+    .topbar-left {
+        gap: 7px;
 
         min-width: 0;
     }
 
-    .syllabus-selector select {
-        min-width: 0;
+    .icon-btn {
+        width: 36px;
+        height: 36px;
 
-        width: 100%;
+        border-radius: 8px;
     }
 
-    .outcomes,
-    .book-list {
-        grid-template-columns: 1fr;
+    .brand-logo {
+        width: 36px;
+        height: 36px;
+
+        border-radius: 8px;
     }
 
-    .student-chip {
-        padding-right: 5px;
+    .brand-logo img {
+        width: 29px;
+        height: 29px;
+    }
+
+    .brand-text strong {
+        max-width: 160px;
+
+        font-size: 9px;
+    }
+
+    .brand-text span {
+        font-size: 7px;
+    }
+
+    .topbar-right {
+        gap: 5px;
     }
 
     .notification-btn {
         display: none;
     }
+
+    .student-chip {
+        width: 36px;
+
+        height: 36px;
+
+        border-radius: 8px;
+    }
+
+    .student-chip .avatar {
+        width: 30px;
+
+        height: 30px;
+
+        border-radius: 7px;
+
+        font-size: 11px;
+    }
+
+    .content {
+        padding:
+            16px 12px;
+    }
+
+    .page-heading h1 {
+        font-size: 23px;
+    }
+
+    .page-heading p {
+        font-size: 9px;
+    }
+
+    .eyebrow {
+        font-size: 8px;
+    }
+
+    .session-badge {
+        height: 34px;
+
+        font-size: 8px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+    }
+
+    .stat-card {
+        min-height: 72px;
+    }
+
+    .panel-header {
+        padding: 14px;
+    }
+
+    .panel-header h2 {
+        font-size: 13px;
+    }
+
+    .panel-tools {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .panel-tools .search-box {
+        width: 100%;
+    }
+
+    .panel-tools select {
+        width: 100%;
+    }
+
+    .syllabus-body {
+        padding: 13px;
+    }
+
+    .syllabus-hero {
+        padding: 14px;
+    }
+
+    .syllabus-hero h3 {
+        font-size: 14px;
+    }
+
+    .outcomes {
+        grid-template-columns: 1fr;
+    }
+
+    .faculty-grid {
+        padding: 12px;
+    }
+
+    .faculty-card {
+        padding: 12px;
+    }
+
+    .toast {
+        left: 12px;
+
+        right: 12px;
+
+        bottom: 12px;
+
+        min-width: 0;
+
+        width: auto;
+    }
 }
 
 
-/* ================================
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .brand-text strong {
+        max-width: 125px;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .brand-logo {
+        display: none;
+    }
+
+    .content {
+        padding:
+            13px 10px;
+    }
+
+    .page-heading h1 {
+        font-size: 21px;
+    }
+
+    .stat-card strong {
+        font-size: 18px;
+    }
+
+    .syllabus-section-head {
+        padding:
+            0 10px;
+    }
+
+    .syllabus-section ul {
+        padding:
+            7px 10px;
+    }
+}
+
+
+/* =========================================================
    PRINT
-================================ */
+========================================================= */
 
 @media print {
+
+    body {
+        background: #FFFFFF;
+    }
 
     .topbar,
     .sidebar,
     .page-heading,
-    .panel-header .search-box,
-    .panel-header select,
+    .stats-grid,
+    .panel-header,
+    .syllabus-selector,
     .primary-btn,
-    .syllabus-selector {
+    .toast {
         display: none !important;
+    }
+
+    .layout {
+        display: block;
     }
 
     .content {
         padding: 0;
+
+        width: 100%;
+
+        background: #FFFFFF;
+    }
+
+    .view {
+        display: none !important;
+    }
+
+    #view-university {
+        display: block !important;
     }
 
     .panel {
-        border: 0;
+        border: none;
 
         box-shadow: none;
     }
@@ -1496,8 +2333,10 @@ td:first-child {
     }
 
     .syllabus-hero {
-        print-color-adjust: exact;
+        break-inside: avoid;
+    }
 
-        -webkit-print-color-adjust: exact;
+    .syllabus-section {
+        break-inside: avoid;
     }
 }
