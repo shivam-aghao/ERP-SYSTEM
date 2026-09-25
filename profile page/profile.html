@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap"
         rel="stylesheet"
     >
 
@@ -25,6 +26,89 @@
 
     <style>
 
+        /* =========================================
+           ROOT COLORS
+        ========================================== */
+
+        :root {
+
+            --primary: #0B5CAD;
+            --primary-hover: #08498b;
+
+            --secondary: #1565C0;
+            --secondary-hover: #0d47a1;
+
+            --accent: #00A6D6;
+            --accent-soft: rgba(0, 166, 214, 0.12);
+            --accent-hover: #0093be;
+
+            --navy: #0B1F3A;
+            --navy-dark: #061325;
+            --navy-light: #132b4f;
+
+            --white: #FFFFFF;
+
+            --light-bg: #F4F8FC;
+            --card-bg: #FFFFFF;
+            --surface-hover: #F8FAFC;
+
+            --border-color: #E2E8F0;
+            --border-light: #EDF2F7;
+
+            --text: #263238;
+            --text-primary: #1E293B;
+            --text-secondary: #475569;
+            --muted: #64748B;
+            --text-light: #94A3B8;
+
+            --success: #10B981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+
+            --warning: #F59E0B;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+
+            --error: #EF4444;
+            --error-bg: rgba(239, 68, 68, 0.12);
+
+            --info: #00A6D6;
+            --info-bg: rgba(0, 166, 214, 0.12);
+
+            --danger: var(--error);
+            --danger-bg: var(--error-bg);
+            --danger-dark: #B91C1C;
+
+            --success-dark: #047857;
+
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont,
+                         'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+            --font-heading: 'Poppins', var(--font-main);
+            --font-body: var(--font-main);
+
+            --header-height: 70px;
+            --sidebar-width: 280px;
+
+            --shadow-xs: 0 1px 2px rgba(11, 31, 58, 0.04);
+            --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.05);
+            --shadow-md: 0 4px 14px rgba(11, 31, 58, 0.06);
+            --shadow-lg: 0 10px 25px rgba(11, 31, 58, 0.08);
+            --shadow-xl: 0 20px 35px -5px rgba(11, 31, 58, 0.16);
+
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+
+        /* =========================================
+           GLOBAL
+        ========================================== */
+
         * {
             margin: 0;
             padding: 0;
@@ -32,24 +116,24 @@
         }
 
         body {
-            font-family: "Inter", sans-serif;
-            background: #f4f7fc;
-            color: #1e293b;
+            font-family: var(--font-body);
+            background: var(--light-bg);
+            color: var(--text-primary);
         }
 
 
         /* =========================================
            TOP HEADER
-        ========================================= */
+        ========================================== */
 
         .top-header {
 
-            height: 64px;
+            height: var(--header-height);
 
             background: linear-gradient(
                 135deg,
-                #172554,
-                #243b80
+                var(--navy-dark),
+                var(--navy)
             );
 
             display: flex;
@@ -57,9 +141,9 @@
 
             padding: 0 24px;
 
-            color: white;
+            color: var(--white);
 
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-lg);
 
             position: sticky;
             top: 0;
@@ -78,7 +162,7 @@
             align-items: center;
             justify-content: center;
 
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
 
             cursor: pointer;
 
@@ -86,7 +170,7 @@
 
             font-size: 20px;
 
-            transition: 0.2s;
+            transition: var(--transition-fast);
         }
 
         .menu-btn:hover {
@@ -96,16 +180,16 @@
 
         /* =========================================
            COLLEGE LOGO
-        ========================================= */
+        ========================================== */
 
         .college-logo {
 
             width: 48px;
             height: 48px;
 
-            background: white;
+            background: var(--white);
 
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
 
             display: flex;
             align-items: center;
@@ -145,7 +229,7 @@
 
         /* =========================================
            HEADER RIGHT
-        ========================================= */
+        ========================================== */
 
         .header-right {
 
@@ -166,7 +250,7 @@
             width: 38px;
             height: 38px;
 
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
 
             display: flex;
             align-items: center;
@@ -180,7 +264,6 @@
         }
 
         .notification:hover {
-
             background: rgba(255, 255, 255, 0.1);
         }
 
@@ -195,7 +278,7 @@
             width: 17px;
             height: 17px;
 
-            background: #ef4444;
+            background: var(--error);
 
             border-radius: 50%;
 
@@ -211,7 +294,7 @@
 
         /* =========================================
            STUDENT HEADER
-        ========================================= */
+        ========================================== */
 
         .student-header {
 
@@ -223,13 +306,12 @@
 
             padding: 5px 10px;
 
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
 
             cursor: pointer;
         }
 
         .student-header:hover {
-
             background: rgba(255, 255, 255, 0.1);
         }
 
@@ -241,9 +323,9 @@
 
             border-radius: 50%;
 
-            background: #dbeafe;
+            background: var(--accent-soft);
 
-            color: #1e3a8a;
+            color: var(--white);
 
             display: flex;
             align-items: center;
@@ -267,7 +349,7 @@
 
             font-size: 10px;
 
-            color: #cbd5e1;
+            color: var(--text-light);
 
             margin-top: 2px;
         }
@@ -275,7 +357,7 @@
 
         /* =========================================
            MAIN CONTAINER
-        ========================================= */
+        ========================================== */
 
         .main-container {
 
@@ -289,7 +371,7 @@
 
         /* =========================================
            PAGE HEADER
-        ========================================= */
+        ========================================== */
 
         .page-header {
 
@@ -318,11 +400,11 @@
             width: 45px;
             height: 45px;
 
-            border-radius: 12px;
+            border-radius: var(--radius-md);
 
-            background: #dbeafe;
+            background: var(--accent-soft);
 
-            color: #1d4ed8;
+            color: var(--primary);
 
             display: flex;
 
@@ -336,9 +418,11 @@
 
         .page-title h1 {
 
+            font-family: var(--font-heading);
+
             font-size: 24px;
 
-            color: #172554;
+            color: var(--navy);
 
             font-weight: 800;
         }
@@ -348,7 +432,7 @@
 
             font-size: 12px;
 
-            color: #64748b;
+            color: var(--muted);
 
             margin-top: 4px;
         }
@@ -360,13 +444,13 @@
 
             border: none;
 
-            background: #2563eb;
+            background: var(--primary);
 
-            color: white;
+            color: var(--white);
 
             padding: 10px 17px;
 
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
 
             font-size: 13px;
 
@@ -380,13 +464,15 @@
 
             gap: 8px;
 
-            transition: 0.2s;
+            transition: var(--transition-fast);
+
+            box-shadow: var(--shadow-sm);
         }
 
 
         .edit-btn:hover {
 
-            background: #1d4ed8;
+            background: var(--primary-hover);
 
             transform: translateY(-1px);
         }
@@ -394,18 +480,17 @@
 
         /* =========================================
            PROFILE SUMMARY CARD
-        ========================================= */
+        ========================================== */
 
         .profile-card {
 
-            background: white;
+            background: var(--card-bg);
 
-            border-radius: 14px;
+            border-radius: var(--radius-lg);
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
-            box-shadow:
-                0 5px 20px rgba(15, 23, 42, 0.06);
+            box-shadow: var(--shadow-md);
 
             overflow: hidden;
 
@@ -423,20 +508,19 @@
 
             gap: 25px;
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #eff6ff,
-                    #ffffff
-                );
+            background: linear-gradient(
+                135deg,
+                var(--info-bg),
+                var(--white)
+            );
 
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
 
         /* =========================================
            STUDENT PHOTO
-        ========================================= */
+        ========================================== */
 
         .profile-image-container {
 
@@ -454,16 +538,15 @@
             width: 125px;
             height: 145px;
 
-            border-radius: 10px;
+            border-radius: var(--radius-md);
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
-            box-shadow:
-                0 4px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-md);
 
             object-fit: cover;
 
-            background: #e2e8f0;
+            background: var(--border-light);
 
             display: block;
         }
@@ -478,9 +561,9 @@
             width: 17px;
             height: 17px;
 
-            background: #22c55e;
+            background: var(--success);
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
             border-radius: 50%;
 
@@ -491,7 +574,7 @@
 
         /* =========================================
            PHOTO UPLOAD BUTTON
-        ========================================= */
+        ========================================== */
 
         .photo-upload-btn {
 
@@ -505,11 +588,11 @@
 
             border-radius: 50%;
 
-            background: #2563eb;
+            background: var(--primary);
 
-            color: white;
+            color: var(--white);
 
-            border: 3px solid white;
+            border: 3px solid var(--white);
 
             display: flex;
 
@@ -519,16 +602,15 @@
 
             cursor: pointer;
 
-            box-shadow:
-                0 4px 10px rgba(0, 0, 0, 0.20);
+            box-shadow: var(--shadow-md);
 
-            transition: 0.2s;
+            transition: var(--transition-fast);
         }
 
 
         .photo-upload-btn:hover {
 
-            background: #1d4ed8;
+            background: var(--primary-hover);
 
             transform: scale(1.08);
         }
@@ -536,7 +618,7 @@
 
         /* =========================================
            PROFILE DETAILS
-        ========================================= */
+        ========================================== */
 
         .profile-info {
 
@@ -546,9 +628,11 @@
 
         .profile-info h2 {
 
+            font-family: var(--font-heading);
+
             font-size: 24px;
 
-            color: #172554;
+            color: var(--navy);
 
             margin-bottom: 7px;
         }
@@ -558,9 +642,9 @@
 
             display: inline-block;
 
-            background: #dbeafe;
+            background: var(--info-bg);
 
-            color: #1d4ed8;
+            color: var(--primary);
 
             font-size: 11px;
 
@@ -592,7 +676,7 @@
 
             gap: 7px;
 
-            color: #475569;
+            color: var(--text-secondary);
 
             font-size: 13px;
         }
@@ -600,7 +684,7 @@
 
         .profile-detail i {
 
-            color: #2563eb;
+            color: var(--primary);
 
             width: 16px;
         }
@@ -608,18 +692,17 @@
 
         /* =========================================
            SECTION CARD
-        ========================================= */
+        ========================================== */
 
         .section-card {
 
-            background: white;
+            background: var(--card-bg);
 
-            border-radius: 14px;
+            border-radius: var(--radius-lg);
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
-            box-shadow:
-                0 5px 20px rgba(15, 23, 42, 0.05);
+            box-shadow: var(--shadow-md);
 
             margin-bottom: 22px;
 
@@ -629,7 +712,7 @@
 
         /* =========================================
            SECTION HEADER
-        ========================================= */
+        ========================================== */
 
         .section-header {
 
@@ -643,9 +726,9 @@
 
             gap: 10px;
 
-            background: #f8fafc;
+            background: var(--surface-hover);
 
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
 
@@ -654,11 +737,11 @@
             width: 32px;
             height: 32px;
 
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
 
-            background: #dbeafe;
+            background: var(--accent-soft);
 
-            color: #1d4ed8;
+            color: var(--primary);
 
             display: flex;
 
@@ -672,11 +755,13 @@
 
         .section-header h3 {
 
+            font-family: var(--font-heading);
+
             font-size: 15px;
 
             font-weight: 700;
 
-            color: #172554;
+            color: var(--navy);
         }
 
 
@@ -688,7 +773,7 @@
 
         /* =========================================
            INFORMATION GRID
-        ========================================= */
+        ========================================== */
 
         .info-grid {
 
@@ -718,7 +803,7 @@
 
             font-size: 12px;
 
-            color: #64748b;
+            color: var(--muted);
 
             font-weight: 600;
         }
@@ -726,7 +811,7 @@
 
         .info-colon {
 
-            color: #94a3b8;
+            color: var(--text-light);
 
             text-align: center;
         }
@@ -736,7 +821,7 @@
 
             font-size: 13px;
 
-            color: #1e293b;
+            color: var(--text-primary);
 
             font-weight: 600;
 
@@ -746,13 +831,13 @@
 
         .info-value.highlight {
 
-            color: #2563eb;
+            color: var(--primary);
         }
 
 
         /* =========================================
            STATUS BADGE
-        ========================================= */
+        ========================================== */
 
         .status-badge {
 
@@ -766,9 +851,9 @@
 
             border-radius: 20px;
 
-            background: #dcfce7;
+            background: var(--success-bg);
 
-            color: #15803d;
+            color: var(--success-dark);
 
             font-size: 11px;
 
@@ -778,7 +863,7 @@
 
         /* =========================================
            TWO COLUMN
-        ========================================= */
+        ========================================== */
 
         .two-column {
 
@@ -792,7 +877,7 @@
 
         /* =========================================
            CONTACT
-        ========================================= */
+        ========================================== */
 
         .contact-grid {
 
@@ -809,9 +894,9 @@
 
             padding: 17px;
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
-            border-radius: 10px;
+            border-radius: var(--radius-md);
 
             display: flex;
 
@@ -819,16 +904,17 @@
 
             gap: 13px;
 
-            transition: 0.2s;
+            transition: var(--transition-fast);
         }
 
 
         .contact-card:hover {
 
-            border-color: #93c5fd;
+            border-color: rgba(11, 92, 173, 0.35);
 
-            box-shadow:
-                0 4px 12px rgba(37, 99, 235, 0.08);
+            box-shadow: var(--shadow-md);
+
+            background: var(--surface-hover);
         }
 
 
@@ -837,11 +923,11 @@
             width: 40px;
             height: 40px;
 
-            border-radius: 10px;
+            border-radius: var(--radius-md);
 
-            background: #eff6ff;
+            background: var(--accent-soft);
 
-            color: #2563eb;
+            color: var(--primary);
 
             display: flex;
 
@@ -857,7 +943,7 @@
 
             font-size: 10px;
 
-            color: #94a3b8;
+            color: var(--text-light);
 
             margin-bottom: 4px;
 
@@ -871,7 +957,7 @@
 
             font-weight: 600;
 
-            color: #334155;
+            color: var(--text-secondary);
 
             word-break: break-word;
         }
@@ -879,7 +965,7 @@
 
         /* =========================================
            DOCUMENTS
-        ========================================= */
+        ========================================== */
 
         .documents {
 
@@ -894,9 +980,9 @@
 
         .document {
 
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
 
-            border-radius: 10px;
+            border-radius: var(--radius-md);
 
             padding: 15px;
 
@@ -906,15 +992,17 @@
 
             gap: 12px;
 
-            transition: 0.2s;
+            transition: var(--transition-fast);
         }
 
 
         .document:hover {
 
-            border-color: #93c5fd;
+            border-color: rgba(11, 92, 173, 0.35);
 
             transform: translateY(-1px);
+
+            box-shadow: var(--shadow-sm);
         }
 
 
@@ -923,11 +1011,11 @@
             width: 40px;
             height: 40px;
 
-            background: #fee2e2;
+            background: var(--error-bg);
 
-            color: #dc2626;
+            color: var(--error);
 
-            border-radius: 9px;
+            border-radius: var(--radius-sm);
 
             display: flex;
 
@@ -945,7 +1033,7 @@
 
             font-weight: 600;
 
-            color: #334155;
+            color: var(--text-secondary);
         }
 
 
@@ -953,7 +1041,7 @@
 
             font-size: 10px;
 
-            color: #16a34a;
+            color: var(--success);
 
             margin-top: 3px;
         }
@@ -961,13 +1049,13 @@
 
         /* =========================================
            FOOTER
-        ========================================= */
+        ========================================== */
 
         .footer {
 
-            background: #172554;
+            background: var(--navy-dark);
 
-            color: #cbd5e1;
+            color: var(--text-light);
 
             min-height: 50px;
 
@@ -989,22 +1077,19 @@
 
         /* =========================================
            RESPONSIVE
-        ========================================= */
+        ========================================== */
 
         @media (max-width: 1000px) {
 
             .info-grid {
-
                 grid-template-columns: 1fr;
             }
 
             .contact-grid {
-
                 grid-template-columns: 1fr;
             }
 
             .documents {
-
                 grid-template-columns: 1fr;
             }
 
@@ -1014,12 +1099,10 @@
         @media (max-width: 800px) {
 
             .two-column {
-
                 grid-template-columns: 1fr;
             }
 
             .logo-text {
-
                 font-size: 16px;
             }
 
@@ -1029,12 +1112,10 @@
         @media (max-width: 600px) {
 
             .top-header {
-
                 padding: 0 12px;
             }
 
             .college-logo {
-
                 width: 42px;
                 height: 42px;
             }
@@ -1047,30 +1128,605 @@
             }
 
             .header-right {
-
                 gap: 5px;
             }
 
             .student-name,
             .student-role {
-
                 display: none;
             }
 
-            .nav-bar {
+            .nav-item i {
+                font-size: 13px;
+            }
+
+
+            /* ================= PAGE ================= */
+
+            .main-container {
+
+                width: min(1240px, calc(100% - 40px));
+
+                max-width: none;
+
+                margin: 0 auto;
+
+                padding: 24px 0 10px;
+            }
+
+
+            .page-header {
+
+                min-height: 50px;
+
+                margin-bottom: 18px;
+            }
+
+
+            .page-title {
+                gap: 11px;
+            }
+
+
+            .page-title-icon {
+
+                width: 42px;
+                height: 42px;
+
+                border-radius: var(--radius-md);
+
+                background: var(--accent-soft);
+
+                color: var(--primary);
+
+                border: 1px solid rgba(11, 92, 173, 0.10);
+
+                font-size: 17px;
+            }
+
+
+            .page-title h1 {
+
+                font-size: 22px;
+
+                color: var(--navy);
+
+                line-height: 1.2;
+
+                font-weight: 800;
+            }
+
+
+            .page-title p {
+
+                margin-top: 4px;
+
+                font-size: 11px;
+
+                color: var(--muted);
+            }
+
+
+            .edit-btn {
+
+                padding: 9px 15px;
+
+                border-radius: var(--radius-sm);
+
+                background: var(--primary);
+
+                font-size: 12px;
+
+                box-shadow: var(--shadow-sm);
+            }
+
+
+            .edit-btn:hover {
+                background: var(--primary-hover);
+            }
+
+
+            /* ================= PROFILE SUMMARY ================= */
+
+            .profile-card,
+            .section-card {
+
+                background: var(--card-bg);
+
+                border: 1px solid var(--border-color);
+
+                border-radius: 11px;
+
+                box-shadow: var(--shadow-md);
+            }
+
+
+            .profile-card {
+                margin-bottom: 18px;
+            }
+
+
+            .profile-top {
+
+                min-height: 150px;
+
+                padding: 20px 22px;
+
+                gap: 20px;
+
+                background: linear-gradient(
+                    135deg,
+                    var(--info-bg) 0%,
+                    var(--white) 72%
+                );
+
+                border-bottom: 1px solid var(--border-color);
+            }
+
+
+            .profile-image-container {
+
+                width: 110px;
+                height: 130px;
+            }
+
+
+            .profile-image {
+
+                width: 110px;
+                height: 130px;
+
+                border-radius: 9px;
+
+                border: 2px solid var(--white);
+
+                box-shadow: var(--shadow-md);
+            }
+
+
+            .status-dot {
+
+                width: 15px;
+                height: 15px;
+
+                bottom: 6px;
+                right: 6px;
+
+                border-width: 2px;
+            }
+
+
+            .photo-upload-btn {
+
+                width: 36px;
+                height: 36px;
+
+                right: -8px;
+                bottom: -8px;
+
+                background: var(--primary);
+
+                border-width: 2px;
+            }
+
+
+            .photo-upload-btn:hover {
+                background: var(--primary-hover);
+            }
+
+
+            .profile-info h2 {
+
+                margin-bottom: 6px;
+
+                font-size: 22px;
+
+                color: var(--navy);
+
+                font-weight: 800;
+            }
+
+
+            .profile-id {
+
+                margin-bottom: 11px;
+
+                padding: 4px 9px;
+
+                background: var(--info-bg);
+
+                color: var(--primary);
+
+                font-size: 10px;
+            }
+
+
+            .profile-details {
+                gap: 10px 20px;
+            }
+
+
+            .profile-detail {
+
+                gap: 6px;
+
+                font-size: 11px;
+
+                color: var(--text-secondary);
+            }
+
+
+            .profile-detail i {
+
+                color: var(--primary);
+
+                font-size: 11px;
+            }
+
+
+            /* ================= SECTION CARDS ================= */
+
+            .section-card {
+
+                margin-bottom: 18px;
+
+                overflow: hidden;
+            }
+
+
+            .section-header {
+
+                min-height: 48px;
+
+                padding: 0 17px;
+
+                gap: 9px;
+
+                background: var(--surface-hover);
+
+                border-bottom: 1px solid var(--border-color);
+            }
+
+
+            .section-icon {
+
+                width: 30px;
+                height: 30px;
+
+                border-radius: 7px;
+
+                background: var(--accent-soft);
+
+                color: var(--primary);
+
+                font-size: 13px;
+            }
+
+
+            .section-header h3 {
+
+                font-size: 13px;
+
+                color: var(--navy);
+
+                font-weight: 700;
+            }
+
+
+            .section-body {
+                padding: 17px;
+            }
+
+
+            .info-grid {
+
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+
+                gap: 10px 28px;
+            }
+
+
+            .info-item {
+
+                grid-template-columns:
+                    145px 14px minmax(0, 1fr);
+
+                min-height: 32px;
+            }
+
+
+            .info-label {
+
+                font-size: 10px;
+
+                color: var(--muted);
+            }
+
+
+            .info-colon {
+
+                font-size: 11px;
+
+                color: var(--text-light);
+            }
+
+
+            .info-value {
+
+                font-size: 11px;
+
+                color: var(--text-primary);
+
+                font-weight: 600;
+            }
+
+
+            .status-badge {
+
+                padding: 4px 8px;
+
+                background: var(--success-bg);
+
+                color: var(--success-dark);
+
+                font-size: 9px;
+            }
+
+
+            /* ================= TWO COLUMN / CONTACT / DOCS ================= */
+
+            .two-column {
+                gap: 18px;
+            }
+
+
+            .contact-grid,
+            .documents {
+                gap: 12px;
+            }
+
+
+            .contact-card,
+            .document {
+
+                border-color: var(--border-color);
+
+                border-radius: 9px;
+
+                background: var(--white);
+            }
+
+
+            .contact-card {
+
+                padding: 13px;
+
+                gap: 10px;
+            }
+
+
+            .contact-icon,
+            .document-icon {
+
+                width: 36px;
+                height: 36px;
+
+                border-radius: 8px;
+            }
+
+
+            .contact-label {
+                font-size: 9px;
+            }
+
+
+            .contact-value,
+            .document-name {
+                font-size: 10px;
+            }
+
+
+            .contact-card:hover {
+
+                border-color: rgba(11, 92, 173, 0.35);
+
+                box-shadow: var(--shadow-md);
+            }
+
+
+            .document {
+                padding: 12px;
+            }
+
+
+            .document:hover {
+
+                border-color: rgba(11, 92, 173, 0.35);
+            }
+
+
+            .document-status {
+                font-size: 9px;
+            }
+
+
+            /* ================= FOOTER ================= */
+
+            .footer {
+
+                width: 100%;
+
+                min-height: 48px;
+
+                margin-top: 18px;
+
+                padding: 10px 20px;
+
+                background: var(--navy-dark);
+
+                color: var(--text-light);
+
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+                font-size: 9px;
+            }
+
+        }
+
+
+        /* =========================================
+           TABLET RESPONSIVE
+        ========================================== */
+
+        @media (max-width: 1000px) {
+
+            .main-container {
+                width: min(94%, 900px);
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .documents {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            .top-header {
+                padding: 0 14px;
+            }
+
+            .logo-text {
+                font-size: 15px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-top {
+                padding: 18px;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .top-header {
+
+                height: 62px;
+
+                min-height: 62px;
 
                 padding: 0 10px;
             }
 
+
+            .menu-btn {
+
+                width: 36px;
+                height: 36px;
+
+                min-width: 36px;
+
+                margin-right: 5px;
+            }
+
+
+            .college-logo {
+
+                width: 38px;
+                height: 38px;
+
+                min-width: 38px;
+
+                margin-right: 8px;
+            }
+
+
+            .logo-text {
+
+                max-width: 46vw;
+
+                font-size: 11px;
+
+                white-space: normal;
+            }
+
+
+            .header-right {
+                gap: 2px;
+            }
+
+
+            .student-name,
+            .student-role {
+                display: none;
+            }
+
+
+            .student-header {
+
+                padding: 4px;
+
+                gap: 3px;
+            }
+
+
+            .header-avatar {
+
+                width: 32px;
+                height: 32px;
+
+                font-size: 10px;
+            }
+
+
+            .notification {
+
+                width: 34px;
+                height: 34px;
+            }
+
+
+            .nav-bar {
+
+                height: 46px;
+
+                min-height: 46px;
+
+                padding: 0 8px;
+            }
+
+
             .nav-item {
 
-                padding: 0 12px;
+                height: 46px;
+
+                padding: 0 10px;
+
+                font-size: 10px;
             }
+
 
             .main-container {
 
-                padding: 15px;
+                width: calc(100% - 24px);
+
+                padding: 16px 0 5px;
             }
+
 
             .page-header {
 
@@ -1079,20 +1735,33 @@
                 gap: 10px;
             }
 
-            .page-title h1 {
 
-                font-size: 20px;
+            .page-title-icon {
+
+                width: 36px;
+                height: 36px;
             }
+
+
+            .page-title h1 {
+                font-size: 18px;
+            }
+
+
+            .page-title p {
+                font-size: 9px;
+            }
+
 
             .edit-btn {
-
-                padding: 9px 12px;
+                padding: 8px 10px;
             }
+
 
             .edit-btn span {
-
                 display: none;
             }
+
 
             .profile-top {
 
@@ -1101,25 +1770,41 @@
                 align-items: flex-start;
             }
 
-            .profile-info h2 {
 
-                font-size: 21px;
+            .profile-info h2 {
+                font-size: 19px;
             }
+
+
+            .profile-detail {
+                font-size: 10px;
+            }
+
+
+            .section-header {
+                min-height: 45px;
+            }
+
+
+            .section-body {
+                padding: 13px;
+            }
+
 
             .info-item {
 
                 grid-template-columns:
-                    125px 10px 1fr;
+                    105px 10px minmax(0, 1fr);
             }
+
 
             .info-label {
-
-                font-size: 11px;
+                font-size: 9px;
             }
 
-            .info-value {
 
-                font-size: 12px;
+            .info-value {
+                font-size: 10px;
             }
 
         }
@@ -1229,10 +1914,6 @@
 
 
 
-    
-
-
-
     <!-- =========================================
          MAIN CONTENT
     ========================================== -->
@@ -1310,7 +1991,7 @@
 
                     <img
                         id="studentPhoto"
-                        src="logo.png"
+                        src="SSGMCElogo.png"
                         alt="Student Photo"
                         class="profile-image"
                     >
@@ -1419,216 +2100,6 @@
 
             </div>
 
-
-        </div>
-
-
-
-        <!-- =========================================
-             ADMISSION DETAILS
-        ========================================== -->
-
-        <div class="section-card">
-
-
-            <div class="section-header">
-
-
-                <div class="section-icon">
-
-                    <i class="fa-solid fa-graduation-cap"></i>
-
-                </div>
-
-
-                <h3>
-                    Admission Details
-                </h3>
-
-
-            </div>
-
-
-            <div class="section-body">
-
-
-                <div class="info-grid">
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Student Code
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value highlight">
-                            308703
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Admission Status
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            Confirmed
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Course
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            B.E. Information Technology
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Admission Pattern
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            Regular
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Current Year
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            Third Year
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Current Semester
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            Semester V
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Admission Year
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            2024-2025
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Current Academic Year
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            2026-2027
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Section
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            TY B.E. Information Technology - A
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <div class="info-label">
-                            Date of Admission
-                        </div>
-
-                        <div class="info-colon">
-                            :
-                        </div>
-
-                        <div class="info-value">
-                            2024
-                        </div>
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
 
         </div>
 
@@ -2263,7 +2734,6 @@
                 <div class="documents">
 
 
-                    
                     <div class="document">
 
 
@@ -2337,7 +2807,9 @@
     <footer class="footer">
 
         © 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon
+
         &nbsp; | &nbsp;
+
         College ERP System
 
     </footer>
@@ -2440,11 +2912,40 @@
 
 
 
-        
+        /* =========================================
+           NAVIGATION
+        ========================================== */
+
+        const navItems =
+            document.querySelectorAll(".nav-item");
+
+
+        navItems.forEach(function(item) {
+
+            item.addEventListener(
+                "click",
+                function() {
+
+                    navItems.forEach(
+                        function(nav) {
+
+                            nav.classList.remove(
+                                "active"
+                            );
+
+                        }
+                    );
+
+
+                    this.classList.add("active");
+
+                }
+            );
+
+        });
 
 
     </script>
-
 
 </body>
 
