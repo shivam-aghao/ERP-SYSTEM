@@ -145,6 +145,34 @@ const AttendanceService = {
         records.unshift(newRecord);
         localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify(records));
 
+        // Sync with Supabase Database
+        if (window.supabaseClient) {
+          (async () => {
+            try {
+              const { data: session, error: sErr } = await window.supabaseClient
+                .from("attendance_sessions")
+                .insert({
+                  teacher_id: "43415a71-b4c9-4969-b836-9e4342ed6613",
+                  department_code: sessionData.department,
+                  class_code: sessionData.classId,
+                  subject_code: sessionData.subjectCode,
+                  attendance_date: sessionData.date,
+                  total_students: sessionData.totalStudents,
+                  present_count: sessionData.presentCount,
+                  absent_count: sessionData.absentCount,
+                  percentage: parseFloat(sessionData.percentage) || 0,
+                  status: "submitted"
+                })
+                .select()
+                .single();
+              if (sErr) console.warn("[Supabase] Session insert error:", sErr);
+              else console.log("%c[Supabase] Successfully saved attendance session to PostgreSQL database!", "color: #10B981; font-weight: bold;", session);
+            } catch (dbErr) {
+              console.warn("[Supabase] DB save failed:", dbErr);
+            }
+          })();
+        }
+
         // Clear any corresponding draft
         const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
         const key = `${sessionData.department}_${sessionData.classId}_${sessionData.date}_${sessionData.subjectCode}`;
