@@ -1,0 +1,437 @@
+{
+  "info": {
+    "name": "SSGMCE Teacher Attendance ERP API",
+    "description": "Comprehensive Postman collection for Shri Sant Gajanan Maharaj College of Engineering (SSGMCE) Teacher Attendance Portal API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login (Mr. K.V. Kulthe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeCode\": \"1039226014\",\n  \"password\": \"Demo@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Prof. Rajesh Sharma)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeCode\": \"EMP-CSE-1042\",\n  \"password\": \"Demo@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Master Data",
+      "item": [
+        {
+          "name": "Get Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/master/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "master", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get Classes (CSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/master/classes?department=CSE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "master", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Get Subjects (CSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/master/subjects?department=CSE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "master", "subjects"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Class Cards",
+      "item": [
+        {
+          "name": "Get My Class Cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cards"]
+            }
+          }
+        },
+        {
+          "name": "Create Class Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department\": \"CSE\",\n  \"classId\": \"2R1\",\n  \"subject\": \"3CS206 - Operating Systems\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cards"]
+            }
+          }
+        },
+        {
+          "name": "Check Card Duplicate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/check-duplicate?department=CSE&classId=2R1&subjectCode=3CS205MD",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cards", "check-duplicate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Students Roster",
+      "item": [
+        {
+          "name": "Get Roster for Class (2R1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/class/2R1?subject=3CS205MD",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "students", "class", "2R1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Attendance Operations",
+      "item": [
+        {
+          "name": "Check Attendance Duplicate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/attendance/check-duplicate?department=CSE&classId=2R1&date=2026-09-25&subjectCode=3CS205MD&period=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "attendance", "check-duplicate"]
+            }
+          }
+        },
+        {
+          "name": "Save Attendance Draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department\": \"CSE\",\n  \"classId\": \"2R1\",\n  \"subjectCode\": \"3CS205MD\",\n  \"subjectName\": \"Database Management Systems\",\n  \"date\": \"2026-09-25\",\n  \"period\": 1,\n  \"topic\": \"Relational Algebra Operations\",\n  \"records\": [\n    { \"rollNo\": 1, \"status\": \"PRESENT\" },\n    { \"rollNo\": 2, \"status\": \"ABSENT\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/attendance/draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "attendance", "draft"]
+            }
+          }
+        },
+        {
+          "name": "Submit Attendance Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department\": \"CSE\",\n  \"classId\": \"2R1\",\n  \"subjectCode\": \"3CS205MD\",\n  \"subjectName\": \"Database Management Systems\",\n  \"date\": \"2026-09-25\",\n  \"period\": 1,\n  \"topic\": \"Relational Algebra Operations\",\n  \"remark\": \"Conducted in LH-2\",\n  \"records\": [\n    { \"rollNo\": 1, \"status\": \"PRESENT\" },\n    { \"rollNo\": 2, \"status\": \"PRESENT\" },\n    { \"rollNo\": 3, \"status\": \"ABSENT\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/attendance/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "attendance", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/attendance/records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "attendance", "records"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Reports & Profile",
+      "item": [
+        {
+          "name": "Get Class Stats (2R1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/classes/2R1/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "classes", "2R1", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
