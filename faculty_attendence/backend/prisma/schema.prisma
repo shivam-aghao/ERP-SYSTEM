@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Teacher {
+  id                  String   @id @default(uuid())
+  authUserId          String   @unique @map("auth_user_id")
+  employeeCode        String   @unique @map("employee_code")
+  name                String
+  email               String   @unique
+  designation         String
+  departmentCode      String   @map("department_code")
+  avatar              String?
+  unreadNotifications Int      @default(0) @map("unread_notifications")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  department         Department          @relation(fields: [departmentCode], references: [code])
+  classCards         TeacherClassCard[]
+  attendanceSessions AttendanceSession[]
+  notifications      Notification[]
+
+  @@map("teachers")
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  icon        String?
+  color       String   @default("#0B5CAD")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  teachers          Teacher[]
+  classes           Class[]
+  subjects          Subject[]
+  classCards        TeacherClassCard[]
+  AttendanceSession AttendanceSession[]
+
+  @@map("departments")
+}
+
+model Class {
+  id             String   @id @default(uuid())
+  departmentCode String   @map("department_code")
+  code           String
+  name           String
+  year           String
+  division       String?
+  studentCount   Int      @default(60) @map("student_count")
+  room           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  department         Department          @relation(fields: [departmentCode], references: [code])
+  students           Student[]
+  classCards         TeacherClassCard[]
+  attendanceSessions AttendanceSession[]
+
+  @@unique([departmentCode, code])
+  @@map("classes")
+}
+
+model Subject {
+  id             String   @id @default(uuid())
+  departmentCode String   @map("department_code")
+  code           String
+  name           String
+  icon           String?
+  type           String   @default("Theory")
+  defaultTime    String?  @map("default_time")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  department         Department          @relation(fields: [departmentCode], references: [code])
+  classCards         TeacherClassCard[]
+  attendanceSessions AttendanceSession[]
+
+  @@unique([departmentCode, code])
+  @@map("subjects")
+}
+
+model TeacherClassCard {
+  id             String   @id @default(uuid())
+  teacherId      String   @map("teacher_id")
+  departmentCode String   @map("department_code")
+  classCode      String   @map("class_code")
+  subjectCode    String   @map("subject_code")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  teacher    Teacher    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentCode], references: [code])
+  class      Class      @relation(fields: [departmentCode, classCode], references: [departmentCode, code])
+  subject    Subject    @relation(fields: [departmentCode, subjectCode], references: [departmentCode, code])
+
+  @@unique([teacherId, departmentCode, classCode, subjectCode])
+  @@map("teacher_class_cards")
+}
+
+model Student {
+  id             String   @id @default(uuid())
+  departmentCode String   @map("department_code")
+  classCode      String   @map("class_code")
+  rollNumber     Int      @map("roll_number")
+  rollFormatted  String   @map("roll_formatted")
+  prn            String   @unique
+  name           String
+  isProvisional  Boolean  @default(false) @map("is_provisional")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  class             Class              @relation(fields: [departmentCode, classCode], references: [departmentCode, code])
+  attendanceRecords AttendanceRecord[]
+
+  @@unique([departmentCode, classCode, rollNumber])
+  @@index([prn])
+  @@map("students")
+}
+
+model AttendanceSession {
+  id             String    @id @default(uuid())
+  sessionCode    String    @unique @map("session_code")
+  teacherId      String    @map("teacher_id")
+  departmentCode String    @map("department_code")
+  classCode      String    @map("class_code")
+  subjectCode    String    @map("subject_code")
+  sessionDate    DateTime  @map("session_date") @db.Date
+  period         Int?
+  timeSlot       String?   @map("time_slot")
+  sessionType    String    @default("REGULAR") @map("session_type")
+  topicTaught    String?   @map("topic_taught")
+  remark         String?
+  totalStudents  Int       @map("total_students")
+  presentCount   Int       @map("present_count")
+  absentCount    Int       @map("absent_count")
+  percentage     Decimal   @db.Decimal(5, 2)
+  status         String    @default("DRAFT")
+  submittedAt    DateTime? @map("submitted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  teacher    Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  department Department         @relation(fields: [departmentCode], references: [code])
+  class      Class              @relation(fields: [departmentCode, classCode], references: [departmentCode, code])
+  subject    Subject            @relation(fields: [departmentCode, subjectCode], references: [departmentCode, code])
+  records    AttendanceRecord[]
+
+  @@unique([teacherId, departmentCode, classCode, subjectCode, sessionDate, period], name: "unique_session")
+  @@index([teacherId, sessionDate])
+  @@index([departmentCode, classCode, sessionDate])
+  @@index([status])
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id              String   @id @default(uuid())
+  sessionId       String   @map("session_id")
+  studentId       String   @map("student_id")
+  status          String
+  previousHistory Json?    @map("previous_history")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  session AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+  @@map("attendance_records")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  teacherId String   @map("teacher_id")
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId, isRead])
+  @@map("notifications")
+}
