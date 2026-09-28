@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initGlobalSearch();
   initQuickAccessTiles();
   initQuickActionStrip();
-  initToastSystem();
   initCampusShowcase();
   initCampusLightbox();
   initTimetableDayTabs();
@@ -40,7 +39,7 @@ function initAttendanceChart() {
           datasets: [
             {
               data: [presentPercentage, absentPercentage],
-              backgroundColor: ['#00A6D6', '#E2E8F0'], // Accent cyan & slate
+              backgroundColor: ['#00A6D6', '#E2E8F0'],
               hoverBackgroundColor: ['#0093be', '#CBD5E1'],
               borderWidth: 0,
               borderRadius: 4,
@@ -125,8 +124,8 @@ function initSyllabusProgressChart() {
       const ctx = canvas.getContext('2d');
 
       const barGradient = ctx.createLinearGradient(0, 10, 0, 200);
-      barGradient.addColorStop(0, '#00A6D6'); // Bright cyan accent at top
-      barGradient.addColorStop(1, '#0B5CAD'); // Deep blue primary at bottom
+      barGradient.addColorStop(0, '#00A6D6');
+      barGradient.addColorStop(1, '#0B5CAD');
 
       const hoverGradient = ctx.createLinearGradient(0, 10, 0, 200);
       hoverGradient.addColorStop(0, '#38BDF8');
@@ -231,13 +230,11 @@ function initSubjectAttendanceToggle() {
     }
   }
 
-  // Click handler on the button
   btnToggle.addEventListener('click', (e) => {
     e.preventDefault();
     toggleSubjectAttendance();
   });
 
-  // Sidebar Attendance link handler
   if (sidebarAttLink) {
     sidebarAttLink.addEventListener('click', (e) => {
       const targetCard = document.getElementById('attendanceCard');
@@ -249,7 +246,6 @@ function initSubjectAttendanceToggle() {
     });
   }
 
-  // Check URL hash on page load (#attendance or #attendanceCard)
   if (window.location.hash === '#attendance' || window.location.hash === '#attendanceCard') {
     setTimeout(() => {
       toggleSubjectAttendance(true);
@@ -311,116 +307,92 @@ function initMobileDrawer() {
 }
 
 /* ==========================================================================
-   4b. SIDEBAR INTERACTIVE MODULE LINKS & FEEDBACK
+   5. SIDEBAR INTERACTIVE MODULE LINKS & ALL 18 NAVIGATION HANDLERS
    ========================================================================== */
 function initSidebarLinks() {
   const sidebar = document.getElementById('dashboardSidebar');
   if (!sidebar) return;
 
-  const moduleMessages = {
-    'dashboard': 'Navigating to Student Dashboard...',
-    'attendance': 'Displaying Semester IV Subject-wise Attendance Breakdown...',
-    'syllabus': 'Displaying Semester IV Syllabus & Subject Progress...',
-    'fees': 'Accessing Student Accounts & Academic Fees Portal...',
-    'profile': 'Opening Shivam Aghao - Verified Student Profile...',
-    'elearning': 'Connecting to SSGMCE E-Learning & LMS...',
-    'change-info': 'Opening Student Change of Information Application...',
-    'update-info': 'Opening Student Information Verification & Updation Form...',
-    'dwallet': 'Opening SSGMCE D-Wallet (Digital Credentials & Balance)...',
-    'examination': 'Accessing Examination Cell, Hall Ticket & Exam Timetable...',
-    'course-choices': 'Opening Autonomous Course Choices Application Form...',
-    'internal-marks': 'Loading Semester IV Continuous Internal Evaluation (CIE) Marks...',
-    'documents': 'Accessing Student Documents Repository & Certificates...',
-    'hostel': 'Connecting to Campus Hostel Management...',
-    'library': 'Connecting to Central Digital Library & OPAC...',
-    'training': 'Opening Training & Placement Cell Portal...',
-    'grievance': 'Opening Student Grievance Redressal Cell...',
-    'settings': 'Opening Portal Account Preferences & Settings...'
-  };
-
   const navLinks = sidebar.querySelectorAll('.sidebar-link');
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
-      const navKey = link.getAttribute('data-nav');
+      const navKey = link.getAttribute('data-nav') || link.closest('[data-module]')?.getAttribute('data-module');
       const href = link.getAttribute('href');
-      const parentItem = link.closest('.sidebar-item');
-      const hasDropdown = parentItem && (parentItem.classList.contains('has-dropdown') || parentItem.classList.contains('has-submenu'));
 
       navLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
 
-      if (hasDropdown) {
-        e.preventDefault();
-        const willExpand = !parentItem.classList.contains('expanded');
-        
-        // Accordion behavior: close other open dropdowns
-        if (willExpand) {
-          sidebar.querySelectorAll('.sidebar-item.has-dropdown.expanded, .sidebar-item.has-submenu.expanded').forEach(otherItem => {
-            if (otherItem !== parentItem) {
-              otherItem.classList.remove('expanded');
-            }
-          });
-        }
-        parentItem.classList.toggle('expanded', willExpand);
+      // Auto-close mobile drawer when any link is clicked
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar.classList.contains('drawer-open')) {
+        sidebar.classList.remove('drawer-open');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+      }
 
-        // Smooth scroll to card if an on-page section exists
-        if (href && href.startsWith('#') && href !== '#') {
-          const targetCard = document.querySelector(href);
-          if (targetCard) {
-            targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            targetCard.classList.add('card-highlight-pulse');
-            setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 1500);
-          }
+      // Check on-page scroll targets
+      if (navKey === 'timetable' || href === '#timetableCard') {
+        e.preventDefault();
+        const timetableCard = document.getElementById('timetableCard');
+        if (timetableCard) {
+          timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          timetableCard.classList.add('card-highlight-pulse');
+          setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
         }
         return;
       }
 
-      if (href && href.startsWith('#')) {
+      if (navKey === 'attendance' || href === '#attendanceCard') {
+        e.preventDefault();
+        const attendanceCard = document.getElementById('attendanceCard');
+        if (attendanceCard) {
+          attendanceCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          attendanceCard.classList.add('card-highlight-pulse');
+          setTimeout(() => attendanceCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Overall & Subject Attendance", 'info');
+        }
+        return;
+      }
+
+      if (navKey === 'dashboard') {
+        if (!href || href === 'index.html' || href === '#' || href === 'javascript:void(0)') {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast('Welcome to SSGMCE Student ERP Dashboard', 'info');
+        }
+        return;
+      }
+
+      if (navKey === 'documents') {
+        e.preventDefault();
+        openStudentModule('dwallet', 'download-document');
+        return;
+      }
+
+      // If registered module exists in config, open its modal
+      if (navKey && studentModuleConfig[navKey]) {
+        e.preventDefault();
+        openStudentModule(navKey);
+        return;
+      }
+
+      if (href && href.startsWith('#') && href !== '#') {
         const targetCard = document.querySelector(href);
         if (targetCard) {
           e.preventDefault();
           targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
           targetCard.classList.add('card-highlight-pulse');
           setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 1500);
-        } else if (moduleMessages[navKey]) {
-          showToast(moduleMessages[navKey], 'info');
+          return;
         }
-      }
-    });
-  });
-
-  // Clicking any sub-tab link in the sidebar dropdown
-  const subtabLinks = sidebar.querySelectorAll('.dropdown-subtab-link, .submenu-link');
-  subtabLinks.forEach(subLink => {
-    subLink.addEventListener('click', (e) => {
-      const moduleKey = subLink.getAttribute('data-module');
-      const subtabKey = subLink.getAttribute('data-subtab');
-      const href = subLink.getAttribute('href');
-
-      if (moduleKey && subtabKey) {
-        e.preventDefault();
-        subtabLinks.forEach(s => s.classList.remove('active'));
-        subLink.classList.add('active');
-        openStudentModule(moduleKey, subtabKey);
-
-        // Close mobile drawer if open
-        if (window.innerWidth <= 768) {
-          const backdrop = document.getElementById('sidebarBackdrop');
-          if (sidebar.classList.contains('drawer-open')) {
-            sidebar.classList.remove('drawer-open');
-            if (backdrop) backdrop.classList.remove('active');
-            document.body.style.overflow = '';
-          }
-        }
-      } else if (href && href.endsWith('.html')) {
-        window.location.href = href;
       }
     });
   });
 }
 
 /* ==========================================================================
-   5. HEADER DROPDOWNS (NOTIFICATIONS & PROFILE)
+   6. HEADER DROPDOWNS (NOTIFICATIONS & PROFILE)
    ========================================================================== */
 function initDropdowns() {
   const notifBtn = document.getElementById('notifBtn');
@@ -481,7 +453,7 @@ function initDropdowns() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      showToast('Signing out from SSGMCE ERP Portal...', 'warning');
+      showToast('Signing out from SSGMCE Autonomous Portal...', 'warning');
       setTimeout(() => {
         showToast('Logged out successfully.', 'info');
       }, 1200);
@@ -490,72 +462,102 @@ function initDropdowns() {
 }
 
 /* ==========================================================================
-   6. GLOBAL SEARCH SYSTEM
+   7. GLOBAL SEARCH SYSTEM
    ========================================================================== */
 function initGlobalSearch() {
   const searchInput = document.getElementById('globalSearchInput');
   if (!searchInput) return;
 
   document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       searchInput.focus();
-      showToast('Search SSGMCE ERP: Start typing...', 'info');
+      showToast('Type to search courses, timetable, and campus services...', 'info');
     }
   });
 
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim().toLowerCase();
-    
+
     // Filter quick access tiles
     const tiles = document.querySelectorAll('.qa-tile-btn');
+    let matchedTiles = 0;
     tiles.forEach(tile => {
-      const label = tile.querySelector('.qa-tile-label').textContent.toLowerCase();
-      tile.style.display = (!query || label.includes(query)) ? '' : 'none';
+      const label = tile.querySelector('.qa-tile-label')?.textContent.toLowerCase() || '';
+      const match = !query || label.includes(query);
+      tile.style.display = match ? '' : 'none';
+      if (match) matchedTiles++;
     });
 
     // Filter timetable periods
     const periods = document.querySelectorAll('.timetable-period');
+    let matchedPeriods = 0;
     periods.forEach(p => {
-      const course = p.querySelector('.period-course').textContent.toLowerCase();
-      p.style.display = (!query || course.includes(query)) ? '' : 'none';
+      const course = p.querySelector('.period-course')?.textContent.toLowerCase() || '';
+      const meta = p.querySelector('.period-meta')?.textContent.toLowerCase() || '';
+      const match = !query || course.includes(query) || meta.includes(query);
+      p.style.display = match ? '' : 'none';
+      if (match) matchedPeriods++;
     });
   });
 }
 
 /* ==========================================================================
-   7. QUICK ACCESS TILES
+   8. QUICK ACCESS TILES
    ========================================================================== */
 function initQuickAccessTiles() {
   const tiles = document.querySelectorAll('.qa-tile-btn');
-  const actionMessages = {
-    'timetable': 'Opening Semester IV Academic Time Table (CSE)...',
-    'exam-form': 'Redirecting to Autonomous Exam Form Portal...',
-    'result': 'Fetching Semester III Autonomous Grade Card...',
-    'bonafide': 'Generating Bonafide Certificate request...',
-    'hostel-app': 'Opening SSGMCE Campus Hostel Portal...',
-    'library-portal': 'Connecting to Central Digital Library & OPAC...',
-    'training-placement': 'Opening Training & Placement Cell Dashboard...',
-    'more-services': 'Loading Student Academic Services Directory...'
-  };
 
   tiles.forEach(tile => {
     tile.addEventListener('click', () => {
       const action = tile.getAttribute('data-action');
-      const message = actionMessages[action] || 'Opening service...';
-      
+
       tile.style.transform = 'scale(0.96)';
       setTimeout(() => {
         tile.style.transform = '';
       }, 150);
 
-      showToast(message, 'info');
+      switch (action) {
+        case 'timetable': {
+          const target = document.getElementById('timetableCard');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.classList.add('card-highlight-pulse');
+            setTimeout(() => target.classList.remove('card-highlight-pulse'), 1500);
+            showToast("Viewing Today's Timetable Schedule", 'info');
+          }
+          break;
+        }
+        case 'exam-form':
+          openStudentModule('examination', 'revaluation');
+          break;
+        case 'result':
+          openStudentModule('examination', 'view-marks');
+          break;
+        case 'bonafide':
+          openStudentModule('dwallet', 'download-document');
+          break;
+        case 'hostel-app':
+          openStudentModule('hostel', 'room');
+          break;
+        case 'library-portal':
+          openStudentModule('library', 'borrowed');
+          break;
+        case 'training-placement':
+          openStudentModule('placement', 'drives');
+          break;
+        case 'more-services':
+          openStudentModule('grievance', 'lodge');
+          break;
+        default:
+          showToast('Opening requested service...', 'info');
+      }
     });
   });
 }
 
 /* ==========================================================================
-   8. QUICK ACTION STRIP (HALL TICKET & STUDENT ID)
+   9. QUICK ACTION STRIP (HALL TICKET & STUDENT ID)
    ========================================================================== */
 function initQuickActionStrip() {
   const actionBtns = document.querySelectorAll('.btn-strip-action');
@@ -563,22 +565,25 @@ function initQuickActionStrip() {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-action');
       if (action === 'hall-ticket') {
-        showToast('Generating Mid-Term Examination Digital Hall Ticket...', 'success');
+        openStudentModule('hall-ticket', 'view-hall-ticket');
       } else if (action === 'download-id') {
-        showToast('Downloading verified SSGMCE Student ID Card...', 'info');
+        openStudentModule('student-id', 'card-view');
       }
     });
   });
 }
 
 /* ==========================================================================
-   9. TOAST NOTIFICATION SYSTEM
+   10. TOAST NOTIFICATION SYSTEM
    ========================================================================== */
-function initToastSystem() {}
-
 function showToast(message, type = 'info') {
-  const stack = document.getElementById('toastStack');
-  if (!stack) return;
+  let stack = document.getElementById('toastStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toastStack';
+    stack.className = 'toast-stack';
+    document.body.appendChild(stack);
+  }
 
   const toast = document.createElement('div');
   toast.className = `toast-item toast-${type}`;
@@ -608,11 +613,10 @@ function showToast(message, type = 'info') {
 }
 
 /* ==========================================================================
-   10. SSGMCE CAMPUS UNIFIED SHOWCASE & LIGHTBOX
+   11. SSGMCE CAMPUS SHOWCASE & HIGH-RES LIGHTBOX
    ========================================================================== */
 function initCampusShowcase() {
   const expandBtn = document.getElementById('campusExpandBtn');
-
   if (expandBtn) {
     expandBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -621,14 +625,12 @@ function initCampusShowcase() {
   }
 }
 
-/* ==========================================================================
-   11. CAMPUS HIGH-RES LIGHTBOX MODAL
-   ========================================================================== */
 function openCampusLightbox() {
   const modal = document.getElementById('campusLightboxModal');
   if (!modal) return;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+  showToast('Viewing Vidya Bhavan Campus Photograph', 'info');
 }
 
 function closeCampusLightbox() {
@@ -645,12 +647,8 @@ function initCampusLightbox() {
 
   if (!modal) return;
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeCampusLightbox);
-  }
-  if (overlay) {
-    overlay.addEventListener('click', closeCampusLightbox);
-  }
+  if (closeBtn) closeBtn.addEventListener('click', closeCampusLightbox);
+  if (overlay) overlay.addEventListener('click', closeCampusLightbox);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('active')) {
@@ -659,6 +657,34 @@ function initCampusLightbox() {
   });
 }
 
+/* ==========================================================================
+   12. CARD TAB DROPDOWN (SYLLABUS & OTHERS)
+   ========================================================================== */
+function toggleCardTabDropdown(menuId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  const isShown = menu.classList.contains('show');
+  document.querySelectorAll('.card-dropdown-menu').forEach(m => m.classList.remove('show'));
+
+  if (!isShown) {
+    menu.classList.add('show');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.card-tab-dropdown-wrap')) {
+    document.querySelectorAll('.card-dropdown-menu').forEach(m => m.classList.remove('show'));
+  }
+  if (!e.target.closest('.modal-tab-dropdown-wrap')) {
+    const modalMenu = document.getElementById('modalTabDropdownMenu');
+    if (modalMenu) modalMenu.classList.remove('show');
+  }
+});
 
 /* ==========================================================================
    13. TIMETABLE DAY SWITCHER TABS (MONDAY - SATURDAY FULL SCHEDULE)
@@ -667,31 +693,31 @@ const timetableScheduleData = {
   monday: {
     dayLabel: 'Monday • 5 Periods Scheduled',
     periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures & Algorithms', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-301L', name: 'DSA Lab (Batch 2R1)', venue: 'Software Lab 2 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present' }
+      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures & Algorithms', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-301L', name: 'DSA Lab (Batch 2R1)', venue: 'Software Lab 2 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
     ]
   },
   tuesday: {
     dayLabel: 'Tuesday • 5 Periods Scheduled',
     periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-302', name: 'Java Programming & OOP', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-302L', name: 'Java Lab (Batch 2R1)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present' },
-      { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-304', name: 'Database Management Tutorial', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Tutorial Active' }
+      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-302', name: 'Java Programming & OOP', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-302L', name: 'Java Lab (Batch 2R1)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true },
+      { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-304', name: 'Database Management Tutorial', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Tutorial Active', isCompleted: true }
     ]
   },
   wednesday: {
     dayLabel: 'Wednesday • 5 Periods Scheduled',
     periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-302', name: 'Java Programming', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present' },
-      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-304L', name: 'DBMS Lab (Batch 2R1)', venue: 'Database Lab 1 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present' }
+      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-302', name: 'Java Programming', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-304L', name: 'DBMS Lab (Batch 2R1)', venue: 'Database Lab 1 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
     ]
   },
   thursday: {
@@ -776,7 +802,7 @@ function initTimetableDayTabs() {
 }
 
 /* ==========================================================================
-   14. STUDENT MODULE MODAL MANAGEMENT
+   14. ALL 18 STUDENT MODULE CONFIGURATIONS & MODAL MANAGER
    ========================================================================== */
 const studentModuleConfig = {
   syllabus: {
@@ -864,7 +890,105 @@ const studentModuleConfig = {
     eyebrow: 'INTERNAL ASSESSMENT',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>',
     subtabs: [
-      { key: 'cie1', label: 'CIE Test 1' }
+      { key: 'cie-tests', label: 'CIE Class Tests' },
+      { key: 'lab-eval', label: 'Lab Assessment' }
+    ]
+  },
+  profile: {
+    title: 'Student Profile & Academic Record',
+    eyebrow: 'OFFICIAL STUDENT DOSSIER',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    subtabs: [
+      { key: 'academic', label: 'Academic Details' },
+      { key: 'personal', label: 'Personal Information' },
+      { key: 'mentor', label: 'Proctor / Guardian' }
+    ]
+  },
+  hostel: {
+    title: 'Hostel & Residential Services',
+    eyebrow: 'CAMPUS RESIDENCE CELL',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>',
+    subtabs: [
+      { key: 'room', label: 'Room Allotment' },
+      { key: 'mess', label: 'Mess Schedule' },
+      { key: 'gatepass', label: 'Digital Leave Pass' }
+    ]
+  },
+  library: {
+    title: 'Central Digital Library & OPAC',
+    eyebrow: 'LEARNING RESOURCE CENTER',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>',
+    subtabs: [
+      { key: 'borrowed', label: 'Borrowed Books' },
+      { key: 'search-book', label: 'Book Search (OPAC)' },
+      { key: 'e-journals', label: 'E-Journals & IEEE' }
+    ]
+  },
+  placement: {
+    title: 'Training & Placement (T&P) Cell',
+    eyebrow: 'CAREER ADVANCEMENT & DRIVES',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+    subtabs: [
+      { key: 'drives', label: 'Upcoming Drives' },
+      { key: 'eligibility', label: 'Eligibility Status' },
+      { key: 'resume', label: 'Verified Resume' }
+    ]
+  },
+  grievance: {
+    title: 'Student Grievance & Redressal',
+    eyebrow: 'INSTITUTIONAL OMBUDSMAN & ETHICS',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+    subtabs: [
+      { key: 'lodge', label: 'Lodge Grievance' },
+      { key: 'status', label: 'Ticket Status' },
+      { key: 'antiragging', label: 'Anti-Ragging Helpline' }
+    ]
+  },
+  settings: {
+    title: 'Account Settings & Preferences',
+    eyebrow: 'STUDENT PORTAL CONFIGURATION',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
+    subtabs: [
+      { key: 'password', label: 'Security & Password' },
+      { key: 'notifications', label: 'Notifications' },
+      { key: 'contact', label: 'Contact Preferences' }
+    ]
+  },
+  'hall-ticket': {
+    title: 'Autonomous Examination Digital Hall Ticket',
+    eyebrow: 'OFFICIAL EXAMINATION ADMIT CARD',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+    subtabs: [
+      { key: 'view-hall-ticket', label: 'Hall Ticket Preview' },
+      { key: 'instructions', label: 'Exam Rules & Instructions' }
+    ]
+  },
+  'student-id': {
+    title: 'Digital Student Identity Card',
+    eyebrow: 'INSTITUTIONAL SMART CARD',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    subtabs: [
+      { key: 'card-view', label: 'Identity Card' },
+      { key: 'card-details', label: 'Card Information & Validity' }
+    ]
+  },
+  timetable: {
+    title: 'Academic Timetable & Schedule',
+    eyebrow: 'SEMESTER IV SCHEDULE',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+    subtabs: [
+      { key: 'today', label: "Today's Schedule" },
+      { key: 'weekly', label: 'Weekly Matrix' },
+      { key: 'rooms', label: 'Classrooms & Labs' }
+    ]
+  },
+  attendance: {
+    title: 'Attendance Monitoring & Eligibility',
+    eyebrow: 'ACADEMIC REGULATIONS',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+    subtabs: [
+      { key: 'subject-wise', label: 'Subject-wise Attendance' },
+      { key: 'eligibility', label: 'Autonomous Eligibility' }
     ]
   }
 };
@@ -906,10 +1030,10 @@ function openStudentModule(moduleKey, requestedSubtab) {
     subtabNav.innerHTML = navHtml;
   }
 
-  // Update modal header dropdown menu with all tabs
+  // Update modal header dropdown menu with all registered modules
   const dropdownMenu = document.getElementById('modalTabDropdownMenu');
   const dropdownLabel = document.getElementById('modalTabDropdownLabel');
-  if (dropdownLabel) dropdownLabel.textContent = (cfg.title.split(' ')[0] || 'All Tabs') + ' ▾';
+  if (dropdownLabel) dropdownLabel.textContent = cfg.title.split(' ')[0] + ' ▾';
   if (dropdownMenu) {
     let dropHtml = '';
     Object.keys(studentModuleConfig).forEach(k => {
@@ -919,7 +1043,7 @@ function openStudentModule(moduleKey, requestedSubtab) {
     dropdownMenu.innerHTML = dropHtml;
   }
 
-  // Show corresponding module pane wrapper (.module-content-pane or .module-pane-wrapper)
+  // Show corresponding module pane wrapper
   document.querySelectorAll('.module-content-pane, .module-pane-wrapper').forEach(w => {
     const isThisModule = w.getAttribute('data-module') === moduleKey;
     w.style.display = isThisModule ? 'block' : 'none';
@@ -963,16 +1087,38 @@ function toggleModalTabDropdown(event) {
   if (menu) menu.classList.toggle('show');
 }
 
-document.addEventListener('click', () => {
-  const menu = document.getElementById('modalTabDropdownMenu');
-  if (menu) menu.classList.remove('show');
-});
+/* ==========================================================================
+   15. INTERACTIVE FORM & BUTTON ACTIONS
+   ========================================================================== */
 
-function handleOnlinePayment() {
-  const amount = document.getElementById('customPayAmount')?.value || '24,700';
-  showToast(`Initiating BillDesk secure transaction for ₹${amount}...`, 'info');
+function handleOnlinePayment(event) {
+  if (event) event.preventDefault();
+  const amountInput = document.getElementById('payAmountInput');
+  const amount = amountInput ? amountInput.value : '25,000';
+  showToast(`Connecting to BillDesk Payment Gateway for ₹${amount}...`, 'info');
   setTimeout(() => {
-    showToast(`Payment Successful! Transaction Reference: TXN-SSG-${Math.floor(100000 + Math.random() * 900000)}`, 'success');
+    const txn = `TXN-SSG-${Math.floor(100000 + Math.random() * 900000)}`;
+    showToast(`Payment Successful! Reference: ${txn}`, 'success');
+    
+    // Add verified receipt
+    const receiptsContainer = document.querySelector('.receipts-list');
+    if (receiptsContainer) {
+      const newReceipt = document.createElement('div');
+      newReceipt.className = 'receipt-item';
+      newReceipt.innerHTML = `
+        <div class="receipt-meta">
+          <span class="receipt-id">Receipt #SSGMCE-2026-${Math.floor(1000 + Math.random() * 9000)}</span>
+          <span class="receipt-date">Paid on Just Now • Online UPI</span>
+          <span class="receipt-head">Autonomous Tuition & Academic Fee Payment</span>
+        </div>
+        <div class="receipt-amount-block">
+          <span class="receipt-val">₹${amount}</span>
+          <button type="button" class="btn-receipt-dl" onclick="showToast('Downloading verified receipt PDF...', 'success')">Download Receipt PDF</button>
+        </div>
+      `;
+      receiptsContainer.insertBefore(newReceipt, receiptsContainer.firstChild);
+    }
+    setTimeout(() => switchModalSubtab('payment-receipt'), 800);
   }, 1200);
 }
 
@@ -980,42 +1126,102 @@ function calculateRevalFee() {
   const checks = document.querySelectorAll('input[name="revalSubject"]:checked');
   const count = checks.length;
   const total = count * 300;
-  const countElem = document.getElementById('revalSubjectCount');
-  const totalElem = document.getElementById('revalFeeTotal');
-  if (countElem) countElem.textContent = count;
-  if (totalElem) totalElem.textContent = '₹' + total;
+  const display = document.getElementById('revalFeeDisplay');
+  const submitBtn = document.getElementById('btnSubmitReval');
+  if (display) display.textContent = '₹' + total;
+  if (submitBtn) submitBtn.disabled = count === 0;
 }
 
-function handleRevaluationSubmit() {
+function handleRevaluationSubmit(event) {
+  if (event) event.preventDefault();
   const checks = document.querySelectorAll('input[name="revalSubject"]:checked');
   if (!checks.length) {
     showToast('Please select at least 1 subject for revaluation.', 'warning');
     return;
   }
-  showToast(`Revaluation application submitted for ${checks.length} subject(s). Dean evaluation in progress.`, 'success');
+  const total = checks.length * 300;
+  showToast(`Revaluation request submitted for ${checks.length} subject(s) (₹${total}). Forwarded to Controller of Examinations.`, 'success');
   setTimeout(() => {
     closeStudentModule();
   }, 1500);
 }
 
-function handleDWalletUpload() {
-  const type = document.getElementById('dwalletDocType')?.value || 'Document';
-  showToast(`Uploading ${type} to secure cloud vault...`, 'info');
+function handleDWalletUpload(event) {
+  const file = event?.target?.files?.[0];
+  const docTypeSelect = document.getElementById('dwalletDocType');
+  const docType = docTypeSelect ? docTypeSelect.options[docTypeSelect.selectedIndex].text : 'Document';
+  const fileName = file ? file.name : `${docType}.pdf`;
+
+  showToast(`Uploading "${fileName}" to encrypted SSGMCE vault...`, 'info');
   setTimeout(() => {
-    showToast(`${type} successfully verified and saved to D-Wallet.`, 'success');
+    showToast(`"${docType}" successfully uploaded & verified!`, 'success');
+    const list = document.querySelector('.wallet-download-list');
+    if (list) {
+      const item = document.createElement('div');
+      item.className = 'wallet-doc-item';
+      item.innerHTML = `
+        <div class="w-doc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        </div>
+        <div class="w-doc-info">
+          <h5>${docType}</h5>
+          <p>Uploaded Just Now • Verified Student Document</p>
+          <span class="file-size-tag">Verified PDF</span>
+        </div>
+        <button type="button" class="btn-download-action" onclick="showToast('Downloading ${docType} PDF...', 'success')">Download PDF</button>
+      `;
+      list.insertBefore(item, list.firstChild);
+    }
+    setTimeout(() => switchModalSubtab('download-document'), 800);
   }, 1000);
 }
 
-function handlePhotoUploadPreview(input) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const container = document.getElementById('studentPhotoPreview');
-      if (container) {
-        container.innerHTML = `<img src="${e.target.result}" alt="Student New Photo">`;
-      }
-      showToast('Photo selected! Click "Save & Update ID Photo" to apply.', 'info');
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
+function handlePhotoUploadPreview(event) {
+  const file = event?.target?.files?.[0] || event?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('studentPhotoPreview');
+    if (preview) {
+      preview.innerHTML = `<img src="${e.target.result}" alt="Student New Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    }
+    showToast('Photo selected! Click "Save as Profile Photo" to apply.', 'info');
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectCourseChoice(btn, courseCode) {
+  const card = btn.closest('.course-choice-card');
+  if (!card) return;
+  const grid = card.parentElement;
+  grid.querySelectorAll('.course-choice-card').forEach(c => {
+    c.classList.remove('selected-course');
+    const b = c.querySelector('.btn-course-select');
+    if (b) {
+      b.textContent = 'Select Elective';
+      b.classList.remove('selected');
+    }
+  });
+  card.classList.add('selected-course');
+  btn.textContent = 'Selected ✓';
+  btn.classList.add('selected');
+  showToast(`Successfully registered for elective: ${courseCode}!`, 'success');
+}
+
+function renewLibraryBook(btn, bookTitle) {
+  btn.textContent = 'Renewed ✓ (+14 Days)';
+  btn.disabled = true;
+  btn.style.opacity = '0.75';
+  showToast(`"${bookTitle}" renewal approved! Extended by 14 days.`, 'success');
+}
+
+function applyPlacementDrive(btn, companyName) {
+  btn.textContent = 'Applied ✓';
+  btn.disabled = true;
+  btn.style.background = '#059669';
+  showToast(`Application submitted for ${companyName} Campus Recruitment Drive!`, 'success');
+}
+
+function printHallTicket() {
+  window.print();
 }
