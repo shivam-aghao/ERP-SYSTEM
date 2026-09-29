@@ -205,7 +205,6 @@ function initSubjectAttendanceToggle() {
   const collapsible = document.getElementById('subjectAttendanceCollapsible');
   const toggleText = document.getElementById('toggleSubjectAttText');
   const toggleBadge = document.getElementById('toggleSubjectAttBadge');
-  const sidebarAttLink = document.querySelector('.sidebar-link[data-nav="attendance"]');
 
   if (!btnToggle || !collapsible) return;
 
@@ -234,17 +233,6 @@ function initSubjectAttendanceToggle() {
     e.preventDefault();
     toggleSubjectAttendance();
   });
-
-  if (sidebarAttLink) {
-    sidebarAttLink.addEventListener('click', (e) => {
-      const targetCard = document.getElementById('attendanceCard');
-      if (targetCard) {
-        e.preventDefault();
-        toggleSubjectAttendance(true);
-        targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  }
 
   if (window.location.hash === '#attendance' || window.location.hash === '#attendanceCard') {
     setTimeout(() => {
@@ -330,6 +318,22 @@ function initSidebarLinks() {
         document.body.style.overflow = '';
       }
 
+      // --- Standalone page navigations: allow the browser to follow the href ---
+      // Attendance page
+      if (navKey === 'attendance') {
+        return;
+      }
+
+      // Profile page
+      if (navKey === 'profile') {
+        return;
+      }
+
+      // Syllabus page
+      if (navKey === 'syllabus') {
+        return;
+      }
+
       // Check on-page scroll targets
       if (navKey === 'timetable' || href === '#timetableCard') {
         e.preventDefault();
@@ -339,18 +343,6 @@ function initSidebarLinks() {
           timetableCard.classList.add('card-highlight-pulse');
           setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
           showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
-        }
-        return;
-      }
-
-      if (navKey === 'attendance' || href === '#attendanceCard') {
-        e.preventDefault();
-        const attendanceCard = document.getElementById('attendanceCard');
-        if (attendanceCard) {
-          attendanceCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          attendanceCard.classList.add('card-highlight-pulse');
-          setTimeout(() => attendanceCard.classList.remove('card-highlight-pulse'), 1500);
-          showToast("Viewing Overall & Subject Attendance", 'info');
         }
         return;
       }

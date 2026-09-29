@@ -1,2960 +1,1229 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="description" content="Student Profile - SSGMCE Shegaon College ERP">
     <title>Student Profile | SSGMCE ERP</title>
 
-    <!-- Google Font -->
+    <!-- Google Fonts: Inter & Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <style>
-
-        /* =========================================
-           ROOT COLORS
-        ========================================== */
-
-        :root {
-
-            --primary: #0B5CAD;
-            --primary-hover: #08498b;
-
-            --secondary: #1565C0;
-            --secondary-hover: #0d47a1;
-
-            --accent: #00A6D6;
-            --accent-soft: rgba(0, 166, 214, 0.12);
-            --accent-hover: #0093be;
-
-            --navy: #0B1F3A;
-            --navy-dark: #061325;
-            --navy-light: #132b4f;
-
-            --white: #FFFFFF;
-
-            --light-bg: #F4F8FC;
-            --card-bg: #FFFFFF;
-            --surface-hover: #F8FAFC;
-
-            --border-color: #E2E8F0;
-            --border-light: #EDF2F7;
-
-            --text: #263238;
-            --text-primary: #1E293B;
-            --text-secondary: #475569;
-            --muted: #64748B;
-            --text-light: #94A3B8;
-
-            --success: #10B981;
-            --success-bg: rgba(16, 185, 129, 0.12);
-
-            --warning: #F59E0B;
-            --warning-bg: rgba(245, 158, 11, 0.12);
-
-            --error: #EF4444;
-            --error-bg: rgba(239, 68, 68, 0.12);
-
-            --info: #00A6D6;
-            --info-bg: rgba(0, 166, 214, 0.12);
-
-            --danger: var(--error);
-            --danger-bg: var(--error-bg);
-            --danger-dark: #B91C1C;
-
-            --success-dark: #047857;
-
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont,
-                         'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-
-            --font-heading: 'Poppins', var(--font-main);
-            --font-body: var(--font-main);
-
-            --header-height: 70px;
-            --sidebar-width: 280px;
-
-            --shadow-xs: 0 1px 2px rgba(11, 31, 58, 0.04);
-            --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.05);
-            --shadow-md: 0 4px 14px rgba(11, 31, 58, 0.06);
-            --shadow-lg: 0 10px 25px rgba(11, 31, 58, 0.08);
-            --shadow-xl: 0 20px 35px -5px rgba(11, 31, 58, 0.16);
-
-            --transition-fast: 0.15s ease;
-            --transition-normal: 0.25s ease;
-            --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 14px;
-        }
-
-
-        /* =========================================
-           GLOBAL
-        ========================================== */
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-body);
-            background: var(--light-bg);
-            color: var(--text-primary);
-        }
-
-
-        /* =========================================
-           TOP HEADER
-        ========================================== */
-
-        .top-header {
-
-            height: var(--header-height);
-
-            background: linear-gradient(
-                135deg,
-                var(--navy-dark),
-                var(--navy)
-            );
-
-            display: flex;
-            align-items: center;
-
-            padding: 0 24px;
-
-            color: var(--white);
-
-            box-shadow: var(--shadow-lg);
-
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-
-        /* Menu */
-
-        .menu-btn {
-
-            width: 40px;
-            height: 40px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            border-radius: var(--radius-sm);
-
-            cursor: pointer;
-
-            margin-right: 8px;
-
-            font-size: 20px;
-
-            transition: var(--transition-fast);
-        }
-
-        .menu-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-
-        /* =========================================
-           COLLEGE LOGO
-        ========================================== */
-
-        .college-logo {
-
-            width: 48px;
-            height: 48px;
-
-            background: var(--white);
-
-            border-radius: var(--radius-sm);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            overflow: hidden;
-
-            margin-right: 12px;
-
-            flex-shrink: 0;
-        }
-
-        .college-logo img {
-
-            width: 100%;
-            height: 100%;
-
-            object-fit: contain;
-
-            display: block;
-        }
-
-
-        /* College name */
-
-        .logo-text {
-
-            font-size: 20px;
-
-            font-weight: 600;
-
-            letter-spacing: 0.1px;
-
-            white-space: nowrap;
-        }
-
-
-        /* =========================================
-           HEADER RIGHT
-        ========================================== */
-
-        .header-right {
-
-            margin-left: auto;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 15px;
-        }
-
-
-        /* Notification */
-
-        .notification {
-
-            width: 38px;
-            height: 38px;
-
-            border-radius: var(--radius-sm);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            position: relative;
-
-            cursor: pointer;
-
-            font-size: 17px;
-        }
-
-        .notification:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-
-        .notification-badge {
-
-            position: absolute;
-
-            top: 1px;
-            right: 1px;
-
-            width: 17px;
-            height: 17px;
-
-            background: var(--error);
-
-            border-radius: 50%;
-
-            font-size: 9px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-weight: 700;
-        }
-
-
-        /* =========================================
-           STUDENT HEADER
-        ========================================== */
-
-        .student-header {
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 10px;
-
-            padding: 5px 10px;
-
-            border-radius: var(--radius-sm);
-
-            cursor: pointer;
-        }
-
-        .student-header:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-
-        .header-avatar {
-
-            width: 36px;
-            height: 36px;
-
-            border-radius: 50%;
-
-            background: var(--accent-soft);
-
-            color: var(--white);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 12px;
-
-            font-weight: 800;
-        }
-
-
-        .student-name {
-
-            font-size: 13px;
-
-            font-weight: 600;
-        }
-
-
-        .student-role {
-
-            font-size: 10px;
-
-            color: var(--text-light);
-
-            margin-top: 2px;
-        }
-
-
-        /* =========================================
-           MAIN CONTAINER
-        ========================================== */
-
-        .main-container {
-
-            max-width: 1350px;
-
-            margin: auto;
-
-            padding: 25px;
-        }
-
-
-        /* =========================================
-           PAGE HEADER
-        ========================================== */
-
-        .page-header {
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: space-between;
-
-            margin-bottom: 22px;
-        }
-
-
-        .page-title {
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 12px;
-        }
-
-
-        .page-title-icon {
-
-            width: 45px;
-            height: 45px;
-
-            border-radius: var(--radius-md);
-
-            background: var(--accent-soft);
-
-            color: var(--primary);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 19px;
-        }
-
-
-        .page-title h1 {
-
-            font-family: var(--font-heading);
-
-            font-size: 24px;
-
-            color: var(--navy);
-
-            font-weight: 800;
-        }
-
-
-        .page-title p {
-
-            font-size: 12px;
-
-            color: var(--muted);
-
-            margin-top: 4px;
-        }
-
-
-        /* Edit button */
-
-        .edit-btn {
-
-            border: none;
-
-            background: var(--primary);
-
-            color: var(--white);
-
-            padding: 10px 17px;
-
-            border-radius: var(--radius-sm);
-
-            font-size: 13px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 8px;
-
-            transition: var(--transition-fast);
-
-            box-shadow: var(--shadow-sm);
-        }
-
-
-        .edit-btn:hover {
-
-            background: var(--primary-hover);
-
-            transform: translateY(-1px);
-        }
-
-
-        /* =========================================
-           PROFILE SUMMARY CARD
-        ========================================== */
-
-        .profile-card {
-
-            background: var(--card-bg);
-
-            border-radius: var(--radius-lg);
-
-            border: 1px solid var(--border-color);
-
-            box-shadow: var(--shadow-md);
-
-            overflow: hidden;
-
-            margin-bottom: 22px;
-        }
-
-
-        .profile-top {
-
-            padding: 25px;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 25px;
-
-            background: linear-gradient(
-                135deg,
-                var(--info-bg),
-                var(--white)
-            );
-
-            border-bottom: 1px solid var(--border-color);
-        }
-
-
-        /* =========================================
-           STUDENT PHOTO
-        ========================================== */
-
-        .profile-image-container {
-
-            position: relative;
-
-            width: 125px;
-            height: 145px;
-
-            flex-shrink: 0;
-        }
-
-
-        .profile-image {
-
-            width: 125px;
-            height: 145px;
-
-            border-radius: var(--radius-md);
-
-            border: 3px solid var(--white);
-
-            box-shadow: var(--shadow-md);
-
-            object-fit: cover;
-
-            background: var(--border-light);
-
-            display: block;
-        }
-
-
-        /* Active status */
-
-        .status-dot {
-
-            position: absolute;
-
-            width: 17px;
-            height: 17px;
-
-            background: var(--success);
-
-            border: 3px solid var(--white);
-
-            border-radius: 50%;
-
-            bottom: 7px;
-            right: 7px;
-        }
-
-
-        /* =========================================
-           PHOTO UPLOAD BUTTON
-        ========================================== */
-
-        .photo-upload-btn {
-
-            position: absolute;
-
-            right: -9px;
-            bottom: -9px;
-
-            width: 39px;
-            height: 39px;
-
-            border-radius: 50%;
-
-            background: var(--primary);
-
-            color: var(--white);
-
-            border: 3px solid var(--white);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            cursor: pointer;
-
-            box-shadow: var(--shadow-md);
-
-            transition: var(--transition-fast);
-        }
-
-
-        .photo-upload-btn:hover {
-
-            background: var(--primary-hover);
-
-            transform: scale(1.08);
-        }
-
-
-        /* =========================================
-           PROFILE DETAILS
-        ========================================== */
-
-        .profile-info {
-
-            flex: 1;
-        }
-
-
-        .profile-info h2 {
-
-            font-family: var(--font-heading);
-
-            font-size: 24px;
-
-            color: var(--navy);
-
-            margin-bottom: 7px;
-        }
-
-
-        .profile-id {
-
-            display: inline-block;
-
-            background: var(--info-bg);
-
-            color: var(--primary);
-
-            font-size: 11px;
-
-            font-weight: 700;
-
-            padding: 5px 10px;
-
-            border-radius: 20px;
-
-            margin-bottom: 13px;
-        }
-
-
-        .profile-details {
-
-            display: flex;
-
-            flex-wrap: wrap;
-
-            gap: 18px 25px;
-        }
-
-
-        .profile-detail {
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 7px;
-
-            color: var(--text-secondary);
-
-            font-size: 13px;
-        }
-
-
-        .profile-detail i {
-
-            color: var(--primary);
-
-            width: 16px;
-        }
-
-
-        /* =========================================
-           SECTION CARD
-        ========================================== */
-
-        .section-card {
-
-            background: var(--card-bg);
-
-            border-radius: var(--radius-lg);
-
-            border: 1px solid var(--border-color);
-
-            box-shadow: var(--shadow-md);
-
-            margin-bottom: 22px;
-
-            overflow: hidden;
-        }
-
-
-        /* =========================================
-           SECTION HEADER
-        ========================================== */
-
-        .section-header {
-
-            min-height: 52px;
-
-            padding: 0 20px;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 10px;
-
-            background: var(--surface-hover);
-
-            border-bottom: 1px solid var(--border-color);
-        }
-
-
-        .section-icon {
-
-            width: 32px;
-            height: 32px;
-
-            border-radius: var(--radius-sm);
-
-            background: var(--accent-soft);
-
-            color: var(--primary);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 14px;
-        }
-
-
-        .section-header h3 {
-
-            font-family: var(--font-heading);
-
-            font-size: 15px;
-
-            font-weight: 700;
-
-            color: var(--navy);
-        }
-
-
-        .section-body {
-
-            padding: 22px;
-        }
-
-
-        /* =========================================
-           INFORMATION GRID
-        ========================================== */
-
-        .info-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-
-            gap: 15px 35px;
-        }
-
-
-        .info-item {
-
-            display: grid;
-
-            grid-template-columns:
-                175px 15px 1fr;
-
-            min-height: 38px;
-
-            align-items: center;
-        }
-
-
-        .info-label {
-
-            font-size: 12px;
-
-            color: var(--muted);
-
-            font-weight: 600;
-        }
-
-
-        .info-colon {
-
-            color: var(--text-light);
-
-            text-align: center;
-        }
-
-
-        .info-value {
-
-            font-size: 13px;
-
-            color: var(--text-primary);
-
-            font-weight: 600;
-
-            word-break: break-word;
-        }
-
-
-        .info-value.highlight {
-
-            color: var(--primary);
-        }
-
-
-        /* =========================================
-           STATUS BADGE
-        ========================================== */
-
-        .status-badge {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 5px;
-
-            padding: 4px 9px;
-
-            border-radius: 20px;
-
-            background: var(--success-bg);
-
-            color: var(--success-dark);
-
-            font-size: 11px;
-
-            font-weight: 700;
-        }
-
-
-        /* =========================================
-           TWO COLUMN
-        ========================================== */
-
-        .two-column {
-
-            display: grid;
-
-            grid-template-columns: 1fr 1fr;
-
-            gap: 22px;
-        }
-
-
-        /* =========================================
-           CONTACT
-        ========================================== */
-
-        .contact-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 15px;
-        }
-
-
-        .contact-card {
-
-            padding: 17px;
-
-            border: 1px solid var(--border-color);
-
-            border-radius: var(--radius-md);
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 13px;
-
-            transition: var(--transition-fast);
-        }
-
-
-        .contact-card:hover {
-
-            border-color: rgba(11, 92, 173, 0.35);
-
-            box-shadow: var(--shadow-md);
-
-            background: var(--surface-hover);
-        }
-
-
-        .contact-icon {
-
-            width: 40px;
-            height: 40px;
-
-            border-radius: var(--radius-md);
-
-            background: var(--accent-soft);
-
-            color: var(--primary);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            flex-shrink: 0;
-        }
-
-
-        .contact-label {
-
-            font-size: 10px;
-
-            color: var(--text-light);
-
-            margin-bottom: 4px;
-
-            font-weight: 600;
-        }
-
-
-        .contact-value {
-
-            font-size: 12px;
-
-            font-weight: 600;
-
-            color: var(--text-secondary);
-
-            word-break: break-word;
-        }
-
-
-        /* =========================================
-           DOCUMENTS
-        ========================================== */
-
-        .documents {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 15px;
-        }
-
-
-        .document {
-
-            border: 1px solid var(--border-color);
-
-            border-radius: var(--radius-md);
-
-            padding: 15px;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 12px;
-
-            transition: var(--transition-fast);
-        }
-
-
-        .document:hover {
-
-            border-color: rgba(11, 92, 173, 0.35);
-
-            transform: translateY(-1px);
-
-            box-shadow: var(--shadow-sm);
-        }
-
-
-        .document-icon {
-
-            width: 40px;
-            height: 40px;
-
-            background: var(--error-bg);
-
-            color: var(--error);
-
-            border-radius: var(--radius-sm);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            flex-shrink: 0;
-        }
-
-
-        .document-name {
-
-            font-size: 12px;
-
-            font-weight: 600;
-
-            color: var(--text-secondary);
-        }
-
-
-        .document-status {
-
-            font-size: 10px;
-
-            color: var(--success);
-
-            margin-top: 3px;
-        }
-
-
-        /* =========================================
-           FOOTER
-        ========================================== */
-
-        .footer {
-
-            background: var(--navy-dark);
-
-            color: var(--text-light);
-
-            min-height: 50px;
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
-
-            font-size: 11px;
-
-            margin-top: 30px;
-
-            text-align: center;
-
-            padding: 10px;
-        }
-
-
-        /* =========================================
-           RESPONSIVE
-        ========================================== */
-
-        @media (max-width: 1000px) {
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .documents {
-                grid-template-columns: 1fr;
-            }
-
-        }
-
-
-        @media (max-width: 800px) {
-
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-
-            .logo-text {
-                font-size: 16px;
-            }
-
-        }
-
-
-        @media (max-width: 600px) {
-
-            .top-header {
-                padding: 0 12px;
-            }
-
-            .college-logo {
-                width: 42px;
-                height: 42px;
-            }
-
-            .logo-text {
-
-                font-size: 13px;
-
-                white-space: normal;
-            }
-
-            .header-right {
-                gap: 5px;
-            }
-
-            .student-name,
-            .student-role {
-                display: none;
-            }
-
-            .nav-item i {
-                font-size: 13px;
-            }
-
-
-            /* ================= PAGE ================= */
-
-            .main-container {
-
-                width: min(1240px, calc(100% - 40px));
-
-                max-width: none;
-
-                margin: 0 auto;
-
-                padding: 24px 0 10px;
-            }
-
-
-            .page-header {
-
-                min-height: 50px;
-
-                margin-bottom: 18px;
-            }
-
-
-            .page-title {
-                gap: 11px;
-            }
-
-
-            .page-title-icon {
-
-                width: 42px;
-                height: 42px;
-
-                border-radius: var(--radius-md);
-
-                background: var(--accent-soft);
-
-                color: var(--primary);
-
-                border: 1px solid rgba(11, 92, 173, 0.10);
-
-                font-size: 17px;
-            }
-
-
-            .page-title h1 {
-
-                font-size: 22px;
-
-                color: var(--navy);
-
-                line-height: 1.2;
-
-                font-weight: 800;
-            }
-
-
-            .page-title p {
-
-                margin-top: 4px;
-
-                font-size: 11px;
-
-                color: var(--muted);
-            }
-
-
-            .edit-btn {
-
-                padding: 9px 15px;
-
-                border-radius: var(--radius-sm);
-
-                background: var(--primary);
-
-                font-size: 12px;
-
-                box-shadow: var(--shadow-sm);
-            }
-
-
-            .edit-btn:hover {
-                background: var(--primary-hover);
-            }
-
-
-            /* ================= PROFILE SUMMARY ================= */
-
-            .profile-card,
-            .section-card {
-
-                background: var(--card-bg);
-
-                border: 1px solid var(--border-color);
-
-                border-radius: 11px;
-
-                box-shadow: var(--shadow-md);
-            }
-
-
-            .profile-card {
-                margin-bottom: 18px;
-            }
-
-
-            .profile-top {
-
-                min-height: 150px;
-
-                padding: 20px 22px;
-
-                gap: 20px;
-
-                background: linear-gradient(
-                    135deg,
-                    var(--info-bg) 0%,
-                    var(--white) 72%
-                );
-
-                border-bottom: 1px solid var(--border-color);
-            }
-
-
-            .profile-image-container {
-
-                width: 110px;
-                height: 130px;
-            }
-
-
-            .profile-image {
-
-                width: 110px;
-                height: 130px;
-
-                border-radius: 9px;
-
-                border: 2px solid var(--white);
-
-                box-shadow: var(--shadow-md);
-            }
-
-
-            .status-dot {
-
-                width: 15px;
-                height: 15px;
-
-                bottom: 6px;
-                right: 6px;
-
-                border-width: 2px;
-            }
-
-
-            .photo-upload-btn {
-
-                width: 36px;
-                height: 36px;
-
-                right: -8px;
-                bottom: -8px;
-
-                background: var(--primary);
-
-                border-width: 2px;
-            }
-
-
-            .photo-upload-btn:hover {
-                background: var(--primary-hover);
-            }
-
-
-            .profile-info h2 {
-
-                margin-bottom: 6px;
-
-                font-size: 22px;
-
-                color: var(--navy);
-
-                font-weight: 800;
-            }
-
-
-            .profile-id {
-
-                margin-bottom: 11px;
-
-                padding: 4px 9px;
-
-                background: var(--info-bg);
-
-                color: var(--primary);
-
-                font-size: 10px;
-            }
-
-
-            .profile-details {
-                gap: 10px 20px;
-            }
-
-
-            .profile-detail {
-
-                gap: 6px;
-
-                font-size: 11px;
-
-                color: var(--text-secondary);
-            }
-
-
-            .profile-detail i {
-
-                color: var(--primary);
-
-                font-size: 11px;
-            }
-
-
-            /* ================= SECTION CARDS ================= */
-
-            .section-card {
-
-                margin-bottom: 18px;
-
-                overflow: hidden;
-            }
-
-
-            .section-header {
-
-                min-height: 48px;
-
-                padding: 0 17px;
-
-                gap: 9px;
-
-                background: var(--surface-hover);
-
-                border-bottom: 1px solid var(--border-color);
-            }
-
-
-            .section-icon {
-
-                width: 30px;
-                height: 30px;
-
-                border-radius: 7px;
-
-                background: var(--accent-soft);
-
-                color: var(--primary);
-
-                font-size: 13px;
-            }
-
-
-            .section-header h3 {
-
-                font-size: 13px;
-
-                color: var(--navy);
-
-                font-weight: 700;
-            }
-
-
-            .section-body {
-                padding: 17px;
-            }
-
-
-            .info-grid {
-
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-
-                gap: 10px 28px;
-            }
-
-
-            .info-item {
-
-                grid-template-columns:
-                    145px 14px minmax(0, 1fr);
-
-                min-height: 32px;
-            }
-
-
-            .info-label {
-
-                font-size: 10px;
-
-                color: var(--muted);
-            }
-
-
-            .info-colon {
-
-                font-size: 11px;
-
-                color: var(--text-light);
-            }
-
-
-            .info-value {
-
-                font-size: 11px;
-
-                color: var(--text-primary);
-
-                font-weight: 600;
-            }
-
-
-            .status-badge {
-
-                padding: 4px 8px;
-
-                background: var(--success-bg);
-
-                color: var(--success-dark);
-
-                font-size: 9px;
-            }
-
-
-            /* ================= TWO COLUMN / CONTACT / DOCS ================= */
-
-            .two-column {
-                gap: 18px;
-            }
-
-
-            .contact-grid,
-            .documents {
-                gap: 12px;
-            }
-
-
-            .contact-card,
-            .document {
-
-                border-color: var(--border-color);
-
-                border-radius: 9px;
-
-                background: var(--white);
-            }
-
-
-            .contact-card {
-
-                padding: 13px;
-
-                gap: 10px;
-            }
-
-
-            .contact-icon,
-            .document-icon {
-
-                width: 36px;
-                height: 36px;
-
-                border-radius: 8px;
-            }
-
-
-            .contact-label {
-                font-size: 9px;
-            }
-
-
-            .contact-value,
-            .document-name {
-                font-size: 10px;
-            }
-
-
-            .contact-card:hover {
-
-                border-color: rgba(11, 92, 173, 0.35);
-
-                box-shadow: var(--shadow-md);
-            }
-
-
-            .document {
-                padding: 12px;
-            }
-
-
-            .document:hover {
-
-                border-color: rgba(11, 92, 173, 0.35);
-            }
-
-
-            .document-status {
-                font-size: 9px;
-            }
-
-
-            /* ================= FOOTER ================= */
-
-            .footer {
-
-                width: 100%;
-
-                min-height: 48px;
-
-                margin-top: 18px;
-
-                padding: 10px 20px;
-
-                background: var(--navy-dark);
-
-                color: var(--text-light);
-
-                border-top: 1px solid rgba(255, 255, 255, 0.06);
-
-                font-size: 9px;
-            }
-
-        }
-
-
-        /* =========================================
-           TABLET RESPONSIVE
-        ========================================== */
-
-        @media (max-width: 1000px) {
-
-            .main-container {
-                width: min(94%, 900px);
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .documents {
-                grid-template-columns: 1fr;
-            }
-
-        }
-
-
-        @media (max-width: 800px) {
-
-            .top-header {
-                padding: 0 14px;
-            }
-
-            .logo-text {
-                font-size: 15px;
-            }
-
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-top {
-                padding: 18px;
-            }
-
-        }
-
-
-        @media (max-width: 600px) {
-
-            .top-header {
-
-                height: 62px;
-
-                min-height: 62px;
-
-                padding: 0 10px;
-            }
-
-
-            .menu-btn {
-
-                width: 36px;
-                height: 36px;
-
-                min-width: 36px;
-
-                margin-right: 5px;
-            }
-
-
-            .college-logo {
-
-                width: 38px;
-                height: 38px;
-
-                min-width: 38px;
-
-                margin-right: 8px;
-            }
-
-
-            .logo-text {
-
-                max-width: 46vw;
-
-                font-size: 11px;
-
-                white-space: normal;
-            }
-
-
-            .header-right {
-                gap: 2px;
-            }
-
-
-            .student-name,
-            .student-role {
-                display: none;
-            }
-
-
-            .student-header {
-
-                padding: 4px;
-
-                gap: 3px;
-            }
-
-
-            .header-avatar {
-
-                width: 32px;
-                height: 32px;
-
-                font-size: 10px;
-            }
-
-
-            .notification {
-
-                width: 34px;
-                height: 34px;
-            }
-
-
-            .nav-bar {
-
-                height: 46px;
-
-                min-height: 46px;
-
-                padding: 0 8px;
-            }
-
-
-            .nav-item {
-
-                height: 46px;
-
-                padding: 0 10px;
-
-                font-size: 10px;
-            }
-
-
-            .main-container {
-
-                width: calc(100% - 24px);
-
-                padding: 16px 0 5px;
-            }
-
-
-            .page-header {
-
-                align-items: flex-start;
-
-                gap: 10px;
-            }
-
-
-            .page-title-icon {
-
-                width: 36px;
-                height: 36px;
-            }
-
-
-            .page-title h1 {
-                font-size: 18px;
-            }
-
-
-            .page-title p {
-                font-size: 9px;
-            }
-
-
-            .edit-btn {
-                padding: 8px 10px;
-            }
-
-
-            .edit-btn span {
-                display: none;
-            }
-
-
-            .profile-top {
-
-                flex-direction: column;
-
-                align-items: flex-start;
-            }
-
-
-            .profile-info h2 {
-                font-size: 19px;
-            }
-
-
-            .profile-detail {
-                font-size: 10px;
-            }
-
-
-            .section-header {
-                min-height: 45px;
-            }
-
-
-            .section-body {
-                padding: 13px;
-            }
-
-
-            .info-item {
-
-                grid-template-columns:
-                    105px 10px minmax(0, 1fr);
-            }
-
-
-            .info-label {
-                font-size: 9px;
-            }
-
-
-            .info-value {
-                font-size: 10px;
-            }
-
-        }
-
-    </style>
+    <!-- Dashboard CSS (same as index.html) -->
+    <link rel="stylesheet" href="../../dashboard/frontend/css/dashboard.css">
 
     <!-- SSGMCE ERP Auth Guard -->
     <script src="../../../common/js/erp-auth-guard.js"></script>
 
+    <style>
+        /* =========================================
+           PROFILE PAGE SPECIFIC STYLES
+           Uses same design tokens from dashboard.css
+        ========================================== */
+
+        /* Profile Page Header */
+        .profile-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .profile-page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-page-title-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+
+        .profile-page-title h1 {
+            font-family: var(--font-heading);
+            font-size: 1.45rem;
+            color: var(--navy);
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .profile-page-title p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .edit-profile-btn {
+            border: none;
+            background: var(--primary);
+            color: var(--white);
+            padding: 10px 17px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+            font-family: inherit;
+        }
+
+        .edit-profile-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Profile Summary Card */
+        .profile-summary-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+
+        .profile-summary-top {
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: linear-gradient(135deg, var(--info-bg), var(--white));
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .profile-image-container {
+            position: relative;
+            width: 125px;
+            height: 145px;
+            flex-shrink: 0;
+        }
+
+        .profile-image {
+            width: 125px;
+            height: 145px;
+            border-radius: var(--radius-md);
+            border: 3px solid var(--white);
+            box-shadow: var(--shadow-md);
+            object-fit: cover;
+            background: var(--border-light);
+            display: block;
+        }
+
+        .status-dot {
+            position: absolute;
+            width: 17px;
+            height: 17px;
+            background: var(--success);
+            border: 3px solid var(--white);
+            border-radius: 50%;
+            bottom: 7px;
+            right: 7px;
+        }
+
+        .photo-upload-btn {
+            position: absolute;
+            right: -9px;
+            bottom: -9px;
+            width: 39px;
+            height: 39px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--white);
+            border: 3px solid var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-fast);
+        }
+
+        .photo-upload-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.08);
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .profile-info h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--navy);
+            margin-bottom: 7px;
+            font-weight: 800;
+        }
+
+        .profile-id {
+            display: inline-block;
+            background: var(--info-bg);
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-bottom: 13px;
+        }
+
+        .profile-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 25px;
+        }
+
+        .profile-detail {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+
+        .profile-detail i {
+            color: var(--primary);
+            width: 16px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: var(--success-bg);
+            color: var(--success-dark);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* Section Cards */
+        .profile-section-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 22px;
+            overflow: hidden;
+        }
+
+        .profile-section-header {
+            min-height: 52px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface-hover);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .profile-section-header h3 {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 0;
+        }
+
+        .profile-section-body {
+            padding: 22px;
+        }
+
+        /* Info Grid */
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px 35px;
+        }
+
+        .profile-info-item {
+            display: grid;
+            grid-template-columns: 175px 15px 1fr;
+            min-height: 38px;
+            align-items: center;
+        }
+
+        .profile-info-label {
+            font-size: 0.76rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .profile-info-colon {
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .profile-info-value {
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        /* Two Column Layout */
+        .profile-two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        /* Contact Grid */
+        .profile-contact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .profile-contact-card {
+            padding: 17px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            transition: var(--transition-fast);
+        }
+
+        .profile-contact-card:hover {
+            border-color: rgba(11, 92, 173, 0.35);
+            box-shadow: var(--shadow-md);
+            background: var(--surface-hover);
+        }
+
+        .profile-contact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .profile-contact-label {
+            font-size: 0.65rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .profile-contact-value {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            word-break: break-word;
+        }
+
+        /* Documents Grid */
+        .profile-documents-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .profile-document-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition-fast);
+        }
+
+        .profile-document-card:hover {
+            border-color: rgba(11, 92, 173, 0.35);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .profile-document-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--error-bg);
+            color: var(--error);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .profile-document-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .profile-document-status {
+            font-size: 0.65rem;
+            color: var(--success);
+            margin-top: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .profile-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-documents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .profile-two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .profile-summary-top {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .profile-info h2 {
+                font-size: 1.25rem;
+            }
+
+            .profile-info-item {
+                grid-template-columns: 120px 12px 1fr;
+            }
+
+            .profile-page-title h1 {
+                font-size: 1.15rem;
+            }
+
+            .profile-page-title p {
+                font-size: 0.7rem;
+            }
+
+            .edit-profile-btn span {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
-
-<body>
-
-
-    <!-- =========================================
-         TOP HEADER
-    ========================================== -->
-
-    <header class="top-header">
-
-
-        <!-- Menu -->
-
-        <div class="menu-btn">
-
-            <i class="fa-solid fa-bars"></i>
-
-        </div>
-
-
-        <!-- =====================================
-             COLLEGE LOGO
-             SAME LOGO AS LOGIN PAGE
-        ====================================== -->
-
-        <div class="college-logo">
-
-            <img
-                src="SSGMCElogo.png"
-                alt="SSGMCE College Logo"
-            >
-
-        </div>
-
-
-        <!-- College Name -->
-
-        <div class="logo-text">
-
-            Shri Sant Gajanan Maharaj College of Engineering, Shegaon
-
-        </div>
-
-        <!-- Back to Dashboard -->
-        <a href="../../dashboard/index.html" style="display:inline-flex; align-items:center; gap:6px; background:#EFF6FF; border:1px solid #BFDBFE; color:#0B5CAD; font-weight:600; font-size:13px; padding:6px 14px; border-radius:8px; text-decoration:none; margin-left:auto; margin-right:16px; transition:all 0.2s;">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span>Dashboard</span>
-        </a>
-
-        <!-- Header Right -->
-
-        <div class="header-right">
-
-
-            <!-- Notification -->
-
-            <div class="notification">
-
-                <i class="fa-regular fa-bell"></i>
-
-                <span class="notification-badge">
-                    3
-                </span>
-
-            </div>
-
-
-            <!-- Student -->
-
-            <div class="student-header">
-
-
-                <div class="header-avatar">
-                    NK
-                </div>
-
-
-                <div>
-
-                    <div class="student-name">
-                        Neha Kailash Badokar
-                    </div>
-
-                    <div class="student-role">
-                        Student
-                    </div>
-
-                </div>
-
-
-                <i
-                    class="fa-solid fa-chevron-down"
-                    style="font-size:10px"
-                ></i>
-
-
-            </div>
-
-
-        </div>
-
-
-    </header>
-
-
-
-    <!-- =========================================
-         MAIN CONTENT
-    ========================================== -->
-
-    <main class="main-container">
-
-
-        <!-- =====================================
-             PAGE HEADER
-        ====================================== -->
-
-        <div class="page-header">
-
-
-            <div class="page-title">
-
-
-                <div class="page-title-icon">
-
-                    <i class="fa-solid fa-user"></i>
-
-                </div>
-
-
-                <div>
-
-                    <h1>
-                        Student Profile
-                    </h1>
-
-                    <p>
-                        View and manage your personal and academic information
-                    </p>
-
-                </div>
-
-
-            </div>
-
-
-            <button
-                class="edit-btn"
-                onclick="editProfile()"
-            >
-
-                <i class="fa-solid fa-pen"></i>
-
-                <span>
-                    Edit Profile
-                </span>
-
+<body class="dashboard-body">
+
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <!-- ==================== TOP STICKY HEADER ==================== -->
+    <header class="ssgmce-top-header" role="banner">
+        <div class="header-left">
+            <!-- Mobile Hamburger Toggle Button -->
+            <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
             </button>
 
+            <!-- SSGMCE College Crest / Brand -->
+            <a href="../../dashboard/frontend/index.html" class="header-brand" aria-label="SSGMCE Home">
+                <div class="brand-crest">
+                    <img src="SSGMCElogo.png" alt="SSGMCE College Logo" class="brand-logo-img">
+                </div>
+                <div class="brand-text-block">
+                    <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+                    <div class="college-sub-tag">(An Autonomous Institute)</div>
+                </div>
+            </a>
 
+            <!-- Divider & ERP Motto -->
+            <div class="brand-divider" aria-hidden="true"></div>
+            <div class="erp-tag-wrap">
+                <span class="erp-badge-text">ERP</span>
+                <span class="erp-slogan">Learn | Grow | Excel</span>
+            </div>
         </div>
 
+        <!-- Center Search Bar (Global Access) -->
+        <div class="header-center">
+            <div class="search-pill-container">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" class="search-input" id="globalSearchInput" placeholder="Search subjects, services, schedule (Ctrl+K)..." aria-label="Search ERP Dashboard">
+                <span class="search-kbd">Ctrl+K</span>
+            </div>
+        </div>
 
-
-        <!-- =====================================
-             PROFILE SUMMARY
-        ====================================== -->
-
-        <div class="profile-card">
-
-
-            <div class="profile-top">
-
-
-                <!-- =================================
-                     STUDENT PHOTO
-                ================================== -->
-
-                <div class="profile-image-container">
-
-
-                    <img
-                        id="studentPhoto"
-                        src="SSGMCElogo.png"
-                        alt="Student Photo"
-                        class="profile-image"
-                    >
-
-
-                    <!-- Active -->
-
-                    <span class="status-dot"></span>
-
-
-                    <!-- Upload Photo -->
-
-                    <label
-                        for="photoUpload"
-                        class="photo-upload-btn"
-                        title="Change profile photo"
-                    >
-
-                        <i class="fa-solid fa-camera"></i>
-
-                    </label>
-
-
-                    <input
-                        type="file"
-                        id="photoUpload"
-                        accept="image/*"
-                        hidden
-                    >
-
-
+        <!-- Right Controls: Notifications & Student Profile -->
+        <div class="header-right">
+            <!-- Notification Bell -->
+            <div class="notif-wrapper" id="notifWrapper">
+                <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 3 unread" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notif-badge">3</span>
+                </button>
+                <!-- Notification Dropdown Popover -->
+                <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
+                    <div class="panel-header">
+                        <h4>Notifications</h4>
+                        <span class="unread-tag">3 New</span>
+                    </div>
+                    <ul class="notif-list">
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-error"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
+                                <span class="notif-time">10 mins ago • Examination Cell</span>
+                            </div>
+                        </li>
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-warning"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
+                                <span class="notif-time">2 hours ago • Academic Cell</span>
+                            </div>
+                        </li>
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-success"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Assignment 2 for Data Structures uploaded to portal.</p>
+                                <span class="notif-time">Yesterday • Prof. R. Sharma</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="panel-footer">
+                        <button type="button" class="btn-link-action" id="markAllReadBtn">Mark all as read</button>
+                    </div>
                 </div>
+            </div>
 
-
-
-                <!-- =================================
-                     STUDENT INFORMATION
-                ================================== -->
-
-                <div class="profile-info">
-
-
-                    <h2>
-                        Neha Kailash Badokar
-                    </h2>
-
-
-                    <span class="profile-id">
-
-                        Student ID: 308703
-
-                    </span>
-
-
+            <!-- Student Profile Pill -->
+            <div class="profile-wrapper" id="profileWrapper">
+                <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
+                    <div class="avatar-circle">NB</div>
                     <div class="profile-details">
-
-
-                        <div class="profile-detail">
-
-                            <i class="fa-solid fa-graduation-cap"></i>
-
-                            TY B.E. Information Technology
-
-                        </div>
-
-
-                        <div class="profile-detail">
-
-                            <i class="fa-solid fa-layer-group"></i>
-
-                            Section A
-
-                        </div>
-
-
-                        <div class="profile-detail">
-
-                            <i class="fa-solid fa-calendar"></i>
-
-                            Academic Year 2026-27
-
-                        </div>
-
-
-                        <div class="profile-detail">
-
-                            <span class="status-badge">
-
-                                <i
-                                    class="fa-solid fa-circle"
-                                    style="font-size:6px"
-                                ></i>
-
-                                Active Student
-
-                            </span>
-
-                        </div>
-
-
+                        <span class="student-name">Neha Badokar</span>
+                        <span class="student-meta">Roll: 308703 • IT</span>
                     </div>
-
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- =========================================
-             PERSONAL + ACADEMIC
-        ========================================== -->
-
-        <div class="two-column">
-
-
-            <!-- PERSONAL -->
-
-            <div class="section-card">
-
-
-                <div class="section-header">
-
-
-                    <div class="section-icon">
-
-                        <i class="fa-solid fa-user"></i>
-
-                    </div>
-
-
-                    <h3>
-                        Personal Information
-                    </h3>
-
-
-                </div>
-
-
-                <div class="section-body">
-
-
-                    <div
-                        class="info-grid"
-                        style="grid-template-columns:1fr;"
-                    >
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Date of Birth
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                11/11/2005
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Gender
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Female
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Nationality
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Indian
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Blood Group
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                O+
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Category
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                General
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-
-            <!-- ACADEMIC -->
-
-            <div class="section-card">
-
-
-                <div class="section-header">
-
-
-                    <div class="section-icon">
-
-                        <i class="fa-solid fa-book-open"></i>
-
-                    </div>
-
-
-                    <h3>
-                        Academic Information
-                    </h3>
-
-
-                </div>
-
-
-                <div class="section-body">
-
-
-                    <div
-                        class="info-grid"
-                        style="grid-template-columns:1fr;"
-                    >
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                University
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Sant Gadge Baba Amravati University
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Branch
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Information Technology
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Roll Number
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                308703
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Enrollment Number
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Not Available
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Semester
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                V
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- =========================================
-             CONTACT INFORMATION
-        ========================================== -->
-
-        <div class="section-card">
-
-
-            <div class="section-header">
-
-
-                <div class="section-icon">
-
-                    <i class="fa-solid fa-address-book"></i>
-
-                </div>
-
-
-                <h3>
-                    Contact Information
-                </h3>
-
-
-            </div>
-
-
-            <div class="section-body">
-
-
-                <div class="contact-grid">
-
-
-                    <div class="contact-card">
-
-
-                        <div class="contact-icon">
-
-                            <i class="fa-solid fa-phone"></i>
-
-                        </div>
-
-
+                    <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <!-- Profile Dropdown Popover -->
+                <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
+                    <div class="profile-panel-header">
+                        <div class="large-avatar">NB</div>
                         <div>
-
-                            <div class="contact-label">
-                                MOBILE NUMBER
-                            </div>
-
-                            <div class="contact-value">
-                                8080214166
-                            </div>
-
+                            <div class="p-name">Neha Kailash Badokar</div>
+                            <div class="p-dept">B.Tech - Information Technology</div>
+                            <div class="p-roll">Roll No: 308703 • TY B.E. • Sem V</div>
                         </div>
-
-
                     </div>
-
-
-
-                    <div class="contact-card">
-
-
-                        <div class="contact-icon">
-
-                            <i class="fa-solid fa-envelope"></i>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="contact-label">
-                                EMAIL ADDRESS
-                            </div>
-
-                            <div class="contact-value">
-                                student@ssgmce.ac.in
-                            </div>
-
-                        </div>
-
-
+                    <div class="p-links">
+                        <a href="profile.html" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            My Student Profile
+                        </a>
+                        <a href="../../attendance/frontend/attendance.html" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            Subject-wise Attendance
+                        </a>
+                        <a href="javascript:void(0)" onclick="openStudentModule('settings')" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            Account Settings
+                        </a>
+                        <div class="p-divider"></div>
+                        <button type="button" class="p-link-item text-danger" id="logoutBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Sign Out
+                        </button>
                     </div>
-
-
-
-                    <div class="contact-card">
-
-
-                        <div class="contact-icon">
-
-                            <i class="fa-solid fa-location-dot"></i>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="contact-label">
-                                CITY
-                            </div>
-
-                            <div class="contact-value">
-                                Shegaon, Maharashtra
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
                 </div>
-
-
             </div>
-
-
         </div>
+    </header>
 
+    <!-- ==================== DASHBOARD WRAPPER ==================== -->
+    <div class="dashboard-wrapper">
 
+        <!-- ==================== LEFT SIDEBAR ==================== -->
+        <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Student Main Navigation">
+            <div class="sidebar-inner">
+                <nav class="sidebar-nav-container" aria-label="Sidebar Menu">
+                    <ul class="sidebar-menu-list">
+                        <!-- 1. Dashboard -->
+                        <li class="sidebar-item">
+                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="dashboard">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                <span class="nav-label">Dashboard</span>
+                            </a>
+                        </li>
 
-        <!-- =========================================
-             ADDRESS + PARENT
-        ========================================== -->
+                        <!-- STUDENT MODULE Header Banner -->
+                        <li class="sidebar-item">
+                            <div class="sidebar-module-banner">
+                                <span class="sidebar-module-title">STUDENT MODULE</span>
+                            </div>
+                        </li>
 
-        <div class="two-column">
+                        <!-- Timetable -->
+                        <li class="sidebar-item" data-module="timetable">
+                            <a href="../../dashboard/frontend/index.html#timetableCard" class="sidebar-link" data-nav="timetable">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span class="nav-label">Timetable</span>
+                                <span class="nav-badge-pill">DAILY</span>
+                            </a>
+                        </li>
 
+                        <!-- Attendance -->
+                        <li class="sidebar-item" data-module="attendance">
+                            <a href="../../attendance/frontend/attendance.html" class="sidebar-link" data-nav="attendance">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    <polyline points="9 16 11 18 15 14"></polyline>
+                                </svg>
+                                <span class="nav-label">Attendance</span>
+                                <span class="nav-badge-pill pct-pill">82%</span>
+                            </a>
+                        </li>
 
-            <!-- ADDRESS -->
+                        <!-- Syllabus -->
+                        <li class="sidebar-item" data-module="syllabus">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="syllabus">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                <span class="nav-label">Syllabus</span>
+                            </a>
+                        </li>
 
-            <div class="section-card">
+                        <!-- Fees -->
+                        <li class="sidebar-item" data-module="fees">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="fees">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                    <circle cx="7" cy="15" r="1"></circle>
+                                </svg>
+                                <span class="nav-label">Fees</span>
+                            </a>
+                        </li>
 
+                        <!-- Profile (Active) -->
+                        <li class="sidebar-item">
+                            <a href="profile.html" class="sidebar-link active" data-nav="profile" aria-current="page">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span class="nav-label">Profile</span>
+                            </a>
+                        </li>
 
-                <div class="section-header">
+                        <!-- E-Learning -->
+                        <li class="sidebar-item" data-module="elearning">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="elearning">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                    <polygon points="10 8 15 10 10 12"></polygon>
+                                </svg>
+                                <span class="nav-label">E-Learning</span>
+                            </a>
+                        </li>
 
+                        <!-- Change Information -->
+                        <li class="sidebar-item" data-module="change-info">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="change-info">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <polyline points="17 11 19 13 23 9"></polyline>
+                                </svg>
+                                <span class="nav-label">Change Information</span>
+                            </a>
+                        </li>
 
-                    <div class="section-icon">
+                        <!-- Updation Information -->
+                        <li class="sidebar-item" data-module="update-info">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="update-info">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                <span class="nav-label">Updation Information</span>
+                            </a>
+                        </li>
 
-                        <i class="fa-solid fa-house"></i>
+                        <!-- D-Wallet -->
+                        <li class="sidebar-item" data-module="dwallet">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="dwallet">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
+                                </svg>
+                                <span class="nav-label">D-Wallet</span>
+                            </a>
+                        </li>
 
+                        <!-- Examination -->
+                        <li class="sidebar-item" data-module="examination">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="examination">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                                <span class="nav-label">Examination</span>
+                            </a>
+                        </li>
+
+                        <!-- Course Choices -->
+                        <li class="sidebar-item" data-module="course-choices">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="course-choices">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                                <span class="nav-label">Course Choices</span>
+                            </a>
+                        </li>
+
+                        <!-- Internal Mark -->
+                        <li class="sidebar-item" data-module="internal-marks">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="internal-marks">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                                <span class="nav-label">Internal Mark</span>
+                            </a>
+                        </li>
+
+                        <!-- CAMPUS SERVICES Section Divider -->
+                        <li class="sidebar-item">
+                            <div class="sidebar-section-divider"></div>
+                            <span class="sidebar-section-caption">Campus Services</span>
+                        </li>
+
+                        <!-- Documents -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="documents">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span class="nav-label">Documents</span>
+                            </a>
+                        </li>
+
+                        <!-- Hostel -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="hostel">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 21h18"></path>
+                                    <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                                </svg>
+                                <span class="nav-label">Hostel</span>
+                            </a>
+                        </li>
+
+                        <!-- Library -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="library">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                <span class="nav-label">Library</span>
+                            </a>
+                        </li>
+
+                        <!-- Training & Placement -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="placement">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <span class="nav-label">Training &amp; Placement</span>
+                            </a>
+                        </li>
+
+                        <!-- Grievance -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="grievance">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span class="nav-label">Grievance</span>
+                            </a>
+                        </li>
+
+                        <!-- Settings -->
+                        <li class="sidebar-item">
+                            <a href="javascript:void(0)" class="sidebar-link" data-nav="settings">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span class="nav-label">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+                <div class="sidebar-footer-artwork">
+                    <div class="ssgmce-dome-illustration" aria-hidden="true">
+                        <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
+                            <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
+                            <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
+                            <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
+                            <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
+                            <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+                            <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
+                            <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
+                            <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
+                        </svg>
                     </div>
-
-
-                    <h3>
-                        Address Information
-                    </h3>
-
-
-                </div>
-
-
-                <div class="section-body">
-
-
-                    <div
-                        class="info-grid"
-                        style="grid-template-columns:1fr;"
-                    >
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Permanent Address
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                At + Post Shegaon , Shegoan
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                District
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Buldhana
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                State
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Maharashtra
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                PIN Code
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                444203
-                            </div>
-
-                        </div>
-
-
+                    <div class="sidebar-motto-text">
+                        <span>Discipline</span>
+                        <span class="dot">•</span>
+                        <span>Development</span>
+                        <span class="dot">•</span>
+                        <span>Dedication</span>
                     </div>
-
-
                 </div>
-
-
             </div>
+        </aside>
 
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <main class="dashboard-main-content" id="mainContent" role="main">
+            <div class="main-dashboard-full-container">
 
-
-            <!-- PARENT -->
-
-            <div class="section-card">
-
-
-                <div class="section-header">
-
-
-                    <div class="section-icon">
-
-                        <i class="fa-solid fa-people-roof"></i>
-
-                    </div>
-
-
-                    <h3>
-                        Parent / Guardian Information
-                    </h3>
-
-
-                </div>
-
-
-                <div class="section-body">
-
-
-                    <div
-                        class="info-grid"
-                        style="grid-template-columns:1fr;"
-                    >
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Father's Name
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Kailash Badokar
-                            </div>
-
+                <!-- PAGE HEADER -->
+                <div class="profile-page-header">
+                    <div class="profile-page-title">
+                        <div class="profile-page-title-icon">
+                            <i class="fa-solid fa-user"></i>
                         </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Mother's Name
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Parent Name
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-item">
-
-                            <div class="info-label">
-                                Parent Contact
-                            </div>
-
-                            <div class="info-colon">
-                                :
-                            </div>
-
-                            <div class="info-value">
-                                Not Available
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-
-        <!-- =========================================
-             DOCUMENTS
-        ========================================== -->
-
-        <div class="section-card">
-
-
-            <div class="section-header">
-
-
-                <div class="section-icon">
-
-                    <i class="fa-solid fa-folder-open"></i>
-
-                </div>
-
-
-                <h3>
-                    Student Documents
-                </h3>
-
-
-            </div>
-
-
-            <div class="section-body">
-
-
-                <div class="documents">
-
-
-                    <div class="document">
-
-
-                        <div class="document-icon">
-
-                            <i class="fa-solid fa-id-card"></i>
-
-                        </div>
-
-
                         <div>
-
-                            <div class="document-name">
-                                Identity Card
-                            </div>
-
-                            <div class="document-status">
-                                Available
-                            </div>
-
+                            <h1>Student Profile</h1>
+                            <p>View and manage your personal and academic information</p>
                         </div>
-
-
                     </div>
-
-
-
-                    <div class="document">
-
-
-                        <div class="document-icon">
-
-                            <i class="fa-solid fa-file-lines"></i>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="document-name">
-                                Academic Documents
-                            </div>
-
-                            <div class="document-status">
-                                Available
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
+                    <button class="edit-profile-btn" onclick="editProfile()">
+                        <i class="fa-solid fa-pen"></i>
+                        <span>Edit Profile</span>
+                    </button>
                 </div>
 
+                <!-- PROFILE SUMMARY CARD -->
+                <div class="profile-summary-card">
+                    <div class="profile-summary-top">
+                        <div class="profile-image-container">
+                            <img id="studentPhoto" src="SSGMCElogo.png" alt="Student Photo" class="profile-image">
+                            <span class="status-dot"></span>
+                            <label for="photoUpload" class="photo-upload-btn" title="Change profile photo">
+                                <i class="fa-solid fa-camera"></i>
+                            </label>
+                            <input type="file" id="photoUpload" accept="image/*" hidden>
+                        </div>
+                        <div class="profile-info">
+                            <h2>Neha Kailash Badokar</h2>
+                            <span class="profile-id">Student ID: 308703</span>
+                            <div class="profile-details">
+                                <div class="profile-detail">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                    TY B.E. Information Technology
+                                </div>
+                                <div class="profile-detail">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                    Section A
+                                </div>
+                                <div class="profile-detail">
+                                    <i class="fa-solid fa-calendar"></i>
+                                    Academic Year 2026-27
+                                </div>
+                                <div class="profile-detail">
+                                    <span class="status-badge">
+                                        <i class="fa-solid fa-circle" style="font-size:6px"></i>
+                                        Active Student
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PERSONAL + ACADEMIC -->
+                <div class="profile-two-column">
+                    <!-- PERSONAL INFORMATION -->
+                    <div class="profile-section-card">
+                        <div class="profile-section-header">
+                            <div class="profile-section-icon">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <h3>Personal Information</h3>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid" style="grid-template-columns:1fr;">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Date of Birth</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">11/11/2005</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Gender</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Female</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Nationality</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Indian</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Blood Group</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">O+</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Category</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">General</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACADEMIC INFORMATION -->
+                    <div class="profile-section-card">
+                        <div class="profile-section-header">
+                            <div class="profile-section-icon">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <h3>Academic Information</h3>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid" style="grid-template-columns:1fr;">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">University</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Sant Gadge Baba Amravati University</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Branch</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Information Technology</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Roll Number</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">308703</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Enrollment Number</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Not Available</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Semester</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">V</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTACT INFORMATION -->
+                <div class="profile-section-card">
+                    <div class="profile-section-header">
+                        <div class="profile-section-icon">
+                            <i class="fa-solid fa-address-book"></i>
+                        </div>
+                        <h3>Contact Information</h3>
+                    </div>
+                    <div class="profile-section-body">
+                        <div class="profile-contact-grid">
+                            <div class="profile-contact-card">
+                                <div class="profile-contact-icon">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div>
+                                    <div class="profile-contact-label">Mobile Number</div>
+                                    <div class="profile-contact-value">8080214166</div>
+                                </div>
+                            </div>
+                            <div class="profile-contact-card">
+                                <div class="profile-contact-icon">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <div class="profile-contact-label">Email Address</div>
+                                    <div class="profile-contact-value">student@ssgmce.ac.in</div>
+                                </div>
+                            </div>
+                            <div class="profile-contact-card">
+                                <div class="profile-contact-icon">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <div>
+                                    <div class="profile-contact-label">City</div>
+                                    <div class="profile-contact-value">Shegaon, Maharashtra</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADDRESS + PARENT -->
+                <div class="profile-two-column">
+                    <!-- ADDRESS INFORMATION -->
+                    <div class="profile-section-card">
+                        <div class="profile-section-header">
+                            <div class="profile-section-icon">
+                                <i class="fa-solid fa-house"></i>
+                            </div>
+                            <h3>Address Information</h3>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid" style="grid-template-columns:1fr;">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Permanent Address</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">At + Post Shegaon , Shegoan</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">District</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Buldhana</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">State</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Maharashtra</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">PIN Code</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">444203</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PARENT / GUARDIAN INFORMATION -->
+                    <div class="profile-section-card">
+                        <div class="profile-section-header">
+                            <div class="profile-section-icon">
+                                <i class="fa-solid fa-people-roof"></i>
+                            </div>
+                            <h3>Parent / Guardian Information</h3>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid" style="grid-template-columns:1fr;">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Father's Name</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Kailash Badokar</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Mother's Name</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Parent Name</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Parent Contact</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Not Available</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDENT DOCUMENTS -->
+                <div class="profile-section-card">
+                    <div class="profile-section-header">
+                        <div class="profile-section-icon">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h3>Student Documents</h3>
+                    </div>
+                    <div class="profile-section-body">
+                        <div class="profile-documents-grid">
+                            <div class="profile-document-card">
+                                <div class="profile-document-icon">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </div>
+                                <div>
+                                    <div class="profile-document-name">Identity Card</div>
+                                    <div class="profile-document-status">Available</div>
+                                </div>
+                            </div>
+                            <div class="profile-document-card">
+                                <div class="profile-document-icon">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </div>
+                                <div>
+                                    <div class="profile-document-name">Academic Documents</div>
+                                    <div class="profile-document-status">Available</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
+            <!-- FOOTER -->
+            <footer class="dashboard-footer" role="contentinfo">
+                <div class="footer-left">
+                    &copy; 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon. All rights reserved.
+                </div>
+                <div class="footer-right">
+                    <a href="#privacy">Privacy Policy</a>
+                    <span class="footer-dot">&bull;</span>
+                    <a href="#terms">Terms of Use</a>
+                    <span class="footer-dot">&bull;</span>
+                    <a href="#support">Help &amp; Support</a>
+                </div>
+            </footer>
 
-        </div>
+        </main>
+    </div>
 
+    <!-- Toast Notification Container -->
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-    </main>
-
-
-
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
-    <footer class="footer">
-
-        © 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon
-
-        &nbsp; | &nbsp;
-
-        College ERP System
-
-    </footer>
-
-
-
-    <!-- =========================================
-         JAVASCRIPT
-    ========================================== -->
+    <!-- Dashboard JavaScript (for header, sidebar, toasts) -->
+    <script src="../../dashboard/frontend/js/dashboard.js"></script>
 
     <script>
-
-
         /* =========================================
            PROFILE PHOTO UPLOAD
         ========================================== */
+        const photoUpload = document.getElementById("photoUpload");
+        const studentPhoto = document.getElementById("studentPhoto");
 
-        const photoUpload =
-            document.getElementById("photoUpload");
+        photoUpload.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-
-        const studentPhoto =
-            document.getElementById("studentPhoto");
-
-
-        photoUpload.addEventListener(
-            "change",
-            function(event) {
-
-                const file =
-                    event.target.files[0];
-
-
-                if (!file) {
-                    return;
-                }
-
-
-                /* Check file type */
-
-                if (!file.type.startsWith("image/")) {
-
-                    alert(
-                        "Please select a valid image file."
-                    );
-
-                    photoUpload.value = "";
-
-                    return;
-                }
-
-
-                /* Maximum 2 MB */
-
-                if (file.size > 2 * 1024 * 1024) {
-
-                    alert(
-                        "Image size should be less than 2 MB."
-                    );
-
-                    photoUpload.value = "";
-
-                    return;
-                }
-
-
-                /* Preview */
-
-                const reader =
-                    new FileReader();
-
-
-                reader.onload =
-                    function(e) {
-
-                        studentPhoto.src =
-                            e.target.result;
-
-                    };
-
-
-                reader.readAsDataURL(file);
-
+            if (!file.type.startsWith("image/")) {
+                showToast("Please select a valid image file.", "warning");
+                photoUpload.value = "";
+                return;
             }
-        );
 
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Image size should be less than 2 MB.", "warning");
+                photoUpload.value = "";
+                return;
+            }
 
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                studentPhoto.src = e.target.result;
+                showToast("Profile photo updated successfully!", "success");
+            };
+            reader.readAsDataURL(file);
+        });
 
         /* =========================================
            EDIT PROFILE
         ========================================== */
-
         function editProfile() {
-
-            alert(
-                "Profile editing functionality will be connected to the ERP backend."
-            );
-
+            showToast("Profile editing functionality will be connected to the ERP backend.", "info");
         }
 
-
-
         /* =========================================
-           NAVIGATION
+           INITIALIZE HEADER DROPDOWNS & SIDEBAR
         ========================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Header dropdowns are initialized by dashboard.js
+            // Sidebar is initialized by dashboard.js
+            
+            // Mark profile sidebar link as active
+            const profileLinks = document.querySelectorAll('.sidebar-link[data-nav="profile"]');
+            profileLinks.forEach(link => {
+                link.classList.add('active');
+            });
 
-        const navItems =
-            document.querySelectorAll(".nav-item");
-
-
-        navItems.forEach(function(item) {
-
-            item.addEventListener(
-                "click",
-                function() {
-
-                    navItems.forEach(
-                        function(nav) {
-
-                            nav.classList.remove(
-                                "active"
-                            );
-
-                        }
-                    );
-
-
-                    this.classList.add("active");
-
-                }
-            );
-
+            // Override dashboard.js sidebar clicks for profile page
+            // since dashboard.js expects certain elements that may not exist
         });
-
-
     </script>
 
 </body>
-
 </html>
