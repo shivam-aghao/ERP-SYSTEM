@@ -2072,7 +2072,7 @@
 
                 <form
                     id="loginForm"
-                    onsubmit="handleLogin(event)"
+                    onsubmit="handleLogin(event); return false;"
                 >
 
 
@@ -2331,93 +2331,93 @@
            LOGIN
         ===================================================== */
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
+            if (event && event.preventDefault) {
+                event.preventDefault();
+            }
+            if (event && event.stopPropagation) {
+                event.stopPropagation();
+            }
 
+            const userIdInput = document.getElementById("userId");
+            const passwordInput = document.getElementById("password");
+            const rememberMeInput = document.getElementById("rememberMe");
 
-            event.preventDefault();
-
-
-            const userId =
-                document
-                    .getElementById("userId")
-                    .value
-                    .trim();
-
-
-            const password =
-                document
-                    .getElementById("password")
-                    .value;
-
-
-            /* USER ID VALIDATION */
+            const userId = userIdInput ? userIdInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value : "";
+            const rememberMe = rememberMeInput ? rememberMeInput.checked : false;
 
             if (!userId) {
-
-
-                alert(
-                    "Please enter your Enrollment / User ID."
-                );
-
-
-                return;
-
+                alert("Please enter your Enrollment / User ID.");
+                return false;
             }
-
-
-            /* PASSWORD MINIMUM */
 
             if (password.length < 8) {
-
-
-                alert(
-                    "Password must contain at least 8 characters."
-                );
-
-
-                return;
-
+                alert("Password must contain at least 8 characters.");
+                return false;
             }
-
-
-            /* PASSWORD MAXIMUM */
 
             if (password.length > 20) {
-
-
-                alert(
-                    "Password cannot contain more than 20 characters."
-                );
-
-
-                return;
-
+                alert("Password cannot contain more than 20 characters.");
+                return false;
             }
 
+            try {
+                const response = await fetch(
+                    "http://127.0.0.1:8000/api/auth/login",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            password: password,
+                            remember_me: rememberMe
+                        })
 
-            /*
-                LOGIN API WILL BE CONNECTED HERE.
+                const result = await response.json();
 
-                Example:
+                if (!response.ok || !result.success) {
+                    const errorMsg = result.detail || result.message || result.error || "Invalid User ID or Password.";
+                    alert(errorMsg);
+                    return false;
+                }
 
-                fetch("/api/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        password: password
-                    })
-                });
-            */
+                // Save login data and access token
+                if (result.data) {
+                    const storage = rememberMe
+                        ? localStorage
+                        : sessionStorage;
 
+                    storage.setItem(
+                        "loginData",
+                        JSON.stringify(result.data)
+                    );
 
-            alert(
-                "Login API can now be connected."
-            );
+                    if (result.data.access_token) {
+                        storage.setItem(
+                            "access_token",
+                            result.data.access_token
+                        );
+                    }
+                }
 
+                // Absolute browser-safe redirect directly to Student Dashboard
+                window.location.href = "/ERP-SYSTEM/Student_dashbord/frontend/index.html";
+                return false;
+
+            } catch (error) {
+                console.error("Login error:", error);
+
+                alert(
+                    "Unable to connect to the authentication server. Please ensure the backend is running."
+                );
+                return false;
+            }
         }
+
+        window.handleLogin = handleLogin;
 
 
         /* =====================================================
