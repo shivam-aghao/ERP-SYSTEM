@@ -1200,16 +1200,32 @@
       <!-- Modal Content Body -->
       <div class="module-modal-body" id="modalModuleContainer">
 
-        <!-- 1. SYLLABUS MODULE -->
+        <!-- 1. SYLLABUS MODULE (COMPREHENSIVE INTEGRATED DATA) -->
         <div class="module-content-pane" data-module="syllabus">
           <!-- Subtab 1: Subject -->
           <div class="subtab-pane active" data-subpane="subject">
             <div class="pane-section-header">
-              <h4>Semester VI - Registered Engineering Courses</h4>
-              <span class="badge-status-safe">Autonomous B.Tech R-2023</span>
+              <div>
+                <h4>Registered Engineering Courses &amp; Curriculum</h4>
+                <p class="pane-subtitle">Autonomous B.Tech R-2023 · NEP-2020 Scheme</p>
+              </div>
+              <span class="badge-status-safe" id="dashSubjectCountBadge">Loading Courses...</span>
             </div>
-            <div class="table-responsive-wrapper">
-              <table class="attendance-data-table">
+
+            <!-- Search and Filter Bar -->
+            <div class="dash-filter-row">
+              <input type="text" id="dashSubjectSearch" class="dash-search-input" placeholder="🔍 Search by course name, code, or professor..." onkeyup="filterDashSubjects()">
+              <select id="dashSubjectFilter" class="dash-select-filter" onchange="filterDashSubjects()">
+                <option value="all">All Course Types</option>
+                <option value="Core">Core</option>
+                <option value="PE">Professional Elective (PE)</option>
+                <option value="MD">Multidisciplinary (MD)</option>
+                <option value="OE">Open Elective (OE)</option>
+              </select>
+            </div>
+
+            <div class="table-responsive-wrapper dash-scrollable-container">
+              <table class="attendance-data-table" id="dashSubjectTable">
                 <thead>
                   <tr>
                     <th>Code</th>
@@ -1217,50 +1233,12 @@
                     <th>Credits</th>
                     <th>Type</th>
                     <th>Faculty Advisor</th>
-                    <th>Syllabus Progress</th>
+                    <th>Progress</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>CS-301</strong></td>
-                    <td>Data Structures &amp; Algorithms</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Prof. Rajesh Sharma</td>
-                    <td><span class="badge badge-cyan">82% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-302</strong></td>
-                    <td>Java &amp; Object Oriented Programming</td>
-                    <td>3.5</td>
-                    <td>Theory + Lab</td>
-                    <td>Dr. Rohan Deshmukh</td>
-                    <td><span class="badge badge-cyan">80% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-303</strong></td>
-                    <td>Operating Systems Concepts</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Prof. Priya Patil</td>
-                    <td><span class="badge badge-cyan">75% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-304</strong></td>
-                    <td>Database Management Systems</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Dr. Vikram Joshi</td>
-                    <td><span class="badge badge-cyan">78% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-305</strong></td>
-                    <td>Computer Networks &amp; Security</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Dr. Ananya Sen</td>
-                    <td><span class="badge badge-warning">65% Covered</span></td>
-                  </tr>
+                <tbody id="dashSubjectTableBody">
+                  <!-- Injected dynamically by loadDynamicSubjects() -->
                 </tbody>
               </table>
             </div>
@@ -1269,56 +1247,64 @@
           <!-- Subtab 2: Faculty -->
           <div class="subtab-pane" data-subpane="faculty">
             <div class="pane-section-header">
-              <h4>Department Faculty Mentors &amp; Office Hours</h4>
-              <span class="badge-status-safe">CSE Faculty Directory</span>
+              <div>
+                <h4>Department Faculty Mentors &amp; Office Hours</h4>
+                <p class="pane-subtitle">Faculty Directory &amp; Course Mapping</p>
+              </div>
+              <span class="badge-status-safe" id="dashFacultyCountBadge">Loading Mentors...</span>
             </div>
-            <div class="modal-grid-two-col">
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RD</div>
-                <div class="fac-details">
-                  <h5>Dr. Rohan Deshmukh</h5>
-                  <p class="fac-designation">Associate Professor &amp; HOD</p>
-                  <p class="fac-meta">Course: Java Programming (CS-302) • Cabin LH-204</p>
-                  <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link">rohan.deshmukh@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RS</div>
-                <div class="fac-details">
-                  <h5>Prof. Rajesh Sharma</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: Data Structures (CS-301) • Cabin LH-201</p>
-                  <a href="mailto:rajesh.sharma@ssgmce.ac.in" class="fac-email-link">rajesh.sharma@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">AS</div>
-                <div class="fac-details">
-                  <h5>Dr. Ananya Sen</h5>
-                  <p class="fac-designation">Associate Professor</p>
-                  <p class="fac-meta">Course: Computer Networks (CS-305) • Cabin LH-108</p>
-                  <a href="mailto:ananya.sen@ssgmce.ac.in" class="fac-email-link">ananya.sen@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">VJ</div>
-                <div class="fac-details">
-                  <h5>Dr. Vikram Joshi</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: DBMS (CS-304) • Lab 3 Annex</p>
-                  <a href="mailto:vikram.joshi@ssgmce.ac.in" class="fac-email-link">vikram.joshi@ssgmce.ac.in</a>
-                </div>
+
+            <!-- Faculty Search Bar -->
+            <div class="dash-filter-row">
+              <input type="text" id="dashFacultySearch" class="dash-search-input" placeholder="🔍 Search faculty name, course, or cabin location..." onkeyup="filterDashFaculty()">
+            </div>
+
+            <div class="dash-scrollable-container">
+              <div class="modal-grid-two-col dash-faculty-grid" id="dashFacultyGrid">
+                <!-- Injected dynamically by loadDynamicFaculty() -->
               </div>
             </div>
           </div>
 
-          <!-- Subtab 3: University Syllabus -->
+          <!-- Subtab 3: University Syllabus & Units Breakdown -->
           <div class="subtab-pane" data-subpane="university-syllabus">
             <div class="pane-section-header">
-              <h4>Sant Gadge Baba Amravati University (SGBAU) Curriculum Documents</h4>
-              <span class="badge-status-safe">Autonomous Regulations R-2023</span>
+              <div>
+                <h4 id="dashSyllabusHeaderTitle">SGBAU Autonomous Curriculum &amp; Unit Breakdown</h4>
+                <p class="pane-subtitle" id="dashSyllabusHeaderSubtitle">Explore 5-Unit detailed syllabus, teaching hours, outcomes &amp; official PDFs</p>
+              </div>
+              <span class="badge-status-safe" id="dashSyllabusSchemeBadge">Autonomous Scheme R-2023</span>
             </div>
+
+            <!-- Subject Selector for Interactive Units -->
+            <div class="dash-filter-row" style="background:#F1F5F9;padding:12px;border-radius:10px;align-items:center;">
+              <label for="dashSyllabusSubjectSelect" style="font-weight:700;font-size:0.86rem;color:#0B1F3A;">Select Course to Inspect Units:</label>
+              <select id="dashSyllabusSubjectSelect" class="dash-select-filter" style="flex:1;" onchange="loadDynamicUniversitySyllabus(this.value)">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <!-- Dynamic Unit Cards Container -->
+            <div id="dashSyllabusUnitContainer" class="dash-units-container">
+              <!-- Dynamically populated by loadDynamicUniversitySyllabus() -->
+            </div>
+
+            <!-- Official Regulation Documents -->
+            <h5 style="margin:24px 0 12px 0;font-size:0.95rem;color:#0B1F3A;font-weight:700;">Official University Documents &amp; Regulations</h5>
             <div class="doc-download-grid">
+              <div class="doc-item-card">
+                <div class="doc-icon-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
+                <div class="doc-info">
+                  <h5>B.Tech Information Technology Semester V Full Syllabus</h5>
+                  <p>Complete unit breakdown, laboratory guidelines, reference textbooks &amp; credit schemes.</p>
+                  <span class="file-size-tag">PDF • 2.8 MB • Updated Jan 2026</span>
+                </div>
+                <a href="https://ssgmce.ac.in/academics/syllabus/btech-it-sem5.pdf" target="_blank" class="btn-download-action">
+                  Download PDF ⬇
+                </a>
+              </div>
               <div class="doc-item-card">
                 <div class="doc-icon-box">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
@@ -1328,21 +1314,8 @@
                   <p>Includes complete unit course objectives, textbooks, reference materials &amp; laboratory scheme.</p>
                   <span class="file-size-tag">PDF • 2.4 MB • Updated Jan 2026</span>
                 </div>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading B.Tech CSE Semester VI Syllabus PDF...', 'info')">
-                  Download PDF
-                </a>
-              </div>
-              <div class="doc-item-card">
-                <div class="doc-icon-box">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                </div>
-                <div class="doc-info">
-                  <h5>Autonomous Academic Examination Scheme &amp; Regulations</h5>
-                  <p>Grading criteria, Continuous Internal Evaluation (CIE), and End Semester Exam (ESE) weightages.</p>
-                  <span class="file-size-tag">PDF • 1.1 MB • Official Autonomous Gazette</span>
-                </div>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading Academic Regulations PDF...', 'info')">
-                  Download PDF
+                <a href="https://ssgmce.ac.in/academics/syllabus/cse-sem4.pdf" target="_blank" class="btn-download-action">
+                  Download PDF ⬇
                 </a>
               </div>
             </div>

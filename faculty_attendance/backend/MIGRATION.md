@@ -55,7 +55,7 @@ To avoid breaking existing frontend views, UI state, or user interactions, a **P
 ### Step 1: Initialize Database
 Run database migrations and seed script:
 ```bash
-cd faculty_attendance/backend
+cd faculty_attendence/backend
 npm run prisma:generate
 npm run prisma:migrate
 npm run seed
@@ -70,9 +70,9 @@ docker-compose up -d
 Verify the server is running by accessing `http://localhost:5000/health`.
 
 ### Step 3: Frontend Deployment
-1. Ensure `<meta name="api-base" content="http://localhost:5000/api/v1">` is present in `faculty_attendance/frontend/index.html`.
+1. Ensure `<meta name="api-base" content="http://localhost:5000/api/v1">` is present in `faculty_attendence/index.html`.
 2. Ensure `<script src="js/api.js"></script>` is loaded prior to `js/attendanceService.js`.
-3. Open `faculty_attendance/frontend/index.html` in your browser or local web server (`http://localhost:5500` or `http://localhost:3000`).
+3. Open `faculty_attendence/index.html` in your browser or local web server (`http://localhost:5500` or `http://localhost:3000`).
 
 ---
 

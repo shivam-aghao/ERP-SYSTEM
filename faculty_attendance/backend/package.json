@@ -11,7 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "seed": "node prisma/seed.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit --runTestsByPath tests/attendance.test.js tests/auth.test.js tests/cards.test.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit"
   },
   "keywords": [
     "ssgmce",
@@ -25,7 +25,6 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.20.0",
-    "@supabase/supabase-js": "^2.117.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -46,9 +45,7 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "transform": {},
-    "roots": [
-      "<rootDir>/tests"
-    ]
+    "transform": {}
   }
 }
+

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance List - SSGMCE ERP</title>
+  <style>
+    /* ==========================================================================
+       COLLEGE ERP ATTENDANCE ROSTER STYLESHEET (SELF-CONTAINED)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #F8FAFC;
+      color: #1E293B;
+      font-size: 12px;
+      line-height: 1.35;
+      padding: 10px;
+    }
+
+    .roster-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    /* Page Header */
+    .erp-page-title {
+      text-align: center;
+      color: #034694;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 8px 12px 6px;
+      letter-spacing: 0.3px;
+      border-bottom: 2px solid #034694;
+      background: #F1F5F9;
+    }
+
+    .provisional-note {
+      color: #DC2626;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      background: #FFF;
+    }
+
+    /* Top Metadata Info Bar */
+    .meta-top-bar {
+      display: grid;
+      grid-template-columns: 1fr 1.8fr;
+      gap: 10px;
+      padding: 6px 12px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .meta-box-teacher {
+      border: 1px solid #CBD5E1;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #991B1B;
+      background-color: #FEF2F2;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+    }
+
+    .meta-box-subject {
+      border: 1px solid #CBD5E1;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #1E3A8A;
+      background-color: #EFF6FF;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* Sub-header Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background-color: #F8FAFC;
+      border-bottom: 1px solid #CBD5E1;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stat-counters {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stat-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-total { color: #0F172A; }
+    .stat-present { color: #15803D; }
+    .stat-absent { color: #DC2626; }
+    .stat-cwork { color: #4B5563; }
+
+    .all-absent-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #DC2626;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+
+    .all-absent-check input {
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Legend */
+    .attendance-legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      background: #FFFFFF;
+      padding: 4px 10px;
+      border: 1px solid #E2E8F0;
+      border-radius: 3px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .period-remark-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-select, .form-input {
+      padding: 3px 8px;
+      font-size: 11.5px;
+      border: 1px solid #CBD5E1;
+      border-radius: 3px;
+      background: #FFFFFF;
+      outline: none;
+    }
+
+    .form-select:focus, .form-input:focus {
+      border-color: #2563EB;
+    }
+
+    /* Pure CSS Attendance Indicator Circles */
+    .circle-indicator-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4.5px;
+    }
+
+    /* PRESENT: plain empty/outline circle (no fill) */
+    .circle-present {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid #16A34A;
+      background-color: transparent;
+      display: inline-block;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      transition: transform 0.15s ease;
+    }
+
+    /* ABSENT: circle filled with diagonal hash lines, NOT solid red */
+    .circle-absent {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid #DC2626;
+      background: repeating-linear-gradient(
+        45deg,
+        #DC2626,
+        #DC2626 1.5px,
+        #FFFFFF 1.5px,
+        #FFFFFF 3.5px
+      );
+      display: inline-block;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      transition: transform 0.15s ease;
+    }
+
+    .circle-present:hover, .circle-absent:hover {
+      transform: scale(1.25);
+    }
+
+    /* Side-by-side Dual Column Roster Grid */
+    .roster-grid-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #FFFFFF;
+      overflow-x: auto;
+    }
+
+    @media (max-width: 1100px) {
+      .roster-grid-wrapper {
+        grid-template-columns: 1fr;
+      }
+      .meta-top-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .table-block {
+      width: 100%;
+      border: 1px solid #CBD5E1;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    /* Spreadsheet Table Design */
+    .roster-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      text-align: left;
+    }
+
+    .roster-table th {
+      background-color: #F1F5F9;
+      color: #334155;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 6px 5px;
+      border: 1px solid #CBD5E1;
+      text-align: center;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .roster-table td {
+      padding: 4px 5px;
+      border: 1px solid #CBD5E1;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    /* Alternating Row Shading */
+    .roster-table tbody tr:nth-child(even) {
+      background-color: #FBFDFE;
+    }
+
+    .roster-table tbody tr:hover {
+      background-color: #F1F5F9;
+    }
+
+    /* Table Columns Alignment & Sizing */
+    .col-sr {
+      text-align: center;
+      font-weight: 700;
+      color: #2563EB;
+      width: 36px;
+    }
+
+    .col-code {
+      font-family: Consolas, monospace;
+      color: #334155;
+      font-size: 11px;
+      width: 82px;
+    }
+
+    .col-name {
+      font-weight: 600;
+      color: #0F172A;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .col-name.provisional {
+      color: #DC2626;
+    }
+
+    .col-history {
+      text-align: center;
+      padding: 4px 6px;
+      width: 175px;
+    }
+
+    .col-roll {
+      text-align: center;
+      font-weight: 700;
+      font-size: 11px;
+      width: 52px;
+    }
+
+    .col-roll.present { color: #15803D; }
+    .col-roll.absent { color: #DC2626; }
+
+    .col-status {
+      text-align: right;
+      font-weight: 800;
+      font-size: 11px;
+      width: 72px;
+      padding-right: 8px !important;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .col-status.present {
+      color: #16A34A;
+    }
+
+    .col-status.absent {
+      color: #DC2626;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 5px;
+      border-radius: 3px;
+      transition: all 0.15s ease;
+    }
+
+    .status-badge:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    /* Footer / Bottom Actions */
+    .roster-footer {
+      padding: 10px 14px;
+      background-color: #F8FAFC;
+      border-top: 1px solid #CBD5E1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .topic-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .topic-label {
+      font-weight: 700;
+      color: #1E293B;
+    }
+
+    .topic-check-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      color: #475569;
+    }
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-save {
+      background-color: #0284C7;
+      color: #FFFFFF;
+      border: 1px solid #0369A1;
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-save:hover {
+      background-color: #0369A1;
+    }
+
+    .btn-submit {
+      background-color: #DC2626;
+      color: #FFFFFF;
+      border: 1px solid #B91C1C;
+      padding: 6px 18px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-submit:hover {
+      background-color: #B91C1C;
+    }
+
+    .btn-export {
+      background-color: #FFFFFF;
+      color: #334155;
+      border: 1px solid #CBD5E1;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-export:hover {
+      background-color: #F1F5F9;
+    }
+
+    /* Print View */
+    @media print {
+      body {
+        padding: 0;
+        background: #FFFFFF;
+      }
+      .roster-container {
+        border: none;
+        box-shadow: none;
+      }
+      .action-buttons, .form-select, .form-input {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="roster-container">
+    <!-- Centered Header Title -->
+    <h1 class="erp-page-title">Attendance List</h1>
+    <div class="provisional-note">* Provisionally Admitted Student</div>
+
+    <!-- Metadata Information Bar -->
+    <div class="meta-top-bar">
+      <div class="meta-box-teacher">
+        Mr. K.V.Kulthe (1039226014) Teaching Assistant CSE
+      </div>
+      <div class="meta-box-subject">
+        <span><strong>Class:</strong> SY-CSE-A</span>
+        <span><strong>Subject:</strong> 3CS205MD Database Management (THEORY)</span>
+        <span><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
+        <span><strong>Date:</strong> 22/09/2026</span>
+        <span><strong>Type:</strong> [REGULAR]</span>
+      </div>
+    </div>
+
+    <!-- Sub-header Controls Bar & Attendance Counts -->
+    <div class="controls-bar">
+      <div class="stat-counters">
+        <span class="stat-item stat-total">Total Stud. : <strong id="totalStudentsCount">87</strong></span>
+        <span class="stat-item stat-present">Present : <strong id="presentStudentsCount">66</strong></span>
+        <span class="stat-item stat-absent">Absent : <strong id="absentStudentsCount">21</strong></span>
+        <span class="stat-item stat-cwork">C-Work : <strong>0</strong></span>
+        
+        <label class="all-absent-check">
+          <input type="checkbox" id="toggleAllAbsent">
+          <span>ALL ABSENT</span>
+        </label>
+      </div>
+
+      <!-- Pure CSS Legend -->
+      <div class="attendance-legend">
+        <span class="legend-item">
+          <span class="circle-present"></span>
+          <span>Present</span>
+        </span>
+        <span class="legend-item">
+          <span class="circle-absent"></span>
+          <span>(hashed) Absent</span>
+        </span>
+      </div>
+
+      <!-- Period / Remark -->
+      <div class="period-remark-group">
+        <label for="periodTakenSelect" style="font-weight: 600; color: #475569;">Period:</label>
+        <select id="periodTakenSelect" class="form-select">
+          <option>Period 4 (02:15 - 03:15)</option>
+          <option>Period 1 (09:00 - 10:00)</option>
+          <option>Period 2 (10:15 - 11:15)</option>
+          <option>Period 3 (11:30 - 12:30)</option>
+        </select>
+        <input type="text" placeholder="Enter Remark..." class="form-input" style="width: 140px;">
+      </div>
+    </div>
+
+    <!-- Side-by-Side Dual Blocks of Student Tables -->
+    <div class="roster-grid-wrapper">
+      
+      <!-- LEFT BLOCK: Sr No. 1 to 44 -->
+      <div class="table-block">
+        <table class="roster-table" id="leftRosterTable">
+          <thead>
+            <tr>
+              <th style="width: 36px;">Sr No</th>
+              <th style="width: 82px;">Student Code</th>
+              <th>Student</th>
+              <th style="width: 175px;">Previous 10 Lecture Attendance</th>
+              <th style="width: 52px;">Roll No.</th>
+              <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="leftTableBody">
+            <!-- Populated dynamically with 44 students -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RIGHT BLOCK: Sr No. 45 to 87 -->
+      <div class="table-block">
+        <table class="roster-table" id="rightRosterTable">
+          <thead>
+            <tr>
+              <th style="width: 36px;">Sr No</th>
+              <th style="width: 82px;">Student Code</th>
+              <th>Student</th>
+              <th style="width: 175px;">Previous 10 Lecture Attendance</th>
+              <th style="width: 52px;">Roll No.</th>
+              <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="rightTableBody">
+            <!-- Populated dynamically with 43 students -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Bottom Footer / Actions -->
+    <div class="roster-footer">
+      <div class="topic-controls">
+        <span class="topic-label">Topics:</span>
+        <label class="topic-check-item">
+          <input type="checkbox" checked>
+          <span>Topic Taught</span>
+        </label>
+        <input type="text" value="ER Diagram Normalization & Relational Schema" class="form-input" style="width: 280px;">
+        <label class="topic-check-item">
+          <input type="checkbox">
+          <span>Additional Topics / Other Work</span>
+        </label>
+        <label class="topic-check-item">
+          <input type="checkbox">
+          <span>Revision of Taught Topic</span>
+        </label>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-export" onclick="window.print()">Print / PDF</button>
+        <button class="btn-save" id="btnSaveRoster">Save</button>
+        <button class="btn-submit" id="btnSubmitRoster">Submit All Records</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELF-CONTAINED ROSTER DATA & INTERACTION LOGIC -->
+  <script>
+    (function () {
+      // 87 Students Data matching SSGMCE Computer Science & Engineering Format
+      const studentsData = [
+        { code: "312225E381", name: "NEMADE AACHAL D.", provisional: false },
+        { code: "312225E384", name: "BHARSARAKALE ACHAL A.", provisional: true },
+        { code: "312225E318", name: "DANDALE APURVA H.", provisional: false },
+        { code: "312225E305", name: "AUTI ARPITA R.", provisional: true },
+        { code: "312225E327", name: "WAJGE AYUSHI S.", provisional: false },
+        { code: "312225E343", name: "THOR BHAGYASHREE A.", provisional: false },
+        { code: "312225E315", name: "MASHRU DIYA C.", provisional: false },
+        { code: "312225E410", name: "RAUT GAURI V.", provisional: true },
+        { code: "312225E330", name: "BORSE GAYATRI D.", provisional: false },
+        { code: "312225E329", name: "DANDGE GAYATRI V.", provisional: false },
+        { code: "312225E347", name: "GITE GAYATRI A.", provisional: false },
+        { code: "312225E421", name: "ZILPE KHUSHI S.", provisional: false },
+        { code: "312225E411", name: "KUHITE KANCHAN N.", provisional: false },
+        { code: "312225E371", name: "MASKE KOMAL S.", provisional: false },
+        { code: "312225E309", name: "SATROTE NAMRATA D.", provisional: false },
+        { code: "312225E365", name: "TAYADE NANDINI S.", provisional: true },
+        { code: "312225E312", name: "CHANGAL PAYAL D.", provisional: false },
+        { code: "312225E323", name: "BICHARE POONJA M.", provisional: true },
+        { code: "312225E311", name: "SHILOKAR PRATHANA R.", provisional: false },
+        { code: "312225E331", name: "SOLANKE SAKSHI D.", provisional: false },
+        { code: "312225E407", name: "ADHALL SHREYA G.", provisional: true },
+        { code: "312225E389", name: "DESHMUKH VAISHNAVI R.", provisional: false },
+        { code: "312225E344", name: "INGLE ANKITA P.", provisional: false },
+        { code: "312225E398", name: "KALE PRATIKSHA S.", provisional: false },
+        { code: "312225E355", name: "MORE DIKSHA K.", provisional: false },
+        { code: "312225E322", name: "PATIL JANHAVI M.", provisional: false },
+        { code: "312225E390", name: "SAWALE SNEHAL D.", provisional: false },
+        { code: "312225E314", name: "WAGH TEJASWINI S.", provisional: false },
+        { code: "312225E367", name: "ZAMBARE KALYANI G.", provisional: false },
+        { code: "312225E415", name: "BHOYAR PRANAY S.", provisional: false },
+        { code: "312225E378", name: "CHAVHAN ROHIT D.", provisional: false },
+        { code: "312225E302", name: "DABERAO SHUBHAM M.", provisional: false },
+        { code: "312225E361", name: "GAWANDE VEDANT S.", provisional: false },
+        { code: "312225E394", name: "JADHAO SANKET R.", provisional: false },
+        { code: "312225E418", name: "KADAM ADITYA N.", provisional: false },
+        { code: "312225E340", name: "LOHIYA HARSH V.", provisional: false },
+        { code: "312225E325", name: "MANDALE PRANAV A.", provisional: false },
+        { code: "312225E388", name: "PACHPOR ANIKET D.", provisional: false },
+        { code: "312225E370", name: "RATHOD KARAN P.", provisional: false },
+        { code: "312225E319", name: "SHELKE HARSHAL V.", provisional: false },
+        { code: "312225E358", name: "TAYADE ABHIJEET R.", provisional: false },
+        { code: "312225E333", name: "WANKHADE TANMAY S.", provisional: false },
+        { code: "312225E402", name: "ZANJAD ADITYA G.", provisional: false },
+        { code: "312225E385", name: "AGRAWAL RIDDHI M.", provisional: false },
+        // Block 2: 45 to 87
+        { code: "312225E395", name: "JAWLE YASH T.", provisional: false },
+        { code: "312225E371", name: "MALIYE YASH L.", provisional: false },
+        { code: "312225E387", name: "DESHMUKH YUVRAJ S.", provisional: false },
+        { code: "BT26ETL012", name: "DHOTE AKANKSHA A.", provisional: false },
+        { code: "BT26ETL013", name: "BADBADE SHREYA S.", provisional: false },
+        { code: "BT26ETL015", name: "MAHARKHEDE SHRUTI R.", provisional: false },
+        { code: "BT26ETL016", name: "ASWAR PRANAV H.", provisional: false },
+        { code: "BT26ETL017", name: "KARE SHRUTI R.", provisional: false },
+        { code: "BT26ETL019", name: "KUKDE MAHESH B.", provisional: false },
+        { code: "BT26ETL020", name: "PARASKAR MANAS W.", provisional: false },
+        { code: "312225E310", name: "LONDHE AAYUSHI A.", provisional: true },
+        { code: "312225E212", name: "PUROHIT SHREYAS S.", provisional: false },
+        { code: "312225E217", name: "INGLE BHAKTI S.", provisional: false },
+        { code: "312225E220", name: "GONDANE RENUKA R.", provisional: false },
+        { code: "312225E241", name: "SOLANKE DHANASHRI T.", provisional: false },
+        { code: "312225E229", name: "ANVI S GAYATRI T.", provisional: false },
+        { code: "312225E231", name: "JAWALE HARSHADA S.", provisional: false },
+        { code: "312225E219", name: "DESHPANDE JANHAVI M.", provisional: false },
+        { code: "312225E237", name: "MINGAL VAISHNAVI S.", provisional: false },
+        { code: "312225E226", name: "AMALEKAR SHIVANI R.", provisional: false },
+        { code: "312225E213", name: "NISRAD NATASHA M.", provisional: false },
+        { code: "312225E217", name: "DEHATE PALAK T.", provisional: false },
+        { code: "312225E234", name: "BORSE MANJIRI A.", provisional: false },
+        { code: "312225E245", name: "CHAVHAN ANKITA P.", provisional: false },
+        { code: "312225E250", name: "DONGRE SHRUTI M.", provisional: false },
+        { code: "312225E252", name: "GAVHANE PRANITA K.", provisional: false },
+        { code: "312225E256", name: "JOSHI KALYANI D.", provisional: false },
+        { code: "312225E259", name: "KALBANDE TANVI R.", provisional: false },
+        { code: "312225E262", name: "MANDAVKAR SAKSHI P.", provisional: false },
+        { code: "312225E267", name: "PANDIT RADHIKA S.", provisional: false },
+        { code: "312225E271", name: "RATHI ISHIKA M.", provisional: false },
+        { code: "312225E274", name: "SABLE VAISHNAVI G.", provisional: false },
+        { code: "312225E277", name: "TAYADE MRUNAL D.", provisional: false },
+        { code: "312225E281", name: "VADGAVE SAMIKSHA K.", provisional: false },
+        { code: "312225E285", name: "WARKAD PRIYANKA S.", provisional: false },
+        { code: "312225E288", name: "ZAMBRE SHREYA N.", provisional: false },
+        { code: "312225E291", name: "BHANGE OM S.", provisional: false },
+        { code: "312225E293", name: "CHOUDHARY HARSHAL M.", provisional: false },
+        { code: "312225E295", name: "DHAGE PRATHAMESH D.", provisional: false },
+        { code: "312225E298", name: "GHUGE ATHARVA S.", provisional: false },
+        { code: "312225E301", name: "INGLE VAIBHAV R.", provisional: false },
+        { code: "312225E304", name: "KALE KRUSHNA G.", provisional: false },
+        { code: "312225E308", name: "MAHAJAN RUTVIK S.", provisional: false }
+      ];
+
+      // Predefined initial absent indices to match the 21 absents shown on screen
+      const initialAbsentSrNos = new Set([
+        2, 4, 8, 16, 18, 21, 22, 28, 33, 37, 41, 46, 50, 55, 60, 64, 71, 75, 79, 83, 87
+      ]);
+
+      // Generate random 10-lecture history per student (e.g. 70-90% attendance rate)
+      function generateHistory(seed) {
+        const history = [];
+        for (let i = 0; i < 10; i++) {
+          // pseudo-random with seed
+          const rand = Math.sin(seed * 10 + i) * 10000;
+          const isPresent = (rand - Math.floor(rand)) > 0.22; // ~78% present
+          history.push(isPresent);
+        }
+        return history;
+      }
+
+      // Generate HTML for 10 circles
+      function renderCircles(history) {
+        return history.map(function (isPresent) {
+          if (isPresent) {
+            return '<span class="circle-present" title="Present"></span>';
+          } else {
+            return '<span class="circle-absent" title="Absent"></span>';
+          }
+        }).join("");
+      }
+
+      // Build Row
+      function buildRow(student, index) {
+        const srNo = index + 1;
+        const isAbsent = initialAbsentSrNos.has(srNo);
+        const statusText = isAbsent ? "ABSENT" : "PRESENT";
+        const statusClass = isAbsent ? "absent" : "present";
+        const rollNo = "2UB" + srNo;
+        const history = generateHistory(srNo);
+
+        const tr = document.createElement("tr");
+        tr.id = "row-student-" + srNo;
+        tr.dataset.sr = srNo;
+        tr.dataset.status = statusText;
+
+        tr.innerHTML = [
+          '<td class="col-sr">' + srNo + '</td>',
+          '<td class="col-code">' + student.code + '</td>',
+          '<td class="col-name ' + (student.provisional ? 'provisional' : '') + '">' +
+            student.name + (student.provisional ? ' *' : '') +
+          '</td>',
+          '<td class="col-history"><div class="circle-indicator-wrapper">' + renderCircles(history) + '</div></td>',
+          '<td class="col-roll ' + statusClass + '">' + rollNo + '</td>',
+          '<td class="col-status ' + statusClass + '" title="Click to toggle status">' +
+            '<span class="status-badge">' + statusText + '</span>' +
+          '</td>'
+        ].join("");
+
+        // Add click listener on the status cell to toggle Present / Absent
+        const statusCell = tr.querySelector(".col-status");
+        statusCell.addEventListener("click", function () {
+          toggleStudentStatus(tr);
+        });
+
+        return tr;
+      }
+
+      // Toggle status of a single student
+      function toggleStudentStatus(row) {
+        const currentStatus = row.dataset.status;
+        const newStatus = (currentStatus === "PRESENT") ? "ABSENT" : "PRESENT";
+        const isAbsent = (newStatus === "ABSENT");
+
+        row.dataset.status = newStatus;
+
+        // Update Roll No color
+        const rollCell = row.querySelector(".col-roll");
+        rollCell.className = "col-roll " + (isAbsent ? "absent" : "present");
+
+        // Update Status Cell
+        const statusCell = row.querySelector(".col-status");
+        statusCell.className = "col-status " + (isAbsent ? "absent" : "present");
+        statusCell.querySelector(".status-badge").textContent = newStatus;
+
+        updateStats();
+      }
+
+      // Update Sub-header Summary Statistics
+      function updateStats() {
+        const allRows = document.querySelectorAll(".roster-table tbody tr");
+        let presentCount = 0;
+        let absentCount = 0;
+
+        allRows.forEach(function (row) {
+          if (row.dataset.status === "PRESENT") {
+            presentCount++;
+          } else {
+            absentCount++;
+          }
+        });
+
+        document.getElementById("totalStudentsCount").textContent = allRows.length;
+        document.getElementById("presentStudentsCount").textContent = presentCount;
+        document.getElementById("absentStudentsCount").textContent = absentCount;
+
+        // Sync "ALL ABSENT" checkbox state
+        const allAbsentCheckbox = document.getElementById("toggleAllAbsent");
+        allAbsentCheckbox.checked = (absentCount === allRows.length && allRows.length > 0);
+      }
+
+      // Render Tables
+      const leftTableBody = document.getElementById("leftTableBody");
+      const rightTableBody = document.getElementById("rightTableBody");
+
+      // Split 87 students: 44 on left (1-44), 43 on right (45-87)
+      const leftStudents = studentsData.slice(0, 44);
+      const rightStudents = studentsData.slice(44);
+
+      leftStudents.forEach(function (student, idx) {
+        leftTableBody.appendChild(buildRow(student, idx));
+      });
+
+      rightStudents.forEach(function (student, idx) {
+        rightTableBody.appendChild(buildRow(student, idx + 44));
+      });
+
+      updateStats();
+
+      // ALL ABSENT checkbox handler
+      const allAbsentCheckbox = document.getElementById("toggleAllAbsent");
+      allAbsentCheckbox.addEventListener("change", function (e) {
+        const makeAllAbsent = e.target.checked;
+        const allRows = document.querySelectorAll(".roster-table tbody tr");
+
+        allRows.forEach(function (row) {
+          const newStatus = makeAllAbsent ? "ABSENT" : "PRESENT";
+          row.dataset.status = newStatus;
+
+          const rollCell = row.querySelector(".col-roll");
+          rollCell.className = "col-roll " + (makeAllAbsent ? "absent" : "present");
+
+          const statusCell = row.querySelector(".col-status");
+          statusCell.className = "col-status " + (makeAllAbsent ? "absent" : "present");
+          statusCell.querySelector(".status-badge").textContent = newStatus;
+        });
+
+        updateStats();
+      });
+
+      // Save & Submit action notifications
+      document.getElementById("btnSaveRoster").addEventListener("click", function () {
+        const present = document.getElementById("presentStudentsCount").textContent;
+        const absent = document.getElementById("absentStudentsCount").textContent;
+        alert("Attendance draft saved successfully!\nPresent: " + present + ", Absent: " + absent);
+      });
+
+      document.getElementById("btnSubmitRoster").addEventListener("click", function () {
+        const present = document.getElementById("presentStudentsCount").textContent;
+        const absent = document.getElementById("absentStudentsCount").textContent;
+        if (confirm("Are you sure you want to submit all 87 records?\nPresent: " + present + ", Absent: " + absent)) {
+          alert("All attendance records submitted to ERP portal successfully!");
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
