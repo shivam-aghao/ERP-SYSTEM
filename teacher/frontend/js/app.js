@@ -8,7 +8,6 @@ const TeacherApp = {
   init() {
     this.bindEvents();
     this.renderHeaderProfile();
-    this.syncTeacherFromDatabase();
     this.renderDynamicDates();
     this.renderDashboardData();
     this.renderTimetableView();
@@ -92,60 +91,6 @@ const TeacherApp = {
       }
     } else {
       setStatus(false);
-    }
-  },
-
-  async syncTeacherFromDatabase() {
-    try {
-      const res = await fetch('http://localhost:8000/api/v1/profile/active');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && json.data.fullName) {
-          const teacher = {
-            ...this.getLoggedInTeacher(),
-            name: json.data.fullName,
-            employeeId: json.data.empCode,
-            department: json.data.departmentName,
-            departmentCode: json.data.department,
-            title: json.data.designation,
-            email: json.data.email,
-            avatarInitials: json.data.avatar || "JP"
-          };
-          localStorage.setItem("ssgmce_logged_in_teacher", JSON.stringify(teacher));
-          this.renderHeaderProfile();
-          this.updateConnectionBadge(true, json.data.source || 'Supabase');
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('[TeacherApp] Backend sync offline, using local cache:', e);
-      this.updateConnectionBadge(false);
-    }
-  },
-
-  updateConnectionBadge(isOnline, source = 'Supabase') {
-    let badge = document.getElementById('erp-live-conn-badge');
-    if (!badge) {
-      badge = document.createElement('div');
-      badge.id = 'erp-live-conn-badge';
-      badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;margin-right:12px;cursor:default;';
-      const headerRight = document.querySelector('.header-right') || document.querySelector('.top-navbar-right');
-      if (headerRight) {
-        headerRight.prepend(badge);
-      }
-    }
-    if (isOnline) {
-      badge.style.background = '#DCFCE7';
-      badge.style.color = '#15803D';
-      badge.style.border = '1px solid #86EFAC';
-      badge.innerHTML = `<span style="width:8px;height:8px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 6px #22C55E;"></span> Live Connected (${source})`;
-      badge.title = 'Connected to Backend (Port 8000) & Supabase Database';
-    } else {
-      badge.style.background = '#FEF3C7';
-      badge.style.color = '#B45309';
-      badge.style.border = '1px solid #FCD34D';
-      badge.innerHTML = `<span style="width:8px;height:8px;background:#F59E0B;border-radius:50%;display:inline-block;"></span> Offline Cache`;
-      badge.title = 'Running on offline cache';
     }
   },
 
