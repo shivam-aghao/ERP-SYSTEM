@@ -1,17 +1,58 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/ApiResponse.js';
 import { AuthService } from '../services/auth.service.js';
+import { successResponse } from '../utils/response.js';
 
-export const login = asyncHandler(async (req, res) => {
-  const result = await AuthService.login(req.body);
-  return res.status(200).json(new ApiResponse(200, result, 'Login successful'));
-});
+export class AuthController {
+  static async login(req, res, next) {
+    try {
+      const { employeeCode, email, password } = req.body;
+      const result = await AuthService.login({ employeeCode, email, password });
+      return successResponse(res, result, 'Login successful', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const getMe = asyncHandler(async (req, res) => {
-  const teacher = await AuthService.getCurrentTeacher(req.teacher.id);
-  return res.status(200).json(new ApiResponse(200, teacher, 'Profile retrieved'));
-});
+  static async refreshToken(req, res, next) {
+    try {
+      const { refreshToken } = req.body;
+      const result = await AuthService.refreshToken(refreshToken);
+      return successResponse(res, result, 'Token refreshed successfully', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const logout = asyncHandler(async (req, res) => {
-  return res.status(200).json(new ApiResponse(200, null, 'Logged out successfully'));
-});
+  static async logout(req, res, next) {
+    try {
+      const accessToken = req.token;
+      const { refreshToken } = req.body;
+      await AuthService.logout(accessToken, refreshToken);
+      return successResponse(res, null, 'Logged out successfully', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async me(req, res, next) {
+    try {
+      const user = req.user;
+      return successResponse(res, {
+        id: user.id,
+        employeeCode: user.employeeCode,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        designation: user.designation,
+        phone: user.phone,
+        avatarInitials: user.avatarInitials,
+        department: user.department ? {
+          id: user.department.id,
+          code: user.department.code,
+          name: user.department.name,
+        } : null,
+      }, 'User details fetched successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+}

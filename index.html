@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) - Autonomous Institute Unified Enterprise Resource Planning (ERP) System.">
+  <title>SSGMCE Shegaon — Autonomous College ERP Portal</title>
+
+  <!-- Google Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="Student_dashbord/frontend/images/logo.png">
+
+  <style>
+    /* ==========================================================================
+       ENTERPRISE DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --primary: #0B5CAD;
+      --primary-hover: #08498b;
+      --secondary: #1565C0;
+      --accent: #00A6D6;
+      --accent-soft: rgba(0, 166, 214, 0.12);
+      --navy: #0B1F3A;
+      --navy-dark: #061325;
+      
+      --white: #FFFFFF;
+      --light-bg: #F4F8FC;
+      --card-bg: #FFFFFF;
+      --surface-hover: #F8FAFC;
+      --border-color: #E2E8F0;
+      --border-light: #EDF2F7;
+      
+      --text: #263238;
+      --text-primary: #1E293B;
+      --text-secondary: #475569;
+      --muted: #64748B;
+      
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-heading: 'Poppins', var(--font-main);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.05);
+      --shadow-md: 0 4px 14px rgba(11, 31, 58, 0.06);
+      --shadow-lg: 0 10px 30px rgba(11, 31, 58, 0.10);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--light-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Sticky Header */
+    .erp-top-header {
+      background: var(--navy);
+      color: var(--white);
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-crest img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .brand-text h1 {
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-text span {
+      font-size: 0.72rem;
+      color: #94A3B8;
+      font-weight: 500;
+      display: block;
+    }
+
+    .header-tag-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .erp-pill {
+      background: var(--primary);
+      color: var(--white);
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .erp-motto {
+      font-size: 0.76rem;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    /* Main Container */
+    .erp-main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+    }
+
+    .erp-hero-section {
+      text-align: center;
+      max-width: 720px;
+      margin-bottom: 36px;
+    }
+
+    .erp-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .erp-hero-title {
+      font-family: var(--font-heading);
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .erp-hero-subtitle {
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Step 1: Role Selection Cards */
+    .role-selection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .role-card {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 36px 30px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: transparent;
+      transition: background 0.2s ease;
+    }
+
+    .role-card.card-student:hover::before {
+      background: #0B5CAD;
+    }
+
+    .role-card.card-faculty:hover::before {
+      background: #00A6D6;
+    }
+
+    .role-icon-box {
+      width: 68px;
+      height: 68px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .role-card.card-student .role-icon-box {
+      background: rgba(11, 92, 173, 0.10);
+      color: var(--primary);
+    }
+
+    .role-card.card-faculty .role-icon-box {
+      background: rgba(0, 166, 214, 0.12);
+      color: #0087b0;
+    }
+
+    .role-icon-box svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .role-title {
+      font-family: var(--font-heading);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .role-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 22px;
+      min-height: 52px;
+    }
+
+    .role-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .role-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .role-feature-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .btn-role-action {
+      background: var(--navy);
+      color: var(--white);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, transform 0.15s ease;
+      width: 100%;
+    }
+
+    .role-card.card-student .btn-role-action {
+      background: var(--primary);
+    }
+
+    .role-card.card-student .btn-role-action:hover {
+      background: var(--primary-hover);
+    }
+
+    .role-card.card-faculty .btn-role-action {
+      background: var(--navy);
+    }
+
+    .role-card.card-faculty .btn-role-action:hover {
+      background: var(--navy-dark);
+    }
+
+    /* Step 2: Role-Specific Authentication View (Hidden initially) */
+    .auth-view-wrapper {
+      display: none;
+      max-width: 480px;
+      width: 100%;
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-lg);
+      animation: fadeInPop 0.25s ease-out;
+    }
+
+    @keyframes fadeInPop {
+      from { opacity: 0; transform: scale(0.97) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .auth-view-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .auth-role-pill-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #F1F5F9;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .btn-switch-role {
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      font-size: 0.76rem;
+    }
+
+    .auth-title {
+      font-family: var(--font-heading);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+
+    .auth-subtitle {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper svg.field-icon {
+      position: absolute;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.15s ease;
+      background: #F8FAFC;
+    }
+
+    .input-wrapper input:focus {
+      background: var(--white);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.12);
+    }
+
+    .btn-toggle-eye {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+    }
+
+    .btn-toggle-eye:hover {
+      color: var(--navy);
+    }
+
+    .form-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      font-size: 0.8rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .link-forgot {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .link-forgot:hover {
+      text-decoration: underline;
+    }
+
+    .btn-submit-login {
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.94rem;
+      font-weight: 700;
+      padding: 13px;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease;
+      margin-bottom: 18px;
+    }
+
+    .btn-submit-login:hover {
+      background: var(--primary-hover);
+    }
+
+    /* One-Click Demo Fast Sign-in Buttons */
+    .demo-fast-login {
+      background: #F8FAFC;
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .demo-fast-login-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .demo-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-demo-chip {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--white);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-demo-chip:hover {
+      border-color: var(--primary);
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+
+    /* Footer */
+    .erp-footer {
+      background: var(--white);
+      border-top: 1px solid var(--border-color);
+      padding: 18px 32px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .erp-top-header {
+        padding: 0 16px;
+      }
+      .brand-text span {
+        display: none;
+      }
+      .role-selection-grid {
+        grid-template-columns: 1fr;
+      }
+      .erp-hero-title {
+        font-size: 1.6rem;
+      }
+      .demo-btn-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Header -->
+  <header class="erp-top-header" role="banner">
+    <a href="index.html" class="brand-group" aria-label="SSGMCE ERP Home">
+      <div class="brand-crest">
+        <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" onerror="this.src='Student_dashbord/frontend/images/logo.png'">
+      </div>
+      <div class="brand-text">
+        <h1>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
+        <span>(An Autonomous Institute Affiliated to SGBAU)</span>
+      </div>
+    </a>
+
+    <div class="header-tag-wrap">
+      <span class="erp-pill">ERP 2026</span>
+      <span class="erp-motto">Learn | Grow | Excel</span>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main class="erp-main-container">
+    
+    <!-- Hero Header -->
+    <div class="erp-hero-section">
+      <div class="erp-hero-badge">Autonomous Institutional Gateway</div>
+      <h2 class="erp-hero-title">Unified College ERP Portal</h2>
+      <p class="erp-hero-subtitle">Select your institutional role to continue to your authorized portal</p>
+    </div>
+
+    <!-- VIEW 1: ROLE SELECTION CARDS (Default) -->
+    <section class="role-selection-grid" id="roleSelectionGrid">
+      
+      <!-- Card 1: Student -->
+      <div class="role-card card-student" onclick="selectRole('student')" tabindex="0" role="button" aria-label="Continue as Student">
+        <div>
+          <div class="role-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <h3 class="role-title">STUDENT PORTAL</h3>
+          <p class="role-desc">Access attendance, timetable, syllabus, fees, examinations, e-learning and academic information.</p>
+          
+          <ul class="role-features">
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Subject Attendance &amp; 75% Shortage Tracker</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Daily Class Timetable &amp; Lecture Slots</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Fees Dues, Digital Receipts &amp; D-Wallet</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Examination Hall Ticket &amp; Internal Marks</span>
+            </li>
+          </ul>
+        </div>
+
+        <button type="button" class="btn-role-action" onclick="event.stopPropagation(); selectRole('student');">
+          <span>Continue as Student</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+
+      <!-- Card 2: Faculty -->
+      <div class="role-card card-faculty" onclick="selectRole('faculty')" tabindex="0" role="button" aria-label="Continue as Faculty">
+        <div>
+          <div class="role-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+          </div>
+          <h3 class="role-title">FACULTY PORTAL</h3>
+          <p class="role-desc">Manage classes, students, attendance, marks, syllabus and academic activities.</p>
+          
+          <ul class="role-features">
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Daily Class Period Attendance Marking</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Test 1, Test 2 &amp; Practical Marks Entry</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Curriculum Syllabus Unit &amp; Topic Progress</span>
+            </li>
+            <li class="role-feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Assigned Classes &amp; Student Directory Roster</span>
+            </li>
+          </ul>
+        </div>
+
+        <button type="button" class="btn-role-action" onclick="event.stopPropagation(); selectRole('faculty');">
+          <span>Continue as Faculty</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- VIEW 2: AUTHENTICATION / LOGIN FORM -->
+    <section class="auth-view-wrapper" id="authViewWrapper">
+      <div class="auth-view-header">
+        <div class="auth-role-pill-switch">
+          <span id="authRoleLabel">Student Portal Sign-In</span>
+          <button type="button" class="btn-switch-role" onclick="showRoleSelection()">Change</button>
+        </div>
+        <h3 class="auth-title" id="authPortalHeading">Sign In</h3>
+        <p class="auth-subtitle">Enter your institutional credentials to authenticate</p>
+      </div>
+
+      <form id="erpLoginForm" onsubmit="handleFormLogin(event)">
+        <div class="form-group">
+          <label for="erpUserId" id="labelUserId">Enrollment / PRN / Email</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <input type="text" id="erpUserId" placeholder="e.g. 202401088219" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="erpPassword">Password</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input type="password" id="erpPassword" placeholder="Enter password (min 8 chars)" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
+              <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="7" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-meta-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe" checked>
+            <span>Remember active session</span>
+          </label>
+          <a href="javascript:void(0)" class="link-forgot" onclick="showForgotModal()">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-submit-login" id="btnSubmitLogin">
+          <span>Authenticate &amp; Launch Portal</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+
+        <!-- Fast Demo One-Click Sign In -->
+        <div class="demo-fast-login">
+          <div class="demo-fast-login-label">Instant One-Click Demo Access</div>
+          <div class="demo-btn-row">
+            <button type="button" class="btn-demo-chip" onclick="quickFillAndLogin('student')">
+              <span>👨‍🎓 Student Demo</span>
+            </button>
+            <button type="button" class="btn-demo-chip" onclick="quickFillAndLogin('faculty')">
+              <span>👨‍🏫 Faculty Demo</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="erp-footer">
+    <div>
+      <strong>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</strong> • Autonomous Institute
+    </div>
+    <div>
+      Digital Campus ERP v4.2 • Protected by SGBAU Institutional Firewall
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="common/js/erp-auth-guard.js"></script>
+  <script>
+    let activeSelectedRole = 'student';
+
+    function selectRole(role) {
+      activeSelectedRole = role;
+      document.getElementById('roleSelectionGrid').style.display = 'none';
+      const authWrapper = document.getElementById('authViewWrapper');
+      authWrapper.style.display = 'block';
+
+      const labelRole = document.getElementById('authRoleLabel');
+      const heading = document.getElementById('authPortalHeading');
+      const labelUser = document.getElementById('labelUserId');
+      const userInput = document.getElementById('erpUserId');
+      const passwordInput = document.getElementById('erpPassword');
+
+      if (role === 'student') {
+        labelRole.textContent = 'Student Portal Sign-In';
+        heading.textContent = 'Student ERP Authentication';
+        labelUser.textContent = 'Enrollment No / PRN / Student Email';
+        userInput.value = '202401088219';
+        passwordInput.value = 'Shivam@2026';
+      } else {
+        labelRole.textContent = 'Faculty Portal Sign-In';
+        heading.textContent = 'Faculty ERP Authentication';
+        labelUser.textContent = 'Faculty Employee Code / College Email';
+        userInput.value = 'FAC-CSE-1048';
+        passwordInput.value = 'Deshmukh@2026';
+      }
+    }
+
+    function showRoleSelection() {
+      document.getElementById('authViewWrapper').style.display = 'none';
+      document.getElementById('roleSelectionGrid').style.display = 'grid';
+    }
+
+    function togglePasswordVisibility() {
+      const pwd = document.getElementById('erpPassword');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+      } else {
+        pwd.type = 'password';
+      }
+    }
+
+    function quickFillAndLogin(role) {
+      selectRole(role);
+      setTimeout(() => {
+        executeLoginRedirect(role);
+      }, 300);
+    }
+
+    function handleFormLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitLogin');
+      btn.innerHTML = '<span>Verifying credentials...</span>';
+      btn.style.opacity = '0.7';
+
+      setTimeout(() => {
+        executeLoginRedirect(activeSelectedRole);
+      }, 500);
+    }
+
+    function executeLoginRedirect(role) {
+      if (window.ERPAuth) {
+        window.ERPAuth.login(role);
+      }
+      if (role === 'student') {
+        window.location.href = 'Student_dashbord/frontend/index.html';
+      } else {
+        window.location.href = 'Teacher _dashbord/frontend/index.html';
+      }
+    }
+
+    function showForgotModal() {
+      alert('Institutional Password Reset:\nPlease contact the SSGMCE IT Cell or Examination Administrator to reset autonomous credentials (Ext: 204).');
+    }
+  </script>
+</body>
+</html>

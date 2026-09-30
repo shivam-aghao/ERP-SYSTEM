@@ -1,43 +1,65 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/ApiResponse.js';
 import { AttendanceService } from '../services/attendance.service.js';
+import { successResponse } from '../utils/response.js';
 
-export const checkDuplicate = asyncHandler(async (req, res) => {
-  const teacherId = req.teacher.id;
-  const { department, departmentCode, classId, classCode, subjectCode, date, period } = req.query;
+export class AttendanceController {
+  static async submitAttendance(req, res, next) {
+    try {
+      const teacherId = req.user.id;
+      const result = await AttendanceService.submitAttendance(teacherId, req.body);
+      return successResponse(res, result, result.message, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  const result = await AttendanceService.checkDuplicate(
-    teacherId,
-    departmentCode || department,
-    classCode || classId,
-    subjectCode,
-    date,
-    period
-  );
+  static async saveDraft(req, res, next) {
+    try {
+      const teacherId = req.user.id;
+      const result = await AttendanceService.saveDraft(teacherId, req.body);
+      return successResponse(res, result, result.message, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  return res.status(200).json(new ApiResponse(200, result, 'Duplicate check completed'));
-});
+  static async getDraft(req, res, next) {
+    try {
+      const teacherId = req.user.id;
+      const { classId, subjectCode, date, period } = req.query;
+      const draft = await AttendanceService.getDraft(teacherId, { classId, subjectCode, date, period });
+      return successResponse(res, draft, draft ? 'Draft retrieved' : 'No draft found');
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const saveDraft = asyncHandler(async (req, res) => {
-  const teacherId = req.teacher.id;
-  const session = await AttendanceService.submitAttendance(teacherId, req.body, true);
-  return res.status(200).json(new ApiResponse(200, session, 'Attendance draft saved successfully'));
-});
+  static async checkDuplicate(req, res, next) {
+    try {
+      const { department, classId, date, subjectCode, period } = req.query;
+      const isDuplicate = await AttendanceService.checkDuplicate({ department, classId, date, subjectCode, period });
+      return successResponse(res, { isDuplicate }, isDuplicate ? 'Attendance session already submitted' : 'Session slot is available');
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const submitAttendance = asyncHandler(async (req, res) => {
-  const teacherId = req.teacher.id;
-  const session = await AttendanceService.submitAttendance(teacherId, req.body, false);
-  return res.status(201).json(new ApiResponse(201, session, 'Attendance submitted successfully'));
-});
+  static async getAllRecords(req, res, next) {
+    try {
+      const teacherId = req.query.teacherId || (req.user.role === 'TEACHER' ? req.user.id : null);
+      const records = await AttendanceService.getAllRecords(teacherId);
+      return successResponse(res, records, 'Attendance records retrieved successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const getAllRecords = asyncHandler(async (req, res) => {
-  const teacherId = req.query.teacherId || req.teacher.id;
-  const sessions = await AttendanceService.getTeacherSessions(teacherId);
-  return res.status(200).json(new ApiResponse(200, sessions, 'Attendance records retrieved'));
-});
-
-export const getSessionDetails = asyncHandler(async (req, res) => {
-  const teacherId = req.teacher.id;
-  const session = await AttendanceService.getSessionDetails(req.params.id, teacherId);
-  return res.status(200).json(new ApiResponse(200, session, 'Session details retrieved'));
-});
+  static async getSessionDetails(req, res, next) {
+    try {
+      const { id } = req.params;
+      const session = await AttendanceService.getSessionDetails(id);
+      return successResponse(res, session, 'Session details retrieved successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+}

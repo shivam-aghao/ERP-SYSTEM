@@ -1,23 +1,27 @@
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger.js';
+import { logger } from './logger.js';
+import { env } from './env.js';
 
-const globalForPrisma = globalThis;
+let prisma;
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error']
-  });
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  if (!global.__prisma) {
+    global.__prisma = new PrismaClient({
+      log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    });
+  }
+  prisma = global.__prisma;
 }
 
-export const connectDB = async () => {
-  try {
-    await prisma.$connect();
-    logger.info('Database connected successfully via Prisma');
-  } catch (err) {
-    logger.error(`Database connection failed: ${err.message}`);
-  }
-};
+prisma.$connect()
+  .then(() => {
+    logger.info('Database connection established successfully via Prisma.');
+  })
+  .catch((err) => {
+    logger.error(`Prisma connection error: ${err.message}`);
+  });
+
+export { prisma };
+export default prisma;
