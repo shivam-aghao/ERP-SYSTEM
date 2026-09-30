@@ -8,6 +8,7 @@ let attendanceChartInstance = null;
 let syllabusChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  checkBackendConnection();
   initAttendanceChart();
   initSyllabusProgressChart();
   initSubjectAttendanceToggle();
@@ -25,6 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
   hydrateDashboardData();
 });
+
+async function checkBackendConnection() {
+  const headerRight = document.querySelector('.header-right');
+  if (!headerRight) return;
+  
+  let pill = document.getElementById('student-live-conn-pill');
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.id = 'student-live-conn-pill';
+    pill.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;margin-right:12px;cursor:default;';
+    headerRight.prepend(pill);
+  }
+
+  try {
+    await fetch('http://localhost:8001/docs', { method: 'GET', mode: 'no-cors' });
+    pill.style.background = '#DCFCE7';
+    pill.style.color = '#15803D';
+    pill.style.border = '1px solid #86EFAC';
+    pill.innerHTML = '<span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 5px #22C55E;"></span> Live Connected (Port 8001 & Supabase)';
+    pill.title = 'Student Dashboard Backend (Port 8001) & Cloud Supabase Database Live';
+  } catch (e) {
+    pill.style.background = '#FEF3C7';
+    pill.style.color = '#B45309';
+    pill.style.border = '1px solid #FCD34D';
+    pill.innerHTML = '<span style="width:7px;height:7px;background:#F59E0B;border-radius:50%;display:inline-block;"></span> Offline Mode';
+  }
+}
 
 /* ==========================================================================
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)
@@ -708,10 +736,10 @@ const timetableScheduleData = {
     dayLabel: 'Monday • 5 Periods Scheduled',
     periods: [
       { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures & Algorithms', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures & Algorithms', venue: 'LH-204 • Dr. J.M. Patil', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
       { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
       { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-301L', name: 'DSA Lab (Batch 2R1)', venue: 'Software Lab 2 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
+      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-301L', name: 'DSA Lab (Batch 2R1)', venue: 'Software Lab 2 • Dr. J.M. Patil', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
     ]
   },
   tuesday: {
@@ -719,7 +747,7 @@ const timetableScheduleData = {
     periods: [
       { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-302', name: 'Java Programming & OOP', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
       { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Dr. J.M. Patil', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
       { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-302L', name: 'Java Lab (Batch 2R1)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true },
       { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-304', name: 'Database Management Tutorial', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Tutorial Active', isCompleted: true }
     ]
@@ -737,7 +765,7 @@ const timetableScheduleData = {
   thursday: {
     dayLabel: 'Thursday • 5 Periods Scheduled',
     periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-301', name: 'Data Structures (CS-301)', venue: 'Lecture Hall 204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
+      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-301', name: 'Data Structures (CS-301)', venue: 'Lecture Hall 204 • Dr. J.M. Patil', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
       { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-302L', name: 'Java Programming Lab (CS-302L)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Live Now', statusClass: 'status-live', att: 'Biometric Logged In', isActiveNow: true },
       { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-303', name: 'Operating Systems (CS-303)', venue: 'Lecture Hall 301 • Prof. V. K. Ramanujan', status: 'Next Up', statusClass: 'status-upcoming', att: 'Starts in 15 mins' },
       { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks (CS-305)', venue: 'Lecture Hall 108 • Dr. Ananya Sen', status: 'Must Attend', statusClass: 'status-critical', att: 'Critical for 75% threshold', isCritical: true },
@@ -748,7 +776,7 @@ const timetableScheduleData = {
     dayLabel: 'Friday • 5 Periods Scheduled',
     periods: [
       { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Mandatory Lecture' },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Regular Lecture' },
+      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Dr. J.M. Patil', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Regular Lecture' },
       { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-302', name: 'Java Programming', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Regular Lecture' },
       { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-303L', name: 'OS Linux Kernel Lab', venue: 'Systems Lab 1 • Prof. Ramanujan', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Practical Session' },
       { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-306', name: 'Mini-Project / AICTE Activity', venue: 'Project Lab 4 • Mentors', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Team Mentoring' }

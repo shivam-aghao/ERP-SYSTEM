@@ -27,12 +27,12 @@ const SUPABASE_STUDENTS_LIST = [
 
 const ERP_DATA = {
   teacher: {
-    name: "Dr. J.M.Patil",
-    id: "EMP-CSE-1048",
+    name: "Prof. Rajesh Sharma",
+    id: "EMP-CSE-1042",
     designation: "Associate Professor",
     department: "Computer Science & Engineering",
-    email: "jm.patil@ssgmce.ac.in",
-    avatar: "JP",
+    email: "rajesh.sharma@ssgmce.ac.in",
+    avatar: "RS",
     unreadNotifications: 3
   },
 
