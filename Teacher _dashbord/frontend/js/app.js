@@ -16,6 +16,82 @@ const TeacherApp = {
     this.renderResultsView();
     this.renderNotificationsList();
     this.initLucideIcons();
+    this.checkBackendConnection();
+  },
+
+  async checkBackendConnection(isManualCheck = false) {
+    const pill = document.getElementById('backend-status-pill');
+    const dot = document.getElementById('backend-status-dot');
+    const text = document.getElementById('backend-status-text');
+
+    const setStatus = (isOnline, latency) => {
+      if (pill) {
+        pill.style.background = isOnline ? '#ECFDF5' : '#FEF2F2';
+        pill.style.borderColor = isOnline ? '#10B981' : '#EF4444';
+        pill.style.color = isOnline ? '#047857' : '#B91C1C';
+      }
+      if (dot) {
+        dot.style.background = isOnline ? '#10B981' : '#EF4444';
+        dot.style.boxShadow = isOnline ? '0 0 8px #10B981' : '0 0 8px #EF4444';
+      }
+      if (text) {
+        text.textContent = isOnline 
+          ? `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`
+          : '🔴 Backend: Offline';
+      }
+    };
+
+    if (typeof window.TeacherAPI !== 'undefined') {
+      try {
+        const start = performance.now();
+        const health = await window.TeacherAPI.checkHealth();
+        const latency = Math.round(performance.now() - start);
+
+        if (health && health.status === 'OK') {
+          const loginData = await window.TeacherAPI.login();
+          setStatus(true, latency);
+
+          if (isManualCheck) {
+            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${loginData.user.name}`, 'success');
+          } else {
+            this.showToast('🟢 Connected to Backend API (Dr. Rohan Deshmukh)', 'success');
+          }
+          console.log('✅ Logged in successfully as:', loginData.user.name);
+          try {
+            const data = await window.TeacherAPI.getDashboardSummary();
+            console.log('📊 Live Dashboard KPI metrics:', data.metrics);
+            console.log('📅 Today schedule slots:', data.todaySchedule);
+
+            // Seamlessly bind live Supabase data to UI cards
+            if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
+              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
+              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
+              if (data.metrics.averageAttendance) {
+                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 87;
+              }
+              if (data.faculty) {
+                TeacherERPData.faculty.name = data.faculty.name;
+                TeacherERPData.faculty.employeeId = data.faculty.employeeId;
+                TeacherERPData.faculty.title = data.faculty.title;
+              }
+              this.renderHeaderProfile();
+              this.renderDashboardData();
+            }
+          } catch (kpiErr) {
+            console.warn('Dashboard summary:', kpiErr.message);
+          }
+        } else {
+          setStatus(false);
+          if (isManualCheck) this.showToast('❌ Backend server offline', 'error');
+        }
+      } catch (err) {
+        setStatus(false);
+        console.warn('Backend connection:', err.message);
+        if (isManualCheck) this.showToast(`❌ Connection error: ${err.message}`, 'error');
+      }
+    } else {
+      setStatus(false);
+    }
   },
 
   initLucideIcons() {
