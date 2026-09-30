@@ -49,7 +49,7 @@
             <!-- SSGMCE College Crest / Brand -->
             <a href="../../dashboard/frontend/index.html" class="header-brand" aria-label="SSGMCE Home">
                 <div class="brand-crest">
-                    <img src="images/logo.png" alt="SSGMCE College Logo" class="brand-logo-img" >
+                    <img src="images/logo.png" alt="SSGMCE College Logo" class="brand-logo-img" onerror="this.src='https://www.ssgmce.ac.in/favicon.svg'">
                 </div>
                 <div class="brand-text-block">
                     <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
@@ -72,26 +72,103 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" class="search-input" id="globalSearchInput" placeholder="Search subjects, services, schedule (Ctrl+K)..." aria-label="Search ERP Dashboard">
+                <input type="text" class="search-input" id="globalSearchInput" placeholder="Search profile, documents, services (Ctrl+K)..." aria-label="Search ERP Dashboard">
                 <span class="search-kbd">Ctrl+K</span>
             </div>
         </div>
 
         <!-- Right Controls: Notifications & Student Profile -->
         <div class="header-right">
-            <!-- Back to Dashboard Quick Link -->
+            <!-- Back to Dashboard Quick Pill -->
             <a href="../../dashboard/frontend/index.html" style="display:inline-flex; align-items:center; gap:6px; background:#EFF6FF; border:1px solid #BFDBFE; color:#0B5CAD; font-weight:600; font-size:12px; padding:6px 14px; border-radius:8px; text-decoration:none; margin-right:8px; transition:all 0.2s;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 <span>Dashboard</span>
             </a>
 
-            <!-- User Profile Widget -->
+            <!-- Notification Bell -->
+            <div class="notif-wrapper" id="notifWrapper">
+                <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 3 unread" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notif-badge">3</span>
+                </button>
+                <!-- Notification Dropdown Popover -->
+                <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
+                    <div class="panel-header">
+                        <h4>Notifications</h4>
+                        <span class="unread-tag">3 New</span>
+                    </div>
+                    <ul class="notif-list">
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-error"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
+                                <span class="notif-time">10 mins ago • Examination Cell</span>
+                            </div>
+                        </li>
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-warning"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
+                                <span class="notif-time">2 hours ago • Academic Cell</span>
+                            </div>
+                        </li>
+                        <li class="notif-item unread">
+                            <span class="notif-bullet bg-success"></span>
+                            <div class="notif-info">
+                                <p class="notif-msg">Assignment 2 for Data Structures uploaded to portal.</p>
+                                <span class="notif-time">Yesterday • Prof. R. Sharma</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="panel-footer">
+                        <button type="button" class="btn-link-action" onclick="showToast('All notifications marked as read', 'info')">Mark all as read</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Profile Pill -->
             <div class="profile-wrapper" id="profileWrapper">
-                <div class="profile-pill-btn" id="profileBtn" style="cursor:default;">
+                <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
                     <div class="avatar-circle">SA</div>
                     <div class="profile-details">
-                        <span class="student-name">Shivam Sanjay Aghao</span>
-                        <span class="student-meta">Roll: 21 • CSE 2R1</span>
+                        <span class="student-name">Shivam Aghao</span>
+                        <span class="student-meta">Roll: 21 • CSE 2R1 (CSE2401)</span>
+                    </div>
+                    <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <!-- Profile Dropdown Popover -->
+                <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
+                    <div class="profile-panel-header">
+                        <div class="large-avatar">SA</div>
+                        <div>
+                            <div class="p-name">Shivam Aghao</div>
+                            <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
+                            <div class="p-roll">Roll No: 21 • Class: 2R1 • Sem IV (CSE2401)</div>
+                        </div>
+                    </div>
+                    <div class="p-links">
+                        <a href="../../dashboard/frontend/index.html" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            Main ERP Dashboard
+                        </a>
+                        <a href="../../attendance/frontend/index.html" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            Subject-wise Attendance (82%)
+                        </a>
+                        <a href="../../syllabus_page/frontend/index.html" class="p-link-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            Course Syllabus &amp; Curriculum
+                        </a>
+                        <div class="p-divider"></div>
+                        <button type="button" class="p-link-item text-danger" id="logoutBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Sign Out
+                        </button>
                     </div>
                 </div>
             </div>
@@ -124,7 +201,7 @@
                             </div>
                         </li>
 
-                        <!-- Timetable -->
+                        <!-- 2. Timetable -->
                         <li class="sidebar-item" data-module="timetable">
                             <a href="../../dashboard/frontend/index.html#timetableCard" class="sidebar-link" data-nav="timetable">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -132,13 +209,16 @@
                                     <line x1="16" y1="2" x2="16" y2="6"></line>
                                     <line x1="8" y1="2" x2="8" y2="6"></line>
                                     <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    <path d="M8 14h.01"></path>
+                                    <path d="M12 14h.01"></path>
+                                    <path d="M16 14h.01"></path>
                                 </svg>
                                 <span class="nav-label">Timetable</span>
                                 <span class="nav-badge-pill">DAILY</span>
                             </a>
                         </li>
 
-                        <!-- Attendance -->
+                        <!-- 3. Attendance -->
                         <li class="sidebar-item" data-module="attendance">
                             <a href="../../attendance/frontend/index.html" class="sidebar-link" data-nav="attendance">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -153,7 +233,7 @@
                             </a>
                         </li>
 
-                        <!-- Syllabus -->
+                        <!-- 4. Syllabus -->
                         <li class="sidebar-item" data-module="syllabus">
                             <a href="../../syllabus_page/frontend/index.html" class="sidebar-link" data-nav="syllabus">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -164,9 +244,9 @@
                             </a>
                         </li>
 
-                        <!-- Fees -->
+                        <!-- 5. Fees -->
                         <li class="sidebar-item" data-module="fees">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="fees">
+                            <a href="javascript:void(0)" onclick="showToast('Fees & payment portal available via finance cell', 'info')" class="sidebar-link" data-nav="fees">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                                     <line x1="2" y1="10" x2="22" y2="10"></line>
@@ -176,7 +256,7 @@
                             </a>
                         </li>
 
-                        <!-- Profile (ACTIVE) -->
+                        <!-- 6. Profile (ACTIVE) -->
                         <li class="sidebar-item" data-module="profile">
                             <a href="index.html" class="sidebar-link active" data-nav="profile" aria-current="page">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -184,23 +264,26 @@
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                                 <span class="nav-label">Profile</span>
+                                <span class="nav-badge-pill" style="background:#10B981; color:white;">VERIFIED</span>
                             </a>
                         </li>
 
-                        <!-- E-Learning -->
+                        <!-- 7. E-Learning -->
                         <li class="sidebar-item" data-module="elearning">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="elearning">
+                            <a href="javascript:void(0)" onclick="showToast('E-Learning portal integration active', 'info')" class="sidebar-link" data-nav="elearning">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
                                     <polygon points="10 8 15 10 10 12"></polygon>
                                 </svg>
                                 <span class="nav-label">E-Learning</span>
                             </a>
                         </li>
 
-                        <!-- Change Information -->
+                        <!-- 8. Change Information -->
                         <li class="sidebar-item" data-module="change-info">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="change-info">
+                            <a href="javascript:void(0)" onclick="openEditProfileModal()" class="sidebar-link" data-nav="change-info">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="8.5" cy="7" r="4"></circle>
@@ -210,9 +293,9 @@
                             </a>
                         </li>
 
-                        <!-- Updation Information -->
+                        <!-- 9. Updation Information -->
                         <li class="sidebar-item" data-module="update-info">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="update-info">
+                            <a href="javascript:void(0)" onclick="openEditProfileModal()" class="sidebar-link" data-nav="update-info">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -221,9 +304,9 @@
                             </a>
                         </li>
 
-                        <!-- D-Wallet -->
+                        <!-- 10. D-Wallet -->
                         <li class="sidebar-item" data-module="dwallet">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="dwallet">
+                            <a href="javascript:void(0)" onclick="showToast('D-Wallet balance: ₹2,450.00', 'info')" class="sidebar-link" data-nav="dwallet">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
                                     <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
@@ -233,9 +316,9 @@
                             </a>
                         </li>
 
-                        <!-- Examination -->
+                        <!-- 11. Examination -->
                         <li class="sidebar-item" data-module="examination">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="examination">
+                            <a href="javascript:void(0)" onclick="showToast('Examination hall tickets and schedule available on dashboard', 'info')" class="sidebar-link" data-nav="examination">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -246,9 +329,9 @@
                             </a>
                         </li>
 
-                        <!-- Course Choices -->
+                        <!-- 12. Course Choices -->
                         <li class="sidebar-item" data-module="course-choices">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="course-choices">
+                            <a href="javascript:void(0)" onclick="showToast('Elective courses choice portal open for Sem V', 'info')" class="sidebar-link" data-nav="course-choices">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="9 11 12 14 22 4"></polyline>
                                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
@@ -257,15 +340,82 @@
                             </a>
                         </li>
 
-                        <!-- Internal Mark -->
+                        <!-- 13. Internal Marks -->
                         <li class="sidebar-item" data-module="internal-marks">
-                            <a href="../../dashboard/frontend/index.html" class="sidebar-link" data-nav="internal-marks">
+                            <a href="javascript:void(0)" onclick="showToast('Internal evaluation scores verified', 'info')" class="sidebar-link" data-nav="internal-marks">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="18" y1="20" x2="18" y2="10"></line>
                                     <line x1="12" y1="20" x2="12" y2="4"></line>
                                     <line x1="6" y1="20" x2="6" y2="14"></line>
                                 </svg>
                                 <span class="nav-label">Internal Mark</span>
+                            </a>
+                        </li>
+
+                        <!-- 14. Documents -->
+                        <li class="sidebar-item" data-module="documents">
+                            <a href="javascript:void(0)" onclick="viewDocument('bonafide')" class="sidebar-link" data-nav="documents">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                                <span class="nav-label">Documents</span>
+                            </a>
+                        </li>
+
+                        <!-- 15. Hostel -->
+                        <li class="sidebar-item" data-module="hostel">
+                            <a href="javascript:void(0)" onclick="showToast('Hostel room: Block B - 304 (Day Scholar)', 'info')" class="sidebar-link" data-nav="hostel">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                <span class="nav-label">Hostel</span>
+                            </a>
+                        </li>
+
+                        <!-- 16. Library -->
+                        <li class="sidebar-item" data-module="library">
+                            <a href="javascript:void(0)" onclick="showToast('Central Library Card: LIB-8921 (Clearance Active)', 'info')" class="sidebar-link" data-nav="library">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                <span class="nav-label">Library</span>
+                            </a>
+                        </li>
+
+                        <!-- 17. Training & Placement -->
+                        <li class="sidebar-item" data-module="placement">
+                            <a href="javascript:void(0)" onclick="showToast('T&P Cell: Profile eligible for upcoming campus drives', 'success')" class="sidebar-link" data-nav="placement">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <span class="nav-label">Training &amp; Placement</span>
+                            </a>
+                        </li>
+
+                        <!-- 18. Grievance -->
+                        <li class="sidebar-item" data-module="grievance">
+                            <a href="javascript:void(0)" onclick="showToast('Grievance redressal portal active', 'info')" class="sidebar-link" data-nav="grievance">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span class="nav-label">Grievance</span>
+                            </a>
+                        </li>
+
+                        <!-- 19. Settings -->
+                        <li class="sidebar-item" data-module="settings">
+                            <a href="javascript:void(0)" onclick="openEditProfileModal()" class="sidebar-link" data-nav="settings">
+                                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span class="nav-label">Settings</span>
                             </a>
                         </li>
                     </ul>
@@ -277,7 +427,7 @@
         <main class="dashboard-main-content" id="mainContent" role="main">
             <div class="main-dashboard-full-container">
 
-                <!-- Breadcrumbs & Back to Dashboard -->
+                <!-- Breadcrumbs & Quick Dashboard Link -->
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
                     <nav class="breadcrumb-nav" aria-label="Breadcrumb" style="margin-bottom:0;">
                         <a href="../../dashboard/frontend/index.html">
@@ -300,50 +450,92 @@
                 <div class="profile-page-header">
                     <div class="profile-page-title">
                         <div class="profile-page-title-icon">
-                            <i class="fa-solid fa-user"></i>
+                            <i class="fa-solid fa-id-badge"></i>
                         </div>
                         <div>
-                            <h1>Student Profile</h1>
-                            <p>View and manage your personal, academic, and institutional records</p>
+                            <h1>Student Profile &amp; Records</h1>
+                            <p>Autonomous Institutional Academic Record &bull; Shri Sant Gajanan Maharaj College of Engineering, Shegaon</p>
                         </div>
                     </div>
-                    <button class="edit-profile-btn" onclick="editProfile()">
-                        <i class="fa-solid fa-pen"></i>
-                        <span>Edit Profile</span>
-                    </button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button type="button" class="btn btn-outline btn-print-profile" onclick="window.print()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:8px; border:1px solid #CBD5E1; font-weight:600; font-size:0.85rem; cursor:pointer; background:#FFF; color:var(--navy);">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Print Dossier</span>
+                        </button>
+                        <button type="button" class="edit-profile-btn" onclick="openEditProfileModal()">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Edit Profile</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- PROFILE SUMMARY CARD -->
+                <!-- ACADEMIC METRIC QUICK TILES -->
+                <div class="academic-metric-banner">
+                    <div class="metric-stat-card">
+                        <div class="metric-icon-box cgpa"><i class="fa-solid fa-chart-line"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Cumulative CGPA</span>
+                            <span class="metric-val">8.64</span>
+                            <span class="metric-sub">Distinction (Sem I-IV)</span>
+                        </div>
+                    </div>
+                    <div class="metric-stat-card">
+                        <div class="metric-icon-box sgpa"><i class="fa-solid fa-award"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Latest SGPA</span>
+                            <span class="metric-val">8.84</span>
+                            <span class="metric-sub">Sem IV Regular</span>
+                        </div>
+                    </div>
+                    <div class="metric-stat-card">
+                        <div class="metric-icon-box att"><i class="fa-solid fa-user-check"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Attendance Rate</span>
+                            <span class="metric-val text-success">82%</span>
+                            <span class="metric-sub">&gt; 75% Mandatory Safe</span>
+                        </div>
+                    </div>
+                    <div class="metric-stat-card">
+                        <div class="metric-icon-box cred"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Earned Credits</span>
+                            <span class="metric-val">86 / 160</span>
+                            <span class="metric-sub">53.7% Degree Done</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE SUMMARY HERO CARD -->
                 <div class="profile-summary-card">
                     <div class="profile-summary-top">
                         <div class="profile-image-container">
-                            <img id="studentPhoto" src="images/logo.png" alt="Student Photo" class="profile-image" >
+                            <img id="studentPhoto" src="images/logo.png" alt="Student Photo" class="profile-image" onerror="this.src='https://www.ssgmce.ac.in/favicon.svg'">
                             <span class="status-dot"></span>
-                            <label for="photoUpload" class="photo-upload-btn" title="Change profile photo">
+                            <label for="photoUpload" class="photo-upload-btn" title="Upload new photo (JPG/PNG, &lt;2MB)">
                                 <i class="fa-solid fa-camera"></i>
                             </label>
-                            <input type="file" id="photoUpload" accept="image/*" hidden>
+                            <input type="file" id="photoUpload" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-info">
                             <h2>Shivam Sanjay Aghao</h2>
-                            <span class="profile-id">PRN: 202401088219 • Roll No: 21</span>
-                            <div class="profile-details">
+                            <span class="profile-id">PRN: 202401088219 &bull; Roll No: 21 &bull; UID: CSE2401-21</span>
+                            <div class="profile-details" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px;">
                                 <div class="profile-detail">
-                                    <i class="fa-solid fa-graduation-cap"></i>
-                                    TY B.E. Computer Science &amp; Engineering
+                                    <i class="fa-solid fa-graduation-cap" style="color:var(--primary);"></i>
+                                    <span>B.Tech - Computer Science &amp; Engineering</span>
                                 </div>
                                 <div class="profile-detail">
-                                    <i class="fa-solid fa-layer-group"></i>
-                                    Section 2R1 (Class A)
+                                    <i class="fa-solid fa-layer-group" style="color:var(--accent);"></i>
+                                    <span>Division 2R1 &bull; Class Roll #21</span>
                                 </div>
                                 <div class="profile-detail">
-                                    <i class="fa-solid fa-calendar"></i>
-                                    Academic Year 2026-27 (Sem V)
+                                    <i class="fa-solid fa-calendar-days" style="color:var(--primary);"></i>
+                                    <span>Academic Session 2025-26 &bull; Semester IV</span>
                                 </div>
                                 <div class="profile-detail">
-                                    <span class="status-badge">
-                                        <i class="fa-solid fa-circle" style="font-size:6px"></i>
-                                        Active Student (Autonomous)
+                                    <span class="status-badge" style="background:#ECFDF5; color:#059669; font-weight:700; border:1px solid #A7F3D0;">
+                                        <i class="fa-solid fa-circle-check" style="font-size:8px;"></i>
+                                        Active Student &bull; Autonomous Institute
                                     </span>
                                 </div>
                             </div>
@@ -351,7 +543,7 @@
                     </div>
                 </div>
 
-                <!-- PERSONAL + ACADEMIC -->
+                <!-- TWO-COLUMN SECTION 1: PERSONAL + ACADEMIC -->
                 <div class="profile-two-column">
                     <!-- PERSONAL INFORMATION -->
                     <div class="profile-section-card">
@@ -364,14 +556,14 @@
                         <div class="profile-section-body">
                             <div class="profile-info-grid" style="grid-template-columns:1fr;">
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Full Name</div>
+                                    <div class="profile-info-label">Full Legal Name</div>
                                     <div class="profile-info-colon">:</div>
                                     <div class="profile-info-value">Shivam Sanjay Aghao</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Date of Birth</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">15/08/2004</div>
+                                    <div class="profile-info-value">15 August 2004</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Gender</div>
@@ -386,12 +578,12 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Blood Group</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">O+</div>
+                                    <div class="profile-info-value" id="valBloodGroup">O+ve</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Category</div>
+                                    <div class="profile-info-label">Caste / Category</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">OBC</div>
+                                    <div class="profile-info-value">OBC (Non-Creamy Layer)</div>
                                 </div>
                             </div>
                         </div>
@@ -408,29 +600,29 @@
                         <div class="profile-section-body">
                             <div class="profile-info-grid" style="grid-template-columns:1fr;">
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">University</div>
+                                    <div class="profile-info-label">Institution</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Sant Gadge Baba Amravati University (SGBAU)</div>
+                                    <div class="profile-info-value">SSGMCE Shegaon (Autonomous)</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Department</div>
+                                    <div class="profile-info-label">Affiliated University</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Sant Gadge Baba Amravati University</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Branch &amp; Dept</div>
                                     <div class="profile-info-colon">:</div>
                                     <div class="profile-info-value">Computer Science &amp; Engineering</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Roll Number</div>
+                                    <div class="profile-info-label">Roll &amp; Section</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">21 (Class 2R1)</div>
+                                    <div class="profile-info-value">21 (Class 2R1, Second Year)</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">PRN Number</div>
                                     <div class="profile-info-colon">:</div>
                                     <div class="profile-info-value">202401088219</div>
-                                </div>
-                                <div class="profile-info-item">
-                                    <div class="profile-info-label">Current Semester</div>
-                                    <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Semester V (Third Year B.E.)</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Cumulative CGPA</div>
@@ -442,13 +634,13 @@
                     </div>
                 </div>
 
-                <!-- CONTACT INFORMATION -->
+                <!-- CONTACT INFORMATION CARD -->
                 <div class="profile-section-card">
                     <div class="profile-section-header">
                         <div class="profile-section-icon">
                             <i class="fa-solid fa-address-book"></i>
                         </div>
-                        <h3>Contact Information</h3>
+                        <h3>Contact &amp; Communication Channels</h3>
                     </div>
                     <div class="profile-section-body">
                         <div class="profile-contact-grid">
@@ -457,8 +649,8 @@
                                     <i class="fa-solid fa-phone"></i>
                                 </div>
                                 <div>
-                                    <div class="profile-contact-label">Mobile Number</div>
-                                    <div class="profile-contact-value">+91 98765 43210</div>
+                                    <div class="profile-contact-label">Primary Mobile</div>
+                                    <div class="profile-contact-value" id="valMobile">+91 94221 88219</div>
                                 </div>
                             </div>
                             <div class="profile-contact-card">
@@ -467,23 +659,23 @@
                                 </div>
                                 <div>
                                     <div class="profile-contact-label">Institutional Email</div>
-                                    <div class="profile-contact-value">shivam.aghao@ssgmce.ac.in</div>
+                                    <div class="profile-contact-value" id="valEmail">shivam.aghao@ssgmce.ac.in</div>
                                 </div>
                             </div>
                             <div class="profile-contact-card">
                                 <div class="profile-contact-icon">
-                                    <i class="fa-solid fa-location-dot"></i>
+                                    <i class="fa-solid fa-shield-halved"></i>
                                 </div>
                                 <div>
-                                    <div class="profile-contact-label">Campus Location</div>
-                                    <div class="profile-contact-value">Shegaon, Maharashtra 444203</div>
+                                    <div class="profile-contact-label">Emergency Guardian Phone</div>
+                                    <div class="profile-contact-value" id="valEmergency">+91 98230 41092</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ADDRESS + PARENT -->
+                <!-- TWO-COLUMN SECTION 2: ADDRESS + PARENT -->
                 <div class="profile-two-column">
                     <!-- ADDRESS INFORMATION -->
                     <div class="profile-section-card">
@@ -491,29 +683,29 @@
                             <div class="profile-section-icon">
                                 <i class="fa-solid fa-house"></i>
                             </div>
-                            <h3>Address Information</h3>
+                            <h3>Residential &amp; Postal Address</h3>
                         </div>
                         <div class="profile-section-body">
                             <div class="profile-info-grid" style="grid-template-columns:1fr;">
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Permanent Address</div>
+                                    <div class="profile-info-label">Address Line</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">At + Post Shegaon, Buldhana Road</div>
+                                    <div class="profile-info-value" id="valAddress">Plot 14, Gajanan Colony, Buldhana Road, Shegaon</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">District</div>
+                                    <div class="profile-info-label">District &amp; State</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Buldhana</div>
+                                    <div class="profile-info-value">Buldhana, Maharashtra</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">State</div>
-                                    <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Maharashtra</div>
-                                </div>
-                                <div class="profile-info-item">
-                                    <div class="profile-info-label">PIN Code</div>
+                                    <div class="profile-info-label">Postal PIN Code</div>
                                     <div class="profile-info-colon">:</div>
                                     <div class="profile-info-value">444203</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Hostel Accommodation</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">Day Scholar (Local Transport Transit)</div>
                                 </div>
                             </div>
                         </div>
@@ -525,65 +717,72 @@
                             <div class="profile-section-icon">
                                 <i class="fa-solid fa-people-roof"></i>
                             </div>
-                            <h3>Parent / Guardian Information</h3>
+                            <h3>Parent &amp; Guardian Details</h3>
                         </div>
                         <div class="profile-section-body">
                             <div class="profile-info-grid" style="grid-template-columns:1fr;">
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Father's Name</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Sanjay Aghao</div>
+                                    <div class="profile-info-value">Mr. Sanjay Aghao</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Mother's Name</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Sunita Aghao</div>
+                                    <div class="profile-info-value">Mrs. Sunita Aghao</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Faculty Mentor</div>
+                                    <div class="profile-info-label">Faculty Counselor</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Dr. Rohan Deshmukh (HOD, CSE)</div>
+                                    <div class="profile-info-value">Dr. Rohan Deshmukh (CSE Dept.)</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Admission Quota</div>
+                                    <div class="profile-info-colon">:</div>
+                                    <div class="profile-info-value">MHT-CET State Merit (Autonomous CAP)</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- STUDENT DOCUMENTS -->
+                <!-- INSTITUTIONAL VERIFIED CREDENTIALS & DOCUMENTS -->
                 <div class="profile-section-card">
                     <div class="profile-section-header">
                         <div class="profile-section-icon">
-                            <i class="fa-solid fa-folder-open"></i>
+                            <i class="fa-solid fa-folder-closed"></i>
                         </div>
-                        <h3>Student Documents &amp; Verification</h3>
+                        <h3>Verified Institutional Documents &amp; Identity Clearances</h3>
                     </div>
                     <div class="profile-section-body">
                         <div class="profile-documents-grid">
-                            <div class="profile-document-card">
+                            <div class="profile-document-card" onclick="viewDocument('id-card')">
                                 <div class="profile-document-icon">
                                     <i class="fa-solid fa-id-card"></i>
                                 </div>
                                 <div>
-                                    <div class="profile-document-name">Smart RFID Identity Card</div>
-                                    <div class="profile-document-status">Verified &amp; Active</div>
+                                    <div class="profile-document-name">Smart RFID Student Identity Card</div>
+                                    <div class="profile-document-status">Verified &bull; Valid Thru 2028 (Click to View)</div>
                                 </div>
                             </div>
-                            <div class="profile-document-card">
+
+                            <div class="profile-document-card" onclick="viewDocument('grade-cards')">
                                 <div class="profile-document-icon">
                                     <i class="fa-solid fa-file-lines"></i>
                                 </div>
                                 <div>
-                                    <div class="profile-document-name">Autonomous Grade Cards (Sem I-IV)</div>
-                                    <div class="profile-document-status">Verified &amp; Available</div>
+                                    <div class="profile-document-name">Autonomous Semester Grade Sheets (Sem I - IV)</div>
+                                    <div class="profile-document-status">SGPA 8.84 &bull; Official Digital Record</div>
                                 </div>
                             </div>
-                            <div class="profile-document-card">
+
+                            <div class="profile-document-card" onclick="viewDocument('bonafide')">
                                 <div class="profile-document-icon">
                                     <i class="fa-solid fa-certificate"></i>
                                 </div>
                                 <div>
-                                    <div class="profile-document-name">Bonafide &amp; Library Clearances</div>
-                                    <div class="profile-document-status">Up to Date</div>
+                                    <div class="profile-document-name">Institutional Bonafide &amp; Library Clearances</div>
+                                    <div class="profile-document-status">Signed &bull; AY 2025-26 Clearance Valid</div>
                                 </div>
                             </div>
                         </div>
@@ -592,7 +791,7 @@
 
             </div>
 
-            <!-- FOOTER -->
+            <!-- FOOTER (Identical to Dashboard, Attendance, Syllabus) -->
             <footer class="dashboard-footer" role="contentinfo">
                 <div class="footer-left">
                     &copy; 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon. All rights reserved.
@@ -607,6 +806,77 @@
             </footer>
 
         </main>
+    </div>
+
+    <!-- ==================== EDIT PROFILE MODAL ==================== -->
+    <div class="profile-modal-backdrop" id="editProfileModal" aria-modal="true" role="dialog">
+        <div class="profile-modal-card">
+            <div class="profile-modal-header">
+                <h3>Edit Profile Information</h3>
+                <button type="button" class="modal-close-btn" onclick="closeEditProfileModal()" aria-label="Close dialog">&times;</button>
+            </div>
+            <form id="editProfileForm">
+                <div class="profile-modal-body">
+                    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:16px;">
+                        Update your editable personal and contact details. Core academic identifiers (PRN, Roll No, CGPA) are verified by the Academic Cell and cannot be changed here.
+                    </p>
+                    <div class="form-group-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="inputMobile">Primary Mobile Number</label>
+                            <input type="tel" class="form-input" id="inputMobile" required pattern="[0-9+ -]{10,16}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="inputEmail">Institutional Email Address</label>
+                            <input type="email" class="form-input" id="inputEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-group-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="inputBloodGroup">Blood Group</label>
+                            <input type="text" class="form-input" id="inputBloodGroup" placeholder="e.g. O+ve, B+ve">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="inputEmergency">Emergency Contact</label>
+                            <input type="tel" class="form-input" id="inputEmergency" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inputAddress">Residential / Postal Address</label>
+                        <textarea class="form-textarea" id="inputAddress" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="profile-modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeEditProfileModal()" style="padding:9px 18px; border-radius:8px; border:1px solid #CBD5E1; font-weight:600; font-size:0.85rem; cursor:pointer; background:#FFF; color:var(--navy);">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="padding:9px 20px; border-radius:8px; border:none; background:var(--primary); color:#FFF; font-weight:600; font-size:0.85rem; cursor:pointer;">
+                        Save Profile Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== DOCUMENT VIEWER MODAL ==================== -->
+    <div class="profile-modal-backdrop" id="documentModal" aria-modal="true" role="dialog">
+        <div class="profile-modal-card" style="max-width:640px;">
+            <div class="profile-modal-header">
+                <h3 id="docModalTitle">Document Preview</h3>
+                <button type="button" class="modal-close-btn" onclick="closeDocumentModal()" aria-label="Close dialog">&times;</button>
+            </div>
+            <div class="profile-modal-body" id="docModalBody">
+                <!-- Injected via JavaScript -->
+            </div>
+            <div class="profile-modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeDocumentModal()" style="padding:9px 18px; border-radius:8px; border:1px solid #CBD5E1; font-weight:600; font-size:0.85rem; cursor:pointer; background:#FFF; color:var(--navy);">
+                    Close
+                </button>
+                <button type="button" class="btn btn-primary" onclick="downloadCurrentDocument()" style="padding:9px 20px; border-radius:8px; border:none; background:var(--primary); color:#FFF; font-weight:600; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download Verified Copy</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Notification Container -->
