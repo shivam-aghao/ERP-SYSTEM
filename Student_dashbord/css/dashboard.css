@@ -19,7 +19,7 @@
   --navy: #0B1F3A;
   --navy-dark: #061325;
   --navy-light: #132b4f;
-  
+
   /* Background & Surface Tokens */
   --white: #FFFFFF;
   --light-bg: #F4F8FC;
@@ -27,14 +27,14 @@
   --surface-hover: #F8FAFC;
   --border-color: #E2E8F0;
   --border-light: #EDF2F7;
-  
+
   /* Typography Tokens */
   --text: #263238;
   --text-primary: #1E293B;
   --text-secondary: #475569;
   --muted: #64748B;
   --text-light: #94A3B8;
-  
+
   /* Status Indicators */
   --success: #10B981;
   --success-bg: rgba(16, 185, 129, 0.12);
