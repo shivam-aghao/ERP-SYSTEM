@@ -23,7 +23,7 @@ const AttendanceState = {
   selectedSubject: {
     code: "CS302",
     name: "Data Structures",
-    faculty: "Dr. Rohan Deshmukh",
+    faculty: "Dr. J.M.Patil",
     time: "10:00 AM – 11:00 AM",
     icon: "book-open"
   },
@@ -56,7 +56,7 @@ const AttendanceState = {
       subjectCode: "CS302",
       subjectName: "Data Structures",
       lectureTime: "08:00 AM – 09:00 AM",
-      teacher: "Dr. Rohan Deshmukh",
+      teacher: "Dr. J.M.Patil",
       submittedAt: new Date().toISOString()
     }
   ],

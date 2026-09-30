@@ -8,7 +8,6 @@ let attendanceChartInstance = null;
 let syllabusChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  checkBackendConnection();
   initAttendanceChart();
   initSyllabusProgressChart();
   initSubjectAttendanceToggle();
@@ -26,33 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
   hydrateDashboardData();
 });
-
-async function checkBackendConnection() {
-  const headerRight = document.querySelector('.header-right');
-  if (!headerRight) return;
-  
-  let pill = document.getElementById('student-live-conn-pill');
-  if (!pill) {
-    pill = document.createElement('div');
-    pill.id = 'student-live-conn-pill';
-    pill.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;margin-right:12px;cursor:default;';
-    headerRight.prepend(pill);
-  }
-
-  try {
-    await fetch('http://localhost:8001/docs', { method: 'GET', mode: 'no-cors' });
-    pill.style.background = '#DCFCE7';
-    pill.style.color = '#15803D';
-    pill.style.border = '1px solid #86EFAC';
-    pill.innerHTML = '<span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 5px #22C55E;"></span> Live Connected (Port 8001 & Supabase)';
-    pill.title = 'Student Dashboard Backend (Port 8001) & Cloud Supabase Database Live';
-  } catch (e) {
-    pill.style.background = '#FEF3C7';
-    pill.style.color = '#B45309';
-    pill.style.border = '1px solid #FCD34D';
-    pill.innerHTML = '<span style="width:7px;height:7px;background:#F59E0B;border-radius:50%;display:inline-block;"></span> Offline Mode';
-  }
-}
 
 /* ==========================================================================
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)

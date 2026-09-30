@@ -140,15 +140,15 @@ if (typeof window !== 'undefined') {
 
 const TeacherERPData = {
   faculty: {
-    name: "Dr. Rohan Deshmukh",
+    name: "Dr. J.M.Patil",
     prefix: "Prof.",
     title: "Associate Professor",
     department: "Computer Science & Engineering",
     departmentCode: "CSE",
     employeeId: "FAC-CSE-1048",
-    email: "rohan.deshmukh@college.edu",
+    email: "jm.patil@ssgmce.ac.in",
     phone: "+91 98230 45678",
-    avatarInitials: "RD",
+    avatarInitials: "JP",
     academicYear: AcademicDateUtils.getCurrentAcademicTerm().academicYear,
     currentSemester: AcademicDateUtils.getCurrentAcademicTerm().semesterName
   },
@@ -275,20 +275,20 @@ const TeacherERPData = {
   subjects: {
     // CSE 2R1
     "2R1": [
-      { code: "CS302", name: "Data Structures", faculty: "Dr. Rohan Deshmukh", time: "10:00 AM – 11:00 AM", icon: "book-open", credits: "4 Credits" },
+      { code: "CS302", name: "Data Structures", faculty: "Dr. J.M.Patil", time: "10:00 AM – 11:00 AM", icon: "book-open", credits: "4 Credits" },
       { code: "CS304", name: "Java Programming", faculty: "Prof. Priya Sharma", time: "11:15 AM – 12:15 PM", icon: "code", credits: "4 Credits" },
       { code: "CS301", name: "Discrete Mathematics", faculty: "Prof. Aniket Roy", time: "01:30 PM – 02:30 PM", icon: "binary", credits: "3 Credits" },
       { code: "CS303", name: "Digital Logic & Design", faculty: "Prof. Sunita Rao", time: "02:45 PM – 03:45 PM", icon: "cpu", credits: "3 Credits" }
     ],
     // CSE 2R2
     "2R2": [
-      { code: "CS304", name: "Java Programming", faculty: "Dr. Rohan Deshmukh", time: "11:00 AM – 12:00 PM", icon: "code", credits: "4 Credits" },
+      { code: "CS304", name: "Java Programming", faculty: "Dr. J.M.Patil", time: "11:00 AM – 12:00 PM", icon: "code", credits: "4 Credits" },
       { code: "CS302", name: "Data Structures", faculty: "Prof. Priya Sharma", time: "01:30 PM – 02:30 PM", icon: "book-open", credits: "4 Credits" },
       { code: "CS305", name: "Computer Organization", faculty: "Prof. Manoj Verma", time: "02:45 PM – 03:45 PM", icon: "cpu", credits: "3 Credits" }
     ],
     // CSE 3R
     "3R": [
-      { code: "CS501", name: "Database Management System", faculty: "Dr. Rohan Deshmukh", time: "09:00 AM – 10:00 AM", icon: "database", credits: "4 Credits" },
+      { code: "CS501", name: "Database Management System", faculty: "Dr. J.M.Patil", time: "09:00 AM – 10:00 AM", icon: "database", credits: "4 Credits" },
       { code: "CS502", name: "Operating Systems", faculty: "Prof. Vikram Sen", time: "10:15 AM – 11:15 AM", icon: "terminal", credits: "4 Credits" },
       { code: "CS503", name: "Computer Networks", faculty: "Prof. Neha Gupta", time: "12:00 PM – 01:00 PM", icon: "network", credits: "4 Credits" },
       { code: "CS504", name: "Theory of Computation", faculty: "Dr. Arvind Shinde", time: "02:00 PM – 03:00 PM", icon: "brain", credits: "3 Credits" }
@@ -296,7 +296,7 @@ const TeacherERPData = {
     // CSE 4R
     "4R": [
       { code: "CS701", name: "Cloud Computing", faculty: "Dr. Arvind Shinde", time: "10:00 AM – 11:00 AM", icon: "cloud", credits: "4 Credits" },
-      { code: "CS702", name: "Information Security", faculty: "Dr. Rohan Deshmukh", time: "11:15 AM – 12:15 PM", icon: "shield-check", credits: "4 Credits" },
+      { code: "CS702", name: "Information Security", faculty: "Dr. J.M.Patil", time: "11:15 AM – 12:15 PM", icon: "shield-check", credits: "4 Credits" },
       { code: "CS703", name: "Machine Learning", faculty: "Prof. Amit Patel", time: "02:00 PM – 03:00 PM", icon: "sparkles", credits: "4 Credits" }
     ],
 

@@ -331,7 +331,7 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || "Dr. J.M.Patil";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");

@@ -27,12 +27,12 @@ const SUPABASE_STUDENTS_LIST = [
 
 const ERP_DATA = {
   teacher: {
-    name: "Prof. Rajesh Sharma",
+    name: "Dr. J.M.Patil",
     id: "EMP-CSE-1042",
     designation: "Associate Professor",
     department: "Computer Science & Engineering",
-    email: "rajesh.sharma@ssgmce.ac.in",
-    avatar: "RS",
+    email: "jm.patil@ssgmce.ac.in",
+    avatar: "JP",
     unreadNotifications: 3
   },
 
@@ -134,18 +134,18 @@ const ERP_DATA = {
 
   subjects: {
     CSE: [
-      { code: "CS302", name: "Data Structures", icon: "📘", teacher: "Prof. Rajesh Sharma", time: "10:00 AM – 11:00 AM", type: "Theory" },
-      { code: "CS303", name: "Java Programming", icon: "☕", teacher: "Prof. Rajesh Sharma", time: "11:15 AM – 12:15 PM", type: "Theory + Lab" },
+      { code: "CS302", name: "Data Structures", icon: "📘", teacher: "Dr. J.M.Patil", time: "10:00 AM – 11:00 AM", type: "Theory" },
+      { code: "CS303", name: "Java Programming", icon: "☕", teacher: "Dr. J.M.Patil", time: "11:15 AM – 12:15 PM", type: "Theory + Lab" },
       { code: "CS304", name: "Operating Systems", icon: "🖥️", teacher: "Dr. Anita Joshi", time: "01:00 PM – 02:00 PM", type: "Theory" },
-      { code: "CS305", name: "Database Management", icon: "🗄️", teacher: "Prof. Rajesh Sharma", time: "02:15 PM – 03:15 PM", type: "Theory" },
+      { code: "CS305", name: "Database Management", icon: "🗄️", teacher: "Dr. J.M.Patil", time: "02:15 PM – 03:15 PM", type: "Theory" },
       { code: "CS306", name: "Computer Networks", icon: "🌐", teacher: "Prof. Vikram Kulkarni", time: "03:30 PM – 04:30 PM", type: "Theory" },
       { code: "CS307", name: "Web Development", icon: "⚡", teacher: "Prof. Neha Gupta", time: "04:30 PM – 05:30 PM", type: "Practical" }
     ],
     IT: [
-      { code: "IT301", name: "Object Oriented Design", icon: "📦", teacher: "Prof. Rajesh Sharma", time: "09:00 AM – 10:00 AM", type: "Theory" },
+      { code: "IT301", name: "Object Oriented Design", icon: "📦", teacher: "Dr. J.M.Patil", time: "09:00 AM – 10:00 AM", type: "Theory" },
       { code: "IT302", name: "Data Warehousing & Mining", icon: "📊", teacher: "Prof. Sneha Patil", time: "10:00 AM – 11:00 AM", type: "Theory" },
       { code: "IT303", name: "Cloud Computing", icon: "☁️", teacher: "Dr. Alok Verma", time: "11:15 AM – 12:15 PM", type: "Theory" },
-      { code: "IT304", name: "Cyber Security", icon: "🔒", teacher: "Prof. Rajesh Sharma", time: "01:30 PM – 02:30 PM", type: "Theory" }
+      { code: "IT304", name: "Cyber Security", icon: "🔒", teacher: "Dr. J.M.Patil", time: "01:30 PM – 02:30 PM", type: "Theory" }
     ],
     EE: [
       { code: "EE301", name: "Power Systems", icon: "⚡", teacher: "Dr. S. K. Mahajan", time: "10:00 AM – 11:00 AM", type: "Theory" },

@@ -202,14 +202,14 @@ def seed_database(db: Session):
             db.flush()
         subj_map[scode] = subj
 
-    # 4. Teacher (Prof. Rajesh Sharma)
+    # 4. Teacher (Dr. J.M.Patil)
     cse_dept = dept_map.get("CSE")
     teacher = db.query(Teacher).filter_by(emp_code="EMP-CSE-1042").first()
     if not teacher:
         teacher = Teacher(
-            full_name="Prof. Rajesh Sharma",
+            full_name="Dr. J.M.Patil",
             emp_code="EMP-CSE-1042",
-            email="rajesh.sharma@ssgmce.ac.in",
+            email="jm.patil@ssgmce.ac.in",
             password_hash=hash_password("password123"),
             designation="Associate Professor",
             department_id=cse_dept.id if cse_dept else None,
