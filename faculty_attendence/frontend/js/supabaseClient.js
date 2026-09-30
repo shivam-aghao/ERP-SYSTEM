@@ -1,6 +1,6 @@
 /**
  * College ERP - Supabase Client Initializer
- * Enables direct live connection between Frontend UI and Supabase database.
+ * Single Shared Cloud PostgreSQL Database: gftqvclenyplnuoocbwe
  */
 
 const SUPABASE_CONFIG = {
@@ -10,16 +10,22 @@ const SUPABASE_CONFIG = {
 
 let supabaseClient = null;
 
-if (window.supabase && typeof window.supabase.createClient === "function") {
-  try {
-    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-    console.log("%c[Supabase] Client initialized successfully.", "color: #10B981; font-weight: bold; font-size: 14px;");
-  } catch (err) {
-    console.warn("[Supabase] Failed to initialize Supabase client:", err);
+if (typeof window !== "undefined") {
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      console.log("%c[Supabase] Client initialized successfully for College ERP.", "color: #10B981; font-weight: bold; font-size: 13px;");
+    } catch (err) {
+      console.warn("[Supabase] Failed to initialize Supabase client:", err);
+    }
+  } else {
+    console.info("[Supabase] @supabase/supabase-js library loaded via CDN.");
   }
-} else {
-  console.warn("[Supabase] @supabase/supabase-js library not loaded yet.");
+
+  window.supabaseClient = supabaseClient;
+  window.SUPABASE_CONFIG = SUPABASE_CONFIG;
 }
 
-window.supabaseClient = supabaseClient;
-window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { SUPABASE_CONFIG, supabaseClient };
+}
