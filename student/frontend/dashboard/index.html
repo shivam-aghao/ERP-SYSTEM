@@ -63,6 +63,12 @@
 
     <!-- Right Controls: Notifications & Student Profile -->
     <div class="header-right">
+      <!-- Live Visual Indicator Badge (🟢 Live Connected / 🔴 Disconnected) -->
+      <div class="erp-live-badge" id="erpLiveConnBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; margin-right: 12px; transition: all 0.3s ease;" title="Connected to Student API (Port 8001) & Cloud Supabase Database">
+        <span class="live-dot" id="liveDot" style="width: 8px; height: 8px; background: #22C55E; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #22C55E;"></span>
+        <span id="liveBadgeText">Live Connected (Backend &amp; Supabase)</span>
+      </div>
+
       <!-- Notification Bell -->
       <div class="notif-wrapper" id="notifWrapper">
         <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">

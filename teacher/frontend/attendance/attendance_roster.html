@@ -843,21 +843,27 @@
       });
 
       // Dynamic live database & backend profile sync
-      (async function syncLiveFaculty() {
-        try {
-          const res = await fetch("http://localhost:8000/api/v1/profile/active");
-          if (res.ok) {
-            const json = await res.json();
-            if (json.data && json.data.fullName) {
-              const box = document.getElementById("roster-teacher-box");
-              if (box) {
-                box.innerHTML = `${json.data.fullName} (${json.data.empCode || "FAC-CSE-1048"}) ${json.data.designation || "Associate Professor"} ${json.data.department || "CSE"} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;"></span> Live Connected (${json.data.source || "Supabase"})</span>`;
+      (function startRosterSync() {
+        const checkRoster = async () => {
+          const box = document.getElementById("roster-teacher-box") || document.getElementById("rosterTeacherInfo");
+          try {
+            const res = await fetch("http://localhost:8000/api/v1/profile/active", { cache: "no-store" });
+            if (res.ok) {
+              const json = await res.json();
+              if (json.data && json.data.fullName && box) {
+                box.innerHTML = `${json.data.fullName} (${json.data.empCode || "FAC-CSE-1048"}) ${json.data.designation || "Associate Professor"} ${json.data.department || "CSE"} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 5px #22C55E;"></span> Live Connected (Backend &amp; Supabase)</span>`;
+                return;
               }
             }
+            throw new Error("HTTP " + res.status);
+          } catch (e) {
+            if (box) {
+              box.innerHTML = `Dr. J.M.Patil (FAC-CSE-1048) Associate Professor CSE <span style="margin-left:auto;font-size:10px;background:#FEE2E2;color:#B91C1C;padding:2px 8px;border-radius:10px;border:1px solid #FCA5A5;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#EF4444;border-radius:50%;display:inline-block;box-shadow:0 0 5px #EF4444;"></span> Disconnected (Backend &amp; DB)</span>`;
+            }
           }
-        } catch (e) {
-          console.info("[Roster] Running in local offline mode:", e);
-        }
+        };
+        checkRoster();
+        setInterval(checkRoster, 4000);
       })();
 
     })();

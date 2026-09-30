@@ -71,17 +71,17 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#22C55E";
             dot.style.boxShadow = "0 0 6px #22C55E";
           }
-          if (text) text.textContent = `Live Connected (${source})`;
+          if (text) text.textContent = "Live Connected (Backend & Supabase)";
         } else {
-          badge.style.background = "#FEF3C7";
-          badge.style.color = "#B45309";
-          badge.style.border = "1px solid #FCD34D";
-          badge.title = "Backend/Database disconnected - operating in offline cache mode";
+          badge.style.background = "#FEE2E2";
+          badge.style.color = "#B91C1C";
+          badge.style.border = "1px solid #FCA5A5";
+          badge.title = "Backend/Database disconnected - operating in offline mode";
           if (dot) {
-            dot.style.background = "#F59E0B";
-            dot.style.boxShadow = "none";
+            dot.style.background = "#EF4444";
+            dot.style.boxShadow = "0 0 6px #EF4444";
           }
-          if (text) text.textContent = "Offline Cache";
+          if (text) text.textContent = "Disconnected (Backend & DB)";
         }
       };
 
