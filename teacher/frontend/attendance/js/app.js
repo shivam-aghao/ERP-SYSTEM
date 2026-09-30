@@ -25,9 +25,83 @@ document.addEventListener("DOMContentLoaded", () => {
       AttendanceService.init();
       this.bindDOM();
       this.bindEvents();
+      this.syncTeacherFromBackend();
+      this.startLiveHealthMonitor();
       this.renderRecentAttendance();
       this.renderCalendar();
       this.updateNavigationUI();
+    },
+
+    async syncTeacherFromBackend() {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/profile/active");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.fullName) {
+            if (typeof ERP_DATA !== "undefined" && ERP_DATA.teacher) {
+              ERP_DATA.teacher.name = json.data.fullName;
+              ERP_DATA.teacher.id = json.data.empCode || ERP_DATA.teacher.id;
+              ERP_DATA.teacher.designation = json.data.designation || ERP_DATA.teacher.designation;
+              ERP_DATA.teacher.avatar = json.data.avatar || "JP";
+            }
+            const nameEl = document.getElementById("teacherName");
+            if (nameEl) nameEl.textContent = json.data.fullName;
+            const avatarEl = document.getElementById("teacherAvatar");
+            if (avatarEl) avatarEl.textContent = json.data.avatar || "JP";
+          }
+        }
+      } catch (e) {
+        console.warn("[App] Running in offline fallback mode:", e);
+      }
+    },
+
+    startLiveHealthMonitor() {
+      const updateBadge = (isOnline, source = "Supabase") => {
+        const badge = document.getElementById("erpLiveConnBadge");
+        const dot = document.getElementById("liveDot");
+        const text = document.getElementById("liveBadgeText");
+        if (!badge) return;
+
+        if (isOnline) {
+          badge.style.background = "#DCFCE7";
+          badge.style.color = "#15803D";
+          badge.style.border = "1px solid #86EFAC";
+          badge.title = "Connected to Faculty API (Port 8000) & Cloud Supabase Database";
+          if (dot) {
+            dot.style.background = "#22C55E";
+            dot.style.boxShadow = "0 0 6px #22C55E";
+          }
+          if (text) text.textContent = `Live Connected (${source})`;
+        } else {
+          badge.style.background = "#FEF3C7";
+          badge.style.color = "#B45309";
+          badge.style.border = "1px solid #FCD34D";
+          badge.title = "Backend/Database disconnected - operating in offline cache mode";
+          if (dot) {
+            dot.style.background = "#F59E0B";
+            dot.style.boxShadow = "none";
+          }
+          if (text) text.textContent = "Offline Cache";
+        }
+      };
+
+      const checkHealth = async () => {
+        try {
+          const res = await fetch("http://localhost:8000/api/v1/profile/active", { cache: "no-store" });
+          if (res.ok) {
+            const json = await res.json();
+            const src = (json.data && json.data.source === "supabase") ? "Supabase" : "Backend";
+            updateBadge(true, src);
+            return;
+          }
+          throw new Error("HTTP " + res.status);
+        } catch (e) {
+          updateBadge(false);
+        }
+      };
+
+      checkHealth();
+      setInterval(checkHealth, 4000);
     },
 
     bindDOM() {

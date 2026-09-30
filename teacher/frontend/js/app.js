@@ -9,6 +9,7 @@ const TeacherApp = {
     this.bindEvents();
     this.renderHeaderProfile();
     this.syncTeacherFromDatabase();
+    this.startLiveHealthMonitor();
     this.renderDynamicDates();
     this.renderDashboardData();
     this.renderTimetableView();
@@ -124,29 +125,49 @@ const TeacherApp = {
   },
 
   updateConnectionBadge(isOnline, source = 'Supabase') {
-    let badge = document.getElementById('erp-live-conn-badge');
-    if (!badge) {
-      badge = document.createElement('div');
-      badge.id = 'erp-live-conn-badge';
-      badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;margin-right:12px;cursor:default;';
-      const headerRight = document.querySelector('.header-right') || document.querySelector('.top-navbar-right');
-      if (headerRight) {
-        headerRight.prepend(badge);
-      }
-    }
+    const badge = document.getElementById('erpLiveConnBadge') || document.getElementById('erp-live-conn-badge');
+    const dot = document.getElementById('liveDot');
+    const text = document.getElementById('liveBadgeText');
+    if (!badge) return;
+
     if (isOnline) {
       badge.style.background = '#DCFCE7';
       badge.style.color = '#15803D';
       badge.style.border = '1px solid #86EFAC';
-      badge.innerHTML = `<span style="width:8px;height:8px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 6px #22C55E;"></span> Live Connected (${source})`;
-      badge.title = 'Connected to Backend (Port 8000) & Supabase Database';
+      badge.title = 'Connected to Faculty API (Port 8000) & Cloud Supabase Database';
+      if (dot) {
+        dot.style.background = '#22C55E';
+        dot.style.boxShadow = '0 0 6px #22C55E';
+      }
+      if (text) text.textContent = `Live Connected (${source})`;
     } else {
       badge.style.background = '#FEF3C7';
       badge.style.color = '#B45309';
       badge.style.border = '1px solid #FCD34D';
-      badge.innerHTML = `<span style="width:8px;height:8px;background:#F59E0B;border-radius:50%;display:inline-block;"></span> Offline Cache`;
-      badge.title = 'Running on offline cache';
+      badge.title = 'Backend/Database disconnected - operating in offline cache mode';
+      if (dot) {
+        dot.style.background = '#F59E0B';
+        dot.style.boxShadow = 'none';
+      }
+      if (text) text.textContent = 'Offline Cache';
     }
+  },
+
+  startLiveHealthMonitor() {
+    setInterval(async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/profile/active', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const src = (json.data && json.data.source === 'supabase') ? 'Supabase' : 'Backend';
+          this.updateConnectionBadge(true, src);
+          return;
+        }
+        throw new Error('HTTP ' + res.status);
+      } catch (e) {
+        this.updateConnectionBadge(false);
+      }
+    }, 4000);
   },
 
   initLucideIcons() {
