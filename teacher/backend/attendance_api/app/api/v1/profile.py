@@ -5,7 +5,68 @@ from app.models.db_models import Teacher, Notification, ClassCard
 from app.models.schema import ProfileUpdate
 from app.utils.response import success_response, error_response
 
+import logging
+from app.database import get_supabase_client
+
+logger = logging.getLogger("erp_fastapi")
+
 router = APIRouter(tags=["Profile & Notifications"])
+
+@router.get("/profile/active")
+def get_active_faculty_profile(db: Session = Depends(get_db)):
+    """
+    Returns active faculty profile directly from Supabase / database without requiring token.
+    Enables frontend to immediately sync dynamic teacher name and credentials.
+    """
+    # 1. Try Supabase table 'faculty'
+    try:
+        sb = get_supabase_client()
+        if sb:
+            res = sb.table("faculty").select("*").limit(1).execute()
+            if res.data and len(res.data) > 0:
+                row = res.data[0]
+                return success_response(data={
+                    "fullName": row.get("name") or "Dr. J.M.Patil",
+                    "empCode": row.get("employee_id") or "FAC-CSE-1048",
+                    "designation": row.get("title") or "Associate Professor",
+                    "department": row.get("department_code") or "CSE",
+                    "departmentName": "Computer Science & Engineering",
+                    "email": row.get("email") or "jm.patil@ssgmce.ac.in",
+                    "phone": row.get("phone") or "+91 98765 43210",
+                    "avatar": row.get("avatar_initials") or "JP",
+                    "source": "supabase"
+                })
+    except Exception as e:
+        logger.warning("Supabase faculty query error: %s", e)
+
+    # 2. Local database fallback
+    teacher = db.query(Teacher).first()
+    if teacher:
+        dept_code = teacher.department.code if teacher.department else "CSE"
+        dept_name = teacher.department.name if teacher.department else "Computer Science & Engineering"
+        return success_response(data={
+            "fullName": teacher.full_name,
+            "empCode": teacher.emp_code,
+            "designation": teacher.designation,
+            "department": dept_code,
+            "departmentName": dept_name,
+            "email": teacher.email,
+            "phone": teacher.phone or "+91 98765 43210",
+            "avatar": teacher.avatar or "JP",
+            "source": "database"
+        })
+
+    return success_response(data={
+        "fullName": "Dr. J.M.Patil",
+        "empCode": "FAC-CSE-1048",
+        "designation": "Associate Professor",
+        "department": "CSE",
+        "departmentName": "Computer Science & Engineering",
+        "email": "jm.patil@ssgmce.ac.in",
+        "phone": "+91 98765 43210",
+        "avatar": "JP",
+        "source": "default"
+    })
 
 @router.get("/profile")
 def get_profile(current_user: Teacher = Depends(get_current_user), db: Session = Depends(get_db)):
