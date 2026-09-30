@@ -1,8 +1,29 @@
 /**
  * College ERP - Teacher Attendance Management System
  * Data Store & Prototype Data Structure
- * Ready for REST API / PostgreSQL / MySQL / Supabase integration
+ * Integrated directly with Supabase Database
  */
+
+const SUPABASE_STUDENTS_LIST = [
+  "Aaditya Sanjay Chaudhari", "Aakanksha Kishor Patil", "Aarav Nitin Deshmukh", "Abhishek Vilas Kale",
+  "Aditi Gajanan Deshpande", "Akash Pramod Solanke", "Amey Vijay Kadam", "Ananya Rajesh Joshi",
+  "Aniket Dilip Kharche", "Anushka Sunil More", "Ashwin Ramesh Shelke", "Atharva Sandip Patil",
+  "Bhavesh Vinod Kulkarni", "Chetan Arun Bhoyar", "Darshan Sanjay Tale", "Devendra Ashok Shinde",
+  "Dhanashree Mohan Nemade", "Divya Santosh Mahajan", "Gaurav Eknath Gawande", "Harshada Umesh Dhote",
+  "Hrishikesh Manoj Zope", "Ishaan Satish Rathod", "Jayesh Pandurang Sonone", "Kalyani Dinesh Warade",
+  "Kaustubh Pravin Bharad", "Ketaki Suresh Dandge", "Madhura Vinayak Borse", "Mansi Devidas Wankhade",
+  "Mayur Dipak Wagh", "Neha Kishor Pachpor", "Nikhil Vijay Raut", "Nisha Madhav Hiwale",
+  "Omkar Sunil Jadhav", "Pallavi Ganesh Gawali", "Piyush Rajendra Saraf", "Pooja Ramkrishna Deshmukh",
+  "Pranav Sanjay Sarnaik", "Prathamesh Dilip Bobade", "Pratiksha Vijay Tayade", "Radhika Kailash Kute",
+  "Rajat Vinod Sharma", "Rashmi Omprakash Tapadiya", "Riddhi Jugalkishor Mundhada", "Rohan Vilas Ingle",
+  "Rucha Pramod Kulkarni", "Rushikesh Dilip Chavan", "Sahil Sunil Mundhada", "Sakshi Narendra Thakare",
+  "Samiksha Satish Kolte", "Sanket Ashok Patil", "Sayali Sanjay Junghare", "Shivam Rajesh Aghao",
+  "Shravani Sandip Khandare", "Shubham Santosh Agrawal", "Siddhesh Pradeep Pande", "Snehal Gopal Ghuge",
+  "Sudarshan Sanjay Kale", "Swapnil Sudhakar Tale", "Tanvi Shrikant Wagh", "Tejaswini Anil Sawale",
+  "Utkarsh Vasant Wankhade", "Vaibhav Prabhakar Kale", "Vedant Gajanan Deshmukh", "Yash Pradip Chopade",
+  "Yogesh Suresh Gawande", "Zaid Khan Pathan", "Bhakti Rajesh Mundada", "Chaitanya Vijay Joshi",
+  "Dhiraj Sanjay Gawali"
+];
 
 const ERP_DATA = {
   teacher: {
@@ -74,7 +95,7 @@ const ERP_DATA = {
 
   classes: {
     CSE: [
-      { id: "2R1", name: "2R1", year: "2nd Year - Sem 3", division: "Div 1", studentCount: 60, room: "Lab 301 / Hall A" },
+      { id: "2R1", name: "2R1", year: "2nd Year - Sem 3", division: "Div 1", studentCount: 69, room: "Lab 301 / Hall A" },
       { id: "2R2", name: "2R2", year: "2nd Year - Sem 3", division: "Div 2", studentCount: 60, room: "Hall B" },
       { id: "3R",  name: "3R",  year: "3rd Year - Sem 5", division: "Div 1", studentCount: 60, room: "Hall C" },
       { id: "4R",  name: "4R",  year: "4th Year - Sem 7", division: "Div 1", studentCount: 58, room: "Seminar Hall" }
@@ -149,33 +170,24 @@ const ERP_DATA = {
     ]
   },
 
-  // Generate 60 realistic students per class
-  generateStudentRoster(deptCode, classId) {
-    const studentNames = [
-      "Aarav Deshmukh", "Priya Nair", "Gargi Mane", "Rohan Patil", "Sneha Kulkarni",
-      "Vivek Joshi", "Ananya Sharma", "Aditya Jadhav", "Tanvi Shinde", "Kunal Pawar",
-      "Neha Kadam", "Omkar More", "Pooja Gaikwad", "Siddharth Bhat", "Isha Sawant",
-      "Harsh Vardhan", "Rutuja Salunkhe", "Varun Kale", "Sayali Chavan", "Abhishek Khot",
-      "Shivam Aghao", "Pranav Deshpande", "Megha Thakur", "Nikhil Mohite", "Akanksha Soni",
-      "Tejas Thorat", "Shruti Jagtap", "Sanket Ghorpade", "Divya Shrivastav", "Akash Shinde",
-      "Shweta Bhole", "Karthik Ranganathan", "Pooja Tambe", "Mayur Sonawane", "Sonal Mehta",
-      "Atharva Kulkarni", "Komal Ghate", "Rahul Wankhede", "Madhura Dixit", "Sourabh Tamboli",
-      "Aishwarya Nair", "Gaurav Bhosale", "Nikita Agarwal", "Shubham Waghmare", "Radhika Pandit",
-      "Pratik Sonar", "Vaishnavi Patil", "Chetan Biradar", "Aarti Sawant", "Sumit Ingle",
-      "Pallavi Naik", "Samarth Joshi", "Rupali Chate", "Sushant Gawande", "Janhavi Korde",
-      "Chaitanya Gadgil", "Kalyani Londhe", "Yashwant Satpute", "Dipali Suryawanshi", "Mandar Ranade"
-    ];
+  _liveStudentsCache: null,
 
-    return studentNames.map((name, index) => {
+  // Generate students roster - dynamically links with 69 Supabase students
+  generateStudentRoster(deptCode, classId) {
+    const list = this._liveStudentsCache || SUPABASE_STUDENTS_LIST;
+    console.log(`%c[Supabase] Generating Roster: ${list.length} students for ${deptCode} - ${classId}`, "color: #3B82F6; font-weight: bold;");
+    return list.map((name, index) => {
       const roll = index + 1;
       const rollStr = roll < 10 ? `0${roll}` : `${roll}`;
-      const prn = `2024${deptCode}${classId}${rollStr}`;
+      const prn = `PRN2024${deptCode}${1000 + roll}`;
       return {
         roll: roll,
-        rollFormatted: `ROLL ${roll}`,
+        rollFormatted: `ROLL ${rollStr}`,
         name: name,
         prn: prn,
-        status: null // 'present' | 'absent' | null (pending)
+        isProvisional: roll > 66,
+        status: null,
+        recentHistory: [true, true, true, false, true, true, true, true, true, true]
       };
     });
   },
@@ -191,10 +203,10 @@ const ERP_DATA = {
       subjectName: "Database Management",
       date: "2026-09-16",
       dateFormatted: "16 Sep 2026",
-      totalStudents: 60,
-      presentCount: 54,
+      totalStudents: 69,
+      presentCount: 63,
       absentCount: 6,
-      percentage: "90.0%",
+      percentage: "91.3%",
       status: "Submitted",
       savedAt: "Yesterday, 03:15 PM"
     },
@@ -203,52 +215,80 @@ const ERP_DATA = {
       department: "CSE",
       departmentName: "Computer Science & Engineering",
       classId: "2R1",
-      subjectCode: "CS302",
-      subjectName: "Data Structures",
-      date: "2026-09-16",
-      dateFormatted: "16 Sep 2026",
-      totalStudents: 60,
-      presentCount: 52,
-      absentCount: 8,
-      percentage: "86.67%",
-      status: "Submitted",
-      savedAt: "Yesterday, 11:05 AM"
-    },
-    {
-      id: "REC-2026-0915-01",
-      department: "CSE",
-      departmentName: "Computer Science & Engineering",
-      classId: "2R2",
       subjectCode: "CS303",
       subjectName: "Java Programming",
-      date: "2026-09-15",
-      dateFormatted: "15 Sep 2026",
-      totalStudents: 60,
-      presentCount: 56,
-      absentCount: 4,
-      percentage: "93.33%",
+      date: "2026-09-16",
+      dateFormatted: "16 Sep 2026",
+      totalStudents: 69,
+      presentCount: 63,
+      absentCount: 6,
+      percentage: "91.3%",
       status: "Submitted",
-      savedAt: "15 Sep 2026, 12:20 PM"
-    },
-    {
-      id: "REC-2026-0914-01",
-      department: "IT",
-      departmentName: "Information Technology",
-      classId: "2N1",
-      subjectCode: "IT301",
-      subjectName: "Object Oriented Design",
-      date: "2026-09-14",
-      dateFormatted: "14 Sep 2026",
-      totalStudents: 60,
-      presentCount: 49,
-      absentCount: 11,
-      percentage: "81.67%",
-      status: "Submitted",
-      savedAt: "14 Sep 2026, 10:10 AM"
+      savedAt: "Yesterday, 11:05 AM"
     }
   ]
 };
 
 window.ERP_DATA = ERP_DATA;
 
+// Auto-sync with Supabase Database
+(async function syncWithSupabase() {
+  console.log("%c[ERP Data] Initializing Supabase Data Synchronization...", "color: #6366F1; font-weight: bold; font-size: 13px;");
 
+  function getClient() {
+    if (window.supabaseClient) return window.supabaseClient;
+    if (window.supabase && typeof window.supabase.createClient === "function") {
+      window.supabaseClient = window.supabase.createClient(
+        "https://gftqvclenyplnuoocbwe.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY"
+      );
+      return window.supabaseClient;
+    }
+    return null;
+  }
+
+  const client = getClient();
+  if (!client) {
+    console.warn("[Supabase] Supabase client not ready yet. Retrying in 500ms...");
+    setTimeout(syncWithSupabase, 500);
+    return;
+  }
+
+  try {
+    // 1. Fetch Class Cards
+    const { data: cards, error: cardErr } = await client
+      .from("teacher_class_cards")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!cardErr && cards && cards.length > 0) {
+      console.log(`%c[Supabase] SUCCESS! Loaded ${cards.length} LIVE class cards from Supabase!`, "color: #10B981; font-weight: bold; font-size: 14px;");
+      const mappedCards = cards.map((c) => ({
+        id: c.id,
+        teacher_id: "EMP-CSE-1042",
+        department: c.department_code,
+        department_name: c.department_code === "CSE" ? "Computer Science & Engineering" : c.department_code,
+        class: c.class_code,
+        subject_code: c.subject_code,
+        subject_name: c.subject_code === "CS305" ? "Database Management" : c.subject_code === "CS303" ? "Java Programming" : c.subject_code === "CS302" ? "Data Structures" : c.subject_code,
+        created_at: c.created_at
+      }));
+      localStorage.setItem("erp_teacher_class_cards", JSON.stringify(mappedCards));
+    }
+
+    // 2. Fetch 69 Students for CSE 2R1
+    const { data: students, error: studentErr } = await client
+      .from("students")
+      .select("*")
+      .eq("department_code", "CSE")
+      .eq("class_code", "2R1")
+      .order("roll_number", { ascending: true });
+
+    if (!studentErr && students && students.length > 0) {
+      console.log(`%c[Supabase] SUCCESS! Loaded ${students.length} LIVE students from Supabase database!`, "color: #10B981; font-weight: bold; font-size: 14px;");
+      ERP_DATA._liveStudentsCache = students.map((s) => s.name);
+    }
+  } catch (err) {
+    console.error("[Supabase Sync Error]:", err);
+  }
+})();

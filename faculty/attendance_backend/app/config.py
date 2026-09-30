@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     ]
 
     # Supabase Configuration
-    SUPABASE_URL: str = "https://szymhbmrupktrboduvlw.supabase.co"
-    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6eW1oYm1ydXBrdHJib2R1dmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMDc3NTgsImV4cCI6MjEwNTg4Mzc1OH0.DtMxNfnnUmhyP_GGUK4Fms5e7nPHobUPwNVpo1cpP_M"
+    SUPABASE_URL: str = "https://gftqvclenyplnuoocbwe.supabase.co"
+    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY"
     SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     # Database URL
