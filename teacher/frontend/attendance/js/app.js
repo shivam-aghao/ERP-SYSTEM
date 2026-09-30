@@ -25,9 +25,61 @@ document.addEventListener("DOMContentLoaded", () => {
       AttendanceService.init();
       this.bindDOM();
       this.bindEvents();
+      this.syncTeacherFromBackend();
       this.renderRecentAttendance();
       this.renderCalendar();
       this.updateNavigationUI();
+    },
+
+    async syncTeacherFromBackend() {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/profile/active");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.fullName) {
+            if (typeof ERP_DATA !== "undefined" && ERP_DATA.teacher) {
+              ERP_DATA.teacher.name = json.data.fullName;
+              ERP_DATA.teacher.id = json.data.empCode || ERP_DATA.teacher.id;
+              ERP_DATA.teacher.designation = json.data.designation || ERP_DATA.teacher.designation;
+              ERP_DATA.teacher.avatar = json.data.avatar || "JP";
+            }
+            const nameEl = document.getElementById("teacherName");
+            if (nameEl) nameEl.textContent = json.data.fullName;
+            const avatarEl = document.getElementById("teacherAvatar");
+            if (avatarEl) avatarEl.textContent = json.data.avatar || "JP";
+
+            this.updateLiveIndicator(true, json.data.source || "Supabase");
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("[App] Running in offline fallback mode:", e);
+        this.updateLiveIndicator(false);
+      }
+    },
+
+    updateLiveIndicator(isOnline, source = "Supabase") {
+      let badge = document.getElementById("erp-live-conn-pill");
+      if (!badge) {
+        badge = document.createElement("div");
+        badge.id = "erp-live-conn-pill";
+        badge.style.cssText = "display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;margin-right:12px;";
+        const headerRight = document.querySelector(".header-right-part");
+        if (headerRight) {
+          headerRight.prepend(badge);
+        }
+      }
+      if (isOnline) {
+        badge.style.background = "#DCFCE7";
+        badge.style.color = "#15803D";
+        badge.style.border = "1px solid #86EFAC";
+        badge.innerHTML = `<span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block;box-shadow:0 0 5px #22C55E;"></span> Live Connected (${source})`;
+      } else {
+        badge.style.background = "#FEF3C7";
+        badge.style.color = "#B45309";
+        badge.style.border = "1px solid #FCD34D";
+        badge.innerHTML = `<span style="width:7px;height:7px;background:#F59E0B;border-radius:50%;display:inline-block;"></span> Offline Mode`;
+      }
     },
 
     bindDOM() {
