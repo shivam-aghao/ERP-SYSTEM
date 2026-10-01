@@ -588,11 +588,22 @@
 
   <!-- SELF-CONTAINED ROSTER DATA & INTERACTION LOGIC -->
   <script>
-    (function () {
       const urlParams = new URLSearchParams(window.location.search);
-      const activeClass = urlParams.get("class") || "SY-CSE-A";
-      const activeSubject = urlParams.get("subject") || "3CS205MD";
+      const activeClass = urlParams.get("class") || "2R1";
+      const activeSubject = urlParams.get("subject") || "CS303";
       const activeDept = urlParams.get("dept") || "CSE";
+
+      // Dynamically display class, subject and date in meta header
+      const classMetaEl = document.getElementById("rosterMetaClass");
+      if (classMetaEl) classMetaEl.innerHTML = `<strong>Class:</strong> ${activeClass}`;
+      const subjMetaEl = document.getElementById("rosterMetaSubject");
+      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Subject:</strong> ${activeSubject} (THEORY)`;
+      const dateMetaEl = document.getElementById("rosterMetaDate");
+      if (dateMetaEl) {
+        const today = new Date();
+        const dStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+        dateMetaEl.innerHTML = `<strong>Date:</strong> ${dStr}`;
+      }
 
       let studentsData = [];
 
