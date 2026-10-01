@@ -59,32 +59,42 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     startLiveHealthMonitor() {
-      const updateBadge = (isOnline, source = "Supabase") => {
+      const updateBadge = (backendOnline, supabaseOnline) => {
         const badge = document.getElementById("erpLiveConnBadge");
         const dot = document.getElementById("liveDot");
         const text = document.getElementById("liveBadgeText");
         if (!badge) return;
 
-        if (isOnline) {
+        if (backendOnline && supabaseOnline) {
           badge.style.background = "#DCFCE7";
           badge.style.color = "#15803D";
           badge.style.border = "1px solid #86EFAC";
-          badge.title = "Connected to Faculty API (Port 8000) & Cloud Supabase Database";
+          badge.title = "Connected to Live FastAPI Backend (Port 8000) & Cloud Supabase Database";
           if (dot) {
             dot.style.background = "#22C55E";
-            dot.style.boxShadow = "0 0 6px #22C55E";
+            dot.style.boxShadow = "0 0 8px #22C55E";
           }
-          if (text) text.textContent = `Live Connected (${source})`;
-        } else {
+          if (text) text.textContent = "🟢 Live Connected (Backend & Supabase)";
+        } else if (backendOnline && !supabaseOnline) {
           badge.style.background = "#FEF3C7";
           badge.style.color = "#B45309";
           badge.style.border = "1px solid #FCD34D";
-          badge.title = "Backend/Database disconnected - operating in offline cache mode";
+          badge.title = "Connected to Backend, but Supabase Cloud is unreachable";
           if (dot) {
             dot.style.background = "#F59E0B";
+            dot.style.boxShadow = "0 0 6px #F59E0B";
+          }
+          if (text) text.textContent = "🟡 Backend Live (DB Reconnecting)";
+        } else {
+          badge.style.background = "#FEE2E2";
+          badge.style.color = "#991B1B";
+          badge.style.border = "1px solid #FCA5A5";
+          badge.title = "FastAPI Backend (Port 8000) is disconnected. Operating in offline cache mode.";
+          if (dot) {
+            dot.style.background = "#EF4444";
             dot.style.boxShadow = "none";
           }
-          if (text) text.textContent = "Offline Cache";
+          if (text) text.textContent = "🔴 Backend Disconnected";
         }
       };
 
@@ -93,18 +103,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const res = await fetch("http://localhost:8000/api/v1/profile/active", { cache: "no-store" });
           if (res.ok) {
             const json = await res.json();
-            const src = (json.data && json.data.source === "supabase") ? "Supabase" : "Backend";
-            updateBadge(true, src);
+            const isSb = (json.data && (json.data.source === "supabase" || json.data.fullName));
+            updateBadge(true, !!isSb);
             return;
           }
           throw new Error("HTTP " + res.status);
         } catch (e) {
-          updateBadge(false);
+          console.warn("[App Health] Backend check failed:", e);
+          updateBadge(false, false);
         }
       };
 
       checkHealth();
-      setInterval(checkHealth, 4000);
+      setInterval(checkHealth, 3000);
     },
 
     bindDOM() {
