@@ -469,8 +469,8 @@
         Dr. J.M.Patil (FAC-CSE-1048) Associate Professor CSE
       </div>
       <div class="meta-box-subject" id="rosterSubjectBox">
-        <span id="rosterMetaClass"><strong>Class:</strong> SY-CSE-A</span>
-        <span id="rosterMetaSubject"><strong>Subject:</strong> 3CS205MD Database Management (THEORY)</span>
+        <span id="rosterMetaClass"><strong>Class:</strong> 2R1</span>
+        <span id="rosterMetaSubject"><strong>Course:</strong> CS303 Java Programming (THEORY)</span>
         <span id="rosterMetaTime"><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
         <span id="rosterMetaDate"><strong>Date:</strong> 01/10/2026</span>
         <span><strong>Type:</strong> [REGULAR]</span>
@@ -588,16 +588,17 @@
 
   <!-- SELF-CONTAINED ROSTER DATA & INTERACTION LOGIC -->
   <script>
+    (function () {
       const urlParams = new URLSearchParams(window.location.search);
       const activeClass = urlParams.get("class") || "2R1";
-      const activeSubject = urlParams.get("subject") || "CS303";
-      const activeDept = urlParams.get("dept") || "CSE";
+      const activeSubject = urlParams.get("course") || urlParams.get("subject") || "CS303";
+      const activeDept = urlParams.get("program") || urlParams.get("dept") || "CSE";
 
-      // Dynamically display class, subject and date in meta header
+      // Dynamically display class, course, date in meta header
       const classMetaEl = document.getElementById("rosterMetaClass");
       if (classMetaEl) classMetaEl.innerHTML = `<strong>Class:</strong> ${activeClass}`;
       const subjMetaEl = document.getElementById("rosterMetaSubject");
-      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Subject:</strong> ${activeSubject} (THEORY)`;
+      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Course:</strong> ${activeSubject} (THEORY)`;
       const dateMetaEl = document.getElementById("rosterMetaDate");
       if (dateMetaEl) {
         const today = new Date();

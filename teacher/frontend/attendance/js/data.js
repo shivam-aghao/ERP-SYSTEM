@@ -8,8 +8,10 @@
 const ERP_DATA = {
   teacher: null,
   departments: [],
+  programs: [],
   classes: {},
   subjects: {},
+  courses: {},
   classCards: [],
   recentAttendance: [],
   isLoaded: false,
@@ -25,30 +27,33 @@ const ERP_DATA = {
             id: prof.empCode,
             designation: prof.designation,
             department: prof.departmentName || prof.department,
+            program: prof.departmentName || prof.department,
             email: prof.email,
             avatar: prof.avatar || "JP",
             unreadNotifications: 3
           };
         }
 
-        // 2. Fetch Departments from Backend / Supabase
-        const depts = await window.ErpApi.getDepartments();
+        // 2. Fetch Programs / Departments from Backend / Supabase
+        const depts = await window.ErpApi.getPrograms();
         this.departments = depts || [];
+        this.programs = this.departments;
 
         // 3. Fetch Classes from Backend / Supabase
         const clsList = await window.ErpApi.getClasses();
         this.classes = {};
         (clsList || []).forEach((c) => {
-          const dept = c.department || "CSE";
+          const dept = c.program || c.department || "CSE";
           if (!this.classes[dept]) this.classes[dept] = [];
           this.classes[dept].push(c);
         });
 
-        // 4. Fetch Subjects from Backend / Supabase
-        const subsList = await window.ErpApi.getSubjects();
+        // 4. Fetch Courses / Subjects from Backend / Supabase
+        const subsList = await window.ErpApi.getCourses();
         this.subjects = {};
+        this.courses = this.subjects;
         (subsList || []).forEach((s) => {
-          const dept = s.department || "CSE";
+          const dept = s.program || s.department || "CSE";
           if (!this.subjects[dept]) this.subjects[dept] = [];
           this.subjects[dept].push(s);
         });
@@ -96,7 +101,9 @@ const ERP_DATA = {
     return [];
   },
 
+  // Synchronous adapter for existing callers while waiting for async fetch
   generateStudentRoster(deptCode, classId) {
+    // Returns empty array if not preloaded; app.js now calls fetchStudentRoster asynchronously
     return [];
   }
 };

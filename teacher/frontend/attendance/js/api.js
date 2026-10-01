@@ -34,22 +34,26 @@ const ErpApi = {
   },
 
   async getDepartments() {
+    return this.getPrograms();
+  },
+
+  async getPrograms() {
     try {
-      const res = await fetch(`${this.baseUrl}/master/departments`);
+      const res = await fetch(`${this.baseUrl}/master/programs`);
       if (res.ok) {
         const json = await res.json();
         return json.data || [];
       }
       return [];
     } catch (e) {
-      console.warn("[ErpApi] Departments fetch error:", e);
+      console.warn("[ErpApi] Programs fetch error:", e);
       return [];
     }
   },
 
   async getClasses(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
+      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}&program=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -63,8 +67,12 @@ const ErpApi = {
   },
 
   async getSubjects(dept = "") {
+    return this.getCourses(dept);
+  },
+
+  async getCourses(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/subjects?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/subjects`;
+      const url = dept ? `${this.baseUrl}/master/courses?department=${encodeURIComponent(dept)}&program=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/courses`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -72,7 +80,7 @@ const ErpApi = {
       }
       return [];
     } catch (e) {
-      console.warn("[ErpApi] Subjects fetch error:", e);
+      console.warn("[ErpApi] Courses fetch error:", e);
       return [];
     }
   },
