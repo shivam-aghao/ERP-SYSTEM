@@ -21,13 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     swipeEngine: null,
 
-    init() {
+    async init() {
       AttendanceService.init();
       this.bindDOM();
       this.bindEvents();
-      this.syncTeacherFromBackend();
       this.startLiveHealthMonitor();
-      this.renderRecentAttendance();
+      if (typeof ERP_DATA !== "undefined" && ERP_DATA.initDynamic) {
+        await ERP_DATA.initDynamic();
+      }
+      await this.syncTeacherFromBackend();
+      await this.renderRecentAttendance();
       this.renderCalendar();
       this.updateNavigationUI();
     },
@@ -71,17 +74,17 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#22C55E";
             dot.style.boxShadow = "0 0 6px #22C55E";
           }
-          if (text) text.textContent = "Live Connected (Backend & Supabase)";
+          if (text) text.textContent = `Live Connected (${source})`;
         } else {
-          badge.style.background = "#FEE2E2";
-          badge.style.color = "#B91C1C";
-          badge.style.border = "1px solid #FCA5A5";
-          badge.title = "Backend/Database disconnected - operating in offline mode";
+          badge.style.background = "#FEF3C7";
+          badge.style.color = "#B45309";
+          badge.style.border = "1px solid #FCD34D";
+          badge.title = "Backend/Database disconnected - operating in offline cache mode";
           if (dot) {
-            dot.style.background = "#EF4444";
-            dot.style.boxShadow = "0 0 6px #EF4444";
+            dot.style.background = "#F59E0B";
+            dot.style.boxShadow = "none";
           }
-          if (text) text.textContent = "Disconnected (Backend & DB)";
+          if (text) text.textContent = "Offline Cache";
         }
       };
 
@@ -595,9 +598,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // STEP 1: RECENT ATTENDANCE
     // =========================================================================
 
-    renderRecentAttendance() {
-      const records = AttendanceService.getAllRecords();
+    async renderRecentAttendance() {
+      const records = await AttendanceService.getAllRecords();
       this.recentAttendanceTbody.innerHTML = "";
+
+      // Dynamically compute Home Hero metrics from real database records
+      const statToday = document.getElementById("statTodayCount");
+      const statAvg = document.getElementById("statAvgAttendance");
+      if (statToday) statToday.textContent = records.length;
+      if (statAvg) {
+        if (records.length > 0) {
+          const sumPct = records.reduce((acc, r) => acc + (parseFloat(r.attendanceRate || r.percentage) || 0), 0);
+          statAvg.textContent = `${Math.round(sumPct / records.length)}%`;
+        } else {
+          statAvg.textContent = "0%";
+        }
+      }
 
       if (records.length === 0) {
         this.recentAttendanceTbody.innerHTML = `
@@ -765,8 +781,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const teacherId = ERP_DATA.teacher.id;
-        const cards = await AttendanceService.getTeacherCards(teacherId);
+        const cards = await AttendanceService.getAllClassCards();
 
         this.classCardsGrid.innerHTML = "";
 
@@ -778,7 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
         this.classCardsEmptyState.classList.add("hidden");
 
         cards.forEach((card) => {
-          const deptObj = ERP_DATA.departments.find((d) => d.code === card.department);
+          const deptObj = (ERP_DATA.departments || []).find((d) => d.code === card.department);
           const deptColor = deptObj ? deptObj.color : "#0B5CAD";
 
           const cardEl = document.createElement("div");
@@ -872,15 +887,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
 
-    startAttendanceFromCard(card) {
-      const deptObj = ERP_DATA.departments.find((d) => d.code === card.department) || {
+    async startAttendanceFromCard(card) {
+      const deptObj = (ERP_DATA.departments || []).find((d) => d.code === card.department) || {
         id: card.department,
         code: card.department,
         name: card.department_name || card.department,
         color: "#0B5CAD"
       };
 
-      const classList = ERP_DATA.classes[card.department] || [];
+      const classList = (ERP_DATA.classes && ERP_DATA.classes[card.department]) || [];
       const classObj = classList.find((c) => c.name === card.class || c.id === card.class) || {
         id: card.class,
         name: card.class,
@@ -888,7 +903,7 @@ document.addEventListener("DOMContentLoaded", () => {
         studentCount: 60
       };
 
-      const subjectList = ERP_DATA.subjects[card.department] || [];
+      const subjectList = (ERP_DATA.subjects && ERP_DATA.subjects[card.department]) || [];
       const subjectObj = subjectList.find((s) => s.code === card.subject_code) || {
         code: card.subject_code,
         name: card.subject_name,
@@ -901,7 +916,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Check if attendance already exists for this exact combination
       const dateStr = this.formatDateISO(this.state.selectedDate);
-      const isDuplicate = AttendanceService.checkDuplicate(
+      const isDuplicate = await AttendanceService.checkDuplicate(
         deptObj.code,
         classObj.name,
         dateStr,
@@ -914,8 +929,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      this.state.students = ERP_DATA.generateStudentRoster(deptObj.code, classObj.id || classObj.name);
-      this.showToast(`Selected: Class ${classObj.name} — ${subjectObj.name}`, "info");
+      this.showToast(`Loading enrolled students for ${classObj.name}...`, "info");
+      this.state.students = await ERP_DATA.fetchStudentRoster(deptObj.code, classObj.name || classObj.id);
+      if (!this.state.students || this.state.students.length === 0) {
+        this.state.students = await ERP_DATA.fetchStudentRoster(deptObj.code, "SY-CSE-A");
+      }
+      this.showToast(`Loaded ${this.state.students.length} students from database`, "success");
       this.goToStep(4);
     },
 

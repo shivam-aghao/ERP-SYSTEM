@@ -8,7 +8,6 @@ let attendanceChartInstance = null;
 let syllabusChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  startLiveHealthMonitor();
   initAttendanceChart();
   initSyllabusProgressChart();
   initSubjectAttendanceToggle();
@@ -26,49 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
   hydrateDashboardData();
 });
-
-function startLiveHealthMonitor() {
-  const updateBadge = (isOnline) => {
-    const badge = document.getElementById("erpLiveConnBadge");
-    const dot = document.getElementById("liveDot");
-    const text = document.getElementById("liveBadgeText");
-    if (!badge) return;
-
-    if (isOnline) {
-      badge.style.background = "#DCFCE7";
-      badge.style.color = "#15803D";
-      badge.style.border = "1px solid #86EFAC";
-      badge.title = "Connected to Student Dashboard API (Port 8001) & Cloud Supabase Database";
-      if (dot) {
-        dot.style.background = "#22C55E";
-        dot.style.boxShadow = "0 0 6px #22C55E";
-      }
-      if (text) text.textContent = "Live Connected (Backend & Supabase)";
-    } else {
-      badge.style.background = "#FEE2E2";
-      badge.style.color = "#B91C1C";
-      badge.style.border = "1px solid #FCA5A5";
-      badge.title = "Student Backend disconnected - running in offline mode";
-      if (dot) {
-        dot.style.background = "#EF4444";
-        dot.style.boxShadow = "0 0 6px #EF4444";
-      }
-      if (text) text.textContent = "Disconnected (Backend & DB)";
-    }
-  };
-
-  const checkHealth = async () => {
-    try {
-      await fetch("http://localhost:8001/docs", { method: "GET", mode: "no-cors", cache: "no-store" });
-      updateBadge(true);
-    } catch (e) {
-      updateBadge(false);
-    }
-  };
-
-  checkHealth();
-  setInterval(checkHealth, 4000);
-}
 
 /* ==========================================================================
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)

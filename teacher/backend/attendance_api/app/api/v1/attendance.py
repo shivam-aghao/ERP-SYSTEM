@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Optional, Union
 from fastapi import APIRouter, Depends, Query
@@ -8,7 +9,10 @@ from app.models.db_models import (
     AttendanceRecord, AttendanceHistorySummary, Student, Notification
 )
 from app.models.schema import AttendanceDraftSave, AttendanceSubmitRequest
+from app.database import get_supabase_client
 from app.utils.response import success_response, error_response
+
+logger = logging.getLogger("erp_fastapi")
 
 router = APIRouter(prefix="/attendance", tags=["Attendance Management"])
 
@@ -22,8 +26,17 @@ def check_duplicate(
     current_user: Teacher = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(AttendanceSession).filter(AttendanceSession.status == "SUBMITTED")
+    try:
+        sb = get_supabase_client()
+        if sb and classId and date and subjectCode:
+            q = sb.table("attendance_sessions").select("id").eq("class_code", classId).eq("lecture_date", date).eq("subject_code", subjectCode).eq("status", "submitted")
+            res = q.execute()
+            if res.data and len(res.data) > 0:
+                return success_response(data={"isDuplicate": True})
+    except Exception as e:
+        logger.warning("[Attendance] Supabase duplicate check notice: %s", e)
 
+    query = db.query(AttendanceSession).filter(AttendanceSession.status == "SUBMITTED")
     if classId:
         cls = db.query(Class).filter((Class.name == classId) | (Class.id == classId)).first()
         if cls:
@@ -40,7 +53,6 @@ def check_duplicate(
 
     if date:
         query = query.filter(AttendanceSession.attendance_date == date)
-
     if period:
         query = query.filter(AttendanceSession.period == str(period))
 
@@ -107,20 +119,23 @@ def save_draft(
 ):
     cls = db.query(Class).filter((Class.name == payload.classId) | (Class.id == payload.classId)).first()
     if not cls:
-        cls = db.query(Class).first()
-    
+        dept = db.query(Department).first()
+        cls = Class(department_id=dept.id if dept else "", name=payload.classId, academic_year="2024-2025")
+        db.add(cls)
+        db.flush()
+
     subj = db.query(Subject).filter((Subject.code == payload.subjectCode) | (Subject.id == payload.subjectCode)).first()
     if not subj:
-        subj = db.query(Subject).first()
-
-    period_str = str(payload.period or "1")
+        subj = Subject(department_id=cls.department_id, code=payload.subjectCode, name=payload.subjectCode)
+        db.add(subj)
+        db.flush()
 
     session = db.query(AttendanceSession).filter_by(
         teacher_id=current_user.id,
         class_id=cls.id,
         subject_id=subj.id,
         attendance_date=payload.date,
-        period=period_str,
+        period=str(payload.period or "1"),
         status="DRAFT"
     ).first()
 
@@ -130,41 +145,35 @@ def save_draft(
             class_id=cls.id,
             subject_id=subj.id,
             attendance_date=payload.date,
-            period=period_str,
-            status="DRAFT",
-            topic_covered=payload.topic or "",
-            teaching_aid=payload.teachingAid or "Blackboard / PPT",
-            remarks=payload.remark or "",
-            total_students=len(payload.records)
+            period=str(payload.period or "1"),
+            status="DRAFT"
         )
         db.add(session)
         db.flush()
-    else:
-        session.topic_covered = payload.topic or session.topic_covered
-        session.teaching_aid = payload.teachingAid or session.teaching_aid
-        session.remarks = payload.remark or session.remarks
-        session.total_students = len(payload.records)
 
-    # Save records
-    for r in payload.records:
-        st_id = r.studentId
-        if not st_id and r.rollNo is not None:
-            st = db.query(Student).filter_by(class_id=cls.id, roll_no=int(r.rollNo)).first()
-            if st:
-                st_id = st.id
-        
-        if st_id:
-            rec = db.query(AttendanceRecord).filter_by(session_id=session.id, student_id=st_id).first()
-            if rec:
-                rec.status = r.status.upper()
-                rec.remarks = r.remarks
-            else:
-                db.add(AttendanceRecord(
-                    session_id=session.id,
-                    student_id=st_id,
-                    status=r.status.upper(),
-                    remarks=r.remarks
-                ))
+    session.topic_covered = payload.topic or ""
+    session.teaching_aid = payload.teachingAid or "Blackboard / PPT"
+    session.remarks = payload.remark or ""
+
+    if payload.records:
+        for r in payload.records:
+            st_id = r.studentId
+            if not st_id and r.rollNo is not None:
+                st = db.query(Student).filter_by(class_id=cls.id, roll_no=int(r.rollNo)).first()
+                if st:
+                    st_id = st.id
+            if st_id:
+                rec = db.query(AttendanceRecord).filter_by(session_id=session.id, student_id=st_id).first()
+                if rec:
+                    rec.status = r.status.upper() if r.status else "PRESENT"
+                    rec.remarks = r.remarks
+                else:
+                    db.add(AttendanceRecord(
+                        session_id=session.id,
+                        student_id=st_id,
+                        status=r.status.upper() if r.status else "PRESENT",
+                        remarks=r.remarks
+                    ))
 
     db.commit()
     return success_response(data={"sessionId": session.id}, message="Attendance draft saved successfully")
@@ -175,137 +184,96 @@ def submit_attendance(
     current_user: Teacher = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    cls = db.query(Class).filter((Class.name == payload.classId) | (Class.id == payload.classId)).first()
-    if not cls:
-        return error_response(f"Class '{payload.classId}' not found", code=404)
-
-    subj = db.query(Subject).filter((Subject.code == payload.subjectCode) | (Subject.id == payload.subjectCode)).first()
-    if not subj:
-        return error_response(f"Subject '{payload.subjectCode}' not found", code=404)
-
-    period_str = str(payload.period or "1")
-
-    # Check for existing submitted session
-    existing_sub = db.query(AttendanceSession).filter_by(
-        class_id=cls.id,
-        subject_id=subj.id,
-        attendance_date=payload.date,
-        period=period_str,
-        status="SUBMITTED"
-    ).first()
-
     records_in = payload.records or []
-    total_students = len(records_in) if len(records_in) > 0 else (cls.total_students or 60)
+    total_students = len(records_in)
     present_cnt = sum(1 for r in records_in if (r.status or "").upper() in ("PRESENT", "P"))
     absent_cnt = sum(1 for r in records_in if (r.status or "").upper() in ("ABSENT", "A"))
     rate = round((present_cnt / total_students * 100), 1) if total_students > 0 else 0.0
 
-    session = existing_sub or db.query(AttendanceSession).filter_by(
+    # 1. Sync submission to Cloud Supabase
+    supabase_session_id = None
+    try:
+        sb = get_supabase_client()
+        if sb:
+            dept_code = "CSE"
+            sess_insert = sb.table("attendance_sessions").insert({
+                "session_id": f"SESS-{datetime.now().strftime('%Y%m%d')}-{payload.classId}-{datetime.now().strftime('%M%S')}",
+                "faculty_id": current_user.id,
+                "class_code": payload.classId,
+                "subject_code": payload.subjectCode,
+                "department_code": dept_code,
+                "lecture_date": payload.date,
+                "lecture_time": payload.period or "10:00 AM - 11:00 AM",
+                "marking_mode": "roster",
+                "total_students": total_students,
+                "present_count": present_cnt,
+                "absent_count": absent_cnt,
+                "attendance_rate": rate,
+                "status": "submitted"
+            }).execute()
+            if sess_insert.data and len(sess_insert.data) > 0:
+                supabase_session_id = sess_insert.data[0].get("id")
+
+                # Insert student attendance records to Supabase
+                rec_payloads = []
+                for r in records_in:
+                    rec_payloads.append({
+                        "session_id": supabase_session_id,
+                        "student_id": r.studentId if r.studentId else None,
+                        "roll_no": r.rollNo,
+                        "status": "present" if (r.status or "").upper() in ("PRESENT", "P") else "absent",
+                        "remarks": r.remarks
+                    })
+                if rec_payloads:
+                    sb.table("attendance_records").insert(rec_payloads).execute()
+    except Exception as e:
+        logger.warning("[Attendance] Supabase submit error: %s", e)
+
+    # 2. Local DB mirror
+    cls = db.query(Class).filter((Class.name == payload.classId) | (Class.id == payload.classId)).first()
+    if not cls:
+        dept = db.query(Department).first()
+        cls = Class(department_id=dept.id if dept else "", name=payload.classId, academic_year="2024-2025", total_students=total_students)
+        db.add(cls)
+        db.flush()
+
+    subj = db.query(Subject).filter((Subject.code == payload.subjectCode) | (Subject.id == payload.subjectCode)).first()
+    if not subj:
+        subj = Subject(department_id=cls.department_id, code=payload.subjectCode, name=payload.subjectCode)
+        db.add(subj)
+        db.flush()
+
+    session = AttendanceSession(
+        id=supabase_session_id or None,
         teacher_id=current_user.id,
         class_id=cls.id,
         subject_id=subj.id,
         attendance_date=payload.date,
-        period=period_str,
-        status="DRAFT"
-    ).first()
+        period=str(payload.period or "1"),
+        status="SUBMITTED",
+        topic_covered=payload.topic or "",
+        teaching_aid=payload.teachingAid or "Blackboard / PPT",
+        remarks=payload.remark or "",
+        total_students=total_students,
+        present_count=present_cnt,
+        absent_count=absent_cnt,
+        attendance_rate=rate,
+        submitted_at=datetime.now(timezone.utc)
+    )
+    db.add(session)
+    db.flush()
 
-    now_utc = datetime.now(timezone.utc)
-
-    if session:
-        session.teacher_id = current_user.id
-        session.status = "SUBMITTED"
-        session.topic_covered = payload.topic or session.topic_covered
-        session.teaching_aid = payload.teachingAid or session.teaching_aid
-        session.remarks = payload.remark or session.remarks
-        session.total_students = total_students
-        session.present_count = present_cnt
-        session.absent_count = absent_cnt
-        session.attendance_rate = rate
-        session.submitted_at = now_utc
-    else:
-        session = AttendanceSession(
-            teacher_id=current_user.id,
-            class_id=cls.id,
-            subject_id=subj.id,
-            attendance_date=payload.date,
-            period=period_str,
-            status="SUBMITTED",
-            topic_covered=payload.topic or "",
-            teaching_aid=payload.teachingAid or "Blackboard / PPT",
-            remarks=payload.remark or "",
-            total_students=total_students,
-            present_count=present_cnt,
-            absent_count=absent_cnt,
-            attendance_rate=rate,
-            submitted_at=now_utc
-        )
-        db.add(session)
-        db.flush()
-
-    # Process each student record
-    for r in records_in:
-        st_id = r.studentId
-        if not st_id and r.rollNo is not None:
-            st = db.query(Student).filter_by(class_id=cls.id, roll_no=int(r.rollNo)).first()
-            if st:
-                st_id = st.id
-
-        if st_id:
-            st_status = "PRESENT" if (r.status or "").upper() in ("PRESENT", "P") else "ABSENT"
-            char_code = "P" if st_status == "PRESENT" else "A"
-
-            rec = db.query(AttendanceRecord).filter_by(session_id=session.id, student_id=st_id).first()
-            if rec:
-                rec.status = st_status
-                rec.remarks = r.remarks
-            else:
-                db.add(AttendanceRecord(
-                    session_id=session.id,
-                    student_id=st_id,
-                    status=st_status,
-                    remarks=r.remarks
-                ))
-
-            # Update student history summary
-            summary = db.query(AttendanceHistorySummary).filter_by(
-                student_id=st_id,
-                subject_id=subj.id
-            ).first()
-
-            if summary:
-                current_h = summary.last_10_statuses or ""
-                summary.last_10_statuses = (current_h + char_code)[-10:]
-                summary.total_sessions += 1
-                if char_code == "P":
-                    summary.present_count += 1
-                else:
-                    summary.absent_count += 1
-                summary.percentage = round((summary.present_count / summary.total_sessions) * 100, 1)
-            else:
-                db.add(AttendanceHistorySummary(
-                    student_id=st_id,
-                    subject_id=subj.id,
-                    last_10_statuses=char_code,
-                    total_sessions=1,
-                    present_count=1 if char_code == "P" else 0,
-                    absent_count=0 if char_code == "P" else 1,
-                    percentage=100.0 if char_code == "P" else 0.0
-                ))
-
-    # Add notification for teacher
     db.add(Notification(
         teacher_id=current_user.id,
         title="Attendance Submitted",
-        message=f"Attendance marked for {cls.name} ({subj.code} - {subj.name}) on {payload.date}. {present_cnt}/{total_students} present ({rate}%).",
+        message=f"Attendance submitted for {payload.classId} ({payload.subjectCode}) on {payload.date}. {present_cnt}/{total_students} present.",
         type="SUCCESS"
     ))
-
     db.commit()
 
     return success_response(
         data={
             "sessionId": session.id,
-            "message": "Attendance submitted successfully",
             "status": "SUBMITTED",
             "summary": {
                 "total": total_students,
@@ -314,7 +282,7 @@ def submit_attendance(
                 "attendanceRate": rate
             }
         },
-        message="Attendance submitted successfully",
+        message="Attendance submitted successfully to cloud database",
         code=201
     )
 
@@ -324,15 +292,48 @@ def get_all_records(
     current_user: Teacher = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(AttendanceSession).filter(AttendanceSession.status == "SUBMITTED")
-    if teacherId:
-        query = query.filter(
-            (AttendanceSession.teacher_id == teacherId) | (AttendanceSession.teacher_id == current_user.id)
-        )
-    else:
-        query = query.filter(AttendanceSession.teacher_id == current_user.id)
+    """Fetch live submitted attendance records from Cloud Supabase with database fallback."""
+    try:
+        sb = get_supabase_client()
+        if sb:
+            res = sb.table("attendance_sessions").select("*").eq("status", "submitted").order("lecture_date", desc=True).execute()
+            if res.data is not None:
+                # Enrich with subject names
+                subj_res = sb.table("subjects").select("code, name").execute()
+                subj_dict = {s["code"]: s["name"] for s in (subj_res.data or [])}
 
-    sessions = query.order_by(AttendanceSession.attendance_date.desc(), AttendanceSession.created_at.desc()).all()
+                data = []
+                for s in res.data:
+                    s_code = s.get("subject_code") or ""
+                    data.append({
+                        "id": s.get("id"),
+                        "teacherId": current_user.emp_code,
+                        "teacherName": current_user.full_name,
+                        "department": s.get("department_code") or "CSE",
+                        "departmentName": "Computer Science & Engineering",
+                        "classId": s.get("class_code") or "",
+                        "subjectCode": s_code,
+                        "subjectName": subj_dict.get(s_code, s_code),
+                        "subject": f"{s_code} - {subj_dict.get(s_code, s_code)}",
+                        "date": s.get("lecture_date"),
+                        "period": s.get("lecture_time") or "1",
+                        "sessionType": "REGULAR",
+                        "topic": "",
+                        "remark": "",
+                        "status": "Submitted",
+                        "totalStudents": s.get("total_students") or 0,
+                        "presentCount": s.get("present_count") or 0,
+                        "absentCount": s.get("absent_count") or 0,
+                        "attendanceRate": s.get("attendance_rate") or 0.0,
+                        "submittedAt": s.get("submitted_at") or s.get("created_at") or ""
+                    })
+                return success_response(data=data)
+    except Exception as e:
+        logger.warning("[Attendance] Supabase records fetch error: %s", e)
+
+    sessions = db.query(AttendanceSession).filter(AttendanceSession.status == "SUBMITTED").order_by(
+        AttendanceSession.attendance_date.desc()
+    ).all()
 
     data = [
         {
@@ -341,16 +342,16 @@ def get_all_records(
             "teacherName": s.teacher.full_name if s.teacher else current_user.full_name,
             "department": s.assigned_class.department.code if s.assigned_class and s.assigned_class.department else "CSE",
             "departmentName": s.assigned_class.department.name if s.assigned_class and s.assigned_class.department else "Computer Science & Engineering",
-            "classId": s.assigned_class.name if s.assigned_class else "3R",
-            "subjectCode": s.subject.code if s.subject else "CS305",
-            "subjectName": s.subject.name if s.subject else "Database Management",
-            "subject": f"{s.subject.code} - {s.subject.name}" if s.subject else "CS305 - Database Management",
+            "classId": s.assigned_class.name if s.assigned_class else "",
+            "subjectCode": s.subject.code if s.subject else "",
+            "subjectName": s.subject.name if s.subject else "",
+            "subject": f"{s.subject.code} - {s.subject.name}" if s.subject else "",
             "date": s.attendance_date,
             "period": s.period or "1",
             "sessionType": "REGULAR",
             "topic": s.topic_covered or "",
             "remark": s.remarks or "",
-            "status": s.status,
+            "status": "Submitted",
             "totalStudents": s.total_students,
             "presentCount": s.present_count,
             "absentCount": s.absent_count,
@@ -359,7 +360,6 @@ def get_all_records(
         }
         for s in sessions
     ]
-
     return success_response(data=data)
 
 @router.get("/sessions/{session_id}")
@@ -368,12 +368,42 @@ def get_session_details(
     current_user: Teacher = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    try:
+        sb = get_supabase_client()
+        if sb:
+            s_res = sb.table("attendance_sessions").select("*").eq("id", session_id).execute()
+            if s_res.data and len(s_res.data) > 0:
+                s = s_res.data[0]
+                rec_res = sb.table("attendance_records").select("*").eq("session_id", session_id).order("roll_no").execute()
+                records = [
+                    {
+                        "id": r.get("id"),
+                        "studentId": r.get("student_id"),
+                        "rollNo": r.get("roll_no"),
+                        "status": (r.get("status") or "").upper(),
+                        "remarks": r.get("remarks")
+                    }
+                    for r in (rec_res.data or [])
+                ]
+                return success_response(data={
+                    "id": s.get("id"),
+                    "classId": s.get("class_code"),
+                    "subjectCode": s.get("subject_code"),
+                    "date": s.get("lecture_date"),
+                    "totalStudents": s.get("total_students"),
+                    "presentCount": s.get("present_count"),
+                    "absentCount": s.get("absent_count"),
+                    "attendanceRate": s.get("attendance_rate"),
+                    "records": records
+                })
+    except Exception as e:
+        logger.warning("[Attendance] Supabase session details fetch error: %s", e)
+
     session = db.query(AttendanceSession).filter_by(id=session_id).first()
     if not session:
         return error_response("Attendance session not found", code=404)
 
     records = db.query(AttendanceRecord).filter_by(session_id=session.id).join(Student).order_by(Student.roll_no).all()
-
     record_items = [
         {
             "id": r.id,
@@ -389,24 +419,12 @@ def get_session_details(
 
     return success_response(data={
         "id": session.id,
-        "teacherId": session.teacher.emp_code if session.teacher else current_user.emp_code,
-        "teacherName": session.teacher.full_name if session.teacher else current_user.full_name,
-        "department": session.assigned_class.department.code if session.assigned_class and session.assigned_class.department else "CSE",
-        "departmentName": session.assigned_class.department.name if session.assigned_class and session.assigned_class.department else "Computer Science & Engineering",
-        "classId": session.assigned_class.name if session.assigned_class else "3R",
-        "subjectCode": session.subject.code if session.subject else "CS305",
-        "subjectName": session.subject.name if session.subject else "Database Management",
-        "subject": f"{session.subject.code} - {session.subject.name}" if session.subject else "",
+        "classId": session.assigned_class.name if session.assigned_class else "",
+        "subjectCode": session.subject.code if session.subject else "",
         "date": session.attendance_date,
-        "period": session.period or "1",
-        "sessionType": "REGULAR",
-        "topic": session.topic_covered or "",
-        "remark": session.remarks or "",
-        "status": session.status,
         "totalStudents": session.total_students,
         "presentCount": session.present_count,
         "absentCount": session.absent_count,
         "attendanceRate": session.attendance_rate,
-        "submittedAt": session.submitted_at.isoformat() if session.submitted_at else "",
         "records": record_items
     })

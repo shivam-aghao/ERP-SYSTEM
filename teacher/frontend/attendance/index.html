@@ -44,6 +44,12 @@
     </div>
 
     <div class="header-right-part">
+      <!-- Live Visual Indicator Badge (🟢 Live Connected / 🟠 Offline Cache) -->
+      <div class="erp-live-badge" id="erpLiveConnBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; transition: all 0.3s ease;" title="Connected to Faculty API (Port 8000) & Cloud Supabase Database">
+        <span class="live-dot" id="liveDot" style="width: 8px; height: 8px; background: #22C55E; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #22C55E;"></span>
+        <span id="liveBadgeText">Live Connected (Supabase)</span>
+      </div>
+
       <button class="header-action-btn" id="notificationsBtn" title="Notifications">
         <span class="notif-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -304,11 +310,11 @@
           </div>
           <div class="hero-right">
             <div class="quick-metric">
-              <div class="metric-num" id="statTodayCount">4</div>
+              <div class="metric-num" id="statTodayCount">0</div>
               <div class="metric-lbl">Sessions Today</div>
             </div>
             <div class="quick-metric">
-              <div class="metric-num" id="statAvgAttendance">88.5%</div>
+              <div class="metric-num" id="statAvgAttendance">0%</div>
               <div class="metric-lbl">Avg. Attendance</div>
             </div>
           </div>
@@ -435,7 +441,7 @@
               <div class="stat-pill-label">Absent</div>
             </div>
             <div class="stat-pill pill-remaining">
-              <div class="stat-pill-num" id="statLiveRemaining">60</div>
+              <div class="stat-pill-num" id="statLiveRemaining">0</div>
               <div class="stat-pill-label">Remaining</div>
             </div>
           </div>
@@ -443,7 +449,7 @@
           <!-- Progress Bar Card -->
           <div class="student-progress-card" id="studentProgressCard">
             <div class="progress-info-row">
-              <span class="progress-student-count" id="progressStudentText">Student 1 of 60</span>
+              <span class="progress-student-count" id="progressStudentText">Student 0 of 0</span>
               <span class="progress-percentage" id="progressPctText">0%</span>
             </div>
             <div class="attendance-progress-track">
@@ -909,11 +915,16 @@
      ==================================================================== -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Supabase CDN and Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js?v=patil_v6"></script>
+<script src="js/api.js?v=patil_v6"></script>
+
 <!-- Scripts -->
-<script src="js/data.js"></script>
-<script src="js/attendanceService.js"></script>
-<script src="js/swipeEngine.js"></script>
-<script src="js/app.js"></script>
+<script src="js/data.js?v=patil_v6"></script>
+<script src="js/attendanceService.js?v=patil_v6"></script>
+<script src="js/swipeEngine.js?v=patil_v6"></script>
+<script src="js/app.js?v=patil_v6"></script>
 
 </body>
 </html>

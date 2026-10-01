@@ -56,17 +56,7 @@ def get_active_faculty_profile(db: Session = Depends(get_db)):
             "source": "database"
         })
 
-    return success_response(data={
-        "fullName": "Dr. J.M.Patil",
-        "empCode": "FAC-CSE-1048",
-        "designation": "Associate Professor",
-        "department": "CSE",
-        "departmentName": "Computer Science & Engineering",
-        "email": "jm.patil@ssgmce.ac.in",
-        "phone": "+91 98765 43210",
-        "avatar": "JP",
-        "source": "default"
-    })
+    return error_response("Faculty profile not found in database", code=404)
 
 @router.get("/profile")
 def get_profile(current_user: Teacher = Depends(get_current_user), db: Session = Depends(get_db)):

@@ -16,7 +16,7 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
     sessions = db.query(AttendanceSession).filter_by(class_id=cls.id, status="SUBMITTED").all()
 
     total_sessions = len(sessions)
-    overall_rate = 82.5
+    overall_rate = 0.0
     if sessions:
         total_present = sum(s.present_count for s in sessions)
         total_possible = sum(s.total_students for s in sessions)
@@ -28,7 +28,7 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
 
     for s in students:
         summary = db.query(AttendanceHistorySummary).filter_by(student_id=s.id).first()
-        pct = summary.percentage if summary else (85.0 if s.roll_no % 7 != 0 else 68.0)
+        pct = summary.percentage if summary else (0.0 if total_sessions > 0 else 100.0)
         item = {
             "id": s.id,
             "rollNo": s.roll_no,

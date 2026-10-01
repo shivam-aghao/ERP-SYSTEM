@@ -1,330 +1,177 @@
 /**
- * SSGMCE Faculty Attendance ERP - FastAPI & Supabase Client Adapter
- * Connects frontend smoothly to FastAPI backend (http://localhost:8000/api/v1)
- * with automatic JWT refresh and fallback.
+ * College ERP - Python Backend API Client
+ * Connects Frontend UI directly to the Python FastAPI Backend on Port 8000
+ * Integrated with Cloud Supabase PostgreSQL Database
  */
 
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
-  } else {
-    root.ErpApi = factory();
+const API_BASE_URL = "http://localhost:8000/api/v1";
+
+const ErpApi = {
+  baseUrl: API_BASE_URL,
+
+  async checkHealth() {
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/profile/active");
+      const json = await res.json();
+      return { success: res.ok, data: json.data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  async getProfile() {
+    try {
+      const res = await fetch(`${this.baseUrl}/profile/active`);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data;
+      }
+      return null;
+    } catch (e) {
+      console.warn("[ErpApi] Profile fetch error:", e);
+      return null;
+    }
+  },
+
+  async getDepartments() {
+    try {
+      const res = await fetch(`${this.baseUrl}/master/departments`);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (e) {
+      console.warn("[ErpApi] Departments fetch error:", e);
+      return [];
+    }
+  },
+
+  async getClasses(dept = "") {
+    try {
+      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (e) {
+      console.warn("[ErpApi] Classes fetch error:", e);
+      return [];
+    }
+  },
+
+  async getSubjects(dept = "") {
+    try {
+      const url = dept ? `${this.baseUrl}/master/subjects?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/subjects`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (e) {
+      console.warn("[ErpApi] Subjects fetch error:", e);
+      return [];
+    }
+  },
+
+  async getClassCards() {
+    try {
+      const res = await fetch(`${this.baseUrl}/cards`);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (err) {
+      console.warn("[ErpApi] Failed to fetch cards:", err);
+      return [];
+    }
+  },
+
+  async createClassCard(cardData) {
+    try {
+      const res = await fetch(`${this.baseUrl}/cards`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cardData)
+      });
+      return await res.json();
+    } catch (err) {
+      console.warn("[ErpApi] Create card error:", err);
+      return null;
+    }
+  },
+
+  async deleteClassCard(cardId) {
+    try {
+      const res = await fetch(`${this.baseUrl}/cards/${cardId}`, {
+        method: "DELETE"
+      });
+      return await res.json();
+    } catch (err) {
+      console.warn("[ErpApi] Delete card error:", err);
+      return null;
+    }
+  },
+
+  async getStudents(dept = "CSE", classId = "2R1") {
+    try {
+      const res = await fetch(`${this.baseUrl}/students/class/${encodeURIComponent(classId)}?departmentCode=${encodeURIComponent(dept)}`);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (err) {
+      console.warn("[ErpApi] Failed to fetch students:", err);
+      return [];
+    }
+  },
+
+  async submitAttendance(payload) {
+    try {
+      const res = await fetch(`${this.baseUrl}/attendance/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    } catch (err) {
+      console.warn("[ErpApi] Failed to submit attendance:", err);
+      return null;
+    }
+  },
+
+  async getRecords() {
+    try {
+      const res = await fetch(`${this.baseUrl}/attendance/records`);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || [];
+      }
+      return [];
+    } catch (err) {
+      console.warn("[ErpApi] Failed to fetch attendance records:", err);
+      return [];
+    }
+  },
+
+  async checkDuplicate(dept, classId, date, subjectCode) {
+    try {
+      const url = `${this.baseUrl}/attendance/check-duplicate?department=${encodeURIComponent(dept)}&classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(date)}&subjectCode=${encodeURIComponent(subjectCode)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        return json.data?.isDuplicate || false;
+      }
+      return false;
+    } catch (err) {
+      return false;
+    }
   }
-})(typeof self !== 'undefined' ? self : this, function () {
-  'use strict';
+};
 
-  const DEFAULT_BASE_URL = 'http://localhost:8000/api/v1';
-
-  let isRefreshing = false;
-  let refreshSubscribers = [];
-
-  function subscribeTokenRefresh(cb) {
-    refreshSubscribers.push(cb);
-  }
-
-  function onTokenRefreshed(newToken) {
-    refreshSubscribers.forEach((cb) => cb(newToken));
-    refreshSubscribers = [];
-  }
-
-  const ErpApi = {
-    baseUrl: (typeof window !== 'undefined' && window.__ERP_API_BASE__) || DEFAULT_BASE_URL,
-    TOKEN_KEY: 'ssgmce_faculty_access_token',
-    REFRESH_TOKEN_KEY: 'ssgmce_faculty_refresh_token',
-    USER_KEY: 'ssgmce_faculty_user',
-
-    getToken() {
-      try {
-        return localStorage.getItem(this.TOKEN_KEY);
-      } catch (e) {
-        return null;
-      }
-    },
-
-    setToken(token) {
-      try {
-        localStorage.setItem(this.TOKEN_KEY, token);
-      } catch (e) {}
-    },
-
-    getRefreshToken() {
-      try {
-        return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-      } catch (e) {
-        return null;
-      }
-    },
-
-    setRefreshToken(token) {
-      try {
-        localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
-      } catch (e) {}
-    },
-
-    getUser() {
-      try {
-        const u = localStorage.getItem(this.USER_KEY);
-        return u ? JSON.parse(u) : null;
-      } catch (e) {
-        return null;
-      }
-    },
-
-    setUser(user) {
-      try {
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      } catch (e) {}
-    },
-
-    clearAuth() {
-      try {
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-        localStorage.removeItem(this.USER_KEY);
-      } catch (e) {}
-    },
-
-    isAuthenticated() {
-      return !!this.getToken();
-    },
-
-    async request(endpoint, options = {}) {
-      const url = `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
-
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      };
-
-      const token = this.getToken();
-      if (token && !headers['Authorization']) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const config = {
-        ...options,
-        headers,
-      };
-
-      if (options.body && typeof options.body === 'object') {
-        config.body = JSON.stringify(options.body);
-      }
-
-      try {
-        const response = await fetch(url, config);
-
-        // Token Expiry & Automatic Refresh
-        if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh-token')) {
-          const refreshToken = this.getRefreshToken();
-          if (refreshToken) {
-            if (!isRefreshing) {
-              isRefreshing = true;
-              try {
-                const refreshRes = await fetch(`${this.baseUrl}/auth/refresh-token`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ refreshToken }),
-                });
-                const refreshData = await refreshRes.json();
-                if (refreshData.success && refreshData.data?.accessToken) {
-                  this.setToken(refreshData.data.accessToken);
-                  onTokenRefreshed(refreshData.data.accessToken);
-                } else {
-                  this.clearAuth();
-                }
-              } catch (refreshErr) {
-                this.clearAuth();
-              } finally {
-                isRefreshing = false;
-              }
-            }
-
-            return new Promise((resolve, reject) => {
-              subscribeTokenRefresh((newToken) => {
-                config.headers['Authorization'] = `Bearer ${newToken}`;
-                fetch(url, config)
-                  .then((res) => res.json())
-                  .then(resolve)
-                  .catch(reject);
-              });
-            });
-          }
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.warn(`[ErpApi] Network request failed for ${url}:`, err.message);
-        throw err;
-      }
-    },
-
-    // =========================================================================
-    // AUTHENTICATION
-    // =========================================================================
-    async login(employeeCodeOrEmail, password) {
-      const isEmail = employeeCodeOrEmail.includes('@');
-      const body = {
-        password,
-        ...(isEmail ? { email: employeeCodeOrEmail } : { employeeCode: employeeCodeOrEmail }),
-      };
-
-      const res = await this.request('/auth/login', {
-        method: 'POST',
-        body,
-      });
-
-      if (res.success && res.data) {
-        this.setToken(res.data.accessToken);
-        this.setRefreshToken(res.data.refreshToken);
-        this.setUser(res.data.user);
-      }
-      return res;
-    },
-
-    async logout() {
-      try {
-        await this.request('/auth/logout', { method: 'POST' });
-      } catch (e) {}
-      this.clearAuth();
-    },
-
-    async getMe() {
-      return await this.request('/auth/me');
-    },
-
-    // =========================================================================
-    // MASTER DATA
-    // =========================================================================
-    async getDepartments() {
-      return await this.request('/master/departments');
-    },
-
-    async getClasses(department) {
-      const qs = department ? `?department=${encodeURIComponent(department)}` : '';
-      return await this.request(`/master/classes${qs}`);
-    },
-
-    async getSubjects(department, semester) {
-      const params = new URLSearchParams();
-      if (department) params.append('department', department);
-      if (semester) params.append('semester', semester);
-      const qs = params.toString() ? `?${params.toString()}` : '';
-      return await this.request(`/master/subjects${qs}`);
-    },
-
-    // =========================================================================
-    // CLASS CARDS
-    // =========================================================================
-    async getTeacherCards(teacherId) {
-      const qs = teacherId ? `?teacherId=${encodeURIComponent(teacherId)}` : '';
-      return await this.request(`/cards${qs}`);
-    },
-
-    async createCard(cardPayload) {
-      return await this.request('/cards', {
-        method: 'POST',
-        body: cardPayload,
-      });
-    },
-
-    async updateCard(cardId, cardPayload) {
-      return await this.request(`/cards/${cardId}`, {
-        method: 'PUT',
-        body: cardPayload,
-      });
-    },
-
-    async deleteCard(cardId) {
-      return await this.request(`/cards/${cardId}`, {
-        method: 'DELETE',
-      });
-    },
-
-    async checkCardDuplicate(department, classId, subjectCode) {
-      const qs = `?department=${encodeURIComponent(department)}&classId=${encodeURIComponent(classId)}&subjectCode=${encodeURIComponent(subjectCode)}`;
-      return await this.request(`/cards/check-duplicate${qs}`);
-    },
-
-    // =========================================================================
-    // STUDENTS & ROSTER
-    // =========================================================================
-    async getClassRoster(classId, subject) {
-      const qs = subject ? `?subject=${encodeURIComponent(subject)}` : '';
-      return await this.request(`/students/class/${encodeURIComponent(classId)}${qs}`);
-    },
-
-    // =========================================================================
-    // ATTENDANCE
-    // =========================================================================
-    async checkAttendanceDuplicate(department, classId, date, subjectCode, period) {
-      const params = new URLSearchParams({
-        department: department || '',
-        classId: classId || '',
-        date: date || '',
-        subjectCode: subjectCode || '',
-      });
-      if (period) params.append('period', period);
-      return await this.request(`/attendance/check-duplicate?${params.toString()}`);
-    },
-
-    async saveDraft(sessionData) {
-      return await this.request('/attendance/draft', {
-        method: 'POST',
-        body: sessionData,
-      });
-    },
-
-    async getDraft(classId, subjectCode, date, period) {
-      const params = new URLSearchParams({
-        classId: classId || '',
-        subjectCode: subjectCode || '',
-        date: date || '',
-      });
-      if (period) params.append('period', period);
-      return await this.request(`/attendance/draft?${params.toString()}`);
-    },
-
-    async submitAttendance(sessionData) {
-      return await this.request('/attendance/submit', {
-        method: 'POST',
-        body: sessionData,
-      });
-    },
-
-    async getAllRecords(teacherId) {
-      const qs = teacherId ? `?teacherId=${encodeURIComponent(teacherId)}` : '';
-      return await this.request(`/attendance/records${qs}`);
-    },
-
-    async getSessionDetails(sessionId) {
-      return await this.request(`/attendance/sessions/${encodeURIComponent(sessionId)}`);
-    },
-
-    // =========================================================================
-    // PROFILE & NOTIFICATIONS
-    // =========================================================================
-    async getProfile() {
-      return await this.request('/profile');
-    },
-
-    async getNotifications() {
-      return await this.request('/notifications');
-    },
-
-    async markNotificationRead(id) {
-      return await this.request(`/notifications/${id}/read`, {
-        method: 'PATCH',
-      });
-    },
-
-    // =========================================================================
-    // REPORTS
-    // =========================================================================
-    async getClassStats(classId) {
-      return await this.request(`/reports/classes/${encodeURIComponent(classId)}/stats`);
-    },
-  };
-
-  return ErpApi;
-});
+window.ErpApi = ErpApi;
