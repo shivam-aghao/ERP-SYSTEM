@@ -39,7 +39,7 @@ const ErpApi = {
 
   async getPrograms() {
     try {
-      const res = await fetch(`${this.baseUrl}/master/programs`);
+      const res = await fetch(`${this.baseUrl}/master/departments`);
       if (res.ok) {
         const json = await res.json();
         return json.data || [];
@@ -53,7 +53,7 @@ const ErpApi = {
 
   async getClasses(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}&program=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
+      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -72,7 +72,7 @@ const ErpApi = {
 
   async getCourses(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/courses?department=${encodeURIComponent(dept)}&program=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/courses`;
+      const url = dept ? `${this.baseUrl}/master/subjects?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/subjects`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();

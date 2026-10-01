@@ -335,8 +335,8 @@
                 <tr>
                   <th>Record ID</th>
                   <th>Date</th>
-                  <th>Dept / Class</th>
-                  <th>Subject</th>
+                  <th>Program / Class</th>
+                  <th>Course</th>
                   <th>Attendance</th>
                   <th>Status</th>
                   <th>Timestamp</th>
@@ -495,7 +495,7 @@
                 </div>
                 <div class="meta-box-subject">
                   <span id="rosterClassText"><strong>Class:</strong> SY-CSE-A</span>
-                  <span id="rosterSubjectText"><strong>Subject:</strong> 3CS205MD Database Management (THEORY)</span>
+                  <span id="rosterSubjectText"><strong>Course:</strong> 3CS205MD Database Management (THEORY)</span>
                   <span id="rosterTimeText"><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
                   <span id="rosterDateText"><strong>Date:</strong> 22/09/2026</span>
                   <span><strong>Type:</strong> [REGULAR]</span>
@@ -843,20 +843,20 @@
     </div>
     <div class="modal-body">
       <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 13px;">
-        Pick your Department, Class, and Subject to create a quick-access class card.
+        Pick your Program, Class, and Course to create a quick-access class card.
       </p>
 
       <div class="card-modal-error-alert hidden" id="cardModalError">
         <span class="error-alert-icon">⚠️</span>
-        <span id="cardModalErrorText">A card for this Department, Class, and Subject already exists.</span>
+        <span id="cardModalErrorText">A card for this Program, Class, and Course already exists.</span>
       </div>
 
       <form id="formClassCard" onsubmit="return false;">
         <input type="hidden" id="cardModalCardId" value="">
         <div class="form-group-card">
-          <label for="cardModalDept">Department <span class="required-star">*</span></label>
+          <label for="cardModalDept">Program <span class="required-star">*</span></label>
           <select id="cardModalDept" class="form-select-card" required>
-            <option value="">-- Select Department --</option>
+            <option value="">-- Select Program --</option>
           </select>
         </div>
 
@@ -868,9 +868,9 @@
         </div>
 
         <div class="form-group-card">
-          <label for="cardModalSubject">Subject <span class="required-star">*</span></label>
+          <label for="cardModalSubject">Course <span class="required-star">*</span></label>
           <select id="cardModalSubject" class="form-select-card" required disabled>
-            <option value="">-- Select Subject --</option>
+            <option value="">-- Select Course --</option>
           </select>
         </div>
       </form>
@@ -917,14 +917,14 @@
 
 <!-- Supabase CDN and Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabaseClient.js?v=live_fix_888"></script>
-<script src="js/api.js?v=live_fix_888"></script>
+<script src="js/supabaseClient.js?v=patil_v6"></script>
+<script src="js/api.js?v=patil_v6"></script>
 
 <!-- Scripts -->
-<script src="js/data.js?v=live_fix_888"></script>
-<script src="js/attendanceService.js?v=live_fix_888"></script>
-<script src="js/swipeEngine.js?v=live_fix_888"></script>
-<script src="js/app.js?v=live_fix_888"></script>
+<script src="js/data.js?v=patil_v6"></script>
+<script src="js/attendanceService.js?v=patil_v6"></script>
+<script src="js/swipeEngine.js?v=patil_v6"></script>
+<script src="js/app.js?v=patil_v6"></script>
 
 </body>
 </html>

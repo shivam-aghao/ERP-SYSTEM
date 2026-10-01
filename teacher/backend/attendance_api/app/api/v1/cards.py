@@ -37,15 +37,23 @@ def get_cards(
                     c_code = c.get("class_code", "")
                     s_code = c.get("subject_code", "")
                     cls_info = cls_dict.get(c_code, {})
+                    dept_code = c.get("department_code") or "CSE"
+                    dept_name = "Computer Science & Engineering" if dept_code == "CSE" else dept_code
+                    s_name = subj_dict.get(s_code, s_code)
                     data.append({
                         "id": c.get("id"),
                         "teacher_id": current_user.emp_code,
-                        "department": c.get("department_code") or "CSE",
-                        "department_name": "Computer Science & Engineering" if c.get("department_code") == "CSE" else c.get("department_code"),
+                        "employee_id": current_user.emp_code,
+                        "department": dept_code,
+                        "department_name": dept_name,
+                        "program": dept_code,
+                        "program_name": dept_name,
                         "class": c_code,
                         "class_id": c_code,
                         "subject_code": s_code,
-                        "subject_name": subj_dict.get(s_code, s_code),
+                        "subject_name": s_name,
+                        "course_code": s_code,
+                        "course_name": s_name,
                         "room_number": cls_info.get("room") or "Room 201",
                         "color_gradient": "from-blue-600 to-indigo-700",
                         "created_at": c.get("created_at") or ""

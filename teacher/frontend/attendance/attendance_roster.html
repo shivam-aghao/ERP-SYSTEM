@@ -471,7 +471,7 @@
       <div class="meta-box-subject" id="rosterSubjectBox">
         <span id="rosterMetaClass"><strong>Class:</strong> 2R1</span>
         <span id="rosterMetaSubject"><strong>Course:</strong> CS303 Java Programming (THEORY)</span>
-        <span id="rosterMetaTime"><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
+        <span id="rosterMetaTime"><strong>Time:</strong> 11:15 AM TO 12:15 PM (2)</span>
         <span id="rosterMetaDate"><strong>Date:</strong> 01/10/2026</span>
         <span><strong>Type:</strong> [REGULAR]</span>
       </div>
@@ -591,14 +591,14 @@
     (function () {
       const urlParams = new URLSearchParams(window.location.search);
       const activeClass = urlParams.get("class") || "2R1";
-      const activeSubject = urlParams.get("course") || urlParams.get("subject") || "CS303";
-      const activeDept = urlParams.get("program") || urlParams.get("dept") || "CSE";
+      const activeCourse = urlParams.get("course") || urlParams.get("subject") || "CS303";
+      const activeProgram = urlParams.get("program") || urlParams.get("dept") || "CSE";
 
-      // Dynamically display class, course, date in meta header
+      // Dynamically display class, course and date in meta header
       const classMetaEl = document.getElementById("rosterMetaClass");
       if (classMetaEl) classMetaEl.innerHTML = `<strong>Class:</strong> ${activeClass}`;
       const subjMetaEl = document.getElementById("rosterMetaSubject");
-      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Course:</strong> ${activeSubject} (THEORY)`;
+      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Course:</strong> ${activeCourse} (THEORY)`;
       const dateMetaEl = document.getElementById("rosterMetaDate");
       if (dateMetaEl) {
         const today = new Date();

@@ -7,6 +7,7 @@
 
 const ERP_DATA = {
   teacher: null,
+  employee: null,
   departments: [],
   programs: [],
   classes: {},
@@ -32,10 +33,11 @@ const ERP_DATA = {
             avatar: prof.avatar || "JP",
             unreadNotifications: 3
           };
+          this.employee = this.teacher;
         }
 
         // 2. Fetch Programs / Departments from Backend / Supabase
-        const depts = await window.ErpApi.getPrograms();
+        const depts = await window.ErpApi.getDepartments();
         this.departments = depts || [];
         this.programs = this.departments;
 
@@ -43,19 +45,21 @@ const ERP_DATA = {
         const clsList = await window.ErpApi.getClasses();
         this.classes = {};
         (clsList || []).forEach((c) => {
-          const dept = c.program || c.department || "CSE";
+          const dept = c.department || c.program || "CSE";
           if (!this.classes[dept]) this.classes[dept] = [];
           this.classes[dept].push(c);
         });
 
         // 4. Fetch Courses / Subjects from Backend / Supabase
-        const subsList = await window.ErpApi.getCourses();
+        const subsList = await window.ErpApi.getSubjects();
         this.subjects = {};
-        this.courses = this.subjects;
+        this.courses = {};
         (subsList || []).forEach((s) => {
-          const dept = s.program || s.department || "CSE";
+          const dept = s.department || s.program || "CSE";
           if (!this.subjects[dept]) this.subjects[dept] = [];
+          if (!this.courses[dept]) this.courses[dept] = [];
           this.subjects[dept].push(s);
+          this.courses[dept].push(s);
         });
 
         // 5. Fetch Class Cards from Backend / Supabase

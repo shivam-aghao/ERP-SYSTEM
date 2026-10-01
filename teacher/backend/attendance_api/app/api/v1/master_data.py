@@ -12,8 +12,9 @@ logger = logging.getLogger("erp_fastapi")
 router = APIRouter(prefix="/master", tags=["Master Data"])
 
 @router.get("/departments")
+@router.get("/programs")
 def get_departments(db: Session = Depends(get_db)):
-    """Fetch live departments directly from Supabase, with local cache fallback."""
+    """Fetch live programs / departments directly from Supabase, with local cache fallback."""
     try:
         sb = get_supabase_client()
         if sb:
@@ -23,28 +24,32 @@ def get_departments(db: Session = Depends(get_db)):
                     {
                         "id": d.get("code"),
                         "code": d.get("code"),
+                        "programCode": d.get("code"),
                         "name": d.get("name"),
+                        "programName": d.get("name"),
                         "icon": d.get("icon") or "💻",
                         "classesCount": d.get("classes_count") or 4,
                         "color": "#0B5CAD",
-                        "description": d.get("description") or f"Department of {d.get('code')}"
+                        "description": d.get("description") or f"Program in {d.get('code')}"
                     }
                     for d in res.data
                 ]
                 return success_response(data=data)
     except Exception as e:
-        logger.warning("[MasterData] Supabase departments error: %s", e)
+        logger.warning("[MasterData] Supabase departments/programs error: %s", e)
 
     depts = db.query(Department).order_by(Department.code).all()
     data = [
         {
             "id": d.code,
             "code": d.code,
+            "programCode": d.code,
             "name": d.name,
+            "programName": d.name,
             "icon": d.icon or "💻",
             "classesCount": d.classes_count or 4,
             "color": "#0B5CAD",
-            "description": d.description or f"Department of {d.code}"
+            "description": d.description or f"Program in {d.code}"
         }
         for d in depts
     ]
@@ -101,12 +106,15 @@ def get_classes(department: Optional[str] = Query(None), db: Session = Depends(g
     return success_response(data=data)
 
 @router.get("/subjects")
+@router.get("/courses")
 def get_subjects(
     department: Optional[str] = Query(None),
+    program: Optional[str] = Query(None),
     semester: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
-    """Fetch live subjects directly from Supabase, with local cache fallback."""
+    """Fetch live courses / subjects directly from Supabase, with local cache fallback."""
+    dept_val = program or department
     try:
         sb = get_supabase_client()
         if sb:
@@ -117,21 +125,24 @@ def get_subjects(
                     {
                         "id": s.get("code"),
                         "code": s.get("code"),
+                        "courseCode": s.get("code"),
                         "name": s.get("name"),
+                        "courseName": s.get("name"),
                         "semester": s.get("semester") or "Semester 5",
                         "type": "THEORY",
-                        "department": department or "CSE"
+                        "department": dept_val or "CSE",
+                        "program": dept_val or "CSE"
                     }
                     for s in res.data
                 ]
                 return success_response(data=data)
     except Exception as e:
-        logger.warning("[MasterData] Supabase subjects error: %s", e)
+        logger.warning("[MasterData] Supabase courses/subjects error: %s", e)
 
     query = db.query(Subject)
-    if department:
+    if dept_val:
         dept = db.query(Department).filter(
-            (Department.code == department) | (Department.id == department)
+            (Department.code == dept_val) | (Department.id == dept_val)
         ).first()
         if dept:
             query = query.filter(Subject.department_id == dept.id)
@@ -143,10 +154,13 @@ def get_subjects(
         {
             "id": s.code,
             "code": s.code,
+            "courseCode": s.code,
             "name": s.name,
+            "courseName": s.name,
             "semester": s.semester,
             "type": s.type,
-            "department": s.department.code if s.department else ""
+            "department": s.department.code if s.department else "",
+            "program": s.department.code if s.department else ""
         }
         for s in subjects
     ]

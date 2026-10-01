@@ -25,12 +25,17 @@ def get_active_faculty_profile(db: Session = Depends(get_db)):
             res = sb.table("faculty").select("*").limit(1).execute()
             if res.data and len(res.data) > 0:
                 row = res.data[0]
+                emp_code = row.get("employee_id") or "FAC-CSE-1048"
                 return success_response(data={
                     "fullName": row.get("name") or "Dr. J.M.Patil",
-                    "empCode": row.get("employee_id") or "FAC-CSE-1048",
+                    "empCode": emp_code,
+                    "employeeCode": emp_code,
+                    "employeeId": emp_code,
                     "designation": row.get("title") or "Associate Professor",
                     "department": row.get("department_code") or "CSE",
                     "departmentName": "Computer Science & Engineering",
+                    "program": row.get("department_code") or "CSE",
+                    "programName": "Computer Science & Engineering",
                     "email": row.get("email") or "jm.patil@ssgmce.ac.in",
                     "phone": row.get("phone") or "+91 98765 43210",
                     "avatar": row.get("avatar_initials") or "JP",
@@ -47,9 +52,13 @@ def get_active_faculty_profile(db: Session = Depends(get_db)):
         return success_response(data={
             "fullName": teacher.full_name,
             "empCode": teacher.emp_code,
+            "employeeCode": teacher.emp_code,
+            "employeeId": teacher.emp_code,
             "designation": teacher.designation,
             "department": dept_code,
             "departmentName": dept_name,
+            "program": dept_code,
+            "programName": dept_name,
             "email": teacher.email,
             "phone": teacher.phone or "+91 98765 43210",
             "avatar": teacher.avatar or "JP",
