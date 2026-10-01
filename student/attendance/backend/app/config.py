@@ -20,8 +20,8 @@ class Settings(BaseSettings):
         "*",
     ]
 
-    SUPABASE_URL: str = "https://szymhbmrupktrboduvlw.supabase.co"
-    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6eW1oYm1ydXBrdHJib2R1dmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMDc3NTgsImV4cCI6MjEwNTg4Mzc1OH0.DtMxNfnnUmhyP_GGUK4Fms5e7nPHobUPwNVpo1cpP_M"
+    SUPABASE_URL: str = "https://gftqvclenyplnuoocbwe.supabase.co"
+    SUPABASE_ANON_KEY: str = "sb_publishable_S1S9X948M9O5FyRmEeOISQ_FJQ4i6sv"
     SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     DATABASE_URL: str = "sqlite:///./student_erp.db"

@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    fetchAndHydrateLiveSyllabus();
     // Auth Guard & Header Hydration
     if (window.ERPAuth) {
         const session = window.ERPAuth.guard('student');
@@ -406,3 +407,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.add('active');
             });
         });
+
+async function fetchAndHydrateLiveSyllabus() {
+    try {
+        if (typeof window.StudentApi === 'undefined' || typeof window.StudentApi.getSyllabus !== 'function') return;
+        const res = await window.StudentApi.getSyllabus();
+        if (!res || !res.data || res.data.length === 0) return;
+
+        const liveList = res.data;
+        const tbody = document.querySelector('.syllabus-data-table tbody, .table-body, tbody');
+        if (tbody) {
+            let html = '';
+            liveList.forEach(s => {
+                const code = s.subjectCode || s.code || 'CS-301';
+                const name = s.subjectName || s.name || 'Course';
+                const credits = s.credits || 4.0;
+                const faculty = s.faculty?.name || s.faculty || 'Faculty Advisor';
+                const progress = s.syllabusProgress || 80;
+
+                html += `
+                    <tr>
+                        <td><strong>${code}</strong></td>
+                        <td>${name}</td>
+                        <td>${credits}</td>
+                        <td>Core Theory + Lab</td>
+                        <td>${faculty}</td>
+                        <td><span class="badge ${progress >= 75 ? 'badge-cyan' : 'badge-warning'}">${progress}% Covered</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+    } catch (e) {
+        console.warn('Error fetching live syllabus data:', e);
+    }
+}

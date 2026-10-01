@@ -22,6 +22,7 @@
   <!-- SSGMCE ERP Auth Guard & Central Supabase -->
   <script src="../../../common/js/erp-auth-guard.js"></script>
   <script src="../../../common/js/erp-supabase.js"></script>
+  <script src="../../../common/js/student-supabase.js"></script>
   <script>
     if (window.ERPAuth) {
       window.ERPAuth.guard('student');
@@ -727,6 +728,7 @@
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
   <!-- Attendance Logic Scripts -->
+  <script src="js/api.js"></script>
   <script src="js/attendanceData.js"></script>
   <script src="js/attendanceCalculations.js"></script>
   <script src="js/attendanceService.js"></script>

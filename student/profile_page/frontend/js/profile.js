@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeaderDropdowns();
     initGlobalSearch();
     loadSavedProfileData();
+    fetchAndHydrateLiveProfile();
 });
 
 /* ==========================================================================
@@ -489,4 +490,54 @@ function showToast(message, type = 'info') {
         toast.style.transition = 'all 0.3s ease';
         setTimeout(() => toast.remove(), 300);
     }, 3200);
+}
+
+
+async function fetchAndHydrateLiveProfile() {
+    try {
+        let p = null;
+        if (typeof window.StudentApi !== 'undefined' && typeof window.StudentApi.getProfile === 'function') {
+            const res = await window.StudentApi.getProfile();
+            if (res && res.data) p = res.data;
+        }
+
+        if (!p) return;
+
+        // Personal & Contact Fields
+        const valMobile = document.getElementById('valMobile');
+        const valCardMobile = document.getElementById('valCardMobile');
+        if (valMobile && p.phone) valMobile.textContent = p.phone;
+        if (valCardMobile && p.phone) valCardMobile.textContent = p.phone;
+
+        const valEmail = document.getElementById('valEmail');
+        const valCardEmail = document.getElementById('valCardEmail');
+        if (valEmail && p.email) valEmail.textContent = p.email;
+        if (valCardEmail && p.email) valCardEmail.textContent = p.email;
+
+        const valBlood = document.getElementById('valBloodGroup');
+        if (valBlood && p.bloodGroup) valBlood.textContent = p.bloodGroup;
+
+        const valEmergency = document.getElementById('valEmergency');
+        if (valEmergency && p.emergencyContact) valEmergency.textContent = p.emergencyContact;
+
+        const valAddress = document.getElementById('valAddress');
+        if (valAddress && p.permanentAddress) {
+            const addrParts = [p.permanentAddress, p.district, p.state, p.pincode].filter(Boolean);
+            valAddress.textContent = addrParts.join(', ');
+        }
+
+        // Student identity headers
+        const studentNameEls = document.querySelectorAll('.student-name, .p-name');
+        studentNameEls.forEach(el => {
+            if (p.fullName) el.textContent = p.fullName;
+        });
+
+        const avatarInitials = p.fullName ? p.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA';
+        document.querySelectorAll('.avatar-circle, .large-avatar').forEach(el => {
+            el.textContent = avatarInitials;
+        });
+
+    } catch (e) {
+        console.warn('Error hydrating live student profile:', e);
+    }
 }

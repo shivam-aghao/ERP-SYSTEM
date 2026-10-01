@@ -1,136 +1,184 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, Query, Path, Body
 from sqlalchemy.orm import Session
-from app.database import get_db, get_supabase_client
+from app.database import get_db
 from app.models.db_models import (
-    StudentProfile, TimetableEntry, SubjectSyllabus, FeeRecord, FeeReceipt,
-    ElearningAssignment, ElearningContent, ElearningQuiz, ChangeInfoRequest,
-    UpdationInfoRecord, StudentDocument, ExamMark, ExamRevaluation, StudentNotification
+    StudentProfile, FeeRecord, FeeReceipt, ElearningAssignment,
+    ElearningContent, ElearningQuiz, ChangeInfoRequest, UpdationInfoRecord,
+    StudentDocument, ExamMark, ExamRevaluation
 )
 from app.models.schema import (
-    ChangeInfoSubmit, UpdationInfoSubmit, DocumentUpload, RevaluationSubmit, FeePaymentIntent
+    ChangeInfoSubmit, UpdationInfoSubmit, DocumentUpload,
+    RevaluationSubmit, FeePaymentIntent, StudentProfileUpdate
 )
+from app.services.supabase_service import supabase_service
 from app.utils.response import success_response, error_response
 
 router = APIRouter()
 
 # ==============================================================================
+# 0. HEALTH & STATUS
+# ==============================================================================
+@router.get("/health", tags=["Health"])
+def get_service_health():
+    """Checks FastAPI server status and live Supabase PostgreSQL connectivity."""
+    status = supabase_service.check_connection()
+    return success_response(
+        data=status,
+        message="Student ERP API is healthy and operational"
+    )
+
+@router.get("/status", tags=["Health"])
+def get_detailed_status(db: Session = Depends(get_db)):
+    """Provides detailed system telemetry including database tables and Supabase metrics."""
+    sb_status = supabase_service.check_connection()
+    return success_response(
+        data={
+            "service": "SSGMCE Student ERP Dashboard Backend",
+            "version": "1.1.0",
+            "framework": "FastAPI + Supabase PostgreSQL",
+            "supabase": sb_status,
+            "localSqliteReady": True
+        }
+    )
+
+# ==============================================================================
 # 1. PROFILE & AUTH
 # ==============================================================================
-@router.get("/profile")
-def get_student_profile(db: Session = Depends(get_db)):
-    student = db.query(StudentProfile).first()
-    if not student:
+@router.get("/profile", tags=["Profile"])
+def get_student_profile(
+    student_code: str = Query("308637", description="Student enrollment / code"),
+    db: Session = Depends(get_db)
+):
+    """Fetches full student profile from Supabase with SQLite fallback."""
+    profile_data, meta = supabase_service.get_profile(student_code=student_code, db=db)
+    if not profile_data:
         return error_response("Student profile not found", code=404)
-    
-    return success_response(data={
-        "id": student.id,
-        "rollNo": student.roll_no,
-        "studentCode": student.student_code,
-        "fullName": student.full_name,
-        "email": student.email,
-        "department": student.department,
-        "className": student.class_name,
-        "division": student.division,
-        "semester": student.semester,
-        "academicYear": student.academic_year,
-        "prn": student.prn,
-        "caste": student.caste,
-        "isEmployeeWard": student.is_employee_ward,
-        "phone": student.phone,
-        "cgpa": student.cgpa,
-        "sgpa": student.sgpa,
-        "attendanceRate": student.attendance_rate,
-        "avatarUrl": student.avatar_url
-    })
+    return success_response(data=profile_data, message="Student profile loaded successfully", meta=meta)
+
+@router.put("/profile", tags=["Profile"])
+@router.post("/profile/update", tags=["Profile"])
+def update_student_profile(
+    payload: StudentProfileUpdate,
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Updates student profile fields across Supabase and local storage."""
+    update_dict = payload.model_dump(exclude_unset=True)
+    success, msg = supabase_service.update_profile(student_code=student_code, updates=update_dict, db=db)
+    # Return updated profile
+    profile_data, meta = supabase_service.get_profile(student_code=student_code, db=db)
+    return success_response(data=profile_data, message=msg, meta=meta)
 
 # ==============================================================================
-# 2. TIMETABLE
+# 2. ACADEMIC METRICS & DASHBOARD OVERVIEW
 # ==============================================================================
-@router.get("/timetable")
-def get_timetable(day: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    query = db.query(TimetableEntry)
-    if day:
-        query = query.filter(TimetableEntry.day == day.lower())
-    
-    entries = query.all()
-    days_data = {}
-    for e in entries:
-        d = e.day.lower()
-        if d not in days_data:
-            days_data[d] = []
-        days_data[d].append({
-            "num": e.period_num,
-            "time": e.period_time,
-            "code": e.course_code,
-            "name": e.course_name,
-            "venue": e.venue,
-            "teacher": e.teacher_name,
-            "status": e.status,
-            "statusClass": e.status_class,
-            "att": e.att_label,
-            "isCompleted": e.is_completed,
-            "isActiveNow": e.is_active_now,
-            "isCritical": e.is_critical
-        })
-    
-    return success_response(data=days_data)
+@router.get("/metrics", tags=["Academics"])
+@router.get("/academic-metrics", tags=["Academics"])
+def get_academic_metrics(
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Returns official autonomous CGPA, semester SGPAs, credits, and standing."""
+    metrics, meta = supabase_service.get_academic_metrics(student_code=student_code, db=db)
+    return success_response(data=metrics, message="Academic metrics retrieved", meta=meta)
+
+@router.get("/overview", tags=["Dashboard"])
+def get_dashboard_overview(
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Single-call consolidated endpoint returning student profile, metrics, timetable, and alerts."""
+    overview = supabase_service.get_dashboard_overview(student_code=student_code, db=db)
+    return success_response(data=overview, message="Dashboard overview aggregated successfully")
 
 # ==============================================================================
-# 3. ATTENDANCE OVERVIEW & SUBJECT BREAKDOWN
+# 3. TIMETABLE
 # ==============================================================================
-@router.get("/attendance")
-def get_student_attendance(db: Session = Depends(get_db)):
-    student = db.query(StudentProfile).first()
-    rate = student.attendance_rate if student else 82.0
-
-    subjects_att = [
-        {"code": "CS-301", "name": "Data Structures & Algorithms", "attended": 38, "total": 43, "percentage": 88.4, "status": "Good Standing"},
-        {"code": "CS-302", "name": "Object Oriented Programming (Java)", "attended": 36, "total": 43, "percentage": 83.7, "status": "Good Standing"},
-        {"code": "CS-303", "name": "Operating System Principles", "attended": 34, "total": 43, "percentage": 79.1, "status": "Safe Zone"},
-        {"code": "CS-304", "name": "Database Management Systems", "attended": 35, "total": 43, "percentage": 81.4, "status": "Good Standing"},
-        {"code": "CS-305", "name": "Computer Networks & Protocols", "attended": 14, "total": 19, "percentage": 73.7, "status": "Critical (<75%)"},
-    ]
-
-    return success_response(data={
-        "overallPercentage": rate,
-        "attendedLectures": 157,
-        "totalLectures": 191,
-        "absentLectures": 34,
-        "eligibilityStatus": "Eligible for Mid-Term Exams (Overall > 75%)",
-        "defaulterAlert": "Attention: Computer Networks attendance is 73.7%. Attend next 2 lectures to cross 75%.",
-        "subjectWise": subjects_att
-    })
+@router.get("/timetable", tags=["Timetable"])
+def get_timetable(
+    day: Optional[str] = Query(None, description="Day of week (e.g. 'Monday', 'Tuesday')"),
+    db: Session = Depends(get_db)
+):
+    """Returns timetable periods mapped by weekday from Supabase or local timetable schedule."""
+    data, meta = supabase_service.get_timetable(day=day, db=db)
+    return success_response(data=data, message="Timetable fetched successfully", meta=meta)
 
 # ==============================================================================
-# 4. SYLLABUS & CURRICULUM
+# 4. ATTENDANCE OVERVIEW & SUBJECT BREAKDOWN
 # ==============================================================================
-@router.get("/syllabus")
+@router.get("/attendance", tags=["Attendance"])
+def get_student_attendance(
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Fetches overall attendance statistics, subject-level period counts, and eligibility."""
+    data, meta = supabase_service.get_attendance(student_code=student_code, db=db)
+    return success_response(data=data, message="Attendance records retrieved", meta=meta)
+
+# ==============================================================================
+# 5. SYLLABUS & CURRICULUM
+# ==============================================================================
+@router.get("/syllabus", tags=["Curriculum"])
 def get_syllabus(db: Session = Depends(get_db)):
-    items = db.query(SubjectSyllabus).all()
-    data = [
-        {
-            "id": s.id,
-            "subjectCode": s.subject_code,
-            "subjectName": s.subject_name,
-            "credits": s.credits,
-            "faculty": {
-                "name": s.faculty_name,
-                "designation": s.faculty_designation,
-                "email": s.faculty_email,
-                "cabin": s.faculty_cabin
-            },
-            "syllabusProgress": s.syllabus_progress,
-            "curriculumPdfUrl": s.curriculum_pdf_url
-        }
-        for s in items
-    ]
-    return success_response(data=data)
+    """Returns autonomous engineering syllabus, textbook references, and faculty credits."""
+    data, meta = supabase_service.get_syllabus(db=db)
+    return success_response(data=data, message="Curriculum syllabus loaded", meta=meta)
 
 # ==============================================================================
-# 5. FEES & ACCOUNTS
+# 6. D-WALLET & VERIFIED DOCUMENTS (Supabase student_documents)
 # ==============================================================================
-@router.get("/fees")
+@router.get("/documents", tags=["D-Wallet"])
+@router.get("/dwallet", tags=["D-Wallet"])
+def get_dwallet_documents(
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Lists verified institutional documents from Supabase student_documents."""
+    data, meta = supabase_service.get_documents(student_code=student_code, db=db)
+    return success_response(data=data, message="Documents retrieved from D-Wallet", meta=meta)
+
+@router.post("/documents/upload", tags=["D-Wallet"])
+@router.post("/dwallet/upload", tags=["D-Wallet"])
+def upload_dwallet_document(
+    payload: DocumentUpload,
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Registers an uploaded document in Supabase student_documents with verification."""
+    success, msg = supabase_service.upload_document(
+        student_code=student_code,
+        doc_data=payload.model_dump(),
+        db=db
+    )
+    return success_response(message=msg, code=201)
+
+# ==============================================================================
+# 7. NOTIFICATIONS & ANNOUNCEMENTS (Supabase student_notifications)
+# ==============================================================================
+@router.get("/notifications", tags=["Notifications"])
+def get_notifications(
+    student_code: str = Query("308637"),
+    db: Session = Depends(get_db)
+):
+    """Returns official announcements and notifications with read status and severity."""
+    data, meta = supabase_service.get_notifications(student_code=student_code, db=db)
+    return success_response(data=data, message="Notifications fetched", meta=meta)
+
+@router.patch("/notifications/{notification_id}/read", tags=["Notifications"])
+@router.post("/notifications/{notification_id}/read", tags=["Notifications"])
+def mark_notification_read(
+    notification_id: str = Path(..., description="Notification UUID or ID"),
+    db: Session = Depends(get_db)
+):
+    """Marks a notification as read across Supabase and local cache."""
+    success, msg = supabase_service.mark_notification_read(notification_id=notification_id, db=db)
+    return success_response(message=msg)
+
+# ==============================================================================
+# 8. FEES & ACCOUNTS
+# ==============================================================================
+@router.get("/fees", tags=["Finance"])
 def get_fees_summary(db: Session = Depends(get_db)):
     rec = db.query(FeeRecord).first()
     receipts = db.query(FeeReceipt).all()
@@ -168,24 +216,22 @@ def get_fees_summary(db: Session = Depends(get_db)):
         "receipts": receipt_list
     })
 
-@router.post("/fees/pay")
+@router.post("/fees/pay", tags=["Finance"])
 def initiate_online_payment(payload: FeePaymentIntent):
+    import uuid
+    order_id = f"ORD-SSGMCE-{str(uuid.uuid4())[:8].upper()}"
     return success_response(data={
-        "paymentGateway": "SBI ePay / Razorpay",
-        "orderId": f"ORD-SSGMCE-{uuid_sample()}",
+        "paymentGateway": "SBI ePay / Razorpay Enterprise",
+        "orderId": order_id,
         "amount": payload.amount,
         "status": "INITIATED",
-        "message": "Payment gateway session initiated successfully"
+        "message": "Payment gateway checkout session initiated successfully"
     })
 
-def uuid_sample():
-    import uuid
-    return str(uuid.uuid4())[:8].upper()
-
 # ==============================================================================
-# 6. E-LEARNING (ASSIGNMENTS, E-CONTENT, QUIZZES)
+# 9. E-LEARNING (ASSIGNMENTS, E-CONTENT, QUIZZES)
 # ==============================================================================
-@router.get("/elearning")
+@router.get("/elearning", tags=["E-Learning"])
 def get_elearning(db: Session = Depends(get_db)):
     assignments = db.query(ElearningAssignment).all()
     content = db.query(ElearningContent).all()
@@ -231,9 +277,9 @@ def get_elearning(db: Session = Depends(get_db)):
     })
 
 # ==============================================================================
-# 7. CHANGE INFORMATION
+# 10. CHANGE INFORMATION REQUESTS
 # ==============================================================================
-@router.get("/change-info")
+@router.get("/change-info", tags=["Student Office"])
 def get_change_info_requests(db: Session = Depends(get_db)):
     reqs = db.query(ChangeInfoRequest).all()
     data = [
@@ -250,7 +296,7 @@ def get_change_info_requests(db: Session = Depends(get_db)):
     ]
     return success_response(data=data)
 
-@router.post("/change-info")
+@router.post("/change-info", tags=["Student Office"])
 def submit_change_info(payload: ChangeInfoSubmit, db: Session = Depends(get_db)):
     student = db.query(StudentProfile).first()
     curr_val = getattr(student, payload.fieldName.lower(), "Existing Data") if student else "Existing Data"
@@ -268,12 +314,16 @@ def submit_change_info(payload: ChangeInfoSubmit, db: Session = Depends(get_db))
     db.commit()
     db.refresh(req)
 
-    return success_response(data={"requestId": req.id}, message="Change request submitted to Dean Office for verification", code=201)
+    return success_response(
+        data={"requestId": req.id},
+        message="Change request submitted to Dean Office for verification",
+        code=201
+    )
 
 # ==============================================================================
-# 8. UPDATION OF INFORMATION (ACTIVITIES / AICTE 100 POINTS)
+# 11. UPDATION OF INFORMATION (ACTIVITIES / AICTE 100 POINTS)
 # ==============================================================================
-@router.get("/update-info")
+@router.get("/update-info", tags=["Student Office"])
 def get_updation_records(db: Session = Depends(get_db)):
     records = db.query(UpdationInfoRecord).all()
     data = [
@@ -291,7 +341,7 @@ def get_updation_records(db: Session = Depends(get_db)):
     ]
     return success_response(data=data)
 
-@router.post("/update-info")
+@router.post("/update-info", tags=["Student Office"])
 def submit_updation_record(payload: UpdationInfoSubmit, db: Session = Depends(get_db)):
     rec = UpdationInfoRecord(
         student_code="308637",
@@ -309,68 +359,9 @@ def submit_updation_record(payload: UpdationInfoSubmit, db: Session = Depends(ge
     return success_response(message="Activity portfolio record added successfully", code=201)
 
 # ==============================================================================
-# 9. D-WALLET (SUPABASE public.student_documents INTEGRATION)
+# 12. EXAMINATION CELL
 # ==============================================================================
-@router.get("/dwallet")
-def get_dwallet_documents(db: Session = Depends(get_db)):
-    # Try fetching from Supabase table first if available
-    try:
-        supabase = get_supabase_client()
-        if supabase:
-            res = supabase.table("student_documents").select("*").execute()
-            if res and res.data:
-                return success_response(data=res.data)
-    except Exception:
-        pass
-
-    # Local fallback
-    docs = db.query(StudentDocument).all()
-    data = [
-        {
-            "id": d.id,
-            "documentName": d.document_name,
-            "category": d.category,
-            "fileSize": d.file_size,
-            "isVerified": d.is_verified,
-            "uploadDate": d.upload_date
-        }
-        for d in docs
-    ]
-    return success_response(data=data)
-
-@router.post("/dwallet/upload")
-def upload_dwallet_document(payload: DocumentUpload, db: Session = Depends(get_db)):
-    # Try syncing to Supabase table
-    try:
-        supabase = get_supabase_client()
-        if supabase:
-            supabase.table("student_documents").insert({
-                "student_code": "308637",
-                "document_name": payload.documentName,
-                "category": payload.category,
-                "file_url": payload.fileUrl,
-                "is_verified": True
-            }).execute()
-    except Exception:
-        pass
-
-    doc = StudentDocument(
-        student_code="308637",
-        document_name=payload.documentName,
-        category=payload.category,
-        file_url=payload.fileUrl,
-        file_size="1.5 MB",
-        is_verified=True,
-        upload_date="Just now"
-    )
-    db.add(doc)
-    db.commit()
-    return success_response(message="Document uploaded and verified in D-Wallet", code=201)
-
-# ==============================================================================
-# 10. EXAMINATION CELL
-# ==============================================================================
-@router.get("/examination")
+@router.get("/examination", tags=["Examination"])
 def get_examination_details(db: Session = Depends(get_db)):
     marks = db.query(ExamMark).all()
     revals = db.query(ExamRevaluation).all()
@@ -407,7 +398,7 @@ def get_examination_details(db: Session = Depends(get_db)):
         ]
     })
 
-@router.post("/examination/revaluation")
+@router.post("/examination/revaluation", tags=["Examination"])
 def submit_revaluation(payload: RevaluationSubmit, db: Session = Depends(get_db)):
     reval = ExamRevaluation(
         student_code="308637",
@@ -419,21 +410,3 @@ def submit_revaluation(payload: RevaluationSubmit, db: Session = Depends(get_db)
     db.add(reval)
     db.commit()
     return success_response(message="Revaluation application submitted to Controller of Examinations", code=201)
-
-# ==============================================================================
-# 11. NOTIFICATIONS
-# ==============================================================================
-@router.get("/notifications")
-def get_notifications(db: Session = Depends(get_db)):
-    notes = db.query(StudentNotification).order_by(StudentNotification.created_at.desc()).all()
-    data = [
-        {
-            "id": n.id,
-            "title": n.title,
-            "message": n.message,
-            "category": n.category,
-            "isRead": n.is_read
-        }
-        for n in notes
-    ]
-    return success_response(data=data)

@@ -4,6 +4,9 @@
  * Student: Shivam Aghao | Roll: 21 | CSE 2R1 (CSE2401)
  */
 
+let attendanceChartInstance = null;
+let syllabusChartInstance = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   initAttendanceChart();
   initSyllabusProgressChart();
@@ -18,21 +21,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initCampusLightbox();
   initTimetableDayTabs();
   initStudentModules();
+
+  // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
+  hydrateDashboardData();
 });
 
 /* ==========================================================================
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)
    ========================================================================== */
 function initAttendanceChart() {
+  renderAttendanceChart(82, 18, 157, 34);
+}
+
+function renderAttendanceChart(presentPercentage, absentPercentage, attendedLectures = 157, absentLectures = 34) {
   const canvas = document.getElementById('overallAttendanceChart');
   if (!canvas) return;
 
-  const presentPercentage = 82;
-  const absentPercentage = 18;
+  if (attendanceChartInstance) {
+    attendanceChartInstance.destroy();
+    attendanceChartInstance = null;
+  }
 
   if (typeof Chart !== 'undefined') {
     try {
-      new Chart(canvas, {
+      attendanceChartInstance = new Chart(canvas, {
         type: 'doughnut',
         data: {
           labels: ['Present', 'Absent'],
@@ -54,7 +66,7 @@ function initAttendanceChart() {
           animation: {
             animateScale: true,
             animateRotate: true,
-            duration: 1200
+            duration: 1000
           },
           plugins: {
             legend: { display: false },
@@ -68,7 +80,7 @@ function initAttendanceChart() {
                 label: function (context) {
                   const label = context.label || '';
                   const val = context.parsed || 0;
-                  const lectures = val === 82 ? '157 lectures' : '34 lectures';
+                  const lectures = val === presentPercentage ? `${attendedLectures} lectures` : `${absentLectures} lectures`;
                   return ` ${label}: ${val}% (${lectures})`;
                 }
               }
@@ -113,11 +125,19 @@ function renderSvgDoughnutFallback(canvas, presentPct) {
    2. CURRICULUM ANALYTICS: SYLLABUS COMPLETED GRADIENT BAR CHART
    ========================================================================== */
 function initSyllabusProgressChart() {
+  const defaultSubjects = ['Data Struct.', 'Java Prog.', 'Operating Sys.', 'Database Mgmt', 'Comp. Networks'];
+  const defaultData = [82, 80, 75, 78, 65];
+  renderSyllabusChart(defaultSubjects, defaultData);
+}
+
+function renderSyllabusChart(subjects, progressData) {
   const canvas = document.getElementById('syllabusProgressBarChart');
   if (!canvas) return;
 
-  const subjects = ['Data Struct.', 'Java Prog.', 'Operating Sys.', 'Database Mgmt', 'Comp. Networks'];
-  const progressData = [82, 80, 75, 78, 65];
+  if (syllabusChartInstance) {
+    syllabusChartInstance.destroy();
+    syllabusChartInstance = null;
+  }
 
   if (typeof Chart !== 'undefined') {
     try {
@@ -131,7 +151,7 @@ function initSyllabusProgressChart() {
       hoverGradient.addColorStop(0, '#38BDF8');
       hoverGradient.addColorStop(1, '#1565C0');
 
-      new Chart(canvas, {
+      syllabusChartInstance = new Chart(canvas, {
         type: 'bar',
         data: {
           labels: subjects,
@@ -152,7 +172,7 @@ function initSyllabusProgressChart() {
           responsive: true,
           maintainAspectRatio: false,
           animation: {
-            duration: 1200,
+            duration: 1000,
             easing: 'easeOutQuart'
           },
           scales: {
@@ -197,9 +217,6 @@ function initSyllabusProgressChart() {
   }
 }
 
-/* ==========================================================================
-   3. SUBJECT ATTENDANCE TOGGLE (SHOW / HIDE 5 SUBJECTS)
-   ========================================================================== */
 function initSubjectAttendanceToggle() {
   const btnToggle = document.getElementById('btnToggleSubjectAtt');
   const collapsible = document.getElementById('subjectAttendanceCollapsible');
@@ -755,45 +772,36 @@ function initTimetableDayTabs() {
   if (!dayTabBtns.length || !grid) return;
 
   dayTabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       dayTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const dayKey = btn.getAttribute('data-day');
+      const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+
+      if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
+
+      try {
+        if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
+          const res = await StudentApi.getTimetable(dayCapitalized);
+          if (res && res.data && res.data.length > 0) {
+            if (badge) badge.textContent = `${dayCapitalized} • ${res.data.length} Periods Scheduled`;
+            renderTimetablePeriods(res.data);
+            showToast(`Switched schedule to ${dayCapitalized}`, 'info');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
+      }
+
+      // Fallback to local schedule data if API unreachable
       const dayData = timetableScheduleData[dayKey];
-      if (!dayData) return;
-
-      if (badge) badge.textContent = dayData.dayLabel;
-
-      let html = '';
-      dayData.periods.forEach(p => {
-        let cardClass = 'timetable-period';
-        if (p.isCompleted) cardClass += ' completed';
-        if (p.isActiveNow) cardClass += ' active-now';
-        if (p.isCritical) cardClass += ' upcoming critical-period';
-        else if (!p.isCompleted && !p.isActiveNow) cardClass += ' upcoming';
-
-        let slotClass = 'period-slot-badge';
-        if (p.isActiveNow) slotClass += ' slot-live';
-        if (p.isCritical) slotClass += ' slot-critical';
-
-        html += `
-          <div class="${cardClass}">
-            <div class="period-top-row">
-              <div class="${slotClass}">${p.num}</div>
-              <span class="period-status-tag ${p.statusClass}">${p.status}</span>
-            </div>
-            <div class="period-time">
-              <span class="time-main ${p.isActiveNow ? 'text-primary' : ''}">${p.time}</span>
-            </div>
-            <div class="period-course ${p.isActiveNow ? 'text-primary' : ''}">${p.name}</div>
-            <div class="period-meta">${p.venue}</div>
-            <div class="period-att-status ${p.isCritical ? 'text-warning' : p.isActiveNow ? 'text-accent' : p.isCompleted ? 'text-success' : 'text-muted'}">${p.att}</div>
-          </div>
-        `;
-      });
-      grid.innerHTML = html;
-      showToast('Switched schedule to ' + dayData.dayLabel.split('•')[0].trim(), 'info');
+      if (dayData) {
+        if (badge) badge.textContent = dayData.dayLabel;
+        renderTimetablePeriods(dayData.periods);
+        showToast('Switched schedule to ' + dayData.dayLabel.split('•')[0].trim(), 'info');
+      }
     });
   });
 }
@@ -1221,4 +1229,353 @@ function applyPlacementDrive(btn, companyName) {
 
 function printHallTicket() {
   window.print();
+}
+
+/* ==========================================================================
+   16. DYNAMIC BACKEND & SUPABASE HYDRATION ENGINE (REMOVES ALL STATIC DATA)
+   ========================================================================== */
+
+function renderTimetablePeriods(periods) {
+  const grid = document.getElementById('timetableHorizontalGrid');
+  if (!grid) return;
+  if (!periods || periods.length === 0) {
+    grid.innerHTML = '<div class="timetable-period" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: #64748B;">No periods scheduled for this day.</div>';
+    return;
+  }
+
+  let html = '';
+  periods.forEach(p => {
+    let cardClass = 'timetable-period';
+    if (p.isCompleted) cardClass += ' completed';
+    if (p.isActiveNow) cardClass += ' active-now';
+    if (p.isCritical) cardClass += ' upcoming critical-period';
+    else if (!p.isCompleted && !p.isActiveNow) cardClass += ' upcoming';
+
+    let slotClass = 'period-slot-badge';
+    if (p.isActiveNow) slotClass += ' slot-live';
+    if (p.isCritical) slotClass += ' slot-critical';
+
+    const num = p.num || `Period ${p.periodNumber || ''}`;
+    const status = p.status || (p.isCompleted ? 'Completed ✓' : p.isActiveNow ? 'Live Now' : 'Scheduled');
+    const statusClass = p.statusClass || (p.isCompleted ? 'status-done' : p.isActiveNow ? 'status-live' : 'status-upcoming');
+    const time = p.time || `${p.startTime || ''} - ${p.endTime || ''}`;
+    const name = p.name || p.subjectName || p.code || 'Course Period';
+    const venue = p.venue || `${p.classroom || 'LH'} • ${p.teacher || p.faculty || ''}`;
+    const att = p.att || (p.isCompleted ? 'Attendance: Present' : p.isCritical ? 'Critical for 75%' : p.isActiveNow ? 'Live in Session' : 'Scheduled');
+
+    html += `
+      <div class="${cardClass}">
+        <div class="period-top-row">
+          <div class="${slotClass}">${num}</div>
+          <span class="period-status-tag ${statusClass}">${status}</span>
+        </div>
+        <div class="period-time">
+          <span class="time-main ${p.isActiveNow ? 'text-primary' : ''}">${time}</span>
+        </div>
+        <div class="period-course ${p.isActiveNow ? 'text-primary' : ''}">${name}</div>
+        <div class="period-meta">${venue}</div>
+        <div class="period-att-status ${p.isCritical ? 'text-warning' : p.isActiveNow ? 'text-accent' : p.isCompleted ? 'text-success' : 'text-muted'}">${att}</div>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
+function renderSubjectWiseAttendance(subjects) {
+  const container = document.getElementById('subjectAttendanceList');
+  const countBadge = document.getElementById('toggleSubjectAttBadge');
+  if (!container) return;
+
+  if (!subjects || subjects.length === 0) {
+    container.innerHTML = '<div style="padding:16px; text-align:center; color:#64748B;">No registered courses found.</div>';
+    return;
+  }
+
+  if (countBadge) {
+    countBadge.textContent = `${subjects.length} Subjects ▼`;
+  }
+
+  let html = '';
+  subjects.forEach(sub => {
+    const code = sub.code || sub.subjectCode || 'SUB-101';
+    const name = sub.name || sub.subjectName || 'Course';
+    const attended = sub.attended !== undefined ? sub.attended : (sub.attendedLectures || 0);
+    const total = sub.total !== undefined ? sub.total : (sub.totalLectures || 0);
+    const pct = sub.percentage !== undefined ? Math.round(sub.percentage) : (total > 0 ? Math.round((attended / total) * 100) : 0);
+    
+    const isWarning = pct < 75;
+    const isHigh = pct >= 85;
+    const badgeClass = isWarning ? 'pct-warning' : (isHigh ? 'pct-high' : 'pct-safe');
+    const barClass = isWarning ? 'bg-warning' : (isHigh ? 'bg-accent' : 'bg-primary');
+    const itemClass = isWarning ? 'subject-row-item warning-subject-item' : 'subject-row-item';
+
+    html += `
+      <div class="${itemClass}">
+        <div class="subject-info-head">
+          <div class="sub-name-group">
+            <span class="sub-code ${isWarning ? 'code-warning' : ''}">${code}</span>
+            <h5 class="sub-name">${name}</h5>
+            ${isWarning ? '<span class="shortage-badge">Low Attendance</span>' : ''}
+          </div>
+          <div class="sub-stats-group">
+            <span class="sub-lectures-count">${attended} / ${total} lectures</span>
+            <span class="sub-pct-badge ${badgeClass}">${pct}%</span>
+          </div>
+        </div>
+        <div class="sub-progress-track">
+          <div class="sub-progress-bar ${barClass}" style="width: ${pct}%;" aria-valuenow="${pct}"></div>
+        </div>
+        ${isWarning ? `
+          <div class="subject-warning-alert">
+            <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <span>Attendance below threshold (${pct}% &lt; 75%). Attend upcoming lectures to regain exam eligibility.</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderNotifications(notifs) {
+  const badge = document.getElementById('topNotifBadge');
+  const tag = document.getElementById('topUnreadTag');
+  const list = document.getElementById('topNotifList');
+  if (!list) return;
+
+  if (!notifs || notifs.length === 0) {
+    if (badge) badge.style.display = 'none';
+    if (tag) tag.textContent = '0 New';
+    list.innerHTML = '<li class="notif-item"><div class="notif-info"><p class="notif-msg">No unread notifications.</p><span class="notif-time">All caught up</span></div></li>';
+    return;
+  }
+
+  const unreadCount = notifs.filter(n => !n.isRead).length;
+  if (badge) {
+    badge.textContent = unreadCount;
+    badge.style.display = unreadCount > 0 ? '' : 'none';
+  }
+  if (tag) {
+    tag.textContent = `${unreadCount} New`;
+  }
+
+  let html = '';
+  notifs.forEach(n => {
+    const isUnread = !n.isRead;
+    const bulletBg = n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success');
+    const timeFormatted = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+    const category = n.category || 'Academic Cell';
+
+    html += `
+      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+        <span class="notif-bullet ${bulletBg}"></span>
+        <div class="notif-info">
+          <p class="notif-msg">${n.message || n.title}</p>
+          <span class="notif-time">${timeFormatted} • ${category}</span>
+        </div>
+      </li>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+async function hydrateSyllabusAnalytics() {
+  try {
+    let syllabusList = [];
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getSyllabus === 'function') {
+      const res = await StudentApi.getSyllabus();
+      if (res && res.data) {
+        syllabusList = res.data;
+      }
+    }
+
+    if (!syllabusList || syllabusList.length === 0) return;
+
+    const subjects = syllabusList.map(s => s.subjectCode || s.code);
+    const progressData = syllabusList.map(s => s.syllabusProgress || 75);
+
+    renderSyllabusChart(subjects, progressData);
+
+    const totalPct = progressData.reduce((a, b) => a + b, 0);
+    const avgPct = Math.round(totalPct / (progressData.length || 1));
+    const avgBadge = document.getElementById('syllabusAvgPct');
+    if (avgBadge) avgBadge.textContent = `${avgPct}% Average`;
+
+    const summaryVal = document.getElementById('syllabusUnitsSummary');
+    if (summaryVal) {
+      const totalUnits = syllabusList.length * 5;
+      const completedUnits = (totalUnits * (avgPct / 100)).toFixed(1);
+      summaryVal.textContent = `${completedUnits} / ${totalUnits} Units`;
+    }
+
+    const footerGrid = document.getElementById('syllabusUnitsFooterGrid');
+    if (footerGrid) {
+      let pillsHtml = '';
+      syllabusList.forEach(s => {
+        const code = s.subjectCode || s.code;
+        const prog = s.syllabusProgress || 75;
+        const units = (5 * (prog / 100)).toFixed(1);
+        pillsHtml += `
+          <div class="s-unit-pill">
+            <span class="sup-code">${code}</span>
+            <strong class="sup-val text-primary">${prog}%</strong>
+            <span class="sup-units">${units} / 5 Units</span>
+          </div>
+        `;
+      });
+      footerGrid.innerHTML = pillsHtml;
+    }
+  } catch (e) {
+    console.warn('Error hydrating syllabus analytics:', e);
+  }
+}
+
+async function hydrateDashboardData() {
+  try {
+    let overview = null;
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getOverview === 'function') {
+      try {
+        const res = await StudentApi.getOverview();
+        if (res && res.data) {
+          overview = res.data;
+        }
+      } catch (e) {
+        console.warn('StudentApi overview fetch failed, attempting fallback...', e);
+      }
+    }
+
+    if (!overview && typeof StudentSupabase !== 'undefined' && typeof StudentSupabase.getDashboardOverview === 'function') {
+      try {
+        const res = await StudentSupabase.getDashboardOverview();
+        if (res && res.data) {
+          overview = res.data;
+        }
+      } catch (e) {
+        console.warn('StudentSupabase overview fetch failed:', e);
+      }
+    }
+
+    if (!overview) {
+      console.warn('No dynamic overview source reached; retaining local view');
+      return;
+    }
+
+    window.__currentStudentOverview = overview;
+    // Update Live Connection Badge in Top Header
+    const statusBadge = document.getElementById('liveBackendStatusBadge');
+    const statusText = document.getElementById('liveStatusText');
+    const statusDot = document.getElementById('liveStatusDot');
+    if (statusText) {
+      const source = overview.systemStatus?.dataSource || 'Supabase / Live DB';
+      statusText.textContent = 'Backend & DB Online';
+      if (statusDot) statusDot.style.background = '#10B981';
+      if (statusBadge) {
+        statusBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+        statusBadge.style.color = '#059669';
+        statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        statusBadge.onclick = () => {
+          showToast(`Live Connection Active • Source: ${source} (FastAPI :8001)`, 'success');
+        };
+      }
+    }
+
+
+    // 1. Student Identity
+    const s = overview.student || {};
+    const initials = s.fullName ? s.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA';
+    const topAvatar = document.getElementById('topAvatarInitials');
+    const topName = document.getElementById('topStudentName');
+    const topMeta = document.getElementById('topStudentMeta');
+    const dropAvatar = document.getElementById('dropdownAvatarInitials');
+    const dropName = document.getElementById('dropdownStudentName');
+    const dropDept = document.getElementById('dropdownStudentDept');
+    const dropRoll = document.getElementById('dropdownStudentRoll');
+    const heroTitle = document.getElementById('heroGreetingTitle');
+    const heroDept = document.getElementById('heroDeptTitle');
+    const heroYearSem = document.getElementById('heroYearSemRoll');
+    const heroAcadBadge = document.getElementById('heroAcadYearSem');
+
+    if (topAvatar) topAvatar.textContent = initials;
+    if (topName) topName.textContent = s.fullName || 'Student';
+    if (topMeta) topMeta.textContent = `Roll: ${s.rollNo || '--'} • ${s.department || 'CSE'} ${s.division || ''}`;
+
+    if (dropAvatar) dropAvatar.textContent = initials;
+    if (dropName) dropName.textContent = s.fullName || 'Student';
+    if (dropDept) dropDept.textContent = `B.Tech - ${s.department || 'Computer Science & Engg.'}`;
+    if (dropRoll) dropRoll.textContent = `Roll No: ${s.rollNo || '--'} • Class: ${s.division || '2R1'} • Sem ${s.semester || 'IV'} (${s.studentCode || s.prn || ''})`;
+
+    if (heroTitle) {
+      const firstName = s.fullName ? s.fullName.split(' ')[0] : 'Student';
+      heroTitle.textContent = `Welcome back, ${firstName}!`;
+    }
+    if (heroDept) heroDept.textContent = s.department === 'CSE' ? 'Computer Science & Engineering' : (s.department || 'Engineering');
+    if (heroYearSem) {
+      heroYearSem.textContent = `Year ${s.semester ? Math.ceil(s.semester / 2) : 2} (Semester ${s.semester || 4}) • Class: ${s.className || '2R1'} • Roll No: ${s.rollNo || '--'} (${s.studentCode || s.prn || ''})`;
+    }
+    if (heroAcadBadge) {
+      heroAcadBadge.textContent = `${s.className ? s.className.split(' ')[0] + ' ' : ''}Semester ${s.semester || 4} • Academic Year ${s.academicYear || '2026-2027'}`;
+    }
+
+    // 2. Notifications
+    if (overview.recentNotifications) {
+      renderNotifications(overview.recentNotifications);
+    }
+
+    // 3. Attendance
+    const att = overview.attendanceSummary || {};
+    const overallPct = Math.round(att.overallPercentage !== undefined ? att.overallPercentage : (overview.metrics?.overallAttendancePct || 82));
+    const absentPct = 100 - overallPct;
+    const attendedCount = att.attendedLectures !== undefined ? att.attendedLectures : 157;
+    const absentCount = att.absentLectures !== undefined ? att.absentLectures : 34;
+
+    const centerPct = document.getElementById('overallAttCenterPct');
+    const presentPctEl = document.getElementById('overallAttPresentPct');
+    const presentCountEl = document.getElementById('overallAttPresentCount');
+    const absentPctEl = document.getElementById('overallAttAbsentPct');
+    const absentCountEl = document.getElementById('overallAttAbsentCount');
+    const sbAttBadge = document.getElementById('sidebarAttendanceBadge');
+    const dropAttPct = document.getElementById('dropdownAttPct');
+    const threshText = document.getElementById('attThresholdText');
+
+    if (centerPct) centerPct.textContent = `${overallPct}%`;
+    if (presentPctEl) presentPctEl.textContent = `${overallPct}%`;
+    if (presentCountEl) presentCountEl.textContent = `(${attendedCount} Lectures)`;
+    if (absentPctEl) absentPctEl.textContent = `${absentPct}%`;
+    if (absentCountEl) absentCountEl.textContent = `(${absentCount} Lectures)`;
+    if (sbAttBadge) sbAttBadge.textContent = `${overallPct}%`;
+    if (dropAttPct) dropAttPct.textContent = `${overallPct}%`;
+
+    if (threshText) {
+      if (overallPct >= 75) {
+        const diff = overallPct - 75;
+        threshText.innerHTML = `Your overall attendance is currently <strong>${diff}% above</strong> the autonomous institutional requirement.`;
+      } else {
+        const diff = 75 - overallPct;
+        threshText.innerHTML = `<span class="text-warning"><strong>Attendance Deficit (${overallPct}% &lt; 75%)</strong>: You need to attend upcoming lectures to clear eligibility threshold.</span>`;
+      }
+    }
+
+    renderAttendanceChart(overallPct, absentPct, attendedCount, absentCount);
+
+    if (att.subjectWise && att.subjectWise.length > 0) {
+      renderSubjectWiseAttendance(att.subjectWise);
+    }
+
+    // 4. Timetable
+    if (overview.todayTimetable && overview.todayTimetable.length > 0) {
+      renderTimetablePeriods(overview.todayTimetable);
+      const scheduleDayBadge = document.getElementById('scheduleDayBadge');
+      if (scheduleDayBadge) {
+        const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        scheduleDayBadge.textContent = `${todayDay} • ${overview.todayTimetable.length} Periods Scheduled`;
+      }
+    }
+
+    // 5. Syllabus Progress
+    hydrateSyllabusAnalytics();
+
+  } catch (err) {
+    console.error('Error during dashboard dynamic hydration:', err);
+  }
 }

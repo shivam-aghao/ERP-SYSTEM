@@ -53,45 +53,37 @@
         <span class="erp-badge-text">ERP</span>
         <span class="erp-slogan">Learn | Grow | Excel</span>
       </div>
+      <div class="conn-status-wrap" style="margin-left: 12px; display: inline-flex; align-items: center;">
+        <span id="liveBackendStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" title="Click to test live Backend & Database ping">
+          <span id="liveStatusDot" style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px #10B981;"></span>
+          <span id="liveStatusText">Checking DB...</span>
+        </span>
+      </div>
     </div>
 
     <!-- Right Controls: Notifications & Student Profile -->
     <div class="header-right">
       <!-- Notification Bell -->
       <div class="notif-wrapper" id="notifWrapper">
-        <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 3 unread" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span class="notif-badge">3</span>
+          <span class="notif-badge" id="topNotifBadge">0</span>
         </button>
         <!-- Notification Dropdown Popover -->
         <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
           <div class="panel-header">
             <h4>Notifications</h4>
-            <span class="unread-tag">3 New</span>
+            <span class="unread-tag" id="topUnreadTag">0 New</span>
           </div>
-          <ul class="notif-list">
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-error"></span>
+          <ul class="notif-list" id="topNotifList">
+            <li class="notif-item">
+              <span class="notif-bullet bg-accent"></span>
               <div class="notif-info">
-                <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
-                <span class="notif-time">10 mins ago • Examination Cell</span>
-              </div>
-            </li>
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-warning"></span>
-              <div class="notif-info">
-                <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
-                <span class="notif-time">2 hours ago • Academic Cell</span>
-              </div>
-            </li>
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-success"></span>
-              <div class="notif-info">
-                <p class="notif-msg">Assignment 2 for Data Structures uploaded to portal.</p>
-                <span class="notif-time">Yesterday • Prof. R. Sharma</span>
+                <p class="notif-msg">Loading notifications...</p>
+                <span class="notif-time">Just now • Academic Cell</span>
               </div>
             </li>
           </ul>
@@ -103,11 +95,11 @@
 
       <!-- Student Profile Pill -->
       <div class="profile-wrapper" id="profileWrapper">
-        <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Shivam Aghao Profile Menu" aria-haspopup="true" aria-expanded="false">
-          <div class="avatar-circle">SA</div>
+        <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
+          <div class="avatar-circle" id="topAvatarInitials">--</div>
           <div class="profile-details">
-            <span class="student-name">Shivam Aghao</span>
-            <span class="student-meta">Roll: 21 • CSE 2R1 (CSE2401)</span>
+            <span class="student-name" id="topStudentName">Loading Profile...</span>
+            <span class="student-meta" id="topStudentMeta">Roll: -- • CSE</span>
           </div>
           <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -116,11 +108,11 @@
         <!-- Profile Dropdown Popover -->
         <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
           <div class="profile-panel-header">
-            <div class="large-avatar">SA</div>
+            <div class="large-avatar" id="dropdownAvatarInitials">--</div>
             <div>
-              <div class="p-name">Shivam Aghao</div>
-              <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
-              <div class="p-roll">Roll No: 21 • Class: 2R1 • Sem IV (CSE2401)</div>
+              <div class="p-name" id="dropdownStudentName">Loading Student...</div>
+              <div class="p-dept" id="dropdownStudentDept">B.Tech - Computer Science &amp; Engg.</div>
+              <div class="p-roll" id="dropdownStudentRoll">Roll No: -- • Loading...</div>
             </div>
           </div>
           <div class="p-links">
@@ -128,9 +120,9 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               My Student Profile
             </a>
-            <a href="../../attendance/frontend/index.html" class="p-link-item">
+            <a href="../../attendance/frontend/index.html" class="p-link-item" id="dropdownAttLink">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              Subject-wise Attendance (82%)
+              Subject-wise Attendance (<span id="dropdownAttPct">--%</span>)
             </a>
             <a href="javascript:void(0)" onclick="openStudentModule('settings')" class="p-link-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -203,7 +195,7 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <span class="nav-badge-pill pct-pill">82%</span>
+                <span class="nav-badge-pill pct-pill" id="sidebarAttendanceBadge">--%</span>
               </a>
             </li>
 
@@ -462,11 +454,11 @@
             <div class="hero-unified-student-card">
               <div class="hero-welcome-badge">
                 <span class="pulse-indicator"></span>
-                <span>B.Tech Semester IV • Academic Year 2025-26</span>
+                <span id="heroAcadYearSem">Loading Academic Standing...</span>
               </div>
-              <h1 class="hero-title">Welcome back, Shivam!</h1>
-              <div class="hero-dept-title">Computer Science &amp; Engineering</div>
-              <div class="hero-year-sem">Second Year (Semester IV) • Class: 2R1 • Roll No: 21 (CSE2401)</div>
+              <h1 class="hero-title" id="heroGreetingTitle">Welcome back!</h1>
+              <div class="hero-dept-title" id="heroDeptTitle">Computer Science &amp; Engineering</div>
+              <div class="hero-year-sem" id="heroYearSemRoll">Loading student identity...</div>
               <div class="hero-accent-bar" aria-hidden="true"></div>
               <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
 
@@ -510,7 +502,7 @@
             </div>
 
             <div class="timetable-header-tags">
-              <span class="schedule-day-badge" id="scheduleDayBadge">Thursday • 5 Periods Scheduled</span>
+              <span class="schedule-day-badge" id="scheduleDayBadge">Loading Today's Schedule...</span>
               <span class="schedule-live-pill"><span class="pulse-ring"></span> Live Class in Session</span>
             </div>
           </div>
@@ -526,78 +518,9 @@
           </div>
 
           <div class="timetable-horizontal-grid" id="timetableHorizontalGrid">
-
-            
-            <!-- Period 1: Completed -->
-            <div class="timetable-period completed">
-              <div class="period-top-row">
-                <div class="period-slot-badge">Period 1</div>
-                <span class="period-status-tag status-done">Completed ✓</span>
-              </div>
-              <div class="period-time">
-                <span class="time-main">09:00 AM - 10:00 AM</span>
-              </div>
-              <div class="period-course">Data Structures (CS-301)</div>
-              <div class="period-meta">Lecture Hall 204 • Prof. R. Sharma</div>
-              <div class="period-att-status text-success">Attendance: Present</div>
+            <div class="timetable-period" style="grid-column: 1 / -1; text-align: center; padding: 28px; color: #64748B;">
+              Loading today's timetable periods...
             </div>
-
-            <!-- Period 2: Live Now -->
-            <div class="timetable-period active-now">
-              <div class="period-top-row">
-                <div class="period-slot-badge slot-live">Period 2</div>
-                <span class="period-status-tag status-live">Live Now</span>
-              </div>
-              <div class="period-time">
-                <span class="time-main text-primary">10:15 AM - 11:15 AM</span>
-              </div>
-              <div class="period-course text-primary">Java Programming Lab (CS-302L)</div>
-              <div class="period-meta">Advanced Systems Lab 3 • Dr. S. Kulkarni • Batch 2R1</div>
-              <div class="period-att-status text-accent">Biometric Logged In</div>
-            </div>
-
-            <!-- Period 3: Upcoming -->
-            <div class="timetable-period upcoming">
-              <div class="period-top-row">
-                <div class="period-slot-badge">Period 3</div>
-                <span class="period-status-tag status-upcoming">Next Up</span>
-              </div>
-              <div class="period-time">
-                <span class="time-main">11:30 AM - 12:30 PM</span>
-              </div>
-              <div class="period-course">Operating Systems (CS-303)</div>
-              <div class="period-meta">Lecture Hall 301 • Prof. V. K. Ramanujan</div>
-              <div class="period-att-status text-muted">Starts in 15 mins</div>
-            </div>
-
-            <!-- Period 4: Upcoming (Critical for 75%) -->
-            <div class="timetable-period upcoming critical-period">
-              <div class="period-top-row">
-                <div class="period-slot-badge slot-critical">Period 4</div>
-                <span class="period-status-tag status-critical">Must Attend</span>
-              </div>
-              <div class="period-time">
-                <span class="time-main">01:30 PM - 02:30 PM</span>
-              </div>
-              <div class="period-course">Computer Networks (CS-305)</div>
-              <div class="period-meta">Lecture Hall 108 • Dr. Ananya Sen</div>
-              <div class="period-att-status text-warning">Critical for 75% threshold</div>
-            </div>
-
-            <!-- Period 5: Upcoming Tutorial -->
-            <div class="timetable-period upcoming">
-              <div class="period-top-row">
-                <div class="period-slot-badge">Period 5</div>
-                <span class="period-status-tag status-upcoming">Tutorial</span>
-              </div>
-              <div class="period-time">
-                <span class="time-main">02:45 PM - 03:45 PM</span>
-              </div>
-              <div class="period-course">Database Management (CS-304)</div>
-              <div class="period-meta">Seminar Hall 1 • Tutorial Batch B</div>
-              <div class="period-att-status text-muted">Problem Solving Session</div>
-            </div>
-
           </div>
         </section>
 
@@ -632,7 +555,7 @@
                 <div class="chart-canvas-box">
                   <canvas id="overallAttendanceChart" width="200" height="200" aria-label="Overall Attendance: 82% Present, 18% Absent" role="img"></canvas>
                   <div class="chart-center-overlay" aria-hidden="true">
-                    <span class="center-percentage">82%</span>
+                    <span class="center-percentage" id="overallAttCenterPct">--%</span>
                     <span class="center-label">Attendance</span>
                   </div>
                 </div>
@@ -644,14 +567,14 @@
                   <div class="legend-item present-legend">
                     <span class="legend-bullet bg-accent"></span>
                     <span class="legend-title">Present:</span>
-                    <strong class="legend-value">82%</strong>
-                    <span class="legend-sub">(157 Lectures)</span>
+                    <strong class="legend-value" id="overallAttPresentPct">--%</strong>
+                    <span class="legend-sub" id="overallAttPresentCount">(-- Lectures)</span>
                   </div>
                   <div class="legend-item absent-legend">
                     <span class="legend-bullet bg-muted"></span>
                     <span class="legend-title">Absent:</span>
-                    <strong class="legend-value">18%</strong>
-                    <span class="legend-sub">(34 Lectures)</span>
+                    <strong class="legend-value" id="overallAttAbsentPct">--%</strong>
+                    <span class="legend-sub" id="overallAttAbsentCount">(-- Lectures)</span>
                   </div>
                 </div>
 
@@ -663,7 +586,7 @@
                     </svg>
                     <div>
                       <span class="threshold-title">Required Attendance: 75%</span>
-                      <p class="threshold-text">Your overall attendance is currently <strong>7% above</strong> the autonomous institutional requirement.</p>
+                      <p class="threshold-text" id="attThresholdText">Calculating institutional requirement standing...</p>
                     </div>
                   </div>
                 </div>
@@ -680,7 +603,7 @@
                       </svg>
                       <span id="toggleSubjectAttText">Show Subject-wise Attendance</span>
                     </div>
-                    <span class="badge-subject-count" id="toggleSubjectAttBadge">5 Subjects ▼</span>
+                    <span class="badge-subject-count" id="toggleSubjectAttBadge">-- Subjects ▼</span>
                   </button>
                 </div>
               </div>
@@ -697,98 +620,14 @@
                   </div>
 
                   <div class="subject-attendance-list" id="subjectAttendanceList">
-                    <!-- Subject 1: Data Structures -->
-                    <div class="subject-row-item">
-                      <div class="subject-info-head">
-                        <div class="sub-name-group">
-                          <span class="sub-code">CS-301</span>
-                          <h5 class="sub-name">Data Structures</h5>
-                        </div>
-                        <div class="sub-stats-group">
-                          <span class="sub-lectures-count">34 / 40 lectures</span>
-                          <span class="sub-pct-badge pct-high">85%</span>
-                        </div>
-                      </div>
-                      <div class="sub-progress-track">
-                        <div class="sub-progress-bar bg-accent" style="width: 85%;" aria-valuenow="85"></div>
-                      </div>
-                    </div>
-
-                    <!-- Subject 2: Java Programming -->
-                    <div class="subject-row-item">
-                      <div class="subject-info-head">
-                        <div class="sub-name-group">
-                          <span class="sub-code">CS-302</span>
-                          <h5 class="sub-name">Java Programming</h5>
-                        </div>
-                        <div class="sub-stats-group">
-                          <span class="sub-lectures-count">36 / 40 lectures</span>
-                          <span class="sub-pct-badge pct-high">90%</span>
-                        </div>
-                      </div>
-                      <div class="sub-progress-track">
-                        <div class="sub-progress-bar bg-primary" style="width: 90%;" aria-valuenow="90"></div>
-                      </div>
-                    </div>
-
-                    <!-- Subject 3: Operating Systems -->
-                    <div class="subject-row-item">
-                      <div class="subject-info-head">
-                        <div class="sub-name-group">
-                          <span class="sub-code">CS-303</span>
-                          <h5 class="sub-name">Operating Systems</h5>
-                        </div>
-                        <div class="sub-stats-group">
-                          <span class="sub-lectures-count">32 / 42 lectures</span>
-                          <span class="sub-pct-badge pct-safe">76%</span>
-                        </div>
-                      </div>
-                      <div class="sub-progress-track">
-                        <div class="sub-progress-bar bg-secondary" style="width: 76%;" aria-valuenow="76"></div>
-                      </div>
-                    </div>
-
-                    <!-- Subject 4: Database Management -->
-                    <div class="subject-row-item">
-                      <div class="subject-info-head">
-                        <div class="sub-name-group">
-                          <span class="sub-code">CS-304</span>
-                          <h5 class="sub-name">Database Management</h5>
-                        </div>
-                        <div class="sub-stats-group">
-                          <span class="sub-lectures-count">30 / 37 lectures</span>
-                          <span class="sub-pct-badge pct-safe">81%</span>
-                        </div>
-                      </div>
-                      <div class="sub-progress-track">
-                        <div class="sub-progress-bar bg-accent" style="width: 81%;" aria-valuenow="81"></div>
-                      </div>
-                    </div>
-
-                    <!-- Subject 5: Computer Networks (72% -> WARNING!) -->
-                    <div class="subject-row-item warning-subject-item">
-                      <div class="subject-info-head">
-                        <div class="sub-name-group">
-                          <span class="sub-code code-warning">CS-305</span>
-                          <h5 class="sub-name">Computer Networks</h5>
-                          <span class="shortage-badge">Low Attendance</span>
-                        </div>
-                        <div class="sub-stats-group">
-                          <span class="sub-lectures-count">26 / 36 lectures</span>
-                          <span class="sub-pct-badge pct-warning">72%</span>
-                        </div>
-                      </div>
-                      <div class="sub-progress-track">
-                        <div class="sub-progress-bar bg-warning" style="width: 72%;" aria-valuenow="72"></div>
-                      </div>
-                      <div class="subject-warning-alert">
-                        <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                        <span>Attendance below threshold (72% &lt; 75%). Attend next 3 lectures to restore eligibility.</span>
-                      </div>
+                    <div style="padding: 20px; text-align: center; color: #64748B;">
+                      Loading subject-wise attendance breakdown...
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
             </div>
           </div>
@@ -823,7 +662,7 @@
                   <button type="button" class="btn-syllabus-tab" onclick="openStudentModule('syllabus', 'faculty')">Faculty</button>
                   <button type="button" class="btn-syllabus-tab" onclick="openStudentModule('syllabus', 'university-syllabus')">University Syllabus</button>
                 </div>
-                <span class="badge-syllabus-pct">76% Average</span>
+                <span class="badge-syllabus-pct" id="syllabusAvgPct">--% Average</span>
               </div>
             </div>
 
@@ -831,7 +670,7 @@
             <div class="syllabus-card-body">
               <div class="syllabus-metric-summary">
                 <div class="sms-left">
-                  <span class="sms-val text-primary">19 / 25 Units</span>
+                  <span class="sms-val text-primary" id="syllabusUnitsSummary">-- / -- Units</span>
                   <span class="sms-sub">Completed across 5 registered engineering subjects</span>
                 </div>
                 <div class="sms-right">
@@ -845,35 +684,12 @@
               </div>
 
               <!-- Subject-wise Unit Coverage Mini Badges -->
-              <div class="syllabus-units-footer-grid">
-                <div class="s-unit-pill">
-                  <span class="sup-code">Data Struct.</span>
-                  <strong class="sup-val text-primary">82%</strong>
-                  <span class="sup-units">4.1 / 5 Units</span>
-                </div>
-                <div class="s-unit-pill">
-                  <span class="sup-code">Java Prog.</span>
-                  <strong class="sup-val text-primary">80%</strong>
-                  <span class="sup-units">4.0 / 5 Units</span>
-                </div>
-                <div class="s-unit-pill">
-                  <span class="sup-code">Operating Sys.</span>
-                  <strong class="sup-val text-primary">75%</strong>
-                  <span class="sup-units">3.8 / 5 Units</span>
-                </div>
-                <div class="s-unit-pill">
-                  <span class="sup-code">Database Mgmt</span>
-                  <strong class="sup-val text-primary">78%</strong>
-                  <span class="sup-units">3.9 / 5 Units</span>
-                </div>
-                <div class="s-unit-pill">
-                  <span class="sup-code">Comp. Networks</span>
-                  <strong class="sup-val text-primary">65%</strong>
-                  <span class="sup-units">3.2 / 5 Units</span>
-                </div>
+              <div class="syllabus-units-footer-grid" id="syllabusUnitsFooterGrid">
+                <!-- Dynamically populated from backend -->
               </div>
             </div>
           </div>
+        </div>
 
         </div>
 
@@ -2891,6 +2707,8 @@
   <!-- SSGMCE ERP Auth Guard -->
   <script src="../../../common/js/erp-auth-guard.js"></script>
   <script src="../../../common/js/erp-supabase.js"></script>
+  <script src="../../../common/js/student-supabase.js"></script>
+  <script src="js/api.js"></script>
 
   <!-- Dashboard JavaScript -->
   <script src="js/dashboard.js"></script>

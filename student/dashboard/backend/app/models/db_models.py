@@ -26,10 +26,43 @@ class StudentProfile(Base):
     caste = Column(String(50), default="OBC")
     is_employee_ward = Column(Boolean, default=False)
     phone = Column(String(20), default="+91 94231 55678")
+    date_of_birth = Column(String(20), default="2004-08-15")
+    gender = Column(String(10), default="Male")
+    blood_group = Column(String(10), default="O+ve")
+    nationality = Column(String(50), default="Indian")
+    emergency_contact = Column(String(20), default="+91 98230 41092")
+    permanent_address = Column(String(255), default="Plot 14, Gajanan Colony, Buldhana Road, Shegaon")
+    district = Column(String(50), default="Buldhana")
+    state = Column(String(50), default="Maharashtra")
+    pincode = Column(String(10), default="444203")
+    father_name = Column(String(100), default="Mr. Sanjay Aghao")
+    mother_name = Column(String(100), default="Mrs. Sunita Aghao")
+    faculty_mentor = Column(String(100), default="Dr. Rohan Deshmukh (HOD, CSE)")
+    admission_quota = Column(String(100), default="MHT-CET State Merit (Autonomous CAP)")
+    hostel_status = Column(String(50), default="Day Scholar")
     cgpa = Column(Float, default=8.84)
     sgpa = Column(Float, default=8.92)
     attendance_rate = Column(Float, default=35.14)
     avatar_url = Column(Text, default="images/logo.png")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+class AcademicMetrics(Base):
+    """Corresponds to Supabase public.student_academic_metrics."""
+    __tablename__ = "academic_metrics"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    student_code = Column(String(20), default="308637", index=True)
+    academic_year = Column(String(20), default="2025-26")
+    current_semester = Column(Integer, default=4)
+    cgpa = Column(Float, default=8.64)
+    latest_sgpa = Column(Float, default=8.84)
+    sem1_sgpa = Column(Float, default=8.42)
+    sem2_sgpa = Column(Float, default=8.58)
+    sem3_sgpa = Column(Float, default=8.64)
+    overall_attendance_pct = Column(Float, default=82.00)
+    earned_credits = Column(Integer, default=86)
+    total_credits = Column(Integer, default=160)
+    academic_standing = Column(String(100), default="Active Student (Autonomous)")
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
 class TimetableEntry(Base):

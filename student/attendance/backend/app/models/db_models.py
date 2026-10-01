@@ -13,23 +13,56 @@ class StudentProfile(Base):
     __tablename__ = "students"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    roll_no = Column(Integer, default=60, index=True)
-    student_code = Column(String(20), unique=True, default="308637", index=True)
+    roll_no = Column(Integer, default=21, index=True)
+    student_code = Column(String(20), unique=True, default="CSE2401", index=True)
     full_name = Column(String(150), default="Shivam Sanjay Aghao")
     email = Column(String(150), default="shivam.aghao@ssgmce.ac.in", index=True)
     department = Column(String(20), default="CSE")
-    class_name = Column(String(50), default="SY-CSE-A")
-    division = Column(String(20), default="Div 1")
-    semester = Column(Integer, default=4)
-    academic_year = Column(String(20), default="2025-26")
-    prn = Column(String(50), default="PRN-2024-CSE-060")
+    class_name = Column(String(50), default="TY B.E. Computer Science and Engineering-A")
+    division = Column(String(20), default="A")
+    semester = Column(Integer, default=5)
+    academic_year = Column(String(20), default="2026-2027")
+    prn = Column(String(50), default="CSE2401")
     caste = Column(String(50), default="OBC")
     is_employee_ward = Column(Boolean, default=False)
     phone = Column(String(20), default="+91 94231 55678")
+    date_of_birth = Column(String(20), default="2004-08-15")
+    gender = Column(String(10), default="Male")
+    blood_group = Column(String(10), default="O+ve")
+    nationality = Column(String(50), default="Indian")
+    emergency_contact = Column(String(20), default="+91 98230 41092")
+    permanent_address = Column(String(255), default="Plot 14, Gajanan Colony, Buldhana Road, Shegaon")
+    district = Column(String(50), default="Buldhana")
+    state = Column(String(50), default="Maharashtra")
+    pincode = Column(String(10), default="444203")
+    father_name = Column(String(100), default="Mr. Sanjay Aghao")
+    mother_name = Column(String(100), default="Mrs. Sunita Aghao")
+    faculty_mentor = Column(String(100), default="Dr. Rohan Deshmukh (HOD, CSE)")
+    admission_quota = Column(String(100), default="MHT-CET State Merit (Autonomous CAP)")
+    hostel_status = Column(String(50), default="Day Scholar")
     cgpa = Column(Float, default=8.84)
     sgpa = Column(Float, default=8.92)
-    attendance_rate = Column(Float, default=82.0)
-    avatar_url = Column(Text, default="images/image.png")
+    attendance_rate = Column(Float, default=35.14)
+    avatar_url = Column(Text, default="images/logo.png")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+class AcademicMetrics(Base):
+    """Corresponds to Supabase public.student_academic_metrics."""
+    __tablename__ = "academic_metrics"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    student_code = Column(String(20), default="308637", index=True)
+    academic_year = Column(String(20), default="2025-26")
+    current_semester = Column(Integer, default=4)
+    cgpa = Column(Float, default=8.64)
+    latest_sgpa = Column(Float, default=8.84)
+    sem1_sgpa = Column(Float, default=8.42)
+    sem2_sgpa = Column(Float, default=8.58)
+    sem3_sgpa = Column(Float, default=8.64)
+    overall_attendance_pct = Column(Float, default=82.00)
+    earned_credits = Column(Integer, default=86)
+    total_credits = Column(Integer, default=160)
+    academic_standing = Column(String(100), default="Active Student (Autonomous)")
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
 class TimetableEntry(Base):
@@ -206,4 +239,21 @@ class StudentNotification(Base):
     message = Column(Text)
     category = Column(String(50), default="ACADEMIC")
     is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+class StudentAttendanceSubject(Base):
+    __tablename__ = "student_attendance_subjects"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    student_code = Column(String(20), default="CSE2401", index=True)
+    academic_year = Column(String(20), default="2026-2027")
+    semester = Column(String(20), default="V")
+    subject_name = Column(String(150), nullable=False)
+    subject_code = Column(String(50), nullable=False)
+    subject_type = Column(String(10), default="TH")  # TH, PR, TUT
+    type_name = Column(String(20), default="Theory") # Theory, Practical, Tutorial
+    present_periods = Column(Integer, default=0)
+    total_periods = Column(Integer, default=0)
+    faculty_name = Column(String(100))
+    classroom = Column(String(50))
     created_at = Column(DateTime(timezone=True), default=utc_now)

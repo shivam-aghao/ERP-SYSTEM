@@ -192,3 +192,58 @@ class RevaluationOut(BaseModel):
     applicationType: str
     status: str
     appliedAt: str
+
+# Extended Models for Fortified Supabase Integration
+class StudentProfileUpdate(BaseModel):
+    phone: Optional[str] = None
+    primaryMobile: Optional[str] = None
+    emergencyContact: Optional[str] = None
+    permanentAddress: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    avatarUrl: Optional[str] = None
+    caste: Optional[str] = None
+    bloodGroup: Optional[str] = None
+    hostelStatus: Optional[str] = None
+
+class AcademicMetricsOut(BaseModel):
+    studentCode: str
+    academicYear: str
+    currentSemester: int
+    cgpa: float
+    latestSgpa: float
+    sem1Sgpa: float
+    sem2Sgpa: float
+    sem3Sgpa: float
+    overallAttendancePct: float
+    earnedCredits: int
+    totalCredits: int
+    academicStanding: str
+
+class NotificationItem(BaseModel):
+    id: str
+    title: str
+    message: str
+    category: str
+    severity: str = "info"
+    source: str = "Examination Cell"
+    isRead: bool = False
+    createdAt: Optional[str] = None
+
+class StudentOverviewOut(BaseModel):
+    student: Dict[str, Any]
+    metrics: Dict[str, Any]
+    attendanceSummary: Dict[str, Any]
+    todayTimetable: List[Dict[str, Any]]
+    recentNotifications: List[Dict[str, Any]]
+    systemStatus: Dict[str, Any]
+
+class HealthStatusOut(BaseModel):
+    status: str
+    service: str
+    version: str
+    supabaseConnected: bool
+    supabaseUrl: str
+    database: str
+    latencyMs: Optional[float] = None
