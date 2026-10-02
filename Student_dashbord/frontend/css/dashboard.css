@@ -3509,7 +3509,11 @@ img {
 
 .dash-faculty-grid {
   display: grid !important;
+<<<<<<< HEAD
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+=======
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+>>>>>>> b7fdf147124e6c60efdfb815bf1069a2f8fc8816
   gap: 16px !important;
 }
 
@@ -3670,6 +3674,7 @@ img {
   background: #0B5CAD !important;
   color: #FFFFFF !important;
 }
+<<<<<<< HEAD
 
 /* ==========================================================================
    SYLLABUS CARD HEADER ACTIONS & DROPDOWN MENU
@@ -3779,3 +3784,5 @@ img {
     display: none !important;
   }
 }
+=======
+>>>>>>> b7fdf147124e6c60efdfb815bf1069a2f8fc8816
