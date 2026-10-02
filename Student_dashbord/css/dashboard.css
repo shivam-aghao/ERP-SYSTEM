@@ -3509,7 +3509,7 @@ img {
 
 .dash-faculty-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
   gap: 16px !important;
 }
 
@@ -3669,4 +3669,113 @@ img {
 .btn-view-syllabus:hover {
   background: #0B5CAD !important;
   color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   SYLLABUS CARD HEADER ACTIONS & DROPDOWN MENU
+   ========================================================================== */
+.syllabus-head-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  position: relative !important;
+  flex-wrap: wrap !important;
+}
+
+.card-tab-dropdown-wrap {
+  position: relative !important;
+  display: none !important;
+}
+
+.btn-card-dropdown-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 12px !important;
+  background: #EFF6FF !important;
+  color: #0B5CAD !important;
+  border: 1px solid #BFDBFE !important;
+  border-radius: 6px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-card-dropdown-toggle:hover {
+  background: #0B5CAD !important;
+  color: #FFFFFF !important;
+}
+
+.card-dropdown-menu {
+  display: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  top: calc(100% + 6px) !important;
+  z-index: 1000 !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+  min-width: 190px !important;
+  padding: 6px !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.card-dropdown-menu.show {
+  display: flex !important;
+}
+
+.card-dropdown-item {
+  width: 100% !important;
+  text-align: left !important;
+  padding: 8px 12px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  color: #1E293B !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+}
+
+.card-dropdown-item:hover {
+  background: #F1F5F9 !important;
+  color: #0B5CAD !important;
+}
+
+.syllabus-quick-btns {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.btn-syllabus-tab {
+  padding: 5px 11px !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  color: #0B5CAD !important;
+  background: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-syllabus-tab:hover {
+  background: #0B5CAD !important;
+  color: #FFFFFF !important;
+  border-color: #0B5CAD !important;
+}
+
+@media (max-width: 680px) {
+  .card-tab-dropdown-wrap {
+    display: block !important;
+  }
+  .syllabus-quick-btns {
+    display: none !important;
+  }
 }

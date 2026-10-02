@@ -372,6 +372,12 @@ function initSidebarLinks() {
             setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 1500);
           }
         }
+
+        // Also open syllabus module directly if syllabus sidebar item is clicked
+        const modKey = parentItem.getAttribute('data-module');
+        if (modKey === 'syllabus') {
+          openStudentModule('syllabus', 'subject');
+        }
         return;
       }
 
@@ -1332,7 +1338,11 @@ async function loadDynamicUniversitySyllabus(subjectCode) {
   const select = document.getElementById('dashSyllabusSubjectSelect');
   if (!container) return;
 
-  const code = subjectCode || (select ? select.value : null) || (cachedSubjects[0]?.code) || '5IT220PC';
+  if (!cachedSubjects || !cachedSubjects.length) {
+    await loadDynamicSubjects();
+  }
+
+  const code = subjectCode || (select && select.value ? select.value : null) || (cachedSubjects[0]?.code) || 'CS-301';
 
   if (select && select.value !== code) {
     select.value = code;
@@ -1522,11 +1532,33 @@ function viewSubjectUnitsInModal(subjectCode) {
   }, 100);
 }
 
+// 9. Card Dropdown Toggle
+function toggleCardTabDropdown(menuId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+  const isShow = menu.classList.contains('show');
+  document.querySelectorAll('.card-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+  if (!isShow) {
+    menu.classList.add('show');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.card-tab-dropdown-wrap')) {
+    document.querySelectorAll('.card-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+  }
+});
+
 // Global scope bindings
 window.openStudentModule = openStudentModule;
 window.closeStudentModule = closeStudentModule;
 window.switchModalSubtab = switchModalSubtab;
 window.toggleModalTabDropdown = toggleModalTabDropdown;
+window.toggleCardTabDropdown = toggleCardTabDropdown;
 window.filterDashSubjects = filterDashSubjects;
 window.filterDashFaculty = filterDashFaculty;
 window.renderDashSubjectUnits = loadDynamicUniversitySyllabus;
