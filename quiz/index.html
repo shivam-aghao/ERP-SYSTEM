@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSGMCE College ERP — Quiz & Assessment Gateway</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    :root {
+      --primary: #0B5CAD;
+      --navy: #0B1F3A;
+      --navy-light: #15325b;
+      --accent: #00A6D6;
+      --bg: #F4F8FC;
+      --card-bg: #FFFFFF;
+      --border-color: #E2E8F0;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --success: #10B981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-header {
+      background: var(--navy);
+      color: #FFFFFF;
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: white;
+    }
+    .brand-logo {
+      height: 42px;
+    }
+    .college-info h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .college-info p {
+      font-size: 0.75rem;
+      color: #94A3B8;
+      margin: 0;
+    }
+
+    .gateway-container {
+      flex: 1;
+      max-width: 1000px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #EFF6FF;
+      color: var(--primary);
+      border: 1px solid #BFDBFE;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    .gateway-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.75rem;
+    }
+
+    .gateway-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 650px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      width: 100%;
+    }
+
+    .portal-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      text-align: left;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-decoration: none;
+      color: inherit;
+    }
+    .portal-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 28px rgba(11, 92, 173, 0.12);
+      border-color: var(--primary);
+    }
+
+    .card-icon-box {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .icon-student {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+    .icon-teacher {
+      background: #F0FDF4;
+      color: var(--success);
+    }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .feature-item {
+      font-size: 0.85rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .feature-check {
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .btn-enter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.85rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-student {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-student:hover {
+      background: #094785;
+    }
+    .btn-teacher {
+      background: var(--navy);
+      color: white;
+    }
+    .btn-teacher:hover {
+      background: var(--navy-light);
+    }
+
+    .system-status-strip {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+      margin-right: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <a href="../index.html" class="header-brand">
+      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Logo" class="brand-logo">
+      <div class="college-info">
+        <h1>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
+        <p>Autonomous Institute • Central Quiz & Assessment System</p>
+      </div>
+    </a>
+    <a href="../index.html" style="color: #94A3B8; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+      <i data-lucide="home"></i> ERP Home
+    </a>
+  </header>
+
+  <main class="gateway-container">
+    <div class="badge-pill">
+      <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+      Class-Targeted Assessment Platform
+    </div>
+
+    <h2 class="gateway-title">SSGMCE Online Assessment & Quiz Gateway</h2>
+    <p class="gateway-desc">
+      Integrated testing with live FastAPI and Supabase database. Teachers schedule and assign quizzes with real-time class notifications, while students solve assessments with automated server evaluation.
+    </p>
+
+    <div class="portal-grid">
+      <!-- Student Card -->
+      <a href="student/index.html" class="portal-card">
+        <div>
+          <div class="card-icon-box icon-student">
+            <i data-lucide="graduation-cap" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 class="card-title">Student Assessment Portal</h3>
+          <p class="card-desc">Solve class-restricted tests, timed quizzes, and view automated server scores & review sheets.</p>
+          
+          <ul class="feature-list">
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Strict class-targeted quiz access (e.g. 1R1, 3R)</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Real-time notifications on new quiz uploads</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Server-side grading with negative marking</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Full answer key review sheet & class rank</li>
+          </ul>
+        </div>
+        <div class="btn-enter btn-student">
+          Enter Student Portal <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+        </div>
+      </a>
+
+      <!-- Teacher Card -->
+      <a href="teacher/index.html" class="portal-card">
+        <div>
+          <div class="card-icon-box icon-teacher">
+            <i data-lucide="layers" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 class="card-title">Teacher Quiz Portal</h3>
+          <p class="card-desc">Create department assessments, import MHT-CET JSON question banks, and monitor live submissions.</p>
+          
+          <ul class="feature-list">
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Target quizzes to specific classes (1R1, 2R1, 3R)</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Auto-notify enrolled students on publication</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> JSON batch question import & question editor</li>
+            <li class="feature-item"><i data-lucide="check" class="feature-check" style="width: 16px; height: 16px;"></i> Live question accuracy charts & speed leaderboard</li>
+          </ul>
+        </div>
+        <div class="btn-enter btn-teacher">
+          Enter Teacher Portal <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- System Status Strip -->
+    <div class="system-status-strip">
+      <div><span class="status-dot"></span>FastAPI Engine (Port 8000): Online</div>
+      <div><span class="status-dot"></span>Supabase PostgreSQL: Connected</div>
+      <div><span class="status-dot"></span>Target Class Notifications: Enabled</div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
+

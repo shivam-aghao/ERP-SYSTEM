@@ -20,8 +20,8 @@
   const getSupabaseConfig = () => {
     const parentConfig = (global.ERPSupabase && global.ERPSupabase.config) || {};
     return {
-      url: global.__SUPABASE_URL__ || parentConfig.url || 'https://ssgmce-erp.supabase.co',
-      anonKey: global.__SUPABASE_ANON_KEY__ || parentConfig.anonKey || 'sb_publishable_anon_token_placeholder'
+      url: global.__SUPABASE_URL__ || parentConfig.url || 'https://gftqvclenyplnuoocbwe.supabase.co',
+      anonKey: global.__SUPABASE_ANON_KEY__ || parentConfig.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
     };
   };
 

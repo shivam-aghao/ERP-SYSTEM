@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSGMCE College ERP â€” Teacher Quiz Portal</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for Teacher Quiz Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Base ERP Stylesheets -->
+  <link rel="stylesheet" href="../../teacher/frontend/css/variables.css">
+  <link rel="stylesheet" href="../../teacher/frontend/css/base.css">
+  <link rel="stylesheet" href="../../teacher/frontend/css/layout.css">
+  <link rel="stylesheet" href="../../teacher/frontend/css/components.css">
+  
+  <style>
+    :root {
+      --primary: #0B5CAD;
+      --navy: #0B1F3A;
+      --navy-light: #15325b;
+      --card-bg: #FFFFFF;
+      --light-bg: #F8FAFC;
+      --border-color: #E2E8F0;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --purple: #8B5CF6;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header matching Teacher ERP */
+    .top-header {
+      background: var(--navy);
+      color: #FFFFFF;
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .brand-logo {
+      height: 40px;
+    }
+    .college-info h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .college-info p {
+      font-size: 0.75rem;
+      margin: 0;
+      color: #94A3B8;
+    }
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.08);
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+    }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    /* Sub Navigation Bar */
+    .sub-nav {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 1rem;
+    }
+    .nav-tab {
+      padding: 1rem 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover {
+      color: var(--primary);
+    }
+    .nav-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Main Container */
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* View Sections */
+    .view-section {
+      display: none;
+    }
+    .view-section.active {
+      display: block;
+    }
+
+    /* Card styling */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: #08498b;
+    }
+    .btn-secondary {
+      background: #F1F5F9;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: #E2E8F0;
+    }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Quiz Table */
+    .quiz-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .quiz-table th {
+      background: #F8FAFC;
+      padding: 0.9rem 1rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .quiz-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .quiz-table tr:hover {
+      background: #F8FAFC;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-published { background: #DCFCE7; color: #15803D; }
+    .badge-draft { background: #FEF3C7; color: #B45309; }
+    .badge-closed { background: #F1F5F9; color: #64748B; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-main);
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(11,92,173,0.1);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Question builder list */
+    .question-item {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #F8FAFC;
+    }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .option-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .option-pill {
+      background: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .option-pill.correct {
+      border-color: var(--success);
+      background: #F0FDF4;
+      font-weight: 600;
+      color: #15803D;
+    }
+
+    /* Analytics Stat Grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Master SSGMCE Header -->
+  <header class="top-header">
+    <div class="header-brand">
+      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Logo" class="brand-logo">
+      <div class="college-info">
+        <h1>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
+        <p>Autonomous Institute â€¢ Teacher ERP Quiz Module</p>
+      </div>
+    </div>
+    <div class="header-user">
+      <div class="user-badge">
+        <div class="user-avatar" id="teacherAvatar">--</div>
+        <span><strong id="teacherName">Loading Faculty...</strong> (<span id="teacherDept">CSE</span>)</span>
+      </div>
+      <a href="../../teacher/frontend/index.html" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+        <i data-lucide="arrow-left"></i> Back to ERP
+      </a>
+    </div>
+  </header>
+
+  <!-- Sub Navigation -->
+  <nav class="sub-nav">
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="switchTab('quizzes')">
+        <i data-lucide="layout-list"></i> My Quizzes
+      </div>
+      <div class="nav-tab" onclick="switchTab('analytics')">
+        <i data-lucide="bar-chart-3"></i> Quiz Analytics & Monitoring
+      </div>
+      <div class="nav-tab" onclick="switchTab('question-bank')">
+        <i data-lucide="database"></i> Question Bank & Import
+      </div>
+    </div>
+    <div>
+      <button class="btn btn-primary" onclick="openCreateQuizModal()">
+        <i data-lucide="plus-circle"></i> + Create New Quiz
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- SECTION 1: MY QUIZZES -->
+    <section id="sec-quizzes" class="view-section active">
+      <div class="action-bar">
+        <div>
+          <h2 class="page-title">Class-Restricted Quizzes</h2>
+          <p class="page-desc">Quizzes assigned to specific departments and classes (e.g. CSE 1R1, 2R1, 3R)</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <select id="filterClass" class="form-control" style="width: 180px;" onchange="renderQuizzes()">
+            <option value="ALL">All Classes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="quiz-table">
+          <thead>
+            <tr>
+              <th>Quiz Title</th>
+              <th>Target Class</th>
+              <th>Subject</th>
+              <th>Duration</th>
+              <th>Total Marks</th>
+              <th>Status</th>
+              <th>Attempts</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="quizTableBody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 2: QUIZ ANALYTICS -->
+    <section id="sec-analytics" class="view-section">
+      <div class="action-bar">
+        <div>
+          <h2 class="page-title">Teacher Quiz Analytics</h2>
+          <p class="page-desc">Comprehensive class evaluation, speed analysis, and question-level difficulty breakdown</p>
+        </div>
+        <select id="analyticsQuizSelect" class="form-control" style="width: 320px;" onchange="loadQuizAnalytics()">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statAttempts">0</div>
+          <div class="stat-label">Students Attempted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAvgScore">0%</div>
+          <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAvgAccuracy">0%</div>
+          <div class="stat-label">Average Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAvgTime">0s</div>
+          <div class="stat-label">Avg Completion Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statHighScore">0%</div>
+          <div class="stat-label">Highest Score</div>
+        </div>
+      </div>
+
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <div class="card">
+          <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Question-Level Performance Breakdown</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Identify difficult or slow questions to revise in lectures.</p>
+          <div style="height: 300px;">
+            <canvas id="questionAccuracyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Speed & Leaderboard</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Top 5 Student Performers</p>
+          <div id="analyticsTopPerformers" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: QUESTION BANK & JSON IMPORT -->
+    <section id="sec-question-bank" class="view-section">
+      <div class="action-bar">
+        <div>
+          <h2 class="page-title">Question Bank & MHT-CET JSON Importer</h2>
+          <p class="page-desc">Import batches of questions directly from JSON format (Study Guide Section 2 & 18)</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Import questions.json</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Paste a JSON array containing questions, choices A/B/C/D, and correct answers.
+        </p>
+
+        <textarea id="jsonImportArea" class="form-control" rows="8" placeholder='[
+  {
+    "question": "What is the capital of Maharashtra?",
+    "A": "Nagpur",
+    "B": "Mumbai",
+    "C": "Pune",
+    "D": "Nashik",
+    "correct": "B",
+    "marks": 2,
+    "negative_marks": 0.5
+  }
+]'></textarea>
+        
+        <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+          <select id="importTargetQuiz" class="form-control" style="width: 300px;">
+            <option value="">Select Quiz to Add Questions</option>
+          </select>
+          <button class="btn btn-primary" onclick="importQuestionsJson()">
+            <i data-lucide="upload-cloud"></i> Validate & Import Questions
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CREATE QUIZ MODAL -->
+  <div class="modal-backdrop" id="createQuizModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin: 0; color: var(--navy);">Create New Quiz</h3>
+        <button class="btn btn-secondary" onclick="closeCreateQuizModal()" style="padding: 0.2rem 0.5rem;">âœ•</button>
+      </div>
+
+      <form id="createQuizForm" onsubmit="handleCreateQuiz(event)">
+        <div class="form-group">
+          <label>Quiz Title *</label>
+          <input type="text" id="newQuizTitle" class="form-control" placeholder="e.g. Unit Test 2 - Operating Systems" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Subject / Chapter *</label>
+            <input type="text" id="newQuizSubject" class="form-control" placeholder="e.g. Operating Systems" required>
+          </div>
+          <div class="form-group">
+            <label>Target Class (Restriction) *</label>
+            <select id="newQuizClass" class="form-control" required>
+              <option value="">Select target class...</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Duration (Minutes) *</label>
+            <input type="number" id="newQuizDuration" class="form-control" value="20" min="5" max="180" required>
+          </div>
+          <div class="form-group">
+            <label>Max Attempts</label>
+            <input type="number" id="newQuizMaxAttempts" class="form-control" value="1" min="1" max="5">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marks Per Question *</label>
+            <input type="number" step="0.5" id="newQuizMarks" class="form-control" value="2.0" required>
+          </div>
+          <div class="form-group">
+            <label>Negative Marks (per wrong answer)</label>
+            <input type="number" step="0.25" id="newQuizNegMarks" class="form-control" value="0.5" min="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description & Instructions</label>
+          <textarea id="newQuizDesc" class="form-control" rows="3" placeholder="Enter instructions for students..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateQuizModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Quiz & Add Questions</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MANAGE QUESTIONS MODAL -->
+  <div class="modal-backdrop" id="manageQuestionsModal">
+    <div class="modal-box" style="max-width: 800px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin: 0; color: var(--navy);" id="manageQuizTitle">Manage Questions</h3>
+          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);" id="manageQuizSubtitle"></p>
+        </div>
+        <button class="btn btn-secondary" onclick="closeManageQuestionsModal()" style="padding: 0.2rem 0.5rem;">âœ•</button>
+      </div>
+
+      <!-- Add New Question Box -->
+      <div class="card" style="background: #F8FAFC; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
+        <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; color: var(--primary);">+ Add Question</h4>
+        <div class="form-group">
+          <textarea id="addQText" class="form-control" rows="2" placeholder="Enter question statement..."></textarea>
+        </div>
+        <div class="form-row" style="margin-bottom: 0.75rem;">
+          <input type="text" id="addQOptA" class="form-control" placeholder="Option A">
+          <input type="text" id="addQOptB" class="form-control" placeholder="Option B">
+        </div>
+        <div class="form-row" style="margin-bottom: 0.75rem;">
+          <input type="text" id="addQOptC" class="form-control" placeholder="Option C">
+          <input type="text" id="addQOptD" class="form-control" placeholder="Option D">
+        </div>
+        <div class="form-row" style="align-items: center;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.2rem;">Correct Answer Option</label>
+            <select id="addQCorrect" class="form-control">
+              <option value="A">Option A</option>
+              <option value="B">Option B</option>
+              <option value="C">Option C</option>
+              <option value="D">Option D</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="handleAddSingleQuestion()" style="align-self: flex-end;">
+            <i data-lucide="plus"></i> Add to Quiz
+          </button>
+        </div>
+      </div>
+
+      <!-- Existing Questions List -->
+      <h4 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--navy);">Questions in this Quiz (<span id="manageQuestionCount">0</span>)</h4>
+      <div id="questionsContainer" style="max-height: 350px; overflow-y: auto;">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State Store (100% Dynamic from FastAPI & Supabase DB)
+    let quizzes = [];
+    let availableClasses = [];
+    let currentEditingQuizId = null;
+    let currentEditingQuestions = [];
+    let analyticsChart = null;
+
+    async function loadInitialData() {
+      try {
+        // 1. Fetch Teacher Profile for Header
+        const profile = await QuizAPI.getTeacherProfile();
+        if (profile && profile.full_name) {
+          const tName = document.getElementById('teacherName');
+          const tDept = document.getElementById('teacherDept');
+          const tAvatar = document.getElementById('teacherAvatar');
+          if (tName) tName.textContent = profile.full_name;
+          if (tDept) tDept.textContent = profile.designation || 'CSE';
+          if (tAvatar) {
+            const initials = profile.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            tAvatar.textContent = initials || 'FAC';
+          }
+        }
+
+        // 2. Fetch academic classes from database
+        availableClasses = await QuizAPI.getClasses();
+        populateClassDropdowns();
+
+        // 3. Fetch quizzes created for classes from database
+        await refreshQuizzes();
+
+        // 4. Update status indicator
+        const badge = document.getElementById('liveBackendBadge');
+        const label = document.getElementById('backendStatusLabel');
+        if (label) label.textContent = 'Connected: FastAPI :8000 & Supabase';
+        if (badge) {
+          badge.style.background = 'rgba(16, 185, 129, 0.15)';
+          badge.style.color = '#10B981';
+          badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        }
+      } catch (err) {
+        console.warn('Initial data load notice:', err);
+        const label = document.getElementById('backendStatusLabel');
+        if (label) label.textContent = 'Backend Reconnecting...';
+      }
+    }
+
+    function populateClassDropdowns() {
+      // Filter dropdown
+      const filterSelect = document.getElementById('filterClass');
+      if (filterSelect) {
+        filterSelect.innerHTML = '<option value="ALL">All Classes</option>' + 
+          availableClasses.map(c => `<option value="${c.class_name}">${c.class_name} (${c.division || 'CSE'})</option>`).join('');
+      }
+
+      // Create modal class dropdown
+      const newQuizClassSelect = document.getElementById('newQuizClass');
+      if (newQuizClassSelect) {
+        newQuizClassSelect.innerHTML = availableClasses.map(c => 
+          `<option value="${c.id}">${c.class_name} (Year ${c.year} • ${c.student_count || 0} Students)</option>`
+        ).join('');
+      }
+    }
+
+    async function refreshQuizzes() {
+      quizzes = await QuizAPI.getTeacherQuizzes();
+      renderQuizzes();
+      populateAnalyticsDropdown();
+      populateImportDropdown();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+
+      if (tab === 'quizzes') {
+        document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        document.getElementById('sec-quizzes').classList.add('active');
+        renderQuizzes();
+      } else if (tab === 'analytics') {
+        document.querySelectorAll('.nav-tab')[1].classList.add('active');
+        document.getElementById('sec-analytics').classList.add('active');
+        populateAnalyticsDropdown();
+        loadQuizAnalytics();
+      } else if (tab === 'question-bank') {
+        document.querySelectorAll('.nav-tab')[2].classList.add('active');
+        document.getElementById('sec-question-bank').classList.add('active');
+        populateImportDropdown();
+      }
+      lucide.createIcons();
+    }
+
+    function renderQuizzes() {
+      const tbody = document.getElementById('quizTableBody');
+      const filter = document.getElementById('filterClass').value;
+      tbody.innerHTML = '';
+
+      const filtered = quizzes.filter(q => filter === 'ALL' || q.class_name === filter);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No quizzes found for selected class filter. Click <strong>+ Create New Quiz</strong> to assign one.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(q => {
+        const badgeClass = q.status === 'PUBLISHED' ? 'badge-published' : (q.status === 'DRAFT' ? 'badge-draft' : 'badge-closed');
+        const qCount = q.question_count !== undefined ? q.question_count : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${q.title}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">${qCount} Questions</div></td>
+          <td><span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700;">${q.class_name}</span></td>
+          <td>${q.subject}</td>
+          <td>${q.duration_minutes} mins</td>
+          <td>${q.total_marks} marks</td>
+          <td><span class="badge ${badgeClass}">${q.status}</span></td>
+          <td><strong>${q.attempts_count || 0}</strong> submissions</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="openManageQuestions('${q.id}')">
+              <i data-lucide="help-circle"></i> Questions (${qCount})
+            </button>
+            <button class="btn ${q.status === 'PUBLISHED' ? 'btn-secondary' : 'btn-success'}" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="togglePublish('${q.id}')">
+              ${q.status === 'PUBLISHED' ? 'Close' : 'Publish'}
+            </button>
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #EF4444;" onclick="handleDeleteQuiz('${q.id}')" title="Delete Quiz">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    async function togglePublish(quizId) {
+      try {
+        await QuizAPI.togglePublish(quizId);
+        await refreshQuizzes();
+        alert('Quiz publication status toggled! Automatic student notification was triggered.');
+      } catch (err) {
+        alert('Failed to toggle status: ' + err.message);
+      }
+    }
+
+    async function handleDeleteQuiz(quizId) {
+      if (!confirm('Are you sure you want to permanently delete this quiz, all its questions, and recorded student attempts?')) return;
+      try {
+        await QuizAPI.deleteQuiz(quizId);
+        await refreshQuizzes();
+      } catch (err) {
+        alert('Failed to delete quiz: ' + err.message);
+      }
+    }
+
+    // Modal logic
+    function openCreateQuizModal() {
+      document.getElementById('createQuizModal').classList.add('active');
+    }
+    function closeCreateQuizModal() {
+      document.getElementById('createQuizModal').classList.remove('active');
+    }
+
+    async function handleCreateQuiz(e) {
+      e.preventDefault();
+      const title = document.getElementById('newQuizTitle').value.trim();
+      const subject = document.getElementById('newQuizSubject').value.trim();
+      const classId = document.getElementById('newQuizClass').value;
+      const duration = parseInt(document.getElementById('newQuizDuration').value);
+      const marks = parseFloat(document.getElementById('newQuizMarks').value);
+      const negMarks = parseFloat(document.getElementById('newQuizNegMarks').value);
+      const desc = document.getElementById('newQuizDesc').value.trim();
+
+      const selectedClassObj = availableClasses.find(c => c.id === classId);
+      const className = selectedClassObj ? selectedClassObj.class_name : '1R1';
+
+      const payload = {
+        title,
+        subject,
+        class_id: classId,
+        class_name: className,
+        duration_minutes: duration,
+        total_marks: marks * 5,
+        marks_per_question: marks,
+        negative_marks: negMarks,
+        description: desc,
+        status: 'PUBLISHED',
+        questions: []
+      };
+
+      try {
+        const created = await QuizAPI.createQuiz(payload);
+        closeCreateQuizModal();
+        await refreshQuizzes();
+        alert(`Quiz created and class ${className} has been notified! Now you can add questions.`);
+        openManageQuestions(created.id);
+      } catch (err) {
+        alert('Failed to create quiz: ' + err.message);
+      }
+    }
+
+    // Manage questions
+    async function openManageQuestions(quizId) {
+      currentEditingQuizId = quizId;
+      const q = quizzes.find(x => x.id === quizId);
+      if (!q) return;
+
+      document.getElementById('manageQuizTitle').textContent = `Manage Questions: ${q.title}`;
+      document.getElementById('manageQuizSubtitle').textContent = `Class: ${q.class_name} • ${q.subject} • ${q.marks_per_question} Marks / Q`;
+      document.getElementById('manageQuestionsModal').classList.add('active');
+
+      try {
+        currentEditingQuestions = await QuizAPI.getQuizQuestions(quizId);
+      } catch (err) {
+        currentEditingQuestions = [];
+      }
+      renderQuestionsList();
+      lucide.createIcons();
+    }
+
+    function closeManageQuestionsModal() {
+      document.getElementById('manageQuestionsModal').classList.remove('active');
+      refreshQuizzes();
+    }
+
+    function renderQuestionsList() {
+      const container = document.getElementById('questionsContainer');
+      document.getElementById('manageQuestionCount').textContent = currentEditingQuestions.length;
+      container.innerHTML = '';
+
+      if (currentEditingQuestions.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No questions in this quiz yet. Add a question using the form above.</p>`;
+        return;
+      }
+
+      currentEditingQuestions.forEach((qu, idx) => {
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        div.innerHTML = `
+          <div class="question-header">
+            <span><strong>Q${idx + 1}:</strong> ${qu.question_text || qu.text}</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="color: var(--primary); font-size: 0.8rem; font-weight: 600;">${qu.marks} Marks</span>
+              <button onclick="handleDeleteQuestion('${qu.id}')" style="background: none; border: none; color: #EF4444; cursor: pointer;" title="Delete Question">
+                <i data-lucide="trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="option-list">
+            ${(qu.options || []).map(o => `
+              <div class="option-pill ${o.is_correct ? 'correct' : ''}">
+                <strong>${o.key}.</strong> ${o.text} ${o.is_correct ? '✓ Correct' : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    async function handleAddSingleQuestion() {
+      if (!currentEditingQuizId) return;
+      const q = quizzes.find(x => x.id === currentEditingQuizId);
+
+      const text = document.getElementById('addQText').value.trim();
+      const a = document.getElementById('addQOptA').value.trim();
+      const b = document.getElementById('addQOptB').value.trim();
+      const c = document.getElementById('addQOptC').value.trim();
+      const d = document.getElementById('addQOptD').value.trim();
+      const corr = document.getElementById('addQCorrect').value;
+
+      if (!text || !a || !b || !c || !d) {
+        alert('Please fill the question text and all 4 options!');
+        return;
+      }
+
+      const payload = {
+        question_text: text,
+        marks: q ? q.marks_per_question : 2.0,
+        negative_marks: q ? q.negative_marks : 0.5,
+        options: [
+          { key: 'A', text: a, is_correct: corr === 'A' },
+          { key: 'B', text: b, is_correct: corr === 'B' },
+          { key: 'C', text: c, is_correct: corr === 'C' },
+          { key: 'D', text: d, is_correct: corr === 'D' }
+        ]
+      };
+
+      try {
+        await QuizAPI.addQuestion(currentEditingQuizId, payload);
+        currentEditingQuestions = await QuizAPI.getQuizQuestions(currentEditingQuizId);
+        
+        // Clear inputs
+        document.getElementById('addQText').value = '';
+        document.getElementById('addQOptA').value = '';
+        document.getElementById('addQOptB').value = '';
+        document.getElementById('addQOptC').value = '';
+        document.getElementById('addQOptD').value = '';
+
+        renderQuestionsList();
+      } catch (err) {
+        alert('Failed to add question: ' + err.message);
+      }
+    }
+
+    async function handleDeleteQuestion(questionId) {
+      if (!confirm('Remove this question?')) return;
+      try {
+        await QuizAPI.deleteQuestion(currentEditingQuizId, questionId);
+        currentEditingQuestions = await QuizAPI.getQuizQuestions(currentEditingQuizId);
+        renderQuestionsList();
+      } catch (err) {
+        alert('Failed to delete question: ' + err.message);
+      }
+    }
+
+    // Analytics
+    function populateAnalyticsDropdown() {
+      const sel = document.getElementById('analyticsQuizSelect');
+      if (!sel) return;
+      sel.innerHTML = quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
+    }
+
+    async function loadQuizAnalytics() {
+      const sel = document.getElementById('analyticsQuizSelect');
+      const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
+      if (!qid) {
+        document.getElementById('statAttempts').textContent = '0';
+        document.getElementById('statAvgScore').textContent = '0%';
+        document.getElementById('statAvgAccuracy').textContent = '0%';
+        document.getElementById('statAvgTime').textContent = '0s';
+        document.getElementById('statHighScore').textContent = '0%';
+        document.getElementById('analyticsTopPerformers').innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No quizzes created yet.</div>`;
+        return;
+      }
+
+      const data = await QuizAPI.getQuizAnalytics(qid);
+      if (!data) return;
+
+      document.getElementById('statAttempts').textContent = data.total_attempts || 0;
+      document.getElementById('statAvgScore').textContent = `${data.average_score || 0}%`;
+      document.getElementById('statAvgAccuracy').textContent = `${data.average_accuracy || 0}%`;
+      const avgMins = Math.floor((data.average_time_seconds || 0) / 60);
+      const avgSecs = (data.average_time_seconds || 0) % 60;
+      document.getElementById('statAvgTime').textContent = `${avgMins}m ${avgSecs}s`;
+      document.getElementById('statHighScore').textContent = `${data.highest_score || 0}%`;
+
+      // Top Performers Leaderboard
+      const topContainer = document.getElementById('analyticsTopPerformers');
+      if (data.top_performers && data.top_performers.length > 0) {
+        topContainer.innerHTML = data.top_performers.map(tp => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: #F8FAFC; border-radius: 8px;">
+            <div><strong>${tp.rank}. ${tp.name}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">Roll ${tp.roll_no} • Time: ${Math.floor(tp.time_taken_seconds / 60)}m ${tp.time_taken_seconds % 60}s</div></div>
+            <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 700;">${tp.score} Marks (${tp.accuracy}%)</span>
+          </div>
+        `).join('');
+      } else {
+        topContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No student attempts recorded yet for this quiz.</div>`;
+      }
+
+      // Chart
+      const labels = (data.questions_analysis || []).map((_, i) => `Q${i + 1}`);
+      const accuracyData = (data.questions_analysis || []).map(qa => qa.accuracy || 0);
+
+      if (analyticsChart) {
+        analyticsChart.destroy();
+      }
+
+      const ctx = document.getElementById('questionAccuracyChart').getContext('2d');
+      analyticsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['No Questions'],
+          datasets: [{
+            label: 'Accuracy %',
+            data: accuracyData.length ? accuracyData : [0],
+            backgroundColor: (accuracyData.length ? accuracyData : [0]).map(val => val < 50 ? '#EF4444' : '#0B5CAD'),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+
+    // JSON Import
+    function populateImportDropdown() {
+      const sel = document.getElementById('importTargetQuiz');
+      if (!sel) return;
+      sel.innerHTML = `<option value="">Select Quiz to Add Questions</option>` + quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
+    }
+
+    async function importQuestionsJson() {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid) {
+        alert('Please select a target quiz!');
+        return;
+      }
+      const raw = document.getElementById('jsonImportArea').value.trim();
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) throw new Error('JSON root must be an array of questions');
+        
+        const q = quizzes.find(x => x.id === qid);
+        for (const item of parsed) {
+          await QuizAPI.addQuestion(qid, {
+            question_text: item.question || item.text,
+            marks: item.marks || (q ? q.marks_per_question : 2.0),
+            negative_marks: item.negative_marks || (q ? q.negative_marks : 0.5),
+            options: [
+              { key: 'A', text: item.A, is_correct: item.correct === 'A' },
+              { key: 'B', text: item.B, is_correct: item.correct === 'B' },
+              { key: 'C', text: item.C, is_correct: item.correct === 'C' },
+              { key: 'D', text: item.D, is_correct: item.correct === 'D' }
+            ]
+          });
+        }
+        alert(`Successfully imported and saved ${parsed.length} questions to database!`);
+        await refreshQuizzes();
+        switchTab('quizzes');
+      } catch(e) {
+        alert('Invalid JSON or import error: ' + e.message);
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+      lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>

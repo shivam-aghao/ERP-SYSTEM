@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ]
 
     SUPABASE_URL: str = "https://gftqvclenyplnuoocbwe.supabase.co"
-    SUPABASE_ANON_KEY: str = "sb_publishable_S1S9X948M9O5FyRmEeOISQ_FJQ4i6sv"
+    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY"
     SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     DATABASE_URL: str = "sqlite:///./student_erp.db"

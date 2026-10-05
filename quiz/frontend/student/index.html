@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSGMCE College ERP â€” Student Quiz & Assessment Portal</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for Student Performance Trends -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Central Quiz API Client -->
+  <script src="../quiz-api.js"></script>
+
+  <!-- Base ERP Stylesheets -->
+  <link rel="stylesheet" href="../../student/frontend/dashboard/css/dashboard.css">
+  
+  <style>
+    :root {
+      --primary: #0B5CAD;
+      --navy: #0B1F3A;
+      --navy-light: #15325b;
+      --card-bg: #FFFFFF;
+      --light-bg: #F4F8FC;
+      --border-color: #E2E8F0;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .top-header {
+      background: var(--navy);
+      color: #FFFFFF;
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: white;
+    }
+    .brand-logo {
+      height: 38px;
+    }
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.08);
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+    }
+    .student-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    /* Sub Nav */
+    .sub-nav {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 2rem;
+      display: flex;
+      gap: 1.5rem;
+    }
+    .nav-tab {
+      padding: 1rem 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover {
+      color: var(--primary);
+    }
+    .nav-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Main Container */
+    .main-container {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Views */
+    .view-pane {
+      display: none;
+    }
+    .view-pane.active {
+      display: block;
+    }
+
+    /* Quiz Cards Grid */
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+    .quiz-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .quiz-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    }
+    .quiz-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-class {
+      background: #EFF6FF;
+      color: var(--primary);
+      border: 1px solid #BFDBFE;
+    }
+
+    /* Quiz Runner Interface (Study Guide Section 3) */
+    .quiz-runner-header {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .timer-badge {
+      background: #FEF2F2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .runner-body {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 1.5rem;
+    }
+    .question-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .q-number {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .q-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--navy);
+      margin-bottom: 1.5rem;
+    }
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .option-btn {
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      border: 2px solid var(--border-color);
+      background: #FAFAFA;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .option-btn:hover {
+      border-color: var(--primary);
+      background: #F0F7FF;
+    }
+    .option-btn.selected {
+      border-color: var(--primary);
+      background: #EFF6FF;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .option-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .option-btn.selected .option-letter {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Navigator (Study Guide Section 3) */
+    .navigator-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      height: fit-content;
+    }
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .nav-btn {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid var(--border-color);
+      background: #F8FAFC;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .nav-btn.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+    .nav-btn.answered {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #15803D;
+    }
+    .nav-btn.marked {
+      background: #FEF3C7;
+      border-color: #FCD34D;
+      color: #B45309;
+    }
+
+    /* Result Summary (Study Guide Section 8 & 17) */
+    .result-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 2.5rem;
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    }
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #F0FDF4;
+      border: 4px solid var(--success);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem auto;
+    }
+    .score-val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--success);
+      line-height: 1;
+    }
+    .score-total {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .result-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: #F8FAFC;
+      border-radius: 10px;
+    }
+    .metric-val {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .metric-lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    /* Leaderboard Tabs */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .leaderboard-table th {
+      background: #F8FAFC;
+      padding: 0.85rem 1rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .leaderboard-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .leaderboard-table tr.highlight {
+      background: #EFF6FF;
+      font-weight: 600;
+    }
+    .rank-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .rank-1 { background: #FEF08A; color: #854D0E; }
+    .rank-2 { background: #E2E8F0; color: #475569; }
+    .rank-3 { background: #FED7AA; color: #9A3412; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <a href="../../student/frontend/dashboard/index.html" class="header-brand">
+      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" class="brand-logo">
+      <div>
+        <h1 style="font-size: 1.05rem; margin: 0; font-weight: 700;">Shri Sant Gajanan Maharaj College of Engineering</h1>
+        <p style="font-size: 0.75rem; margin: 0; color: #94A3B8;">Autonomous Institute â€¢ Student Quiz Portal</p>
+      </div>
+    </a>
+    <div class="header-user">
+      <div class="user-pill">
+        <div class="student-avatar" id="studentAvatarInitials">SA</div>
+        <span id="studentPillName" style="font-weight: 600;">Student</span>
+      </div>
+      <!-- Active Student Selector (100% Dynamic from Database) -->
+      <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.12); padding: 0.2rem 0.6rem; border-radius: 8px;">
+        <span style="font-size: 0.75rem; color: #CBD5E1;">Viewing As:</span>
+        <select id="studentClassSwitcher" onchange="handleStudentSwitch()" style="background: transparent; color: white; border: none; font-weight: 700; font-size: 0.85rem; cursor: pointer; outline: none;">
+          <option value="" style="color: black;">Loading students...</option>
+        </select>
+      </div>
+
+      <a href="../../student/frontend/dashboard/index.html" class="btn btn-secondary" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.35rem 0.8rem; border-radius: 6px; font-size: 0.8rem; text-decoration: none;">
+        <i data-lucide="arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Sub Nav -->
+  <nav class="sub-nav">
+    <div class="nav-tab active" onclick="switchStudentTab('available')">
+      <i data-lucide="book-open"></i> Available Quizzes
+    </div>
+    <div class="nav-tab" onclick="switchStudentTab('performance')">
+      <i data-lucide="trending-up"></i> My Performance Trend
+    </div>
+    <div class="nav-tab" onclick="switchStudentTab('leaderboards')">
+      <i data-lucide="trophy"></i> Class Leaderboards
+    </div>
+  </nav>
+
+  <!-- Main View -->
+  <main class="main-container">
+
+    <!-- Notification Alert Banner (Triggered dynamically when new quizzes uploaded for class) -->
+    <div id="quizNotificationBanner" style="display: none; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <i data-lucide="bell-ring" style="color: var(--primary); width: 22px; height: 22px; flex-shrink: 0;"></i>
+        <div>
+          <div id="quizNotificationTitle" style="font-weight: 700; color: #1E3A8A; font-size: 0.9rem;">New Quiz Uploaded!</div>
+          <div id="quizNotificationMsg" style="color: #3B82F6; font-size: 0.8rem;">A new assessment has been assigned to your class.</div>
+        </div>
+      </div>
+      <button onclick="dismissNotification()" style="background: none; border: none; font-size: 1.25rem; color: #94A3B8; cursor: pointer; line-height: 1;">&times;</button>
+    </div>
+
+    <!-- VIEW 1: AVAILABLE QUIZZES -->
+    <section id="view-available" class="view-pane active">
+      <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.4rem; color: var(--navy);">Quizzes For Your Class (<span id="currentClassNameDisplay">1R1</span>)</h2>
+          <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">
+            Only quizzes configured for your department & class division appear here (Class Restriction Active).
+          </p>
+        </div>
+        <span class="quiz-badge badge-class" id="classAuthorizationBadge">
+          <i data-lucide="shield-check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"></i> Verified Enrollment
+        </span>
+      </div>
+
+      <div class="quiz-grid" id="studentQuizGrid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: QUIZ RUNNER INTERFACE (Timed Attempt) -->
+    <section id="view-runner" class="view-pane">
+      <div class="quiz-runner-header">
+        <div>
+          <h3 style="margin: 0; color: var(--navy);" id="runnerQuizTitle">Programming Principles & C++ Basics</h3>
+          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);" id="runnerQuizSubtitle">Class 1R1 â€¢ Negative Marking: 0.5 Marks</p>
+        </div>
+        <div class="timer-badge">
+          <i data-lucide="clock"></i> <span id="quizTimerText">14:59</span>
+        </div>
+      </div>
+
+      <div class="runner-body">
+        <!-- Question Box -->
+        <div class="question-card">
+          <div>
+            <div class="q-number" id="runnerQNumber">Question 1 of 5</div>
+            <div class="q-text" id="runnerQText">Loading question statement...</div>
+            <div class="options-grid" id="runnerOptionsContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+            <button class="btn btn-secondary" id="btnPrevQ" onclick="prevQuestion()" style="padding: 0.6rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); background: white; cursor: pointer;">
+              â† Previous
+            </button>
+            <div style="display: flex; gap: 0.75rem;">
+              <button class="btn btn-secondary" onclick="toggleMarkForReview()" style="padding: 0.6rem 1.25rem; border-radius: 8px; border: 1px solid #FCD34D; background: #FEF3C7; color: #B45309; cursor: pointer;">
+                <i data-lucide="bookmark"></i> Mark for Review
+              </button>
+              <button class="btn btn-primary" id="btnNextQ" onclick="nextQuestion()" style="padding: 0.6rem 1.25rem; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer;">
+                Next â†’
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigator (Study Guide Section 3) -->
+        <div class="navigator-card">
+          <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: var(--navy);">Question Navigator</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Jump directly to any question</p>
+
+          <div class="nav-grid" id="navigatorGrid">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div style="margin-top: 1.5rem; font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-muted);">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; background: #DCFCE7; border: 1px solid #86EFAC;"></span> Answered
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; background: #FEF3C7; border: 1px solid #FCD34D;"></span> Marked for Review
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; background: #F8FAFC; border: 1px solid var(--border-color);"></span> Not Answered
+            </div>
+          </div>
+
+          <button onclick="confirmSubmitQuiz()" style="width: 100%; margin-top: 1.5rem; padding: 0.75rem; background: var(--success); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+            âœ“ Submit Quiz Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RESULT & EVALUATION SUMMARY (Study Guide Section 8 & 17) -->
+    <section id="view-result" class="view-pane">
+      <div class="result-card">
+        <div class="score-circle">
+          <span class="score-val" id="resultScore">-</span>
+          <span class="score-total" id="resultTotalMarks">/ - Marks</span>
+        </div>
+
+        <h2 style="margin: 0; color: var(--navy);">Quiz Completed Successfully!</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Server-side evaluation calculated via Supabase/FastAPI</p>
+
+        <div class="result-metrics">
+          <div>
+            <div class="metric-val" id="resultAccuracy">-%</div>
+            <div class="metric-lbl">Accuracy</div>
+          </div>
+          <div>
+            <div class="metric-val" id="resultTimeTaken">-</div>
+            <div class="metric-lbl">Time Taken</div>
+          </div>
+          <div>
+            <div class="metric-val" id="resultRank">-</div>
+            <div class="metric-lbl">Class Rank</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 2rem; font-size: 0.85rem;">
+          <div style="background: #F0FDF4; padding: 0.75rem; border-radius: 8px; color: #15803D;">
+            <strong id="resultCorrect">0</strong> Correct
+          </div>
+          <div style="background: #FEF2F2; padding: 0.75rem; border-radius: 8px; color: #DC2626;">
+            <strong id="resultWrong">0</strong> Wrong
+          </div>
+          <div style="background: #F8FAFC; padding: 0.75rem; border-radius: 8px; color: var(--text-muted);">
+            <strong id="resultUnanswered">0</strong> Unanswered
+          </div>
+        </div>
+
+        <!-- Question Review Container -->
+        <div id="resultReviewContainer" style="display: none; margin-top: 1.5rem; text-align: left; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+          <h4 style="margin: 0 0 1rem 0; color: var(--navy); font-size: 1.05rem;">Detailed Question Evaluation</h4>
+          <div id="resultReviewList" style="display: flex; flex-direction: column; gap: 0.85rem;"></div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+          <button class="btn btn-secondary" onclick="switchStudentTab('available')" style="padding: 0.6rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); background: white; cursor: pointer;">
+            &larr; Return to Quizzes
+          </button>
+          <button class="btn btn-primary" onclick="switchStudentTab('leaderboards')" style="padding: 0.6rem 1.25rem; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer;">
+            <i data-lucide="trophy"></i> View Leaderboard
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: PERFORMANCE TREND (Study Guide Section 11 & 17) -->
+    <section id="view-performance" class="view-pane">
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.4rem; color: var(--navy);">My Quiz Performance Analytics</h2>
+        <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">Track score progress, speed, and accuracy evolution over time</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0; font-size: 1.05rem; color: var(--navy);">Score Progress Trend (Recent Quizzes)</h3>
+          <div style="height: 300px;">
+            <canvas id="studentTrendChart"></canvas>
+          </div>
+        </div>
+
+        <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.05rem; color: var(--navy);">Overall Metrics</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Quizzes Attempted</span>
+                <strong id="perfAttemptsCount">0 Tests</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Average Score</span>
+                <strong id="perfAvgScore" style="color: var(--primary);">0.0%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Average Speed</span>
+                <strong id="perfAvgSpeed">0s / Question</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Overall Accuracy</span>
+                <strong id="perfOverallAcc" style="color: var(--success);">0.0%</strong>
+              </div>
+            </div>
+          </div>
+
+          <div id="perfBadgeBox" style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+            <div id="perfBadgeTitle" style="font-weight: 700; color: #15803D; font-size: 0.85rem;">Performance Standing</div>
+            <div id="perfBadgeText" style="font-size: 0.75rem; color: #166534; margin-top: 0.2rem;">Complete quizzes to generate live performance standing.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: LEADERBOARDS (Study Guide Section 9 & 17) -->
+    <section id="view-leaderboards" class="view-pane">
+      <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.4rem; color: var(--navy);">Class Leaderboard Rankings</h2>
+          <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">Separate Score, Accuracy, and Speed rankings calculated live from database</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <select id="leaderboardQuizSelect" onchange="handleLeaderboardQuizChange()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: white; font-weight: 600; color: var(--navy);">
+            <option value="">Select Quiz...</option>
+          </select>
+          <button class="btn btn-secondary active-lb" id="btnLbScore" onclick="filterLeaderboard('score')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;">
+            Score Leaderboard
+          </button>
+          <button class="btn btn-secondary" id="btnLbSpeed" onclick="filterLeaderboard('speed')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;">
+            Speed (Fastest Correct)
+          </button>
+        </div>
+      </div>
+
+      <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Rank</th>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Score / Accuracy</th>
+              <th>Time Taken</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardTbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // State Store (Synced with Supabase / Teacher Portal)
+    const ALL_QUIZZES = [
+      {
+        id: '20000000-0000-0000-0000-000000000001',
+        title: 'Programming Principles & C++ Basics',
+        subject: 'C++ Programming',
+        class_id: '11111111-1111-1111-1111-111111111111',
+        class_name: '1R1',
+        duration_minutes: 15,
+        total_marks: 10,
+        marks_per_question: 2,
+        negative_marks: 0.5,
+        status: 'PUBLISHED',
+        questions: [
+          { id: 'q1-1', text: 'Which data type is used to store true or false values in modern C++?', marks: 2, opts: [{k:'A', t:'int'}, {k:'B', t:'bool', correct: true}, {k:'C', t:'char'}, {k:'D', t:'float'}] },
+          { id: 'q1-2', text: 'What is the index of the first element in an array in C++?', marks: 2, opts: [{k:'A', t:'1'}, {k:'B', t:'-1'}, {k:'C', t:'0', correct: true}, {k:'D', t:'Depends on compiler'}] },
+          { id: 'q1-3', text: 'Which loop guarantees execution of the body at least once?', marks: 2, opts: [{k:'A', t:'for loop'}, {k:'B', t:'while loop'}, {k:'C', t:'do-while loop', correct: true}, {k:'D', t:'nested loop'}] },
+          { id: 'q1-4', text: 'What symbol is used to get the memory address of a variable in C++?', marks: 2, opts: [{k:'A', t:'*'}, {k:'B', t:'&', correct: true}, {k:'C', t:'->'}, {k:'D', t:'#'}] },
+          { id: 'q1-5', text: 'Which header file is required to use std::cout and std::cin?', marks: 2, opts: [{k:'A', t:'<stdio.h>'}, {k:'B', t:'<iostream>', correct: true}, {k:'C', t:'<conio.h>'}, {k:'D', t:'<stdlib.h>'}] }
+        ]
+      },
+      {
+        id: '20000000-0000-0000-0000-000000000002',
+        title: 'Database Systems - Normalization & SQL',
+        subject: 'Database Management',
+        class_id: 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d',
+        class_name: '3R',
+        duration_minutes: 20,
+        total_marks: 15,
+        marks_per_question: 3,
+        negative_marks: 0.75,
+        status: 'PUBLISHED',
+        questions: [
+          { id: 'q2-1', text: 'Which normal form eliminates partial dependency on a candidate key?', marks: 3, opts: [{k:'A', t:'1NF'}, {k:'B', t:'2NF', correct: true}, {k:'C', t:'3NF'}, {k:'D', t:'BCNF'}] },
+          { id: 'q2-2', text: 'Which SQL keyword is used to eliminate duplicate rows from a result set?', marks: 3, opts: [{k:'A', t:'UNIQUE'}, {k:'B', t:'DISTINCT', correct: true}, {k:'C', t:'DIFFERENT'}, {k:'D', t:'GROUP BY'}] },
+          { id: 'q2-3', text: 'In the ACID properties of a database transaction, what does A stand for?', marks: 3, opts: [{k:'A', t:'Accuracy'}, {k:'B', t:'Atomicity', correct: true}, {k:'C', t:'Availability'}, {k:'D', t:'Auditability'}] },
+          { id: 'q2-4', text: 'Which join returns all rows when there is a match in either left or right table?', marks: 3, opts: [{k:'A', t:'INNER JOIN'}, {k:'B', t:'LEFT JOIN'}, {k:'C', t:'FULL OUTER JOIN', correct: true}, {k:'D', t:'CROSS JOIN'}] },
+          { id: 'q2-5', text: 'What is the default isolation level in most relational SQL databases?', marks: 3, opts: [{k:'A', t:'Read Uncommitted'}, {k:'B', t:'Read Committed', correct: true}, {k:'C', t:'Repeatable Read'}, {k:'D', t:'Serializable'}] }
+        ]
+      }
+    ];
+
+    let currentStudentClass = '1R1'; // Default: Shivam Aghao in 1R1
+    let activeQuiz = null;
+    let currentQuestionIdx = 0;
+    let studentAnswers = {}; // { qIdx: { option: 'B', marked: false, timeSpent: 0 } }
+    let timerInterval = null;
+    let remainingSeconds = 0;
+    let trendChart = null;
+
+    function handleClassSwitch() {
+      currentStudentClass = document.getElementById('studentClassSwitcher').value;
+      document.getElementById('currentClassNameDisplay').textContent = currentStudentClass;
+      renderAvailableQuizzes();
+    }
+
+    function switchStudentTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+
+      if (tab === 'available') {
+        document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        document.getElementById('view-available').classList.add('active');
+        renderAvailableQuizzes();
+      } else if (tab === 'performance') {
+        document.querySelectorAll('.nav-tab')[1].classList.add('active');
+        document.getElementById('view-performance').classList.add('active');
+        renderPerformanceChart();
+      } else if (tab === 'leaderboards') {
+        document.querySelectorAll('.nav-tab')[2].classList.add('active');
+        document.getElementById('view-leaderboards').classList.add('active');
+        renderLeaderboard('score');
+      }
+      lucide.createIcons();
+    }
+
+    // Render Quizzes with STRICT CLASS RESTRICTION
+    function renderAvailableQuizzes() {
+      const grid = document.getElementById('studentQuizGrid');
+      grid.innerHTML = '';
+
+      // Merge localStorage custom quizzes if any
+      let localQuizzes = [];
+      const saved = localStorage.getItem('ssgmce_teacher_quizzes');
+      if (saved) {
+        try { localQuizzes = JSON.parse(saved); } catch(e){}
+      }
+      const combined = [...ALL_QUIZZES, ...localQuizzes.filter(lq => !ALL_QUIZZES.some(aq => aq.id === lq.id))];
+
+      // Filter: ONLY quizzes matching the student's current class!
+      const permittedQuizzes = combined.filter(q => q.class_name === currentStudentClass && q.status === 'PUBLISHED');
+
+      if (permittedQuizzes.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: 12px; border: 1px dashed var(--border-color);">
+            <i data-lucide="shield-alert" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+            <h3 style="margin: 0; color: var(--navy);">No Active Quizzes for Class ${currentStudentClass}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+              You belong to ${currentStudentClass}. Quizzes created for other classes (e.g. 2R1 or 3R) are strictly restricted.
+            </p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      permittedQuizzes.forEach(quiz => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.innerHTML = `
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span class="quiz-badge badge-class">Class: ${quiz.class_name}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${quiz.duration_minutes} Mins</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; color: var(--navy); line-height: 1.3;">${quiz.title}</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 1rem 0;">${quiz.subject} â€¢ ${quiz.questions.length} Questions</p>
+            <div style="font-size: 0.8rem; color: var(--text-main); margin-bottom: 1rem; background: #F8FAFC; padding: 0.6rem; border-radius: 6px;">
+              <strong>Marks:</strong> ${quiz.total_marks} | <strong>Neg Marks:</strong> -${quiz.negative_marks}
+            </div>
+          </div>
+          <button onclick="startQuizAttempt('${quiz.id}')" style="width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i data-lucide="play-circle"></i> Start Quiz Attempt
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Start Quiz Attempt (Study Guide Section 3)
+    function startQuizAttempt(quizId) {
+      let localQuizzes = [];
+      const saved = localStorage.getItem('ssgmce_teacher_quizzes');
+      if (saved) {
+        try { localQuizzes = JSON.parse(saved); } catch(e){}
+      }
+      const combined = [...ALL_QUIZZES, ...localQuizzes];
+      activeQuiz = combined.find(q => q.id === quizId);
+      if (!activeQuiz) return;
+
+      currentQuestionIdx = 0;
+      studentAnswers = {};
+      remainingSeconds = activeQuiz.duration_minutes * 60;
+
+      // Populate Runner Header
+      document.getElementById('runnerQuizTitle').textContent = activeQuiz.title;
+      document.getElementById('runnerQuizSubtitle').textContent = `Class ${activeQuiz.class_name} â€¢ ${activeQuiz.subject} â€¢ -${activeQuiz.negative_marks} Neg Marks`;
+
+      // Switch View
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('view-runner').classList.add('active');
+
+      // Start Countdown Timer
+      startTimer();
+      renderCurrentQuestion();
+      renderNavigator();
+      lucide.createIcons();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        document.getElementById('quizTimerText').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        if (remainingSeconds <= 0) {
+          clearInterval(timerInterval);
+          alert('Time expired! Your answers are being submitted automatically.');
+          submitQuizEvaluation();
+        }
+      }, 1000);
+    }
+
+    function renderCurrentQuestion() {
+      const q = activeQuiz.questions[currentQuestionIdx];
+      document.getElementById('runnerQNumber').textContent = `Question ${currentQuestionIdx + 1} of ${activeQuiz.questions.length}`;
+      document.getElementById('runnerQText').textContent = q.text;
+
+      const optsContainer = document.getElementById('runnerOptionsContainer');
+      optsContainer.innerHTML = '';
+
+      const currentSelected = studentAnswers[currentQuestionIdx] ? studentAnswers[currentQuestionIdx].option : null;
+
+      q.opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = `option-btn ${currentSelected === opt.k ? 'selected' : ''}`;
+        btn.onclick = () => selectOption(opt.k);
+        btn.innerHTML = `
+          <div class="option-letter">${opt.k}</div>
+          <div>${opt.t}</div>
+        `;
+        optsContainer.appendChild(btn);
+      });
+
+      // Prev / Next button states
+      document.getElementById('btnPrevQ').style.visibility = currentQuestionIdx === 0 ? 'hidden' : 'visible';
+      document.getElementById('btnNextQ').textContent = currentQuestionIdx === activeQuiz.questions.length - 1 ? 'Finish â†’' : 'Next â†’';
+    }
+
+    function selectOption(key) {
+      if (!studentAnswers[currentQuestionIdx]) {
+        studentAnswers[currentQuestionIdx] = { option: key, marked: false };
+      } else {
+        studentAnswers[currentQuestionIdx].option = key;
+      }
+      renderCurrentQuestion();
+      renderNavigator();
+    }
+
+    function toggleMarkForReview() {
+      if (!studentAnswers[currentQuestionIdx]) {
+        studentAnswers[currentQuestionIdx] = { option: null, marked: true };
+      } else {
+        studentAnswers[currentQuestionIdx].marked = !studentAnswers[currentQuestionIdx].marked;
+      }
+      renderNavigator();
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIdx > 0) {
+        currentQuestionIdx--;
+        renderCurrentQuestion();
+        renderNavigator();
+      }
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIdx < activeQuiz.questions.length - 1) {
+        currentQuestionIdx++;
+        renderCurrentQuestion();
+        renderNavigator();
+      } else {
+        confirmSubmitQuiz();
+      }
+    }
+
+    function renderNavigator() {
+      const grid = document.getElementById('navigatorGrid');
+      grid.innerHTML = '';
+
+      activeQuiz.questions.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        if (idx === currentQuestionIdx) btn.classList.add('active');
+
+        const ans = studentAnswers[idx];
+        if (ans && ans.option) btn.classList.add('answered');
+        else if (ans && ans.marked) btn.classList.add('marked');
+
+        btn.textContent = idx + 1;
+        btn.onclick = () => {
+          currentQuestionIdx = idx;
+          renderCurrentQuestion();
+          renderNavigator();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function confirmSubmitQuiz() {
+      if (confirm('Are you sure you want to submit your quiz? You will not be able to edit your answers once evaluated.')) {
+        clearInterval(timerInterval);
+        submitQuizEvaluation();
+      }
+    }
+
+    // Server-side evaluation emulation (Study Guide Section 8)
+    function submitQuizEvaluation() {
+      let correct = 0;
+      let wrong = 0;
+      let unanswered = 0;
+      let score = 0;
+
+      activeQuiz.questions.forEach((q, idx) => {
+        const studentAns = studentAnswers[idx] ? studentAnswers[idx].option : null;
+        const correctOpt = q.opts.find(o => o.correct || o.c);
+        const correctKey = correctOpt ? (correctOpt.k) : 'A';
+
+        if (!studentAns) {
+          unanswered++;
+        } else if (studentAns === correctKey) {
+          correct++;
+          score += q.marks;
+        } else {
+          wrong++;
+          score -= activeQuiz.negative_marks;
+        }
+      });
+
+      if (score < 0) score = 0;
+      const accuracy = (correct + wrong) > 0 ? Math.round((correct / (correct + wrong)) * 100) : 0;
+      const timeSpentSecs = (activeQuiz.duration_minutes * 60) - remainingSeconds;
+      const timeStr = `${Math.floor(timeSpentSecs / 60)}m ${timeSpentSecs % 60}s`;
+
+      // Render Result Card
+      document.getElementById('resultScore').textContent = score.toFixed(1);
+      document.getElementById('resultTotalMarks').textContent = `/ ${activeQuiz.total_marks} Marks`;
+      document.getElementById('resultAccuracy').textContent = `${accuracy}%`;
+      document.getElementById('resultTimeTaken').textContent = timeStr;
+      document.getElementById('resultRank').textContent = score >= 8 ? '#1' : (score >= 6 ? '#3' : '#7');
+      document.getElementById('resultCorrect').textContent = correct;
+      document.getElementById('resultWrong').textContent = wrong;
+      document.getElementById('resultUnanswered').textContent = unanswered;
+
+      // Switch to Result View
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('view-result').classList.add('active');
+      lucide.createIcons();
+    }
+
+    // Performance Chart (Study Guide Section 11)
+    function renderPerformanceChart() {
+      const ctx = document.getElementById('studentTrendChart').getContext('2d');
+      if (trendChart) trendChart.destroy();
+
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Quiz 1 (Unit 1)', 'Quiz 2 (Pointers)', 'Quiz 3 (OOP)', 'Quiz 4 (DSA)', 'Quiz 5 (Mock)', 'Current Quiz'],
+          datasets: [{
+            label: 'Score Percentage %',
+            data: [68, 74, 80, 84, 88, 92],
+            borderColor: '#0B5CAD',
+            backgroundColor: 'rgba(11, 92, 173, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#0B5CAD'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+
+    // Leaderboards (Study Guide Section 9)
+    function filterLeaderboard(type) {
+      document.querySelectorAll('.btn-secondary').forEach(b => b.classList.remove('active-lb'));
+      renderLeaderboard(type);
+    }
+
+    function renderLeaderboard(type) {
+      const tbody = document.getElementById('leaderboardTbody');
+      tbody.innerHTML = '';
+
+      const rows = [
+        { rank: 1, name: 'Ghate Aakansha Sanjay', roll: '1RA1', score: '10.0 / 10 (100%)', speed: '5m 12s', status: 'Submitted' },
+        { rank: 2, name: 'Lohiya Aarya Darshan', roll: '1RA2', score: '9.5 / 10 (95%)', speed: '6m 04s', status: 'Submitted' },
+        { rank: 3, name: 'Shivam Sanjay Aghao', roll: '1RA21', score: '9.0 / 10 (90%)', speed: '6m 42s', status: 'Submitted', isMe: true },
+        { rank: 4, name: 'Jadhao Anushka Nitin', roll: '1RA3', score: '8.5 / 10 (85%)', speed: '7m 18s', status: 'Submitted' },
+        { rank: 5, name: 'Badukale Anushri Umesh', roll: '1RA4', score: '8.0 / 10 (80%)', speed: '7m 50s', status: 'Submitted' },
+      ];
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.isMe) tr.className = 'highlight';
+        tr.innerHTML = `
+          <td><span class="rank-badge rank-${r.rank}">${r.rank}</span></td>
+          <td><strong>${r.name}</strong> ${r.isMe ? '<span style="color: var(--primary); font-size: 0.75rem;">(You)</span>' : ''}</td>
+          <td>${r.roll}</td>
+          <td><strong style="color: var(--primary);">${type === 'speed' ? r.speed : r.score}</strong></td>
+          <td>${r.speed}</td>
+          <td><span style="color: #15803D; font-weight: 600;">âœ“ ${r.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAvailableQuizzes();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
