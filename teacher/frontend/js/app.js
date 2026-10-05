@@ -16,8 +16,6 @@ const TeacherApp = {
     this.renderResultsView();
     this.renderNotificationsList();
     this.initLucideIcons();
-<<<<<<< HEAD
-=======
     this.checkBackendConnection();
   },
 
@@ -94,7 +92,6 @@ const TeacherApp = {
     } else {
       setStatus(false);
     }
->>>>>>> b7fdf147124e6c60efdfb815bf1069a2f8fc8816
   },
 
   initLucideIcons() {
