@@ -26,13 +26,19 @@ def get_supabase_client() -> Client:
 # ==============================================================================
 # 2. SQLALCHEMY ORM & LOCAL / DIRECT POSTGRES FALLBACK ENGINE
 # ==============================================================================
-# Handle SQLite connect_args
+# Handle SQLite connect_args and canonical database path
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+db_url = settings.DATABASE_URL
+if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+    if db_url in ("sqlite:///./ssgmce_erp.db", "sqlite:///ssgmce_erp.db"):
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        canonical_db = os.path.join(base_dir, "ssgmce_erp.db").replace("\\", "/")
+        db_url = f"sqlite:///{canonical_db}"
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
     echo=False
 )
