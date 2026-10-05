@@ -1911,10 +1911,9 @@
                     <div class="left-logo-container">
 
                         <img
-                            src="SSGMCElogo.png"
+                            src="./SSGMCElogo.png"
                             alt="SSGMCE College Logo"
                             class="left-logo"
-                            onerror="this.onerror=null; this.src='https://www.ssgmce.ac.in/favicon.svg';"
                         >
 
                     </div>
@@ -2032,10 +2031,9 @@
                 <div class="right-logo-container">
 
                     <img
-                        src="SSGMCElogo.png"
+                        src="./SSGMCElogo.png"
                         alt="SSGMCE Logo"
                         class="right-logo"
-                        onerror="this.onerror=null; this.src='https://www.ssgmce.ac.in/favicon.svg';"
                     >
 
                 </div>
@@ -2074,7 +2072,7 @@
 
                 <form
                     id="loginForm"
-                    onsubmit="handleLogin(event); return false;"
+                    onsubmit="handleLogin(event)"
                 >
 
 
@@ -2333,107 +2331,296 @@
            LOGIN
         ===================================================== */
 
-        async function handleLogin(event) {
-            if (event && event.preventDefault) {
-                event.preventDefault();
-            }
-            if (event && event.stopPropagation) {
-                event.stopPropagation();
-            }
+        function handleLogin(event) {
 
-            const userIdInput = document.getElementById("userId");
-            const passwordInput = document.getElementById("password");
-            const rememberMeInput = document.getElementById("rememberMe");
+            event.preventDefault();
 
-            const userId = userIdInput ? userIdInput.value.trim() : "";
-            const password = passwordInput ? passwordInput.value : "";
-            const rememberMe = rememberMeInput ? rememberMeInput.checked : false;
+            const userId =
+                document.getElementById("userId").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            const rememberMe =
+                document.getElementById("rememberMe").checked;
+
+
+            /* USER ID VALIDATION */
 
             if (!userId) {
-                alert("Please enter your Enrollment / User ID.");
+
+                alert(
+                    "Please enter your Enrollment / User ID."
+                );
+
                 return false;
             }
 
+
+            /* PASSWORD VALIDATION */
+
             if (password.length < 8) {
-                alert("Password must contain at least 8 characters.");
+
+                alert(
+                    "Password must contain at least 8 characters."
+                );
+
                 return false;
             }
 
             if (password.length > 20) {
-                alert("Password cannot contain more than 20 characters.");
+
+                alert(
+                    "Password cannot contain more than 20 characters."
+                );
+
                 return false;
             }
 
-            try {
-                const response = await fetch(
-                    "http://127.0.0.1:8000/api/auth/login",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            user_id: userId,
-                            password: password,
-                            remember_me: rememberMe
-                        })
-                    }
-                );
+
+            /*
+             * LOGIN API
+             *
+             * Backend must return the authenticated user's role:
+             *
+             * student
+             * employee
+             * faculty
+             */
+
+            fetch("http://127.0.0.1:8000/api/auth/login", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    user_id: userId,
+
+                    password: password,
+
+                    remember_me: rememberMe
+
+                })
+
+            })
+
+            .then(async (response) => {
 
                 const result = await response.json();
 
-                if (!response.ok || !result.success) {
-                    const errorMsg = result.detail || result.message || result.error || "Invalid User ID or Password.";
-                    alert(errorMsg);
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.detail ||
+                        result.message ||
+                        result.error ||
+                        "Invalid User ID or password."
+                    );
+                }
+
+                return result;
+
+            })
+
+            .then((result) => {
+
+                /*
+                 * IMPORTANT:
+                 * Role comes from backend/database.
+                 * We do NOT decide role from User ID.
+                 */
+
+                const role = String(
+                    result.data?.role ||
+                    result.data?.user?.role ||
+                    result.user?.role ||
+                    result.role ||
+                    ""
+                ).toLowerCase().trim();
+
+
+                if (!role) {
+
+                    alert(
+                        "Login successful, but account role was not received. Please contact the College ERP Administrator."
+                    );
+
+                    console.error(
+                        "Role missing from login response:",
+                        result
+                    );
+
                     return false;
                 }
 
-                // Save login data and access token
-                if (result.data) {
-                    const storage = rememberMe
+
+                /*
+                 * Storage
+                 */
+
+                const storage =
+                    rememberMe
                         ? localStorage
                         : sessionStorage;
 
+
+                storage.setItem(
+                    "user_role",
+                    role
+                );
+
+
+                /*
+                 * Save access token if backend returns one.
+                 */
+
+                const accessToken =
+                    result.access_token ||
+                    result.data?.access_token;
+
+                if (accessToken) {
+
                     storage.setItem(
-                        "loginData",
-                        JSON.stringify(result.data)
+                        "access_token",
+                        accessToken
+                    );
+                }
+
+
+                /*
+                 * ================================
+                 * 3 TYPES OF LOGIN
+                 * ================================
+                 *
+                 * 1. STUDENT
+                 * 2. EMPLOYEE
+                 * 3. FACULTY
+                 *
+                 * Employee and Faculty use the
+                 * Employee/Teacher Dashboard.
+                 */
+
+
+                let redirectUrl = "";
+
+
+                /* STUDENT LOGIN */
+
+                if (role === "student") {
+
+                    storage.setItem(
+                        "dashboard_permissions",
+                        JSON.stringify({
+                            student_dashboard: true,
+                            employee_dashboard: false,
+                            faculty_dashboard: false
+                        })
                     );
 
-                    if (result.data.access_token) {
-                        storage.setItem(
-                            "access_token",
-                            result.data.access_token
-                        );
-                    }
-                }
 
-                // Bulletproof dashboard redirect for any server root or file:// protocol
-                const pathname = window.location.pathname;
-                let redirectUrl;
-                if (window.location.protocol === "file:") {
-                    redirectUrl = pathname.includes("/frontend/")
-                        ? "../../student/frontend/dashboard/index.html"
-                        : "../../student/frontend/dashboard/index.html";
-                } else if (pathname.toLowerCase().includes("/erp-system/")) {
-                    redirectUrl = "/ERP-SYSTEM/student/frontend/dashboard/index.html";
-                } else {
                     redirectUrl = "/ERP-SYSTEM/student/frontend/dashboard/index.html";
                 }
 
-                window.location.href = redirectUrl;
-                return false;
 
-            } catch (error) {
-                console.error("Login error:", error);
+                /* EMPLOYEE LOGIN */
+
+                else if (role === "employee") {
+
+                    storage.setItem(
+                        "dashboard_permissions",
+                        JSON.stringify({
+                            student_dashboard: false,
+                            employee_dashboard: true,
+                            faculty_dashboard: false
+                        })
+                    );
+
+
+                    redirectUrl =
+                        "/ERP-SYSTEM/Teacher%20_dashbord/frontend/index.html";
+                }
+
+
+                /* FACULTY LOGIN */
+
+                else if (
+                    role === "faculty" ||
+                    role === "teacher"
+                ) {
+
+                    storage.setItem(
+                        "dashboard_permissions",
+                        JSON.stringify({
+                            student_dashboard: false,
+                            employee_dashboard: false,
+                            faculty_dashboard: true
+                        })
+                    );
+
+
+                    redirectUrl =
+                        "/ERP-SYSTEM/Teacher%20_dashbord/frontend/index.html";
+                }
+
+
+                /* UNKNOWN ROLE */
+
+                else {
+
+                    alert(
+                        "This account role is not configured. Please contact the College ERP Administrator."
+                    );
+
+                    console.error(
+                        "Unknown role:",
+                        role
+                    );
+
+                    return false;
+                }
+
+
+                console.log(
+                    "Login successful. Role:",
+                    role
+                );
+
+                console.log(
+                    "Redirecting to:",
+                    redirectUrl
+                );
+
+
+                /*
+                 * REDIRECT
+                 */
+
+                window.location.href =
+                    redirectUrl;
+
+            })
+
+            .catch((error) => {
+
+                console.error(
+                    "Login error:",
+                    error
+                );
 
                 alert(
-                    "Unable to connect to the authentication server. Please ensure the backend is running."
+                    error.message ||
+                    "Unable to login. Please check your User ID and password."
                 );
-                return false;
-            }
-        }
 
-        window.handleLogin = handleLogin;
+            });
+
+
+            return false;
+        }
 
 
         /* =====================================================
@@ -2471,8 +2658,6 @@
 
 
     </script>
+    </body>
 
-
-</body>
-
-</html> 
+</html>
