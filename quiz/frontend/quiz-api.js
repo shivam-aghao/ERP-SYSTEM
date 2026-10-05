@@ -185,7 +185,9 @@
       if (studentId) query += `&student_id=${encodeURIComponent(studentId)}`;
       try {
         const res = await this._fetch(`/student/quizzes${query}`);
-        return res.data || [];
+        if (Array.isArray(res.data)) return res.data;
+        if (res.data && Array.isArray(res.data.quizzes)) return res.data.quizzes;
+        return [];
       } catch (err) {
         console.error('Failed to fetch student quizzes:', err);
         return [];

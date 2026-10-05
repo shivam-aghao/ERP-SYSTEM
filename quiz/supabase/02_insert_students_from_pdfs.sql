@@ -113,7 +113,7 @@ VALUES
   ('59ed587a-ae0b-483e-a4df-4bf581f14872', '308834', '10', 'Ku. Gouri Pramodrao Deshmukh', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
   ('6e55a7e4-89f2-4356-b1b8-1ff978ff6700', '308746', '11', 'Ku. Jiya Jitendra Kamble', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
   ('24d1044e-1bd7-4cf5-83e7-00a3986aa3a0', '308835', '12', 'Ku. Krushna Suresh Falke', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
-  ('58e99a12-df4f-4711-abdc-7c2cf22b75a4', '308843', '13', 'Ku. Pallavi Ganesh Tade', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
+  ('58e99a12-df4f-4711-abdc-7c2cf22b75a4', '308843', '13', 'Ku. Pallavi GanX`esh Tade', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
   ('d097d72c-65d2-4f71-9f4e-9a2a0a1bda98', '309044', '14', 'Ku. Ritika Manojkumar Chaudhari', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
   ('cf30ab08-677b-4269-9306-c1bc86d40ae9', '308648', '15', 'Ku. Sakshi Jitendra Wagh', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),
   ('e453b50a-401d-4e55-85bb-413b62d2f27a', '308699', '16', 'Ku. Saloni Anil Ghodkhande', NULL, (SELECT id FROM public.departments WHERE code = 'CSE'), 'ac46eda9-4dd3-4432-ac69-d4b91b61aa4d'::uuid, 3, '1', 'ACTIVE'),

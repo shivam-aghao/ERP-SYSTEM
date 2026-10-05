@@ -14,6 +14,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Chart.js for Teacher Quiz Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Central Quiz API Client -->
+  <script src="../quiz-api.js"></script>
 
   <!-- Base ERP Stylesheets -->
   <link rel="stylesheet" href="../../teacher/frontend/css/variables.css">
@@ -783,7 +785,7 @@
         tr.innerHTML = `
           <td><strong>${q.title}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">${qCount} Questions</div></td>
           <td><span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700;">${q.class_name}</span></td>
-          <td>${q.subject}</td>
+          <td>${q.subject || q.subject_name || 'General'}</td>
           <td>${q.duration_minutes} mins</td>
           <td>${q.total_marks} marks</td>
           <td><span class="badge ${badgeClass}">${q.status}</span></td>
@@ -878,7 +880,7 @@
       if (!q) return;
 
       document.getElementById('manageQuizTitle').textContent = `Manage Questions: ${q.title}`;
-      document.getElementById('manageQuizSubtitle').textContent = `Class: ${q.class_name} • ${q.subject} • ${q.marks_per_question} Marks / Q`;
+      document.getElementById('manageQuizSubtitle').textContent = `Class: ${q.class_name} • ${q.subject || q.subject_name || 'General'} • ${q.marks_per_question || 2} Marks / Q`;
       document.getElementById('manageQuestionsModal').classList.add('active');
 
       try {
