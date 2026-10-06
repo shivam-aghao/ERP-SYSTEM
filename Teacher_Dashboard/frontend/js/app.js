@@ -732,24 +732,49 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // TIMETABLE MODULE VIEW
+  // TIMETABLE MODULE VIEW (DELEGATED TO TimetableModule)
   // ----------------------------------------------------
-  selectedTimetableDate: null,
+  _selectedTimetableDate: null,
+
+  get selectedTimetableDate() {
+    return (window.TimetableModule && window.TimetableModule.selectedDate) || this._selectedTimetableDate || null;
+  },
+
+  set selectedTimetableDate(val) {
+    this._selectedTimetableDate = val;
+    if (window.TimetableModule) {
+      window.TimetableModule.selectedDate = val;
+    }
+  },
 
   handleTimetableDateChange(dateVal) {
-    if (!dateVal) return;
-    this.selectedTimetableDate = dateVal;
-    this.renderTimetableView();
+    if (window.TimetableModule && typeof window.TimetableModule.handleDateChange === 'function') {
+      window.TimetableModule.handleDateChange(dateVal, "timetable-content");
+    } else {
+      if (!dateVal) return;
+      this.selectedTimetableDate = dateVal;
+      this.renderTimetableView();
+    }
   },
 
   resetTimetableToToday() {
-    this.selectedTimetableDate = (typeof AcademicDateUtils !== 'undefined')
-      ? AcademicDateUtils.getTodayISO()
-      : new Date().toISOString().split('T')[0];
-    this.renderTimetableView();
+    if (window.TimetableModule && typeof window.TimetableModule.resetToToday === 'function') {
+      window.TimetableModule.resetToToday("timetable-content");
+    } else {
+      this.selectedTimetableDate = (typeof AcademicDateUtils !== 'undefined')
+        ? AcademicDateUtils.getTodayISO()
+        : new Date().toISOString().split('T')[0];
+      this.renderTimetableView();
+    }
   },
 
   renderTimetableView() {
+    if (window.TimetableModule && typeof window.TimetableModule.render === 'function') {
+      window.TimetableModule.render("timetable-content");
+      this.initLucideIcons();
+      return;
+    }
+
     const container = document.getElementById("timetable-content");
     if (!container) return;
 
@@ -763,7 +788,6 @@ const TeacherApp = {
     const readableDate = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.formatReadableDate(selectedDate) : selectedDate;
     const todayISO = (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0];
     const isToday = (selectedDate === todayISO);
-
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
     container.innerHTML = `
@@ -773,8 +797,6 @@ const TeacherApp = {
             <h3 style="font-size:16px; color:var(--dark-navy);">Weekly Lecture & Lab Schedule</h3>
             <p style="font-size:12.5px; color:var(--text-muted);" id="timetable-academic-term">Academic Term: ${term.academicYear} • ${term.semesterType} Semester</p>
           </div>
-
-          <!-- Date Picker & Filter Controls -->
           <div class="timetable-date-filter-bar">
             <div class="timetable-picker-group">
               <i data-lucide="calendar" style="width:15px;height:15px; color:var(--primary-blue);"></i>
@@ -797,8 +819,6 @@ const TeacherApp = {
             </button>
           </div>
         </div>
-
-        <!-- Highlighting Banner -->
         <div class="timetable-schedule-status-banner">
           <div class="status-left">
             <span class="status-pulse-indicator"></span>
@@ -809,7 +829,6 @@ const TeacherApp = {
             ${isWeekend ? '<em>Note: Weekend - regular weekday schedule displayed below</em>' : `Highlighting <strong>${currentDayName}</strong> in the schedule`}
           </div>
         </div>
-
         <table class="timetable-table">
           <thead>
             <tr>
@@ -817,7 +836,7 @@ const TeacherApp = {
             </tr>
           </thead>
           <tbody>
-            ${TeacherERPData.timetable.map(row => {
+            ${(typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable ? TeacherERPData.timetable : []).map(row => {
               const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
               return `
               <tr class="${isHighlightRow ? 'active-day-row' : ''}">
@@ -835,20 +854,15 @@ const TeacherApp = {
                   const timeSlotHeader = timeHeaders[slotIndex + 1] || "09:00 - 10:30 AM";
                   const subjectName = slot.split('(')[0].trim();
                   const roomPart = slot.split('(')[1] ? slot.split('(')[1].replace(')', '').trim() : 'Room 201';
-
-                  // Determine class code
                   let classCode = '2R1';
                   if (subjectName.includes('Java')) classCode = '2R2';
                   else if (subjectName.includes('Database') || subjectName.includes('Operating')) classCode = '3R';
                   else if (subjectName.includes('Algorithms') || subjectName.includes('Project')) classCode = '4R';
 
-                  // Determine future day state relative to selectedDate or today
                   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
                   const todayDayIndex = new Date().getDay();
                   const rowDayIndex = daysOfWeek.indexOf(row.day);
                   const isFutureSlot = (selectedDate > todayISO) || (selectedDate === todayISO && rowDayIndex > todayDayIndex);
-
-                  // Session key for marked attendance check
                   const sessionKey = `${selectedDate}_${classCode}_${subjectName}`;
                   const isMarked = Boolean(
                     window.AttendanceMarkingManager && window.AttendanceMarkingManager.markedSessions && window.AttendanceMarkingManager.markedSessions[sessionKey]
