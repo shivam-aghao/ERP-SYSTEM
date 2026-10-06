@@ -17,8 +17,8 @@ const TeacherApp = {
     this.renderNotificationsList();
     this.initLucideIcons();
     this.checkBackendConnection();
-    if (typeof window.AttendanceDrawer !== 'undefined') {
-      window.AttendanceDrawer.init();
+    if (typeof window.AttendanceMarkingManager !== 'undefined') {
+      window.AttendanceMarkingManager.init();
     }
   },
 
@@ -422,9 +422,6 @@ const TeacherApp = {
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance");
         AttendanceWorkflow.init();
-        if (typeof AttendanceDrawer !== 'undefined') {
-          AttendanceDrawer.init();
-        }
         break;
       case 'attendance-mark':
         const markPage = document.getElementById("attendance-marking-page");
@@ -854,14 +851,13 @@ const TeacherApp = {
                   // Session key for marked attendance check
                   const sessionKey = `${selectedDate}_${classCode}_${subjectName}`;
                   const isMarked = Boolean(
-                    (window.AttendanceMarkingManager && window.AttendanceMarkingManager.markedSessions && window.AttendanceMarkingManager.markedSessions[sessionKey]) ||
-                    (window.AttendanceDrawer && window.AttendanceDrawer.markedSessions && window.AttendanceDrawer.markedSessions[sessionKey])
+                    window.AttendanceMarkingManager && window.AttendanceMarkingManager.markedSessions && window.AttendanceMarkingManager.markedSessions[sessionKey]
                   );
 
                   return `
                     <td>
                       <div class="timetable-slot ${isLab ? 'lab' : ''} ${isHighlightRow ? 'active-slot' : ''} ${isMarked ? 'slot-marked' : ''} ${isFutureSlot ? 'slot-future' : 'slot-clickable'}"
-                           ${!isFutureSlot ? `onclick="(window.AttendanceMarkingManager ? AttendanceMarkingManager.openFromSlot : AttendanceDrawer.openFromSlot)('${subjectName.replace(/'/g, "\\'")}', '${roomPart.replace(/'/g, "\\'")}', '${timeSlotHeader}', '${classCode}', '${selectedDate}')"` : ''}
+                           ${!isFutureSlot ? `onclick="AttendanceMarkingManager.openFromSlot('${subjectName.replace(/'/g, "\\'")}', '${roomPart.replace(/'/g, "\\'")}', '${timeSlotHeader}', '${classCode}', '${selectedDate}')"` : ''}
                            title="${isFutureSlot ? 'Future session cannot be marked ahead' : (isMarked ? 'Attendance Marked. Click to view/edit' : 'Click to mark attendance for this lecture')}">
                         <div class="slot-sub" style="display:flex; align-items:center; justify-content:space-between; gap:4px;">
                           <span>${subjectName}</span>

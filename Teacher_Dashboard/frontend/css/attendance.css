@@ -2787,51 +2787,7 @@
 /* ========================================================
    SHARED ATTENDANCE MARKING SLIDE-OUT DRAWER / MODAL
    ======================================================== */
-.attendance-drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 1000;
-  opacity: 0;
-  animation: drawerBackdropFadeIn 0.25s forwards ease;
-}
-
-@keyframes drawerBackdropFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.attendance-slide-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 580px;
-  max-width: 95vw;
-  background: #FFFFFF;
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
-  z-index: 1001;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  animation: drawerSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes drawerSlideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-.attendance-slide-drawer.closing {
-  animation: drawerSlideOutRight 0.25s ease-in forwards;
-}
-
-@keyframes drawerSlideOutRight {
-  from { transform: translateX(0); }
-  to { transform: translateX(100%); }
-}
+/* (Old slide-drawer and backdrop rules removed in favor of dedicated page view) */
 
 /* Drawer Header */
 .drawer-header {

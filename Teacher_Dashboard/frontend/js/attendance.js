@@ -1790,39 +1790,17 @@ const AttendanceWorkflow = {
 };
 
 /* ========================================================
-   SHARED ATTENDANCE MARKING DRAWER & MANUAL CONTROLLER
+   ATTENDANCE DRAWER COMPATIBILITY ADAPTER
+   (Routes legacy/manual triggers cleanly into AttendanceMarkingManager)
    ======================================================== */
 const AttendanceDrawer = {
-  activeContext: null,
-  activeMode: 'swipe', // 'swipe' or 'roster'
-  rosterRecords: {},
-  liveSwipedList: [],
-  markedSessions: {
-    // Seed initial marked session for display
-    "2026-10-05_2R1_Data Structures": {
-      sessionId: "SESS-20261005-2R1-01",
-      presentCount: 28,
-      absentCount: 2,
-      totalStudents: 30,
-      status: "submitted"
-    }
+  get markedSessions() {
+    return (window.AttendanceMarkingManager && window.AttendanceMarkingManager.markedSessions) ? window.AttendanceMarkingManager.markedSessions : {};
   },
-  pendingCount: 2,
-
+  set markedSessions(val) {
+    if (window.AttendanceMarkingManager) window.AttendanceMarkingManager.markedSessions = val;
+  },
   init() {
-    // Listen for hardware card reader enter key or scanner inputs
-    window.addEventListener('keydown', (e) => {
-      const drawer = document.getElementById('attendance-slide-drawer');
-      if (!drawer || drawer.style.display === 'none') return;
-      if (this.activeMode !== 'swipe') return;
-
-      const input = document.getElementById('rfid-card-input');
-      if (e.key === 'Enter' && input && document.activeElement === input) {
-        e.preventDefault();
-        this.handleSwipeSubmit();
-      }
-    });
-
     const today = (typeof AcademicDateUtils !== 'undefined')
       ? AcademicDateUtils.getTodayISO()
       : new Date().toISOString().split('T')[0];
@@ -1832,588 +1810,74 @@ const AttendanceDrawer = {
       dateInput.value = today;
       this.handleManualDateChange(today);
     }
+    if (window.AttendanceMarkingManager) {
+      AttendanceMarkingManager.init();
+    }
   },
-
   handleManualDateChange(dateStr) {
     if (!dateStr) return;
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    let dayName = "Monday";
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let dayName = 'Monday';
     const parts = dateStr.split('-');
     if (parts.length === 3) {
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      dayName = days[d.getDay()] || "Monday";
-    }
-    const chip = document.getElementById('manual-date-day-chip');
-    if (chip) chip.textContent = dayName;
-
-    const select = document.getElementById('manual-attendance-slot-select');
-    if (!select) return;
-    select.innerHTML = '';
-
-    const row = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable)
-      ? TeacherERPData.timetable.find(r => r.day.toLowerCase() === dayName.toLowerCase())
-      : null;
-
-    const timeHeaders = ["09:00 - 10:30 AM", "11:00 - 12:30 PM", "01:30 - 03:00 PM", "03:30 - 05:00 PM"];
-
-    let count = 0;
-    if (row && row.slots) {
-      row.slots.forEach((slot, idx) => {
-        if (slot !== "Free Slot") {
-          const subject = slot.split('(')[0].trim();
-          const room = slot.split('(')[1] ? slot.split('(')[1].replace(')', '').trim() : 'Room 201';
-          const time = timeHeaders[idx] || "09:00 - 10:30 AM";
-          let cls = '2R1';
-          if (subject.includes('Java')) cls = '2R2';
-          else if (subject.includes('Database') || subject.includes('Operating')) cls = '3R';
-          else if (subject.includes('Algorithms') || subject.includes('Project')) cls = '4R';
-
-          const opt = document.createElement('option');
-          opt.value = JSON.stringify({ subject, room, timeslot: time, classCode: cls, date: dateStr });
-          opt.textContent = `${subject} (${room}) • ${time} • Class ${cls}`;
-          select.appendChild(opt);
-          count++;
-        }
-      });
+      dayName = days[d.getDay()] || 'Monday';
     }
 
-    if (count === 0) {
-      const opt = document.createElement('option');
-      opt.value = "";
-      opt.textContent = `No scheduled classes on ${dayName}`;
-      select.appendChild(opt);
+    const dayChip = document.getElementById('manual-date-day-chip');
+    const today = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    if (dayChip) {
+      dayChip.textContent = (dateStr === today) ? 'Today' : dayName;
+      dayChip.className = (dateStr === today) ? 'manual-day-chip today' : 'manual-day-chip past';
+    }
+
+    const slotSelect = document.getElementById('manual-attendance-slot-select');
+    if (slotSelect && typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable) {
+      const daySchedule = TeacherERPData.timetable.find(t => t.day.toLowerCase() === dayName.toLowerCase());
+      if (daySchedule && daySchedule.slots) {
+        slotSelect.innerHTML = daySchedule.slots.map(s => {
+          const val = JSON.stringify({ subject: s.subject, room: s.room, timeslot: s.time, classCode: s.classCode || '2R1' });
+          return '<option value=\'' + val + '\'>' + s.time + ' — ' + s.subject + ' (' + s.room + ', Class ' + (s.classCode || '2R1') + ')</option>';
+        }).join('');
+      } else {
+        slotSelect.innerHTML = '<option value="">No classes scheduled for ' + dayName + '</option>';
+      }
     }
   },
-
-  switchMode(mode) {
-    this.activeMode = mode;
-    const btnSwipe = document.getElementById('drawer-tab-btn-swipe');
-    const btnRoster = document.getElementById('drawer-tab-btn-roster');
-    const viewSwipe = document.getElementById('drawer-view-swipe');
-    const viewRoster = document.getElementById('drawer-view-roster');
-
-    if (mode === 'swipe') {
-      if (btnSwipe) btnSwipe.classList.add('active');
-      if (btnRoster) btnRoster.classList.remove('active');
-      if (viewSwipe) viewSwipe.style.display = 'flex';
-      if (viewRoster) viewRoster.style.display = 'none';
-      const input = document.getElementById('rfid-card-input');
-      if (input) setTimeout(() => input.focus(), 100);
+  toggleOverrideMode(checked) {
+    const el = document.getElementById('manual-override-fields');
+    if (el) el.style.display = checked ? 'block' : 'none';
+  },
+  handleOverrideDeptChange(dept) {
+    const classSelect = document.getElementById('override-class-select');
+    if (!classSelect) return;
+    if (dept === 'CSE') {
+      classSelect.innerHTML = '<option value="2R1">2R1 (Second Year CSE Div 1)</option><option value="2R2">2R2 (Second Year CSE Div 2)</option><option value="3R">3R (Third Year CSE)</option><option value="4R">4R (Final Year CSE)</option>';
+    } else if (dept === 'IT') {
+      classSelect.innerHTML = '<option value="2IT">2IT (Second Year IT)</option><option value="3IT">3IT (Third Year IT)</option><option value="4IT">4IT (Final Year IT)</option>';
     } else {
-      if (btnRoster) btnRoster.classList.add('active');
-      if (btnSwipe) btnSwipe.classList.remove('active');
-      if (viewRoster) viewRoster.style.display = 'flex';
-      if (viewSwipe) viewSwipe.style.display = 'none';
-      this.renderStudents();
+      classSelect.innerHTML = '<option value="' + dept + '-1">' + dept + ' Div 1</option>';
     }
-    if (window.lucide) lucide.createIcons();
   },
-
   openFromSlot(subject, room, timeslot, classCode, date) {
-    this.open({ subject, room, timeslot, classCode, date });
+    return AttendanceMarkingManager.openFromSlot(subject, room, timeslot, classCode, date);
   },
-
-  async open(context) {
-    this.activeContext = context;
-    const sessionKey = `${context.date}_${context.classCode}_${context.subject}`;
-    const isMarked = Boolean(this.markedSessions[sessionKey]);
-
-    // Populate Header UI
-    const titleEl = document.getElementById('drawer-header-subject-title');
-    if (titleEl) titleEl.textContent = context.subject;
-
-    const classBadgeEl = document.getElementById('drawer-header-class-badge');
-    if (classBadgeEl) classBadgeEl.textContent = `Class ${context.classCode}`;
-
-    const dateEl = document.getElementById('drawer-header-date');
-    if (dateEl) dateEl.textContent = context.date;
-
-    const slotEl = document.getElementById('drawer-header-timeslot');
-    if (slotEl) slotEl.textContent = context.timeslot || 'Scheduled Slot';
-
-    const roomEl = document.getElementById('drawer-header-room');
-    if (roomEl) roomEl.textContent = context.room || 'Room 201';
-
-    const markedBadge = document.getElementById('drawer-header-marked-badge');
-    if (markedBadge) markedBadge.style.display = isMarked ? 'inline-flex' : 'none';
-
-    // Reset feedback & live list
-    this.liveSwipedList = [];
-    const banner = document.getElementById('swipe-feedback-banner');
-    if (banner) banner.style.display = 'none';
-
-    // Show drawer and backdrop
-    const backdrop = document.getElementById('attendance-drawer-backdrop');
-    const drawer = document.getElementById('attendance-slide-drawer');
-    if (backdrop) backdrop.style.display = 'block';
-    if (drawer) {
-      drawer.style.display = 'flex';
-      drawer.classList.remove('closing');
-    }
-
-    // Default to Swipe Card Mode
-    this.switchMode('swipe');
-
-    let students = [];
-    try {
-      const res = await fetch(`http://localhost:5001/api/teacher/class-roster?classId=${encodeURIComponent(context.classCode)}`);
-      if (res.ok) {
-        const json = await res.json();
-        students = json.data?.students || [];
-      }
-    } catch (e) {
-      console.warn('Backend student fetch error, using local data', e);
-    }
-
-    if (!students || students.length === 0) {
-      if (typeof TeacherERPData !== 'undefined' && TeacherERPData.getStudentsForClass) {
-        students = TeacherERPData.getStudentsForClass(context.classCode);
-      } else {
-        students = Array.from({ length: 30 }, (_, i) => ({
-          id: `b0000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`,
-          rollNo: i + 1,
-          rollFormatted: `${context.classCode}-${String(i + 1).padStart(2, '0')}`,
-          name: `Student ${i + 1}`,
-          enrollmentNo: `EN24CSE${String(i + 1).padStart(3, '0')}`,
-          cardId: `CARD-${context.classCode}-${String(i + 1).padStart(3, '0')}`,
-          classCode: context.classCode,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=Student${i + 1}`
-        }));
-      }
-    }
-
-    // Initialize roster records
-    this.rosterRecords = {};
-    const existing = this.markedSessions[sessionKey];
-
-    students.forEach(st => {
-      const prev = existing?.records?.find?.(r => r.rollNo === st.rollNo);
-      this.rosterRecords[st.rollNo] = {
-        student: st,
-        status: prev ? prev.status : 'present',
-        remarks: prev ? prev.remarks || '' : '',
-        markingMethod: prev ? (prev.markingMode || 'manual') : 'roster'
-      };
-    });
-
-    const rosterBadge = document.getElementById('drawer-roster-count-badge');
-    if (rosterBadge) rosterBadge.textContent = students.length;
-
-    this.renderStudents();
-    this.renderSwipeFeed();
-    this.updateStats();
-    if (window.lucide) lucide.createIcons();
-
-    // Auto-focus scanner input
-    const input = document.getElementById('rfid-card-input');
-    if (input) {
-      input.value = '';
-      setTimeout(() => input.focus(), 150);
-    }
+  loadManualStudents() {
+    return AttendanceMarkingManager.loadFromManualForm();
   },
-
-  handleSwipeSubmit() {
-    const input = document.getElementById('rfid-card-input');
-    if (!input) return;
-    const cardId = input.value.trim();
-    if (!cardId) return;
-    this.processSwipe(cardId);
-    input.value = '';
-    input.focus();
-  },
-
-  simulateSwipe(cardId) {
-    const input = document.getElementById('rfid-card-input');
-    if (input) input.value = cardId;
-    this.processSwipe(cardId);
-    if (input) {
-      input.value = '';
-      input.focus();
-    }
-  },
-
-  async processSwipe(cardId) {
-    if (!this.activeContext || !cardId) return;
-
-    try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/swipe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          classId: this.activeContext.classCode,
-          cardId: cardId.trim(),
-          date: this.activeContext.date,
-          timeSlot: this.activeContext.timeslot,
-          subject: this.activeContext.subject
-        })
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        const student = data.data?.student || data.student;
-        const rollNo = student.rollNo;
-
-        // 1. Cross-sync: Update underlying roster record to present
-        if (this.rosterRecords[rollNo]) {
-          this.rosterRecords[rollNo].status = 'present';
-          this.rosterRecords[rollNo].markingMethod = 'swipe';
-          this.rosterRecords[rollNo].markedAt = student.markedAt || new Date().toISOString();
-        } else {
-          this.rosterRecords[rollNo] = {
-            student,
-            status: 'present',
-            remarks: '',
-            markingMethod: 'swipe',
-            markedAt: student.markedAt || new Date().toISOString()
-          };
-        }
-
-        // 2. Prepend to liveSwipedList
-        this.liveSwipedList = [
-          {
-            student,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            status: 'present'
-          },
-          ...this.liveSwipedList.filter(item => item.student?.rollNo !== rollNo)
-        ];
-
-        // 3. Show Real-time Success Feedback Alert Card
-        this.showSwipeFeedback('success', data.message || `✅ ${student.name} marked Present`, student);
-
-        // 4. Update UI
-        this.renderSwipeFeed();
-        this.updateStats();
-      } else {
-        // Error Alert: Unregistered or Not Enrolled in this class
-        this.showSwipeFeedback('error', data.message || `Invalid Card ID: ${cardId}`, data.data || null);
-      }
-    } catch (err) {
-      this.showSwipeFeedback('error', `Connection error: ${err.message}`, null);
-    }
-  },
-
-  showSwipeFeedback(type, message, student) {
-    const banner = document.getElementById('swipe-feedback-banner');
-    if (!banner) return;
-
-    banner.className = `swipe-feedback-banner ${type === 'success' ? 'feedback-success' : 'feedback-error'}`;
-    banner.style.display = 'block';
-
-    const avatarUrl = student?.avatarUrl || (student?.name ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(student.name)}` : '');
-
-    banner.innerHTML = `
-      <div class="feedback-inner">
-        ${type === 'success' && avatarUrl ? `
-          <img src="${avatarUrl}" alt="${student.name}" class="feedback-avatar">
-        ` : `
-          <div class="feedback-icon-err">${type === 'success' ? '✓' : '!'}</div>
-        `}
-        <div class="feedback-text">
-          <h5>${message}</h5>
-          ${student ? `<p>Roll: <strong>${student.rollFormatted || student.rollNo}</strong> | Class: ${student.classCode || 'CSE'}</p>` : ''}
-        </div>
-      </div>
-    `;
-
-    if (window.lucide) lucide.createIcons();
-
-    if (this._feedbackTimeout) clearTimeout(this._feedbackTimeout);
-    this._feedbackTimeout = setTimeout(() => {
-      if (banner) banner.style.display = 'none';
-    }, 5000);
-  },
-
-  renderSwipeFeed() {
-    const container = document.getElementById('swipe-live-feed-list');
-    const countEl = document.getElementById('swipe-feed-count');
-    if (countEl) countEl.textContent = this.liveSwipedList.length;
-
-    if (!container) return;
-
-    if (this.liveSwipedList.length === 0) {
-      container.innerHTML = `
-        <div class="feed-empty-state">
-          <i data-lucide="radio" style="width:24px;height:24px;color:#94a3b8;"></i>
-          <p>No cards swiped yet for this session.</p>
-          <small>Students will appear here instantly as they tap their cards.</small>
-        </div>
-      `;
-      if (window.lucide) lucide.createIcons();
-      return;
-    }
-
-    container.innerHTML = this.liveSwipedList.map(item => `
-      <div class="feed-item">
-        <div class="feed-item-left">
-          <img src="${item.student?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=' + item.student?.name}" class="feed-item-avatar">
-          <div>
-            <div class="feed-item-name">${item.student?.name}</div>
-            <div class="feed-item-roll">Roll #${item.student?.rollFormatted || item.student?.rollNo} • ${item.student?.enrollmentNo || 'EN24'}</div>
-          </div>
-        </div>
-        <div class="feed-item-right">
-          <span class="feed-item-time">${item.timestamp}</span>
-          <span class="feed-item-tag">Present</span>
-        </div>
-      </div>
-    `).join('');
-    if (window.lucide) lucide.createIcons();
-  },
-
-  renderStudents(filteredList = null) {
-    const container = document.getElementById('drawer-student-list');
-    if (!container) return;
-
-    const list = filteredList || Object.values(this.rosterRecords);
-    const countEl = document.getElementById('drawer-footer-total-count');
-    if (countEl) countEl.textContent = Object.keys(this.rosterRecords).length;
-
-    if (list.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:30px; color:#94A3B8; font-size:13px;">No matching students found</div>`;
-      return;
-    }
-
-    const html = list.map(rec => {
-      const st = rec.student;
-      const status = rec.status;
-      const rollNo = st.rollNo;
-      const rollFormatted = st.rollFormatted || `${rollNo}`;
-      const name = st.name;
-      const initials = name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-      const remarks = rec.remarks || '';
-      const isSwipe = rec.markingMethod === 'swipe';
-
-      return `
-        <div class="drawer-student-card status-${status}" id="drawer-student-card-${rollNo}">
-          <div class="student-card-top-row">
-            <div class="student-identity-group">
-              <div class="student-avatar-badge">${initials}</div>
-              <div class="student-meta-info">
-                <div class="student-name-text">
-                  ${name}
-                  ${rollNo === 21 ? '<span style="background:#E0E7FF; color:#4338CA; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px;">CR</span>' : ''}
-                  ${isSwipe ? '<span style="background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; font-size:10px; font-weight:800; padding:1px 6px; border-radius:10px; margin-left:6px;">RFID</span>' : ''}
-                </div>
-                <div class="student-roll-sub">Roll #${rollFormatted} • ${st.enrollmentNo || 'CSE'}</div>
-              </div>
-            </div>
-
-            <!-- Segmented Status Toggle -->
-            <div class="segmented-status-control">
-              <button type="button" class="btn-status-seg ${status === 'present' ? 'active-present' : ''}" onclick="AttendanceDrawer.toggleStudent(${rollNo}, 'present')">
-                <i data-lucide="check" style="width:12px;height:12px;"></i> Present
-              </button>
-              <button type="button" class="btn-status-seg ${status === 'absent' ? 'active-absent' : ''}" onclick="AttendanceDrawer.toggleStudent(${rollNo}, 'absent')">
-                <i data-lucide="x" style="width:12px;height:12px;"></i> Absent
-              </button>
-              <button type="button" class="btn-status-seg ${status === 'late' ? 'active-late' : ''}" onclick="AttendanceDrawer.toggleStudent(${rollNo}, 'late')">
-                <i data-lucide="clock" style="width:12px;height:12px;"></i> Late
-              </button>
-            </div>
-          </div>
-
-          <!-- Remarks Row -->
-          <div class="student-remarks-wrapper">
-            <i data-lucide="message-square" style="width:13px;height:13px; color:#94A3B8;"></i>
-            <input type="text" class="student-remarks-input" placeholder="Optional remark (e.g. Medical, Late Pass, Duty)..."
-                   value="${remarks.replace(/"/g, '&quot;')}"
-                   onchange="AttendanceDrawer.updateRemark(${rollNo}, this.value)">
-            <div class="remarks-quick-chips">
-              <button type="button" class="chip-tag-btn" onclick="AttendanceDrawer.setPresetRemark(${rollNo}, 'Medical Leave')">Medical</button>
-              <button type="button" class="chip-tag-btn" onclick="AttendanceDrawer.setPresetRemark(${rollNo}, 'Late Pass')">Late Pass</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    container.innerHTML = html;
-  },
-
-  toggleStudent(rollNo, status) {
-    if (!this.rosterRecords[rollNo]) return;
-    this.rosterRecords[rollNo].status = status;
-    this.rosterRecords[rollNo].markingMethod = 'manual';
-
-    const card = document.getElementById(`drawer-student-card-${rollNo}`);
-    if (card) {
-      card.className = `drawer-student-card status-${status}`;
-      const buttons = card.querySelectorAll('.btn-status-seg');
-      if (buttons && buttons.length === 3) {
-        buttons[0].className = `btn-status-seg ${status === 'present' ? 'active-present' : ''}`;
-        buttons[1].className = `btn-status-seg ${status === 'absent' ? 'active-absent' : ''}`;
-        buttons[2].className = `btn-status-seg ${status === 'late' ? 'active-late' : ''}`;
-      }
-    }
-
-    this.updateStats();
-  },
-
-  updateRemark(rollNo, remark) {
-    if (this.rosterRecords[rollNo]) {
-      this.rosterRecords[rollNo].remarks = remark;
-    }
-  },
-
-  setPresetRemark(rollNo, remark) {
-    if (this.rosterRecords[rollNo]) {
-      this.rosterRecords[rollNo].remarks = remark;
-      const card = document.getElementById(`drawer-student-card-${rollNo}`);
-      if (card) {
-        const input = card.querySelector('.student-remarks-input');
-        if (input) input.value = remark;
-      }
-    }
-  },
-
-  markAll(status) {
-    Object.keys(this.rosterRecords).forEach(rollNo => {
-      this.rosterRecords[rollNo].status = status;
-      this.rosterRecords[rollNo].markingMethod = 'bulk';
-    });
-    this.renderStudents();
-    this.updateStats();
-    if (window.lucide) lucide.createIcons();
-  },
-
-  filterStudents(query) {
-    const q = (query || '').toLowerCase().trim();
-    if (!q) {
-      this.renderStudents();
-    } else {
-      const filtered = Object.values(this.rosterRecords).filter(rec => {
-        const st = rec.student;
-        return st.name.toLowerCase().includes(q) || String(st.rollNo).includes(q) || (st.rollFormatted && st.rollFormatted.toLowerCase().includes(q));
-      });
-      this.renderStudents(filtered);
-    }
-    if (window.lucide) lucide.createIcons();
-  },
-
-  updateStats() {
-    const list = Object.values(this.rosterRecords);
-    const total = list.length;
-    const present = list.filter(r => r.status === 'present').length;
-    const absent = list.filter(r => r.status === 'absent').length;
-    const late = list.filter(r => r.status === 'late').length;
-    const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
-
-    const pEl = document.getElementById('drawer-stat-present');
-    const aEl = document.getElementById('drawer-stat-absent');
-    const lEl = document.getElementById('drawer-stat-late');
-    const rEl = document.getElementById('drawer-stat-rate');
-    const rfidCounter = document.getElementById('rfid-present-counter');
-
-    if (pEl) pEl.textContent = `${present} Present`;
-    if (aEl) aEl.textContent = `${absent} Absent`;
-    if (lEl) lEl.textContent = `${late} Late`;
-    if (rEl) rEl.textContent = `${rate}%`;
-    if (rfidCounter) rfidCounter.textContent = `${present} / ${total}`;
-  },
-
   close() {
-    const drawer = document.getElementById('attendance-slide-drawer');
-    const backdrop = document.getElementById('attendance-drawer-backdrop');
-    if (drawer) {
-      drawer.classList.add('closing');
-      setTimeout(() => {
-        drawer.style.display = 'none';
-        drawer.classList.remove('closing');
-        if (backdrop) backdrop.style.display = 'none';
-      }, 250);
-    } else if (backdrop) {
-      backdrop.style.display = 'none';
-    }
-  },
-
-  async submit() {
-    if (!this.activeContext) return;
-    const submitBtn = document.getElementById('btn-drawer-submit');
-    if (submitBtn) {
-      submitBtn.setAttribute('disabled', 'true');
-      submitBtn.innerHTML = `
-        <div style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></div>
-        <span>Saving...</span>
-      `;
-    }
-
-    const records = Object.values(this.rosterRecords).map(r => ({
-      studentId: r.student.id || `b0000000-0000-0000-0000-${String(r.student.rollNo).padStart(12, '0')}`,
-      rollNo: r.student.rollNo,
-      status: r.status,
-      remarks: r.remarks || '',
-      markingMode: r.markingMethod || this.activeMode
-    }));
-
-    const payload = {
-      classId: this.activeContext.classCode,
-      classCode: this.activeContext.classCode,
-      subject: this.activeContext.subject,
-      subjectCode: this.activeContext.subject,
-      room: this.activeContext.room,
-      date: this.activeContext.date,
-      lectureDate: this.activeContext.date,
-      timeSlot: this.activeContext.timeslot,
-      lectureTime: this.activeContext.timeslot,
-      markingMode: this.activeMode,
-      records
-    };
-
-    let sessionSaved = null;
-    try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        sessionSaved = json.data;
-      }
-    } catch (e) {
-      console.warn('API error while submitting bulk attendance, saving locally:', e);
-    }
-
-    if (!sessionSaved) {
-      sessionSaved = {
-        sessionId: `SESS-${this.activeContext.date}-${this.activeContext.classCode}`,
-        records,
-        status: 'submitted'
-      };
-    }
-
-    // Save into marked sessions
-    const sessionKey = `${this.activeContext.date}_${this.activeContext.classCode}_${this.activeContext.subject}`;
-    this.markedSessions[sessionKey] = sessionSaved;
-
-    // Toast notification
-    const presentCount = records.filter(r => r.status === 'present').length;
-    if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
-      TeacherApp.showToast(`🎉 Attendance saved successfully for ${this.activeContext.subject} (${this.activeContext.classCode}): ${presentCount}/${records.length} Present!`);
-    }
-
-    // Re-render timetable to show checkmark
-    if (typeof TeacherApp !== 'undefined' && TeacherApp.renderTimetableView) {
-      TeacherApp.renderTimetableView();
-    }
-
-    if (submitBtn) {
-      submitBtn.removeAttribute('disabled');
-      submitBtn.innerHTML = `
-        <i data-lucide="check-check" style="width:16px;height:16px;"></i>
-        <span>Submit Attendance</span>
-      `;
-    }
-
-    this.close();
+    AttendanceMarkingManager.backToTimetable();
   }
 };
 
-// Initialize AttendanceDrawer on DOM ready
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  AttendanceDrawer.init();
+  if (window.AttendanceDrawer) {
+    AttendanceDrawer.init();
+  }
   if (window.AttendanceMarkingManager) {
     AttendanceMarkingManager.init();
   }
