@@ -1,0 +1,23 @@
+/* SSGMCE Student Quiz Stylesheet */
+@import url('./student-dashboard.css');
+
+.quiz-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+.question-box {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.quiz-timer-badge {
+  background: #FEF3C7;
+  color: #B45309;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+}

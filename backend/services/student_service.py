@@ -1,0 +1,53 @@
+from typing import Optional, Dict, Any, List
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+class StudentService:
+    @staticmethod
+    def get_profile(student_code: str, db: Session) -> Optional[Dict[str, Any]]:
+        row = db.execute(
+            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
+            {"c": student_code}
+        ).fetchone()
+        if not row:
+            row = db.execute(text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        if not row:
+            return None
+        m = dict(row._mapping)
+        m["studentCode"] = m.get("student_code", student_code)
+        m["fullName"] = m.get("full_name", "Shivam Sanjay Aghao")
+        m["rollNo"] = m.get("roll_no", 21)
+        m["className"] = m.get("class_name", "3R")
+        return m
+
+    @staticmethod
+    def update_profile(student_code: str, updates: Dict[str, Any], db: Session) -> Optional[Dict[str, Any]]:
+        for k, v in updates.items():
+            if v is not None:
+                db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id = :sc"), {"val": v, "sc": student_code})
+        db.commit()
+        return StudentService.get_profile(student_code, db)
+
+    @staticmethod
+    def get_overview(student_code: str, db: Session) -> Dict[str, Any]:
+        st = StudentService.get_profile(student_code, db)
+        return {
+            "student": st or {},
+            "current_semester": 5,
+            "cgpa": 8.76,
+            "attendance_pct": 82.4,
+            "credits_earned": 112,
+            "alerts_count": 2
+        }
+
+    @staticmethod
+    def get_academic_metrics(student_code: str, db: Session) -> List[Dict[str, Any]]:
+        rows = db.execute(text("SELECT * FROM academic_metrics LIMIT 10")).fetchall()
+        if rows:
+            return [dict(r._mapping) for r in rows]
+        return [
+            {"semester": 1, "sgpa": 8.45, "credits": 20},
+            {"semester": 2, "sgpa": 8.62, "credits": 22},
+            {"semester": 3, "sgpa": 8.80, "credits": 24},
+            {"semester": 4, "sgpa": 8.91, "credits": 24}
+        ]

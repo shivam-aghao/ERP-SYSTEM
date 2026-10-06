@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSGMCE College ERP — Admin Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/admin-dashboard.css">
+</head>
+<body>
+  <header class="admin-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <img src="../images/SSGMCElogo.png" alt="Logo" style="height: 40px;">
+      <div>
+        <h2 style="margin: 0; font-size: 1.15rem;">SSGMCE College ERP</h2>
+        <span style="font-size: 0.8rem; color: #94A3B8;">System Administration Portal</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <span>Admin Console</span>
+      <button onclick="ERP_AUTH.logout()" style="background: #EF4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <h2>System Overview</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div>Total Students</div>
+        <div id="statStudents" class="stat-value">--</div>
+      </div>
+      <div class="stat-card">
+        <div>Total Faculty</div>
+        <div id="statTeachers" class="stat-value">--</div>
+      </div>
+      <div class="stat-card">
+        <div>Active Classes</div>
+        <div id="statClasses" class="stat-value">--</div>
+      </div>
+      <div class="stat-card">
+        <div>Total Quizzes</div>
+        <div id="statQuizzes" class="stat-value">--</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Active Academic Classes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Class Name</th>
+            <th>Class Code</th>
+            <th>Academic Year</th>
+            <th>Semester</th>
+            <th>Division</th>
+          </tr>
+        </thead>
+        <tbody id="classesTableBody">
+          <tr><td colspan="5" style="text-align: center;">Loading classes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin-api.js"></script>
+  <script src="../js/admin-dashboard.js"></script>
+</body>
+</html>

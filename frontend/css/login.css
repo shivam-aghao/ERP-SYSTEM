@@ -1,0 +1,17 @@
+/* SSGMCE Login Portal Stylesheet */
+:root {
+  --primary-dark: #0B5CAD;
+  --primary: #1565C0;
+  --accent: #00A6D5;
+  --dark-text: #081c30;
+  --normal-text: #647F9C;
+  --border: #D9E6F1;
+  --white: #FFFFFF;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f4f8;
+}

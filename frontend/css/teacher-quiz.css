@@ -1,0 +1,20 @@
+/* SSGMCE Teacher Quiz Management Stylesheet */
+@import url('./teacher-variables.css');
+@import url('./teacher-base.css');
+@import url('./teacher-layout.css');
+@import url('./teacher-components.css');
+
+.quiz-mgmt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.quiz-card {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
