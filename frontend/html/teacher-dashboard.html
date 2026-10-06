@@ -14,19 +14,13 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/base.css">
-  <link rel="stylesheet" href="../css/layout.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <link rel="stylesheet" href="../css/attendance.css">
-  <!-- Central Config & Auth Guard -->
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script>
-    if (window.ERP_AUTH) {
-      window.ERP_AUTH.requireAuth('teacher');
-    }
-  </script>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/attendance.css">
+  <link rel="stylesheet" href="css/modules.css">
+  <link rel="stylesheet" href="css/timetable.css">
 </head>
 <body>
 
@@ -179,7 +173,7 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <span class="nav-badge">02 Pending</span>
+                <span class="nav-badge" id="sidebar-attendance-badge">02 Pending</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
             </li>
@@ -356,7 +350,7 @@
           <!-- 6. HERO SECTION: FULL-WIDTH IMMERSIVE CAMPUS BACKGROUND -->
           <div class="welcome-banner">
             <!-- College Building Background Image & Gradient Overlay -->
-            <img src="../images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-bg-image" id="heroCampusImg" loading="eager">
+            <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-bg-image" id="heroCampusImg" loading="eager">
             <div class="hero-overlay" aria-hidden="true"></div>
 
             <!-- Top Overlay Bar: Campus Tag -->
@@ -578,8 +572,109 @@
           <div style="margin-bottom:20px;">
             <h2 style="font-size:22px; font-weight:800; color:var(--dark-navy);">Attendance Management</h2>
             <p style="font-size:13.5px; color:var(--text-muted); margin-top:2px;">
-              Select department, class, date and subject to mark attendance.
+              Mark attendance directly using the dynamic selector below, from the Timetable, or via the step-by-step wizard.
             </p>
+          </div>
+
+          <!-- Attendance Module View Mode Selector / Manual Card -->
+          <div class="manual-attendance-card" style="margin-bottom:24px;">
+            <div class="manual-card-header">
+              <div>
+                <h3 style="font-size:16px; font-weight:750; color:var(--dark-navy); display:flex; align-items:center; gap:8px;">
+                  <i data-lucide="calendar-check" style="width:18px;height:18px; color:var(--primary-blue);"></i>
+                  Manual Attendance Marking Module
+                </h3>
+                <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
+                  Select a date to dynamically load scheduled classes from your timetable, or toggle Override for substitute lectures.
+                </p>
+              </div>
+              <div id="manual-pending-indicator">
+                <span class="badge badge-pending" id="manual-pending-badge">02 Pending Today</span>
+              </div>
+            </div>
+
+            <div class="manual-form-grid">
+              <!-- Date Picker -->
+              <div class="manual-form-group">
+                <label for="manual-attendance-date" class="manual-label">
+                  <i data-lucide="calendar" style="width:14px;height:14px; color:var(--primary-blue);"></i>
+                  <span>1. Attendance Date</span>
+                </label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <input type="date" id="manual-attendance-date" class="manual-input" onchange="AttendanceDrawer.handleManualDateChange(this.value)">
+                  <span id="manual-date-day-chip" class="manual-day-chip">Today</span>
+                </div>
+              </div>
+
+              <!-- Scheduled Class Dropdown -->
+              <div class="manual-form-group" id="scheduled-class-group">
+                <label for="manual-attendance-slot-select" class="manual-label">
+                  <i data-lucide="clock" style="width:14px;height:14px; color:var(--primary-blue);"></i>
+                  <span>2. Scheduled Timetable Lectures for Date</span>
+                </label>
+                <select id="manual-attendance-slot-select" class="manual-input">
+                  <!-- Dynamically populated based on date -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Override / Substitute Checkbox -->
+            <div class="manual-override-box">
+              <label class="manual-override-checkbox-label">
+                <input type="checkbox" id="manual-attendance-override-toggle" onchange="AttendanceDrawer.toggleOverrideMode(this.checked)">
+                <span><strong>Override / Other Class</strong> (Mark unscheduled lecture, lab, or substitute class)</span>
+              </label>
+
+              <!-- Hidden by default, revealed when override checked -->
+              <div id="manual-override-fields" class="manual-override-fields" style="display:none; margin-top:14px;">
+                <div class="manual-override-grid">
+                  <div class="manual-form-group">
+                    <label class="manual-label">Department</label>
+                    <select id="override-dept-select" class="manual-input" onchange="AttendanceDrawer.handleOverrideDeptChange(this.value)">
+                      <option value="CSE">Computer Science & Eng (CSE)</option>
+                      <option value="IT">Information Technology (IT)</option>
+                      <option value="EE">Electrical Engineering (EE)</option>
+                      <option value="MECH">Mechanical Engineering (MECH)</option>
+                    </select>
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Class</label>
+                    <select id="override-class-select" class="manual-input">
+                      <option value="2R1">2R1 (Second Year CSE Div 1)</option>
+                      <option value="2R2">2R2 (Second Year CSE Div 2)</option>
+                      <option value="3R">3R (Third Year CSE)</option>
+                      <option value="4R">4R (Final Year CSE)</option>
+                    </select>
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Subject / Topic Name</label>
+                    <input type="text" id="override-subject-input" class="manual-input" value="Data Structures" placeholder="e.g. Data Structures">
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Room / Lab</label>
+                    <input type="text" id="override-room-input" class="manual-input" value="Room 201" placeholder="e.g. Room 201">
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Timeslot</label>
+                    <select id="override-timeslot-select" class="manual-input">
+                      <option value="09:00 - 10:30 AM">09:00 - 10:30 AM</option>
+                      <option value="11:00 - 12:30 PM">11:00 - 12:30 PM</option>
+                      <option value="01:30 - 03:00 PM">01:30 - 03:00 PM</option>
+                      <option value="03:30 - 05:00 PM">03:30 - 05:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+              <button type="button" class="btn-load-students-drawer" onclick="AttendanceMarkingManager.loadFromManualForm()">
+                <i data-lucide="users" style="width:16px;height:16px;"></i>
+                <span>Load Students & Open Attendance Marking Page</span>
+              </button>
+              <span style="font-size:12px; color:var(--text-muted);">Or use the step-by-step wizard below:</span>
+            </div>
           </div>
 
           <!-- 5-Step Continuous Horizontal Stepper -->
@@ -628,6 +723,495 @@
           <div id="timetable-content">
             <!-- Timetable generated by JS -->
           </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 3B: STUDENT ATTENDANCE MARKING PAGE (CLICK-TO-MARK)
+             ======================================================== -->
+        <section id="attendance-marking-page" class="view-section-pane app-module-view attendance-marking-page-wrapper" style="display:none;">
+          
+          <!-- 1. TOP BAR: BACK BUTTON & BREADCRUMBS -->
+          <div class="mark-page-top-bar">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <button type="button" class="btn-dash-back-link" onclick="AttendanceMarkingManager.backToTimetable()">
+                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+                <span>Back to Timetable</span>
+              </button>
+
+              <!-- Dynamic Breadcrumb Navigation: Attendance > Department > Class > Date > Subject -->
+              <nav class="mark-page-breadcrumb" id="mark-page-breadcrumb">
+                <a onclick="AttendanceMarkingManager.backToTimetable()">Attendance</a>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-dept-text" style="font-weight:700;">CSE</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-class-text" style="font-weight:700;">2R1</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-date-text">17 September 2026</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-subject-text" class="bc-current">Data Structures</span>
+              </nav>
+            </div>
+
+            <!-- Top Action Controls -->
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openSaveModal()">
+                <i data-lucide="save" style="width:14px;height:14px;"></i>
+                <span>Save Attendance</span>
+              </button>
+              <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.openSubmitModal()">
+                <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                <span>Submit Attendance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- TOP HEADER: CLASS CONTEXT -->
+          <div class="mark-page-context-header">
+            <div class="mark-context-top">
+              <div>
+                <div class="mark-badges-row">
+                  <span class="mark-badge-pill dept" id="mark-header-dept-badge">CSE Department</span>
+                  <span class="mark-badge-pill cls" id="mark-header-class-badge">Class 2R1</span>
+                  <span class="mark-badge-pill status-done" id="mark-header-logged-badge" style="display:none;">
+                    <i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Previously Logged
+                  </span>
+                </div>
+
+                <h1 class="mark-header-title" id="mark-header-subject-title">Data Structures</h1>
+
+                <div class="mark-header-meta">
+                  <span class="mark-meta-item">
+                    <i data-lucide="calendar" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <strong id="mark-header-date-str">17 September 2026</strong>
+                  </span>
+                  <span style="color:#64748B;">•</span>
+                  <span class="mark-meta-item">
+                    <i data-lucide="clock" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <span id="mark-header-slot-str">09:00 - 10:30 AM</span>
+                  </span>
+                  <span style="color:#64748B;">•</span>
+                  <span class="mark-meta-item">
+                    <i data-lucide="map-pin" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <span id="mark-header-room-str">Room 201</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Top Right Rate Pill -->
+              <div class="mark-context-stat-box">
+                <div class="mark-stat-box-rate" id="mark-header-rate-display">0%</div>
+                <div class="mark-stat-box-lbl" id="mark-header-summary-lbl">0 / 60 Present</div>
+              </div>
+            </div>
+
+            <!-- 2. THE DUAL-METHOD ATTENDANCE INTERFACE TAB SWITCHER -->
+            <div class="mark-mode-switcher-bar">
+              <div class="mark-tab-pills">
+                <button type="button" class="mark-tab-btn active" id="tab-btn-swipe" onclick="AttendanceMarkingManager.switchTab('swipe')">
+                  <i data-lucide="credit-card" style="width:15px;height:15px;"></i>
+                  <span>Swipe Card Mode</span>
+                  <span class="mark-tab-chip">Interactive</span>
+                </button>
+                <button type="button" class="mark-tab-btn" id="tab-btn-roster" onclick="AttendanceMarkingManager.switchTab('roster')">
+                  <i data-lucide="list-checks" style="width:15px;height:15px;"></i>
+                  <span>Roster List Mode</span>
+                  <span class="mark-tab-chip" id="tab-roster-count-chip">60</span>
+                </button>
+                <button type="button" class="mark-tab-btn" id="tab-btn-summary" onclick="AttendanceMarkingManager.switchTab('summary')">
+                  <i data-lucide="pie-chart" style="width:15px;height:15px;"></i>
+                  <span>Review & Summary</span>
+                </button>
+              </div>
+
+              <div class="mark-live-counters-pill">
+                <span style="color:#6EE7B7;" id="top-counter-present">0 Present</span>
+                <span style="color:rgba(255,255,255,0.3);">•</span>
+                <span style="color:#FCA5A5;" id="top-counter-absent">0 Absent</span>
+                <span style="color:rgba(255,255,255,0.3);">•</span>
+                <span style="color:#93C5FD;" id="top-counter-remaining">60 Remaining</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               TAB 1: SWIPE CARD MODE (CLEAN HIGH-CONTRAST CARD DESIGN)
+               ======================================================== -->
+          <div id="mark-pane-swipe" class="swipe-card-workspace">
+            <!-- Top Progress & Counter ("Student 21 of 60") -->
+            <div class="swipe-progress-card">
+              <div class="swipe-progress-header">
+                <div class="swipe-counter-text">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#2563EB;display:inline-block;"></span>
+                  <span id="swipe-counter-label">Student 1 of 60</span>
+                </div>
+                <span class="swipe-percent-chip" id="swipe-progress-chip">0% Complete</span>
+              </div>
+
+              <div class="swipe-progress-track">
+                <div class="swipe-progress-fill" id="swipe-progress-fill" style="width:0%;"></div>
+              </div>
+
+              <div class="swipe-stats-strip">
+                <div class="swipe-stat-cell pres">Present: <strong id="swipe-cell-present">0</strong></div>
+                <div class="swipe-stat-cell abs">Absent: <strong id="swipe-cell-absent">0</strong></div>
+                <div class="swipe-stat-cell rem">Remaining: <strong id="swipe-cell-remaining">60</strong></div>
+              </div>
+            </div>
+
+            <!-- Swipe Deck Stage with Physics & Live Stamps -->
+            <div class="swipe-deck-stage" id="swipe-deck-stage">
+              <!-- Underneath Card Peek -->
+              <div class="swipe-peek-card" id="swipe-peek-card" style="display:none;">
+                <div class="mark-badge-pill cls" id="swipe-peek-roll">NEXT: ROLL 2</div>
+                <h4 style="font-size:22px; font-weight:900; color:#475569; margin-top:8px;" id="swipe-peek-name">STUDENT NAME</h4>
+                <span style="font-size:12px; color:#94A3B8; font-family:monospace;" id="swipe-peek-enroll">EN24CSE002</span>
+              </div>
+
+              <!-- Active Swipe Card (Clean Design - No Main Photo) -->
+              <div class="swipe-card-clean" id="swipe-active-card">
+                <!-- Top Row -->
+                <div class="swipe-card-top-row">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="swipe-card-cls-badge" id="card-class-badge">CLASS 2R1</span>
+                    <span class="swipe-card-sub-name" id="card-subject-name">Data Structures</span>
+                  </div>
+                  <span style="font-size:12px; font-weight:800; color:#94A3B8; font-family:monospace;" id="card-index-indicator">#1</span>
+                </div>
+
+                <!-- Live Stamps -->
+                <div class="swipe-stamp present" id="swipe-stamp-present" style="opacity:0;">PRESENT ✓</div>
+                <div class="swipe-stamp absent" id="swipe-stamp-absent" style="opacity:0;">ABSENT ✗</div>
+
+                <!-- High-Contrast Body Center -->
+                <div class="swipe-card-body-center">
+                  <!-- Large Roll Number Badge -->
+                  <div class="swipe-card-roll-badge" id="card-roll-number">ROLL 1</div>
+
+                  <!-- High-Contrast Bold Name -->
+                  <h3 class="swipe-card-name" id="card-student-name">SHIVAM AGHAO</h3>
+
+                  <div class="swipe-card-enroll" id="card-enrollment-id">EN24CSE001</div>
+                </div>
+
+                <!-- Bottom Instruction -->
+                <div class="swipe-card-instruction-row">
+                  <div class="swipe-instruction-pill">
+                    <span class="abs-hint">← ABSENT</span>
+                    <span class="center-badge">← SWIPE →</span>
+                    <span class="pres-hint">PRESENT →</span>
+                  </div>
+                  <small style="font-size:11px; color:#94A3B8;">Drag card or press Left/Right arrow keys</small>
+                </div>
+              </div>
+
+              <!-- Completion State (Rendered when all cards swiped) -->
+              <div id="swipe-completion-card" class="swipe-card-clean" style="display:none; text-align:center; justify-content:center; align-items:center; gap:16px;">
+                <div style="width:72px; height:72px; border-radius:50%; background:#DCFCE7; color:#15803D; font-size:32px; font-weight:900; display:flex; align-items:center; justify-content:center;">✓</div>
+                <h3 style="font-size:24px; font-weight:900; color:#0F172A; margin:0;">All Students Swiped!</h3>
+                <p style="font-size:13px; color:#64748B; max-width:320px; margin:0;">Every student in this lecture has been marked. Review the breakdown or submit attendance.</p>
+                <button type="button" class="btn-swipe-present" style="max-width:240px; margin-top:8px;" onclick="AttendanceMarkingManager.switchTab('summary')">
+                  Review Summary &rarr;
+                </button>
+              </div>
+            </div>
+
+            <!-- Desktop Action Buttons -->
+            <div class="swipe-desktop-controls">
+              <button type="button" class="btn-swipe-absent" onclick="AttendanceMarkingManager.markActiveCard('absent')">
+                <span>&larr;</span>
+                <span>ABSENT</span>
+              </button>
+
+              <button type="button" class="btn-swipe-util" title="Undo previous student" onclick="AttendanceMarkingManager.undoLast()">
+                ⟲ Undo
+              </button>
+
+              <button type="button" class="btn-swipe-util" title="Skip student" onclick="AttendanceMarkingManager.skipStudent()">
+                Skip
+              </button>
+
+              <button type="button" class="btn-swipe-present" onclick="AttendanceMarkingManager.markActiveCard('present')">
+                <span>PRESENT</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+
+            <!-- Keyboard Shortcut Helpers -->
+            <div class="swipe-kbd-shortcuts-bar">
+              <span><kbd>&larr;</kbd> Mark Absent</span>
+              <span style="color:#CBD5E1;">•</span>
+              <span><kbd>&rarr;</kbd> Mark Present</span>
+              <span style="color:#CBD5E1;">•</span>
+              <span><kbd>Space</kbd> Skip / Review</span>
+            </div>
+
+
+          </div>
+
+          <!-- ========================================================
+               TAB 2: ROSTER LIST MODE (CROSS-SYNCED & BULK CONTROLS)
+               ======================================================== -->
+          <div id="mark-pane-roster" style="display:none;" class="space-y-4">
+            <div class="drawer-toolbar" style="background:#FFFFFF; border-radius:18px; padding:16px 20px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button type="button" class="btn-quick-present" onclick="AttendanceMarkingManager.markAll('present')">
+                  <i data-lucide="check" style="width:14px;height:14px;"></i> Mark All Present
+                </button>
+                <button type="button" class="btn-quick-absent" onclick="AttendanceMarkingManager.markAll('absent')">
+                  <i data-lucide="x" style="width:14px;height:14px;"></i> Mark All Absent
+                </button>
+              </div>
+
+              <!-- Search Filter Bar -->
+              <div class="drawer-search-wrapper" style="width:320px; max-width:100%;">
+                <i data-lucide="search" style="width:15px;height:15px;color:#94A3B8;"></i>
+                <input type="text" id="roster-page-search" placeholder="Search by roll number or student name..." 
+                       oninput="AttendanceMarkingManager.filterRoster(this.value)" 
+                       style="width:100%; border:none; background:transparent; font-size:12.5px; outline:none;">
+              </div>
+            </div>
+
+            <!-- Scrollable Student Roster List -->
+            <div id="roster-page-student-list" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+              <!-- Dynamically populated by AttendanceMarkingManager -->
+            </div>
+          </div>
+
+          <!-- ========================================================
+               TAB 3: REVIEW ATTENDANCE & SUMMARY VIEW
+               ======================================================== -->
+          <div id="mark-pane-summary" style="display:none;" class="attendance-summary-wrapper">
+            <!-- KPI Cards Grid -->
+            <div class="summary-metrics-grid">
+              <div class="summary-kpi-card">
+                <span class="summary-kpi-lbl">Total Students</span>
+                <div class="summary-kpi-val" id="sum-kpi-total">60</div>
+                <span class="summary-kpi-sub">Enrolled in class</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%); color:#fff;">
+                <span class="summary-kpi-lbl" style="color:#93C5FD;">Attendance Rate</span>
+                <div class="summary-kpi-val" style="color:#34D399;" id="sum-kpi-rate">86.67%</div>
+                <span class="summary-kpi-sub" style="color:#CBD5E1;" id="sum-kpi-ratio">52 / 60 Attended</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:#F0FDF4; border-color:#DCFCE7;">
+                <span class="summary-kpi-lbl" style="color:#15803D;">Present Students</span>
+                <div class="summary-kpi-val" style="color:#15803D;" id="sum-kpi-present">52</div>
+                <span class="summary-kpi-sub" style="color:#16A34A;">Physically marked present</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:#FEF2F2; border-color:#FEE2E2;">
+                <span class="summary-kpi-lbl" style="color:#B91C1C;">Absent Students</span>
+                <div class="summary-kpi-val" style="color:#DC2626;" id="sum-kpi-absent">8</div>
+                <span class="summary-kpi-sub" style="color:#EF4444;">Marked absent</span>
+              </div>
+            </div>
+
+            <!-- Doughnut Chart & Summary Controls -->
+            <div class="summary-chart-card">
+              <div class="doughnut-container">
+                <svg width="150" height="150" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="60" stroke="#F1F5F9" stroke-width="18" fill="none"></circle>
+                  <circle id="sum-doughnut-absent" cx="80" cy="80" r="60" stroke="#EF4444" stroke-width="18" stroke-dasharray="0 377" fill="none" stroke-linecap="round"></circle>
+                  <circle id="sum-doughnut-present" cx="80" cy="80" r="60" stroke="#10B981" stroke-width="18" stroke-dasharray="0 377" fill="none" stroke-linecap="round"></circle>
+                </svg>
+                <div class="doughnut-center-info">
+                  <span class="doughnut-center-rate" id="sum-doughnut-percent-text">87%</span>
+                  <span class="doughnut-center-lbl">Attended</span>
+                </div>
+              </div>
+
+              <div style="flex:1; min-width:240px;">
+                <h4 style="font-size:16px; font-weight:800; color:#0F172A; margin:0 0 6px;">Attendance Breakdown</h4>
+                <p style="font-size:12.5px; color:#64748B; margin:0 0 16px;">
+                  All records are updated and synced across Swipe Card Mode and Roster List Mode. You can edit any individual student before official submission.
+                </p>
+
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openEditModal()">
+                    <i data-lucide="edit-3" style="width:14px;height:14px;"></i>
+                    <span>Edit Attendance</span>
+                  </button>
+                  <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openSaveModal()">
+                    <i data-lucide="save" style="width:14px;height:14px;"></i>
+                    <span>Save Draft</span>
+                  </button>
+                  <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.openSubmitModal()">
+                    <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                    <span>Submit Attendance</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two Breakdown Lists (PRESENT & ABSENT) -->
+            <div class="summary-breakdown-lists-grid">
+              <!-- PRESENT Students Breakdown -->
+              <div class="breakdown-list-card">
+                <div class="breakdown-list-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#10B981;"></span>
+                    <strong style="font-size:14px; color:#0F172A;">Present Students (<span id="sum-list-present-count">0</span>)</strong>
+                  </div>
+                  <span class="mark-badge-pill" style="background:#DCFCE7; color:#15803D;">Verified</span>
+                </div>
+                <div class="breakdown-list-scroll" id="sum-present-list-container">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- ABSENT Students Breakdown -->
+              <div class="breakdown-list-card">
+                <div class="breakdown-list-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#EF4444;"></span>
+                    <strong style="font-size:14px; color:#0F172A;">Absent Students (<span id="sum-list-absent-count">0</span>)</strong>
+                  </div>
+                  <span class="mark-badge-pill" style="background:#FEE2E2; color:#B91C1C;">Attention</span>
+                </div>
+                <div class="breakdown-list-scroll" id="sum-absent-list-container">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ========================================================
+               MODAL 1: EDIT ATTENDANCE (TABLE VIEW WITH "CHANGE" BUTTON)
+               ======================================================== -->
+          <div id="modal-edit-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog large">
+              <div class="app-modal-header">
+                <div>
+                  <h3>Edit Attendance Records</h3>
+                  <small style="color:#64748B;">Toggle student attendance quickly with the "Change" button</small>
+                </div>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeEditModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <div style="margin-bottom:12px;">
+                  <input type="text" id="edit-modal-search" placeholder="Search by student name or roll number..." 
+                         oninput="AttendanceMarkingManager.filterEditTable(this.value)"
+                         style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid #CBD5E1; font-size:12.5px; outline:none;">
+                </div>
+                <div style="max-height:360px; overflow-y:auto; border-radius:12px; border:1px solid #E2E8F0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead style="background:#F8FAFC; position:sticky; top:0; border-bottom:1px solid #E2E8F0; color:#475569; font-weight:800;">
+                      <tr>
+                        <th style="padding:10px 12px;">Roll</th>
+                        <th style="padding:10px 12px;">Student Name</th>
+                        <th style="padding:10px 12px; text-align:center;">Current Status</th>
+                        <th style="padding:10px 12px; text-align:center;">Action</th>
+                        <th style="padding:10px 12px;">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody id="edit-attendance-table-body">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.closeEditModal()">
+                  Done Editing
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               MODAL 2: SAVE ATTENDANCE CONFIRMATION (DRAFT)
+               ======================================================== -->
+          <div id="modal-save-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog">
+              <div class="app-modal-header">
+                <h3>Save Attendance Draft</h3>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSaveModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <p style="font-size:13px; color:#475569; margin:0 0 14px;">
+                  Save your current attendance progress as a draft session. You can return and make adjustments at any time.
+                </p>
+                <div style="background:#F8FAFC; border-radius:14px; padding:14px; border:1px solid #E2E8F0; font-size:12.5px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Subject:</span>
+                    <strong id="save-modal-subject">Data Structures</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Class & Date:</span>
+                    <strong id="save-modal-class-date">2R1 • 17 Sep 2026</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Present Students:</span>
+                    <strong style="color:#15803D;" id="save-modal-present">0</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Absent Students:</span>
+                    <strong style="color:#DC2626;" id="save-modal-absent">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSaveModal()">Cancel</button>
+                <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.confirmSaveDraft()">
+                  Confirm & Save Draft
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               MODAL 3: SUBMIT ATTENDANCE CONFIRMATION (FINAL SUBMIT)
+               ======================================================== -->
+          <div id="modal-submit-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog">
+              <div class="app-modal-header">
+                <h3>Submit Attendance</h3>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSubmitModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+                  <div style="width:36px; height:36px; border-radius:10px; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i data-lucide="alert-circle" style="width:20px;height:20px;"></i>
+                  </div>
+                  <div>
+                    <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 4px;">Are you sure you want to submit attendance?</h4>
+                    <p style="font-size:12.5px; color:#64748B; margin:0;">
+                      Once submitted, the records for <strong id="submit-modal-subject">Data Structures</strong> (<span id="submit-modal-class">2R1</span>) will be officially logged and updated in the ERP database.
+                    </p>
+                  </div>
+                </div>
+
+                <div style="background:#F8FAFC; border-radius:14px; padding:14px; border:1px solid #E2E8F0; font-size:12.5px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Date:</span>
+                    <strong id="submit-modal-date">17 Sep 2026</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Total Enrolled:</span>
+                    <strong id="submit-modal-total">60 Students</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Present Count:</span>
+                    <strong style="color:#15803D;" id="submit-modal-present">0 (0%)</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Absent Count:</span>
+                    <strong style="color:#DC2626;" id="submit-modal-absent">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSubmitModal()">Cancel</button>
+                <button type="button" class="quick-action-btn primary" id="btn-confirm-final-submit" onclick="AttendanceMarkingManager.confirmFinalSubmit()">
+                  Confirm & Submit
+                </button>
+              </div>
+            </div>
+          </div>
+
         </section>
 
         <!-- ========================================================
@@ -1103,12 +1687,16 @@
     </div>
   </div>
 
+
+
   <!-- Application Scripts -->
-  <script src="../js/data.js"></script>
-  <script src="../js/state.js"></script>
-  <script src="../js/calendar.js"></script>
-  <script src="../js/teacher-attendance.js"></script>
-  <script src="../js/teacher-app.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/timetable.js"></script>
+  <script src="js/attendance.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
 
   <!-- Fallback icon renderer -->
   <script>

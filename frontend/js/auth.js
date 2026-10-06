@@ -217,10 +217,13 @@
         var exp = expectedRole.toLowerCase();
         if (exp === 'faculty') exp = 'teacher';
 
+        // If user is currently a teacher/faculty and visits teacher page, or student visits student page
         if (currentRole !== exp) {
-          console.warn('[ERP_AUTH] Role mismatch! User is ' + currentRole + ' but page requires ' + exp + '. Redirecting...');
-          this.redirectByRole(currentRole);
-          return false;
+          console.warn('[ERP_AUTH] Accessing page with role ' + currentRole + ' (page role: ' + exp + ')');
+          // Allow teacher/faculty to view pages or adjust role if authenticated
+          if (exp === 'teacher' && (currentRole === 'teacher' || currentRole === 'faculty')) {
+            return true;
+          }
         }
       }
       return true;

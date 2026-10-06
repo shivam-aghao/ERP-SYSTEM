@@ -2182,11 +2182,20 @@
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
-            window.location.replace(window.ERP_AUTH.getRedirectForRole());
-        }
+        // Reset existing cached role/session on login page so user can choose who to log in as
+        try {
+            localStorage.removeItem('ssgmce_user');
+            localStorage.removeItem('ssgmce_erp_session');
+            localStorage.removeItem('ssgmce_user_session');
+            localStorage.removeItem('ssgmce_active_role');
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('dashboard_permissions');
+            sessionStorage.clear();
+        } catch (e) {}
+    </script>
 
 
+    <script>
         /* =====================================================
            PASSWORD SHOW / HIDE
         ===================================================== */
