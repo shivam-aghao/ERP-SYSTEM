@@ -944,16 +944,7 @@
               <span><kbd>Space</kbd> Skip / Review</span>
             </div>
 
-            <!-- Hardware Card Reader Fallback Input -->
-            <div style="background:#0F172A; border-radius:18px; padding:12px 18px; color:#fff; display:flex; align-items:center; gap:10px;">
-              <i data-lucide="scan" style="width:16px;height:16px;color:#60A5FA;"></i>
-              <input type="text" id="hardware-card-reader-input" placeholder="RFID Reader Active — Tap card or enter CARD-2R1-001..." 
-                     style="flex:1; background:#1E293B; border:1px solid #334155; border-radius:10px; padding:8px 12px; color:#fff; font-size:12px; outline:none;" 
-                     onkeydown="if(event.key==='Enter'){event.preventDefault(); AttendanceMarkingManager.handleHardwareInput(this.value); this.value='';}">
-              <button type="button" class="btn-rfid-mark" onclick="AttendanceMarkingManager.handleHardwareInput(document.getElementById('hardware-card-reader-input').value); document.getElementById('hardware-card-reader-input').value='';">
-                Mark
-              </button>
-            </div>
+
           </div>
 
           <!-- ========================================================

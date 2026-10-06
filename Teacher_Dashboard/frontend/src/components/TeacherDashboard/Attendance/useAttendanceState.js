@@ -3,8 +3,6 @@ import { useState, useCallback, useMemo } from 'react';
 /**
  * Prototype College ERP Data Model:
  * Department -> Classes -> Students -> Subjects -> Timetable
- * Designed for immediate in-memory prototyping and direct drop-in integration
- * with REST API (e.g. Node/Express) or Firebase Firestore.
  */
 export const PROTOTYPE_ERP_DATA = {
   departments: [
@@ -107,13 +105,11 @@ export const PROTOTYPE_ERP_DATA = {
 
 /**
  * Unified Single Source of Truth for Student Attendance
- * Coordinates:
- * - Selected class session context
- * - Synchronized attendance state (records map)
- * - Active tab switching (Swipe Card Mode, Roster List Mode, Review & Summary)
- * - Card index & History stack (Undo functionality)
- * - Real-time stats calculations
- * - Save Draft & Submit Attendance lifecycle
+ * Strictly implements:
+ * - Only Present and Absent states (No Late)
+ * - Starts in neutral/unmarked state
+ * - Synchronized live counters
+ * - Undo stack & Draft save
  */
 export function useAttendanceState(initialSession = null) {
   // Session context: Department, Class, Date, Subject, Timeslot, Room
@@ -142,11 +138,8 @@ export function useAttendanceState(initialSession = null) {
   }, [session.department, session.classCode]);
 
   // UNIFIED ATTENDANCE STATE: Map of student rollNo -> record
-  // Example: { 21: { status: 'present', remarks: '', method: 'swipe' } }
-  const [records, setRecords] = useState(() => {
-    const initialMap = {};
-    return initialMap;
-  });
+  // Initially neutral/unmarked map
+  const [records, setRecords] = useState({});
 
   // Swipe Card deck index
   const [currentIndex, setCurrentCardIndex] = useState(0);
@@ -167,28 +160,28 @@ export function useAttendanceState(initialSession = null) {
     const total = students.length;
     let present = 0;
     let absent = 0;
-    let late = 0;
     let marked = 0;
 
     students.forEach((st) => {
       const rec = records[st.rollNo];
       if (rec && rec.status) {
-        marked++;
-        if (rec.status === 'present') present++;
-        else if (rec.status === 'absent') absent++;
-        else if (rec.status === 'late') late++;
+        if (rec.status === 'present') {
+          present++;
+          marked++;
+        } else if (rec.status === 'absent') {
+          absent++;
+          marked++;
+        }
       }
     });
 
-    const effectivePresent = present + late;
     const remaining = Math.max(0, total - marked);
-    const percentage = total > 0 ? ((effectivePresent / total) * 100).toFixed(2) : '0.00';
+    const percentage = (total > 0 && marked > 0) ? ((present / total) * 100).toFixed(2) : '0.00';
 
     return {
       total,
       present,
       absent,
-      late,
       marked,
       remaining,
       percentage: Number(percentage),
@@ -196,14 +189,19 @@ export function useAttendanceState(initialSession = null) {
     };
   }, [students, records]);
 
-  // Unified single student marking action (Used by Swipe, Roster, and Edit Modal)
-  const markStudent = useCallback((rollNo, status, method = 'swipe', remarks = '') => {
+  // Unified single student marking action
+  const markStudent = useCallback((rollNo, status, method = 'roster', remarks = '') => {
     setRecords((prev) => {
+      if (!status || status === 'unmarked') {
+        const next = { ...prev };
+        delete next[rollNo];
+        return next;
+      }
       const prevRec = prev[rollNo];
       return {
         ...prev,
         [rollNo]: {
-          status,
+          status, // 'present' | 'absent'
           remarks: remarks !== undefined ? remarks : prevRec?.remarks || '',
           method,
           updatedAt: new Date().toISOString()
@@ -217,7 +215,7 @@ export function useAttendanceState(initialSession = null) {
     (decision) => {
       if (currentIndex >= students.length) return;
       const currentStudent = students[currentIndex];
-      const prevStatus = records[currentStudent.rollNo]?.status || 'unmarked';
+      const prevStatus = records[currentStudent.rollNo]?.status || null;
 
       // Push to history for undo
       setHistoryStack((prev) => [
@@ -232,7 +230,7 @@ export function useAttendanceState(initialSession = null) {
       if (currentIndex + 1 < students.length) {
         setCurrentCardIndex((prev) => prev + 1);
       } else {
-        // Last card swiped -> automatically transition to Review & Summary
+        // Last card swiped -> transition to Review & Summary
         setCurrentCardIndex(students.length);
         setActiveTab('summary');
       }
@@ -250,7 +248,7 @@ export function useAttendanceState(initialSession = null) {
     // Restore previous status
     setRecords((prev) => {
       const next = { ...prev };
-      if (last.previousStatus === 'unmarked') {
+      if (!last.previousStatus) {
         delete next[last.rollNo];
       } else {
         next[last.rollNo] = {
@@ -340,7 +338,6 @@ export function useAttendanceState(initialSession = null) {
 
     setIsSubmitting(true);
     try {
-      // Format payload for Node/Express REST API or Supabase
       const payload = {
         department: session.department,
         classCode: session.classCode,
@@ -353,13 +350,12 @@ export function useAttendanceState(initialSession = null) {
           studentId: st.id,
           rollNo: st.rollNo,
           name: st.name,
-          status: records[st.rollNo]?.status || 'present',
+          status: records[st.rollNo]?.status || 'absent',
           remarks: records[st.rollNo]?.remarks || '',
-          method: records[st.rollNo]?.method || 'swipe'
+          method: records[st.rollNo]?.method || 'roster'
         }))
       };
 
-      // Optional network call to backend port 5001
       try {
         await fetch('http://localhost:5001/api/teacher/attendance/bulk', {
           method: 'POST',
@@ -377,7 +373,7 @@ export function useAttendanceState(initialSession = null) {
 
       setToast({
         type: 'success',
-        text: `Attendance submitted successfully for ${session.subject} (${session.classCode})! Total Present: ${stats.present}/${stats.total}`
+        text: `Attendance submitted successfully for ${session.subject} (${session.classCode})! Present: ${stats.present}/${stats.total}`
       });
       setTimeout(() => setToast(null), 5000);
       return true;
@@ -393,7 +389,6 @@ export function useAttendanceState(initialSession = null) {
     setCurrentCardIndex(0);
     setHistoryStack([]);
 
-    // Check if session was previously submitted or saved as draft
     const sessionKey = `${newSession.date}_${newSession.classCode}_${newSession.subject}`;
     const prev = submittedSessions[sessionKey] || savedDrafts[sessionKey];
     if (prev && prev.records) {

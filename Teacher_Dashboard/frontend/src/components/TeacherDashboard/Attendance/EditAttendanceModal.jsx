@@ -7,6 +7,7 @@ import React, { useState, useMemo } from 'react';
  * - Table view inside modal
  * - Search bar to filter students by name or roll number
  * - Columns: Roll, Student Name, Current Status, Action ("Change" toggle button), Remarks
+ * - Only Present and Absent status options (No Late)
  * - Toggling status immediately updates the unified attendance state
  * - "Done Editing" closes the modal
  */
@@ -83,9 +84,12 @@ export function EditAttendanceModal({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.map((st) => {
-                const currentStatus = records[st.rollNo]?.status || 'present';
+                const currentStatus = records[st.rollNo]?.status; // 'present' | 'absent' | undefined
                 const nextStatus = currentStatus === 'present' ? 'absent' : 'present';
                 const remarks = records[st.rollNo]?.remarks || '';
+
+                const isPresent = currentStatus === 'present';
+                const isAbsent = currentStatus === 'absent';
 
                 return (
                   <tr key={st.id || st.rollNo} className="hover:bg-slate-50/70 transition">
@@ -101,25 +105,25 @@ export function EditAttendanceModal({
                     <td className="py-2.5 px-2 text-center">
                       <span
                         className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                          currentStatus === 'present'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : currentStatus === 'absent'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-amber-100 text-amber-800'
+                          isPresent
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : isAbsent
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
                         }`}
                       >
-                        {currentStatus === 'present'
-                          ? 'Present'
-                          : currentStatus === 'absent'
-                          ? 'Absent'
-                          : 'Late'}
+                        {isPresent ? 'Present ✓' : isAbsent ? 'Absent ✗' : 'Unmarked'}
                       </span>
                     </td>
                     <td className="py-2.5 px-2 text-center">
                       <button
                         type="button"
                         onClick={() => onMarkStudent(st.rollNo, nextStatus, 'manual')}
-                        className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 transition active:scale-95 cursor-pointer"
+                        className={`px-3 py-1 text-xs font-bold rounded-lg border transition active:scale-95 cursor-pointer ${
+                          nextStatus === 'present'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
+                        }`}
                       >
                         Change to {nextStatus === 'present' ? 'Present' : 'Absent'}
                       </button>
@@ -143,7 +147,7 @@ export function EditAttendanceModal({
         {/* Footer */}
         <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
           <span className="text-xs text-slate-500">
-            Changes are saved in real-time.
+            Changes update and sync in real time.
           </span>
           <button
             type="button"

@@ -2107,7 +2107,7 @@ const AttendanceMarkingManager = {
       const prev = existing?.records?.find?.(r => r.rollNo === st.rollNo);
       this.rosterRecords[st.rollNo] = {
         student: st,
-        status: prev ? prev.status : 'present',
+        status: prev ? prev.status : null,
         remarks: prev ? (prev.remarks || '') : '',
         markingMethod: prev ? (prev.markingMode || 'manual') : 'swipe'
       };
@@ -2313,7 +2313,8 @@ const AttendanceMarkingManager = {
 
   toggleStudentStatus(rollNo, newStatus) {
     if (this.rosterRecords[rollNo]) {
-      this.rosterRecords[rollNo].status = newStatus;
+      const current = this.rosterRecords[rollNo].status;
+      this.rosterRecords[rollNo].status = (current === newStatus) ? null : newStatus;
       this.updateLiveStats();
       this.renderRosterList();
     }
@@ -2335,14 +2336,29 @@ const AttendanceMarkingManager = {
     const list = Object.values(this.rosterRecords);
     container.innerHTML = list.map(rec => {
       const st = rec.student;
-      const status = rec.status;
+      const status = rec.status; // 'present' | 'absent' | null
       const rollNo = st.rollNo;
+      const isPresent = (status === 'present');
+      const isAbsent = (status === 'absent');
+      const isNeutral = !status || status === 'unmarked';
+
+      // Dynamic Flexbox Color Coding:
+      // Green when Present, Red when Absent, Neutral White/Grey when unmarked
+      let rowStyle = 'background:#FFFFFF; border:1.5px solid #E2E8F0;';
+      let statusClass = 'status-unmarked';
+      if (isPresent) {
+        rowStyle = 'background:#ECFDF5; border:1.5px solid #10B981; box-shadow:0 2px 8px rgba(16, 185, 129, 0.15);';
+        statusClass = 'status-present';
+      } else if (isAbsent) {
+        rowStyle = 'background:#FEF2F2; border:1.5px solid #EF4444; box-shadow:0 2px 8px rgba(239, 68, 68, 0.15);';
+        statusClass = 'status-absent';
+      }
 
       return `
-        <div class="roster-card-item drawer-student-card status-${status}" style="margin-bottom:0;" id="roster-item-${rollNo}">
+        <div class="roster-card-item drawer-student-card ${statusClass}" style="${rowStyle} margin-bottom:0; border-radius:14px; padding:14px 18px; transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);" id="roster-item-${rollNo}">
           <div class="student-card-top-row" style="width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
             <div class="student-identity-group" style="display:flex; align-items:center; gap:12px;">
-              <div class="student-avatar-badge" style="width:38px;height:38px;border-radius:12px;background:#F1F5F9;color:#1E293B;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:13px;">
+              <div class="student-avatar-badge" style="width:40px; height:40px; border-radius:12px; ${isPresent ? 'background:#DCFCE7; color:#15803D;' : (isAbsent ? 'background:#FEE2E2; color:#B91C1C;' : 'background:#F1F5F9; color:#1E293B;')} font-weight:900; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.2s ease;">
                 ${rollNo}
               </div>
               <div class="student-meta-info">
@@ -2356,17 +2372,23 @@ const AttendanceMarkingManager = {
               </div>
             </div>
 
+            <!-- Clickable Status Buttons: Only Present and Absent (No Late) -->
             <div style="display:flex; align-items:center; gap:8px;">
-              <div class="segmented-control" style="background:#F1F5F9; border-radius:10px; padding:3px; display:inline-flex;">
-                <button type="button" class="seg-btn ${status === 'present' ? 'active-present' : ''}" 
-                        style="padding:5px 12px; border-radius:8px; border:none; font-size:11.5px; font-weight:800; cursor:pointer;"
-                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'present')">Present</button>
-                <button type="button" class="seg-btn ${status === 'absent' ? 'active-absent' : ''}" 
-                        style="padding:5px 12px; border-radius:8px; border:none; font-size:11.5px; font-weight:800; cursor:pointer;"
-                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'absent')">Absent</button>
-                <button type="button" class="seg-btn ${status === 'late' ? 'active-late' : ''}" 
-                        style="padding:5px 12px; border-radius:8px; border:none; font-size:11.5px; font-weight:800; cursor:pointer;"
-                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'late')">Late</button>
+              <div class="segmented-control" style="background:rgba(255,255,255,0.95); border:1px solid #CBD5E1; border-radius:10px; padding:3px; display:inline-flex; gap:6px;">
+                <button type="button" 
+                        class="seg-btn btn-pres ${isPresent ? 'active-present' : ''}" 
+                        style="padding:7px 16px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s ease; ${isPresent ? 'background:#10B981 !important; color:#FFFFFF !important; border:1px solid #10B981 !important; box-shadow:0 2px 6px rgba(16, 185, 129, 0.35);' : 'background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0;'}"
+                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'present')"
+                        title="Mark student Present">
+                  Present ✓
+                </button>
+                <button type="button" 
+                        class="seg-btn btn-abs ${isAbsent ? 'active-absent' : ''}" 
+                        style="padding:7px 16px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s ease; ${isAbsent ? 'background:#EF4444 !important; color:#FFFFFF !important; border:1px solid #EF4444 !important; box-shadow:0 2px 6px rgba(239, 68, 68, 0.35);' : 'background:#FEF2F2; color:#B91C1C; border:1px solid #FECDD3;'}"
+                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'absent')"
+                        title="Mark student Absent">
+                  Absent ✗
+                </button>
               </div>
             </div>
           </div>
@@ -2383,18 +2405,17 @@ const AttendanceMarkingManager = {
     const total = list.length;
     const present = list.filter(r => r.status === 'present').length;
     const absent = list.filter(r => r.status === 'absent').length;
-    const late = list.filter(r => r.status === 'late').length;
-    const effectivePresent = present + late;
-    const remaining = Math.max(0, total - (present + absent + late));
-    const rate = total > 0 ? Math.round((effectivePresent / total) * 100) : 0;
+    const remaining = Math.max(0, total - (present + absent));
+    const rate = (total > 0 && (present + absent) > 0) ? Math.round((present / total) * 100) : 0;
+    const rateFormatted = (total > 0 && (present + absent) > 0) ? ((present / total) * 100).toFixed(2) + '%' : '0.00%';
 
-    // Header rate & summary
+    // Header context rate
     const rateDisp = document.getElementById('mark-header-rate-display');
     const sumLbl = document.getElementById('mark-header-summary-lbl');
-    if (rateDisp) rateDisp.textContent = `${rate}%`;
-    if (sumLbl) sumLbl.textContent = `${effectivePresent} / ${total} Present`;
+    if (rateDisp) rateDisp.textContent = rateFormatted;
+    if (sumLbl) sumLbl.textContent = `${present} / ${total} Present`;
 
-    // Live counters pill
+    // Top mode switcher live counters
     const topP = document.getElementById('top-counter-present');
     const topA = document.getElementById('top-counter-absent');
     const topR = document.getElementById('top-counter-remaining');
@@ -2402,13 +2423,20 @@ const AttendanceMarkingManager = {
     if (topA) topA.textContent = `${absent} Absent`;
     if (topR) topR.textContent = `${remaining} Remaining`;
 
-    // Swipe strip
+    // Swipe card stats strip
     const cellP = document.getElementById('swipe-cell-present');
     const cellA = document.getElementById('swipe-cell-absent');
     const cellR = document.getElementById('swipe-cell-remaining');
+    const swipeProgChip = document.getElementById('swipe-progress-chip');
+    const swipeProgFill = document.getElementById('swipe-progress-fill');
     if (cellP) cellP.textContent = present;
     if (cellA) cellA.textContent = absent;
     if (cellR) cellR.textContent = remaining;
+
+    const markedCount = present + absent;
+    const pct = total > 0 ? Math.round((markedCount / total) * 100) : 0;
+    if (swipeProgChip) swipeProgChip.textContent = `${pct}% Complete`;
+    if (swipeProgFill) swipeProgFill.style.width = `${pct}%`;
   },
 
   renderSummaryView() {
@@ -2533,21 +2561,23 @@ const AttendanceMarkingManager = {
       const st = rec.student;
       const rollNo = st.rollNo;
       const status = rec.status;
-      const nextStatus = status === 'present' ? 'absent' : 'present';
+      const isPresent = status === 'present';
+      const isAbsent = status === 'absent';
+      const displayStatus = isPresent ? 'PRESENT' : (isAbsent ? 'ABSENT' : 'UNMARKED');
+      const badgeStyle = isPresent ? 'background:#DCFCE7; color:#15803D;' : (isAbsent ? 'background:#FEE2E2; color:#B91C1C;' : 'background:#F1F5F9; color:#64748B;');
+      const nextStatus = isPresent ? 'absent' : 'present';
 
       return `
         <tr style="border-bottom:1px solid #F1F5F9;">
           <td style="padding:10px 12px; font-family:monospace; font-weight:800; color:#475569;">#${rollNo}</td>
           <td style="padding:10px 12px; font-weight:800; color:#0F172A; text-transform:uppercase;">${st.name}</td>
           <td style="padding:10px 12px; text-align:center;">
-            <span style="padding:3px 10px; border-radius:12px; font-size:10.5px; font-weight:800; text-transform:uppercase; ${
-              status === 'present' ? 'background:#DCFCE7; color:#15803D;' : 'background:#FEE2E2; color:#B91C1C;'
-            }">${status}</span>
+            <span style="padding:3px 10px; border-radius:12px; font-size:10.5px; font-weight:800; text-transform:uppercase; ${badgeStyle}">${displayStatus}</span>
           </td>
           <td style="padding:10px 12px; text-align:center;">
             <button type="button" 
                     style="padding:5px 12px; border-radius:8px; border:1px solid #CBD5E1; background:#fff; font-size:11px; font-weight:800; cursor:pointer;"
-                    onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, '${nextStatus}'); AttendanceMarkingManager.renderEditTable('${q.replace(/'/g, "\\'")}');">
+                    onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, '${nextStatus}'); AttendanceMarkingManager.renderEditTable('${q.replace(/'/g, "\\\'")}');">
               Change to ${nextStatus.toUpperCase()}
             </button>
           </td>
