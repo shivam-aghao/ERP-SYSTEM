@@ -11,7 +11,7 @@ start "SSGMCE Teacher Dashboard API (Port 5001)" cmd /k "cd /d %~dp0Teacher_Dash
 timeout /t 2 /nobreak >nul
 
 echo [2/3] Starting Faculty Attendance Backend on Port 8000...
-start "SSGMCE Faculty Attendance API (Port 8000)" cmd /k "cd /d %~dp0faculty\attendance_backend && python run.py"
+start "SSGMCE Faculty Attendance API (Port 8000)" cmd /k "cd /d %~dp0faculty\backend\attendance_api && run.bat"
 
 timeout /t 2 /nobreak >nul
 
