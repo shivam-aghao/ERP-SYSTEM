@@ -1,6 +1,9 @@
 import os
 from typing import List
-from pydantic_settings import BaseSettings if False else object
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    BaseSettings = object
 
 class Settings:
     PROJECT_NAME: str = "SSGMCE College ERP Unified System"

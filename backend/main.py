@@ -53,6 +53,29 @@ engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# Initialize critical tables if not present
+try:
+    with engine.connect() as _con:
+        _con.execute(text("""
+            CREATE TABLE IF NOT EXISTS timetable_assessments (
+                id VARCHAR(36) PRIMARY KEY,
+                teacher_id VARCHAR(36),
+                type VARCHAR(30) NOT NULL,
+                subject VARCHAR(150) NOT NULL,
+                title VARCHAR(250) NOT NULL,
+                date VARCHAR(20) NOT NULL,
+                start_time VARCHAR(10) NOT NULL,
+                end_time VARCHAR(10) NOT NULL,
+                link TEXT NOT NULL,
+                class_code VARCHAR(50) DEFAULT '2R1',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        _con.commit()
+except Exception as _e:
+    logger.warning("Could not auto-create timetable_assessments table: %s", _e)
+
 def get_db():
     db = SessionLocal()
     try:
@@ -186,6 +209,48 @@ class AttendanceSubmitRequest(BaseModel):
     session_type: str = "theory"
     present_student_ids: List[str] = []
     absent_student_ids: List[str] = []
+
+class TimetableAssessmentCreate(BaseModel):
+    id: Optional[str] = None
+    type: str # 'Quiz', 'Assignment', 'TEC'
+    subject: str
+    title: str
+    date: str # 'YYYY-MM-DD'
+    start_time: str # 'HH:MM'
+    end_time: str # 'HH:MM'
+    link: str
+    class_code: Optional[str] = "2R1"
+
+class TimetableAssessmentUpdate(BaseModel):
+    type: Optional[str] = None
+    subject: Optional[str] = None
+    title: Optional[str] = None
+    date: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    link: Optional[str] = None
+    class_code: Optional[str] = None
+
+def verify_faculty_or_admin(request: Request):
+    """Enforces strict role permissions: students are read-only; only faculty/admin can schedule."""
+    headers = {k.lower(): v for k, v in request.headers.items()} if hasattr(request.headers, "items") else {}
+    auth_header = headers.get("authorization", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+    elif hasattr(request, "query_params") and "token" in request.query_params:
+        token = request.query_params["token"]
+
+    role_header = headers.get("x-user-role", "").lower()
+
+    # Reject student role attempts with 403 Forbidden
+    if token.startswith("st_token_") or role_header == "student" or token == "demo-student-token-ssgmce-2026":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Students have read-only access. Only faculty can schedule, edit, or manage assessments."
+        )
+
+    return {"role": "faculty", "token": token}
 
 class QuestionOptionInput(BaseModel):
     key: str # 'A', 'B', 'C', 'D'
@@ -434,6 +499,116 @@ def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
 def get_teacher_timetable(db: Session = Depends(get_db)):
     rows = db.execute(text("SELECT * FROM timetable_entries LIMIT 10")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
+
+# ==============================================================================
+# TIMETABLE ASSESSMENTS / TESTS MODULE (Shared DB between Faculty & Student)
+# ==============================================================================
+@api.get("/timetable/tests", tags=["Timetable Assessments"])
+@api.get("/student/timetable/tests", tags=["Timetable Assessments"])
+@api.get("/teacher/timetable/tests", tags=["Timetable Assessments"])
+def get_timetable_tests(db: Session = Depends(get_db)):
+    """Fetch all scheduled tests & assessments from database (accessible to both faculty and students)."""
+    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
+    tests = []
+    for r in rows:
+        m = dict(r._mapping)
+        tests.append({
+            "id": m["id"],
+            "type": m["type"],
+            "subject": m["subject"],
+            "title": m["title"],
+            "date": m["date"],
+            "start": m["start_time"],
+            "end": m["end_time"],
+            "link": m["link"],
+            "class_code": m.get("class_code", "2R1")
+        })
+    return success_response(tests)
+
+@api.post("/timetable/tests", tags=["Timetable Assessments"])
+@api.post("/teacher/timetable/tests", tags=["Timetable Assessments"])
+def create_timetable_test(payload: TimetableAssessmentCreate, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
+    """Faculty schedules a test or assessment. Stored directly in backend database. Rejected for students (403)."""
+    test_id = payload.id or f"test-{uuid.uuid4().hex[:10]}"
+    db.execute(text("""
+        INSERT INTO timetable_assessments (id, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
+        VALUES (:id, :type, :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """), {
+        "id": test_id,
+        "type": payload.type,
+        "subject": payload.subject,
+        "title": payload.title,
+        "date": payload.date,
+        "start": payload.start_time,
+        "end": payload.end_time,
+        "link": payload.link,
+        "class_code": payload.class_code or "2R1"
+    })
+    db.commit()
+    return success_response({
+        "id": test_id,
+        "type": payload.type,
+        "subject": payload.subject,
+        "title": payload.title,
+        "date": payload.date,
+        "start": payload.start_time,
+        "end": payload.end_time,
+        "link": payload.link
+    }, "Assessment scheduled successfully in database", code=201)
+
+@api.put("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
+@api.put("/teacher/timetable/tests/{test_id}", tags=["Timetable Assessments"])
+def update_timetable_test(test_id: str, payload: TimetableAssessmentUpdate, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
+    """Faculty updates an assessment. Rejected for students (403)."""
+    existing = db.execute(text("SELECT * FROM timetable_assessments WHERE id = :id"), {"id": test_id}).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Scheduled assessment not found")
+
+    updates = []
+    params = {"id": test_id}
+    if payload.type is not None:
+        updates.append("type = :type")
+        params["type"] = payload.type
+    if payload.subject is not None:
+        updates.append("subject = :subject")
+        params["subject"] = payload.subject
+    if payload.title is not None:
+        updates.append("title = :title")
+        params["title"] = payload.title
+    if payload.date is not None:
+        updates.append("date = :date")
+        params["date"] = payload.date
+    if payload.start_time is not None:
+        updates.append("start_time = :start")
+        params["start"] = payload.start_time
+    if payload.end_time is not None:
+        updates.append("end_time = :end")
+        params["end"] = payload.end_time
+    if payload.link is not None:
+        updates.append("link = :link")
+        params["link"] = payload.link
+    if payload.class_code is not None:
+        updates.append("class_code = :class_code")
+        params["class_code"] = payload.class_code
+
+    updates.append("updated_at = CURRENT_TIMESTAMP")
+    db.execute(text(f"UPDATE timetable_assessments SET {', '.join(updates)} WHERE id = :id"), params)
+    db.commit()
+
+    updated = db.execute(text("SELECT * FROM timetable_assessments WHERE id = :id"), {"id": test_id}).fetchone()
+    m = dict(updated._mapping)
+    return success_response({
+        "id": m["id"], "type": m["type"], "subject": m["subject"], "title": m["title"],
+        "date": m["date"], "start": m["start_time"], "end": m["end_time"], "link": m["link"]
+    }, "Assessment updated successfully")
+
+@api.delete("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
+@api.delete("/teacher/timetable/tests/{test_id}", tags=["Timetable Assessments"])
+def delete_timetable_test(test_id: str, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
+    """Faculty deletes an assessment. Rejected for students (403)."""
+    db.execute(text("DELETE FROM timetable_assessments WHERE id = :id"), {"id": test_id})
+    db.commit()
+    return success_response({"id": test_id}, "Assessment deleted successfully")
 
 @api.get("/class-cards", tags=["Faculty Portal"])
 def get_class_cards(db: Session = Depends(get_db)):
@@ -764,8 +939,13 @@ def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depe
 @api.get("/student/timetable", tags=["Student Portal"])
 @api.get("/timetable", tags=["Student Portal"])
 def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_db)):
+<<<<<<< Updated upstream
     clause = "WHERE LOWER(day) = LOWER(:d)" if day else ""
     params = {"d": day} if day else {}
+=======
+    clause = "WHERE LOWER(day) = :d" if day else ""
+    params = {"d": day.lower()} if day else {}
+>>>>>>> Stashed changes
     rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY period_num ASC"), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
@@ -1772,7 +1952,14 @@ except Exception as e:
 # Serves the frontend directory so everything is available on port 8000!
 # ==============================================================================
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
+<<<<<<< Updated upstream
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
+=======
+STUDENT_DIR = os.path.join(ERP_ROOT, "student")
+if os.path.isdir(STUDENT_DIR):
+    app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
+    logger.info("Mounted student static assets from %s", STUDENT_DIR)
+>>>>>>> Stashed changes
 
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")

@@ -476,7 +476,6 @@ const TeacherApp = {
       case 'timetable':
         document.getElementById("timetable-view").style.display = "block";
         setHeaderBadge("Faculty Timetable");
-        this.renderTimetableView();
         break;
       case 'classes':
         document.getElementById("classes-view").style.display = "block";
