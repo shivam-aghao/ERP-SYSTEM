@@ -1,7 +1,7 @@
 /**
  * ==========================================================================
  * SSGMCE TEACHER ERP — TIMETABLE MODULE
- * File: Teacher_Dashboard/frontend/timetable/timetable.js
+ * File: Teacher_Dashboard/frontend/js/timetable.js
  * Dedicated, modular Timetable management for SSGMCE Teacher ERP Portal.
  * Handles timetable rendering, active day highlights, dynamic date filtering,
  * click-to-mark attendance hooks, and schedule printing.
