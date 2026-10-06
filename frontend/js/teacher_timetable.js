@@ -1,0 +1,1086 @@
+/* ========================================================
+   TEACHER ERP — TIMETABLE MODULE CONTROLLER
+   teacher_timetable.js / teacher-timetable.js
+   SSGMCE Teacher Portal
+   Integrated Regular Timetable & Test/Assessment Scheduling
+   ======================================================== */
+
+const TeacherTimetableApp = {
+  selectedTimetableDate: null,
+
+  // Scheduled tests collection
+  tests: [],
+  activeDeleteTestId: null,
+
+  async init() {
+    this.bindEvents();
+    this.renderHeaderProfile();
+    await this.loadTests();
+    this.renderTimetableView();
+    this.initLucideIcons();
+    this.checkBackendConnection();
+  },
+
+  getApiBase() {
+    return (typeof window !== 'undefined' && window.__API_BASE__) || '/api/v1';
+  },
+
+  getAuthHeaders() {
+    const token = localStorage.getItem('ssgmce_teacher_token') || 'teach_token_default';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'X-User-Role': 'faculty'
+    };
+  },
+
+  // ----------------------------------------------------
+  // TEST DATA PERSISTENCE (BACKEND API + LOCAL CACHE)
+  // ----------------------------------------------------
+  async loadTests() {
+    try {
+      const res = await fetch(`${this.getApiBase()}/timetable/tests`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data)) {
+          this.tests = json.data;
+          try {
+            localStorage.setItem("ssgmce_teacher_scheduled_tests", JSON.stringify(this.tests));
+          } catch (_) {}
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load tests from backend API, using local storage cache:", e);
+    }
+
+    try {
+      const stored = localStorage.getItem("ssgmce_teacher_scheduled_tests");
+      if (stored) {
+        this.tests = JSON.parse(stored);
+      } else {
+        this.tests = [];
+      }
+    } catch (e) {
+      this.tests = [];
+    }
+  },
+
+  saveTests() {
+    try {
+      localStorage.setItem("ssgmce_teacher_scheduled_tests", JSON.stringify(this.tests));
+    } catch (e) {
+      console.warn("Could not persist tests:", e);
+    }
+  },
+
+  bindEvents() {
+    // Mobile hamburger menu toggle
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+    const sidebar = document.getElementById("app-sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const closeBtn = document.getElementById("sidebar-close-btn");
+
+    if (hamburgerBtn && sidebar) {
+      hamburgerBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        if (overlay) overlay.classList.toggle("active");
+      });
+    }
+
+    if (closeBtn && sidebar) {
+      closeBtn.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        if (overlay) overlay.classList.remove("active");
+      });
+    }
+
+    if (overlay && sidebar) {
+      overlay.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        overlay.classList.remove("active");
+      });
+    }
+
+    // Profile Dropdown Trigger
+    const profileTrigger = document.getElementById("profile-dropdown-trigger");
+    const profileMenu = document.getElementById("profile-dropdown-menu");
+
+    if (profileTrigger && profileMenu) {
+      profileTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = profileMenu.classList.contains("show");
+        this.closeAllDropdowns();
+        if (!isOpen) {
+          profileMenu.classList.add("show");
+          profileTrigger.classList.add("active");
+        }
+      });
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener("click", (e) => {
+      this.closeAllDropdowns();
+    });
+
+    // Close modals on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.closeTestFormModal();
+        this.closeTestDetailsModal();
+        this.closeDeleteConfirmModal();
+      }
+    });
+
+    // Close modal on clicking outside modal container
+    const modals = [
+      document.getElementById("testFormModal"),
+      document.getElementById("testDetailsModal"),
+      document.getElementById("testDeleteConfirmModal")
+    ];
+
+    modals.forEach(m => {
+      if (m) {
+        m.addEventListener("click", (e) => {
+          if (e.target === m) {
+            this.closeTestFormModal();
+            this.closeTestDetailsModal();
+            this.closeDeleteConfirmModal();
+          }
+        });
+      }
+    });
+  },
+
+  closeAllDropdowns() {
+    const profileMenu = document.getElementById("profile-dropdown-menu");
+    const profileTrigger = document.getElementById("profile-dropdown-trigger");
+
+    if (profileMenu) profileMenu.classList.remove("show");
+    if (profileTrigger) profileTrigger.classList.remove("active");
+  },
+
+  initLucideIcons() {
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  },
+
+  renderHeaderProfile() {
+    if (typeof TeacherERPData === 'undefined' || !TeacherERPData.faculty) return;
+    const f = TeacherERPData.faculty;
+
+    const headerName = document.getElementById("header-profile-name");
+    const headerDept = document.getElementById("header-profile-dept");
+    const avatarElem = document.getElementById("header-profile-avatar");
+    const menuName = document.getElementById("profile-menu-name");
+    const menuTitle = document.getElementById("profile-menu-title");
+
+    if (headerName) headerName.textContent = f.name;
+    if (headerDept) headerDept.textContent = `${f.title} • ${f.departmentCode}`;
+    if (menuName) menuName.textContent = f.name;
+    if (menuTitle) menuTitle.textContent = `${f.title} • ${f.departmentCode}`;
+    if (avatarElem && f.initials) {
+      avatarElem.innerHTML = `<span>${f.initials}</span>`;
+    }
+  },
+
+  handleTimetableDateChange(dateVal) {
+    if (!dateVal) return;
+    this.selectedTimetableDate = dateVal;
+    this.renderTimetableView();
+  },
+
+  resetTimetableToToday() {
+    this.selectedTimetableDate = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+    this.renderTimetableView();
+  },
+
+  // ----------------------------------------------------
+  // TEST TIMING & SLOT MAPPING
+  // ----------------------------------------------------
+  timeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(":");
+    const hours = parseInt(parts[0], 10) || 0;
+    const mins = parseInt(parts[1], 10) || 0;
+    return hours * 60 + mins;
+  },
+
+  formatTime12Hour(timeStr) {
+    if (!timeStr) return "";
+    const parts = timeStr.split(":");
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] ? parts[1].padStart(2, "0") : "00";
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    h = h ? h : 12;
+    return `${String(h).padStart(2, "0")}:${m} ${ampm}`;
+  },
+
+  getSlotIndexForTime(timeStr) {
+    // 0: 09:00 - 10:30 (540 to 630 mins)
+    // 1: 11:00 - 12:30 (660 to 750 mins)
+    // 2: 13:30 - 15:00 (810 to 900 mins)
+    // 3: 15:30 - 17:00 (930 to 1020 mins)
+    const mins = this.timeToMinutes(timeStr);
+    if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
+    if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
+    if (mins < 915) return 2;       // < 03:15 PM -> Slot 3
+    return 3;                       // >= 03:15 PM -> Slot 4
+  },
+
+  getTestStatus(test) {
+    if (!test || !test.date || !test.start || !test.end) {
+      return { status: "Upcoming", badgeClass: "status-upcoming", label: "Upcoming" };
+    }
+
+    const now = new Date();
+    const [year, month, day] = test.date.split("-").map(Number);
+    const [startH, startM] = test.start.split(":").map(Number);
+    const [endH, endM] = test.end.split(":").map(Number);
+
+    const startDateTime = new Date(year, month - 1, day, startH, startM, 0);
+    const endDateTime = new Date(year, month - 1, day, endH, endM, 0);
+
+    const start12 = this.formatTime12Hour(test.start);
+
+    if (now < startDateTime) {
+      return {
+        status: "Upcoming",
+        badgeClass: "status-upcoming",
+        label: "Upcoming",
+        caption: `Starts at ${start12}`
+      };
+    } else if (now >= startDateTime && now <= endDateTime) {
+      return {
+        status: "Live",
+        badgeClass: "status-live",
+        label: "Live Now",
+        caption: "Active session"
+      };
+    } else {
+      return {
+        status: "Ended",
+        badgeClass: "status-ended",
+        label: "Closed",
+        caption: "Test Closed"
+      };
+    }
+  },
+
+  // ----------------------------------------------------
+  // TEST MODALS MANAGEMENT
+  // ----------------------------------------------------
+  openAddTestModal() {
+    const modal = document.getElementById("testFormModal");
+    const title = document.getElementById("testModalTitle");
+    const badge = document.getElementById("testModalBadge");
+    const btnText = document.getElementById("btnSubmitTestText");
+    const form = document.getElementById("testScheduleForm");
+
+    if (form) form.reset();
+    document.getElementById("testFormId").value = "";
+
+    // Default date to currently viewed timetable date
+    const selectedDate = this.selectedTimetableDate || (
+      (typeof AcademicDateUtils !== 'undefined')
+        ? AcademicDateUtils.getTodayISO()
+        : new Date().toISOString().split('T')[0]
+    );
+
+    document.getElementById("testDateInput").value = selectedDate;
+    document.getElementById("testStartTimeInput").value = "11:15";
+    document.getElementById("testEndTimeInput").value = "12:15";
+
+    if (title) title.textContent = "Schedule New Assessment";
+    if (badge) badge.textContent = "NEW ASSESSMENT";
+    if (btnText) btnText.textContent = "Schedule Test";
+
+    if (modal) {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    this.initLucideIcons();
+  },
+
+  openEditTestModal(testId) {
+    const test = this.tests.find(t => t.id === testId);
+    if (!test) return;
+
+    this.closeTestDetailsModal();
+
+    const modal = document.getElementById("testFormModal");
+    const title = document.getElementById("testModalTitle");
+    const badge = document.getElementById("testModalBadge");
+    const btnText = document.getElementById("btnSubmitTestText");
+
+    document.getElementById("testFormId").value = test.id;
+    document.getElementById("testTypeSelect").value = test.type;
+    document.getElementById("testSubjectSelect").value = test.subject;
+    document.getElementById("testTitleInput").value = test.title;
+    document.getElementById("testDateInput").value = test.date;
+    document.getElementById("testStartTimeInput").value = test.start;
+    document.getElementById("testEndTimeInput").value = test.end;
+    document.getElementById("testLinkInput").value = test.link;
+
+    if (title) title.textContent = "Edit Assessment";
+    if (badge) badge.textContent = "EDIT MODE";
+    if (btnText) btnText.textContent = "Update Assessment";
+
+    if (modal) {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    this.initLucideIcons();
+  },
+
+  closeTestFormModal() {
+    const modal = document.getElementById("testFormModal");
+    if (modal) {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+    }
+  },
+
+  async handleSaveTest(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("testFormId").value.trim();
+    const type = document.getElementById("testTypeSelect").value;
+    const subject = document.getElementById("testSubjectSelect").value;
+    const title = document.getElementById("testTitleInput").value.trim();
+    const date = document.getElementById("testDateInput").value;
+    const start = document.getElementById("testStartTimeInput").value;
+    const end = document.getElementById("testEndTimeInput").value;
+    const link = document.getElementById("testLinkInput").value.trim();
+
+    // Validation checks
+    if (!subject) {
+      this.showToast("Please select a subject for the test.", "error");
+      return;
+    }
+    if (!title) {
+      this.showToast("Please enter a test title or topic.", "error");
+      return;
+    }
+    if (!date) {
+      this.showToast("Please specify the test date.", "error");
+      return;
+    }
+    if (!start || !end) {
+      this.showToast("Start time and end time are required.", "error");
+      return;
+    }
+
+    const startMins = this.timeToMinutes(start);
+    const endMins = this.timeToMinutes(end);
+
+    if (endMins <= startMins) {
+      this.showToast("End time must be after start time.", "error");
+      return;
+    }
+
+    if (!link) {
+      this.showToast("Please enter the test URL or submission link.", "error");
+      return;
+    }
+
+    // URL validation
+    try {
+      new URL(link);
+    } catch (_) {
+      this.showToast("Please enter a valid URL (including https://).", "error");
+      return;
+    }
+
+    const payload = {
+      type,
+      subject,
+      title,
+      date,
+      start_time: start,
+      end_time: end,
+      link,
+      class_code: "2R1"
+    };
+
+    try {
+      let res;
+      if (id && !id.startsWith("local-")) {
+        res = await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(id)}`, {
+          method: "PUT",
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+      } else {
+        payload.id = id || ("test-" + Date.now());
+        res = await fetch(`${this.getApiBase()}/timetable/tests`, {
+          method: "POST",
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (res && res.ok) {
+        await this.loadTests();
+        this.showToast(id ? "Assessment updated successfully" : "Assessment scheduled and saved to backend database", "success");
+      } else {
+        const err = res ? await res.json().catch(() => ({})) : {};
+        throw new Error(err.message || "Backend rejected request");
+      }
+    } catch (err) {
+      console.warn("Backend save notice, caching locally:", err);
+      const savedObj = { id: id || ("local-" + Date.now()), type, subject, title, date, start, end, link };
+      if (id) {
+        const idx = this.tests.findIndex(t => t.id === id);
+        if (idx !== -1) this.tests[idx] = savedObj;
+      } else {
+        this.tests.push(savedObj);
+      }
+      this.saveTests();
+      this.showToast("Assessment scheduled successfully", "success");
+    }
+
+    this.closeTestFormModal();
+    this.renderTimetableView();
+  },
+
+  openTestDetails(testId) {
+    const test = this.tests.find(t => t.id === testId);
+    if (!test) return;
+
+    const modal = document.getElementById("testDetailsModal");
+    const typeBadge = document.getElementById("detailsModalTypeBadge");
+    const modalTitle = document.getElementById("detailsModalTitle");
+    const body = document.getElementById("testDetailsBody");
+
+    const statusObj = this.getTestStatus(test);
+    const start12 = this.formatTime12Hour(test.start);
+    const end12 = this.formatTime12Hour(test.end);
+
+    // Readable date
+    let readableDate = test.date;
+    try {
+      const [y, m, d] = test.date.split("-");
+      const dt = new Date(y, m - 1, d);
+      readableDate = dt.toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
+    } catch (_) {}
+
+    // Action button text based on test type and status
+    let actionBtnHTML = "";
+    if (statusObj.status === "Ended") {
+      actionBtnHTML = `
+        <button type="button" class="btn-test-action disabled" disabled>
+          <i data-lucide="lock" style="width:15px;height:15px;"></i>
+          <span>Test Closed</span>
+        </button>
+      `;
+    } else if (statusObj.status === "Upcoming") {
+      actionBtnHTML = `
+        <button type="button" class="btn-test-action disabled" disabled title="Test link will open at scheduled start time">
+          <i data-lucide="clock" style="width:15px;height:15px;"></i>
+          <span>Link opens at ${start12}</span>
+        </button>
+        <a href="${test.link}" target="_blank" rel="noopener noreferrer" class="btn-preview-link" title="Teacher preview link">
+          <i data-lucide="external-link" style="width:14px;height:14px;"></i> Preview URL
+        </a>
+      `;
+    } else {
+      // Live Now
+      let actionLabel = "Start Assessment";
+      if (test.type === "Quiz") actionLabel = "Start Quiz";
+      else if (test.type === "Assignment") actionLabel = "Submit Assignment";
+      else if (test.type === "TEC") actionLabel = "Start TEC";
+
+      actionBtnHTML = `
+        <a href="${test.link}" target="_blank" rel="noopener noreferrer" class="btn-test-action active-live">
+          <i data-lucide="play-circle" style="width:16px;height:16px;"></i>
+          <span>${actionLabel}</span>
+        </a>
+      `;
+    }
+
+    if (typeBadge) typeBadge.textContent = `${test.type.toUpperCase()} • ${test.subject}`;
+    if (modalTitle) modalTitle.textContent = test.title;
+
+    if (body) {
+      body.innerHTML = `
+        <div class="test-details-grid">
+          <div class="detail-row">
+            <span class="detail-label"><i data-lucide="layers" style="width:14px;height:14px;"></i> Subject:</span>
+            <span class="detail-val"><strong>${test.subject}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i data-lucide="calendar" style="width:14px;height:14px;"></i> Date:</span>
+            <span class="detail-val">${readableDate}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i data-lucide="clock" style="width:14px;height:14px;"></i> Timing:</span>
+            <span class="detail-val">${start12} – ${end12}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i data-lucide="activity" style="width:14px;height:14px;"></i> Status:</span>
+            <span class="detail-val">
+              <span class="test-status-pill ${statusObj.badgeClass}">${statusObj.label}</span>
+              ${statusObj.caption ? `<span class="status-caption">${statusObj.caption}</span>` : ''}
+            </span>
+          </div>
+          <div class="detail-row link-row">
+            <span class="detail-label"><i data-lucide="link-2" style="width:14px;height:14px;"></i> Test URL:</span>
+            <span class="detail-val">
+              <a href="${test.link}" target="_blank" rel="noopener noreferrer" class="test-external-link">
+                ${test.link}
+              </a>
+            </span>
+          </div>
+        </div>
+
+        <div class="test-details-action-bar">
+          <div class="student-action-wrap">
+            ${actionBtnHTML}
+          </div>
+
+          <div class="teacher-manage-actions">
+            <button type="button" class="btn-test-edit" onclick="TeacherTimetableApp.openEditTestModal('${test.id}')" title="Edit this test">
+              <i data-lucide="edit-3" style="width:14px;height:14px;"></i>
+              <span>Edit</span>
+            </button>
+            <button type="button" class="btn-test-delete" onclick="TeacherTimetableApp.promptDeleteTest('${test.id}')" title="Delete this test">
+              <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (modal) {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    this.initLucideIcons();
+  },
+
+  closeTestDetailsModal() {
+    const modal = document.getElementById("testDetailsModal");
+    if (modal) {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+    }
+  },
+
+  promptDeleteTest(testId) {
+    const test = this.tests.find(t => t.id === testId);
+    if (!test) return;
+
+    this.activeDeleteTestId = testId;
+    const modal = document.getElementById("testDeleteConfirmModal");
+    const nameElem = document.getElementById("deleteTestTitleName");
+
+    if (nameElem) {
+      nameElem.textContent = `"${test.title}" (${test.type})`;
+    }
+
+    if (modal) {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    this.initLucideIcons();
+  },
+
+  closeDeleteConfirmModal() {
+    this.activeDeleteTestId = null;
+    const modal = document.getElementById("testDeleteConfirmModal");
+    if (modal) {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+    }
+  },
+
+  async confirmExecuteDelete() {
+    if (!this.activeDeleteTestId) return;
+
+    const testId = this.activeDeleteTestId;
+
+    try {
+      await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders()
+      });
+      this.showToast("Assessment deleted from database", "success");
+    } catch (err) {
+      console.warn("Backend delete notice:", err);
+    }
+
+    const idx = this.tests.findIndex(t => t.id === testId);
+    if (idx !== -1) {
+      this.tests.splice(idx, 1);
+      this.saveTests();
+    }
+
+    this.closeDeleteConfirmModal();
+    this.closeTestDetailsModal();
+    this.renderTimetableView();
+  },
+
+  // ----------------------------------------------------
+  // MAIN TIMETABLE RENDERING
+  // ----------------------------------------------------
+  renderTimetableView() {
+    const container = document.getElementById("timetable-content");
+    if (!container) return;
+
+    // Time Slot Headers
+    const timeSlots = [
+      { range: "09:00 – 10:30", period: "AM", label: "Slot 1" },
+      { range: "11:00 – 12:30", period: "PM", label: "Slot 2" },
+      { range: "01:30 – 03:00", period: "PM", label: "Slot 3" },
+      { range: "03:30 – 05:00", period: "PM", label: "Slot 4" }
+    ];
+
+    const term = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getCurrentAcademicTerm()
+      : { academicYear: "2026-2027", semesterType: "Odd" };
+
+    const selectedDate = this.selectedTimetableDate || (
+      (typeof AcademicDateUtils !== 'undefined')
+        ? AcademicDateUtils.getTodayISO()
+        : new Date().toISOString().split('T')[0]
+    );
+
+    const currentDayName = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getDayName(selectedDate)
+      : "Monday";
+
+    const readableDate = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.formatReadableDate(selectedDate)
+      : selectedDate;
+
+    const todayISO = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    const isToday = (selectedDate === todayISO);
+    const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
+
+    // Exact original schedule data preserved
+    const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable)
+      ? TeacherERPData.timetable
+      : [
+        {
+          day: "Monday",
+          slots: [
+            "Data Structures (Room 201)",
+            "Java Programming (Room 305)",
+            "Free Slot",
+            "Data Structures Lab (Lab 02)"
+          ]
+        },
+        {
+          day: "Tuesday",
+          slots: [
+            "Free Slot",
+            "Data Structures (Room 201)",
+            "Database Systems (Room 304)",
+            "Operating Systems (Lab 04)"
+          ]
+        },
+        {
+          day: "Wednesday",
+          slots: [
+            "Operating Systems (Room 201)",
+            "Free Slot",
+            "Data Structures Lab (Lab 01)",
+            "Data Structures Lab (Lab 01)"
+          ]
+        },
+        {
+          day: "Thursday",
+          slots: [
+            "Data Structures (Room 201)",
+            "Algorithms (Room 304)",
+            "Free Slot",
+            "Project Guidance (Seminar Hall)"
+          ]
+        },
+        {
+          day: "Friday",
+          slots: [
+            "Software Engg (Room 105)",
+            "Operating Systems (Room 201)",
+            "Free Slot",
+            "Faculty Meeting (Dept Library)"
+          ]
+        }
+      ];
+
+    // Helper: Parse slot string into title, location, and type
+    const parseSlotInfo = (slotText) => {
+      if (!slotText || slotText === "Free Slot") {
+        return { isFree: true };
+      }
+
+      const isLab = slotText.toLowerCase().includes("lab");
+      let subject = slotText;
+      let location = "";
+
+      const parenMatch = slotText.match(/^(.*?)\s*\((.*?)\)$/);
+      if (parenMatch) {
+        subject = parenMatch[1].trim();
+        location = parenMatch[2].trim();
+      }
+
+      return {
+        isFree: false,
+        isLab,
+        subject,
+        location,
+        typeLabel: isLab ? "LAB SESSION" : "LECTURE"
+      };
+    };
+
+    container.innerHTML = `
+      <div class="timetable-card">
+        
+        <!-- ==================== HEADER & TOOLBAR ==================== -->
+        <div class="timetable-header">
+          <div class="timetable-header-content">
+            <div class="schedule-meta">
+              <span class="schedule-term-badge">
+                <i data-lucide="graduation-cap" style="width:13px;height:13px;"></i>
+                Academic Term: ${term.academicYear} • ${term.semesterType} Semester
+              </span>
+              <h3 class="schedule-main-title">Weekly Lecture &amp; Lab Schedule</h3>
+              <p class="schedule-subtitle">Department of Computer Science &amp; Engineering • Autonomous Curriculum</p>
+            </div>
+
+            <!-- Schedule Controls -->
+            <div class="schedule-controls">
+              <div class="date-control">
+                <label for="timetable-date-picker-input" class="date-control-label">
+                  <i data-lucide="calendar" style="width:14px;height:14px;"></i>
+                  <span>View Date</span>
+                </label>
+                <input type="date"
+                       id="timetable-date-picker-input"
+                       class="date-input"
+                       value="${selectedDate}"
+                       aria-label="Select date to highlight"
+                       onchange="TeacherTimetableApp.handleTimetableDateChange(this.value)">
+              </div>
+
+              <button class="today-button ${isToday ? 'active' : ''}"
+                      type="button"
+                      onclick="TeacherTimetableApp.resetTimetableToToday()"
+                      aria-label="Reset timetable view to today">
+                <i data-lucide="calendar-check" style="width:14px;height:14px;"></i>
+                <span>Today</span>
+              </button>
+
+              <!-- Test Button -->
+              <button class="test-button"
+                      type="button"
+                      onclick="TeacherTimetableApp.openAddTestModal()"
+                      aria-label="Schedule a new test or assessment">
+                <i data-lucide="file-plus-2" style="width:14px;height:14px;"></i>
+                <span>Test</span>
+              </button>
+
+              <button class="print-button"
+                      type="button"
+                      onclick="window.print()"
+                      aria-label="Print timetable schedule">
+                <i data-lucide="printer" style="width:14px;height:14px;"></i>
+                <span>Print Schedule</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Schedule Status Banner -->
+          <div class="schedule-status ${isToday ? 'status-today' : 'status-custom'}">
+            <div class="status-left">
+              <span class="status-pulse-dot" aria-hidden="true"></span>
+              <span class="status-date-text">
+                Schedule for: <strong>${currentDayName}, ${readableDate}</strong>
+              </span>
+              <span class="status-badge ${isToday ? 'badge-today' : 'badge-selected'}">
+                ${isToday ? "Today's Schedule" : "Selected Date"}
+              </span>
+            </div>
+            <div class="status-hint">
+              ${isWeekend
+                ? '<i data-lucide="info" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> <em>Weekend — regular weekday instruction matrix shown below</em>'
+                : `<i data-lucide="check" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Highlighting <strong>${currentDayName}</strong> in the schedule`
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== TIMETABLE GRID TABLE ==================== -->
+        <div class="timetable-wrapper">
+          <table class="timetable" role="table" aria-label="Faculty Weekly Timetable">
+            <thead>
+              <tr role="row">
+                <th class="timetable-header-cell day-col-header" scope="col">
+                  <div class="th-content">
+                    <i data-lucide="calendar-days" style="width:14px;height:14px;"></i>
+                    <span>Day</span>
+                  </div>
+                </th>
+                ${timeSlots.map((slot, idx) => `
+                  <th class="timetable-header-cell time-slot-header" scope="col">
+                    <div class="th-time-slot">
+                      <span class="th-slot-num">${slot.label}</span>
+                      <div class="th-time-range">
+                        <i data-lucide="clock" style="width:12px;height:12px;"></i>
+                        <span>${slot.range}</span>
+                        <span class="th-ampm">${slot.period}</span>
+                      </div>
+                    </div>
+                  </th>
+                `).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${timetableData.map(row => {
+                const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
+                return `
+                <tr class="schedule-row ${isHighlightRow ? 'active-day-row' : ''}" role="row">
+                  
+                  <!-- Day Cell -->
+                  <td class="day-cell ${isHighlightRow ? 'active-day-cell' : ''}" scope="row">
+                    <div class="day-cell-inner">
+                      <span class="day-label">${row.day.toUpperCase()}</span>
+                      ${isHighlightRow ? `
+                        <span class="today-badge ${isToday ? 'today-badge-current' : 'today-badge-active'}">
+                          ${isToday ? 'TODAY' : 'ACTIVE'}
+                        </span>
+                      ` : ''}
+                    </div>
+                  </td>
+
+                  <!-- Subject Slots -->
+                  ${row.slots.map((slotText, slotIdx) => {
+                    const parsed = parseSlotInfo(slotText);
+
+                    // Find tests scheduled for this day & slot
+                    const slotTests = this.tests.filter(t => {
+                      if (!t.date || !t.start) return false;
+                      const [y, m, d] = t.date.split("-").map(Number);
+                      const testDayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+                      if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
+                      return this.getSlotIndexForTime(t.start) === slotIdx;
+                    });
+
+                    // Build regular class card HTML if not free
+                    let regularClassHTML = "";
+                    if (!parsed.isFree) {
+                      regularClassHTML = `
+                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}">
+                          <div class="class-card-top">
+                            <span class="class-type ${parsed.isLab ? 'type-lab' : 'type-lecture'}">
+                              <i data-lucide="${parsed.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
+                              ${parsed.typeLabel}
+                            </span>
+                          </div>
+                          
+                          <div class="class-title" title="${parsed.subject}">
+                            ${parsed.subject}
+                          </div>
+
+                          ${parsed.location ? `
+                            <div class="class-location">
+                              <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
+                              <span>${parsed.location}</span>
+                            </div>
+                          ` : ''}
+                        </div>
+                      `;
+                    }
+
+                    // Build test cards HTML
+                    const testsHTML = slotTests.map(t => {
+                      const st = this.getTestStatus(t);
+                      const start12 = this.formatTime12Hour(t.start);
+                      const end12 = this.formatTime12Hour(t.end);
+
+                      return `
+                        <div class="test-card ${t.type.toLowerCase()}-card"
+                             onclick="TeacherTimetableApp.openTestDetails('${t.id}')"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Assessment: ${t.title}"
+                             onkeydown="if(event.key==='Enter') TeacherTimetableApp.openTestDetails('${t.id}')">
+                          <div class="test-card-top">
+                            <span class="test-type-badge ${t.type.toLowerCase()}-type">
+                              <i data-lucide="file-text" style="width:11px;height:11px;"></i>
+                              ${t.type.toUpperCase()}
+                            </span>
+                            <span class="test-status-pill ${st.badgeClass}">
+                              ${st.label}
+                            </span>
+                          </div>
+                          <div class="test-subject">${t.subject}</div>
+                          <div class="test-title" title="${t.title}">${t.title}</div>
+                          <div class="test-time">
+                            <i data-lucide="clock" style="width:11px;height:11px;"></i>
+                            <span>${start12} – ${end12}</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join('');
+
+                    // If neither regular class nor test exists, render Off/Prep
+                    if (parsed.isFree && slotTests.length === 0) {
+                      return `
+                        <td class="schedule-cell off-prep-cell">
+                          <div class="off-prep">
+                            <span class="off-prep-pill">
+                              <i data-lucide="coffee" style="width:12px;height:12px;"></i>
+                              OFF / PREP
+                            </span>
+                            <span class="off-prep-caption">No Class Scheduled</span>
+                          </div>
+                        </td>
+                      `;
+                    }
+
+                    return `
+                      <td class="schedule-cell">
+                        <div class="cell-stack-container">
+                          ${regularClassHTML}
+                          ${testsHTML}
+                        </div>
+                      </td>
+                    `;
+                  }).join('')}
+                </tr>
+              `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ==================== LEGEND & FOOTNOTE ==================== -->
+        <div class="timetable-legend-bar">
+          <div class="legend-items">
+            <span class="legend-title">Legend:</span>
+            <span class="legend-item">
+              <span class="legend-dot lecture-dot"></span>
+              <span>Theory Lecture</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot lab-dot"></span>
+              <span>Laboratory Session</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot test-dot"></span>
+              <span>Assessment / Test (Amber)</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot off-dot"></span>
+              <span>Off / Prep Period</span>
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot active-dot"></span>
+              <span>Active Date Highlight</span>
+            </span>
+          </div>
+          <div class="legend-right">
+            <span>SSGMCE Autonomous Curriculum • Integrated Test Scheduling</span>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    this.initLucideIcons();
+  },
+
+  async checkBackendConnection(isManualCheck = false) {
+    const pill = document.getElementById('backend-status-pill');
+    const dot = document.getElementById('backend-status-dot');
+    const text = document.getElementById('backend-status-text');
+
+    const setStatus = (isOnline, latency) => {
+      if (pill) {
+        pill.style.background = isOnline ? '#ECFDF5' : '#FEF2F2';
+        pill.style.borderColor = isOnline ? '#10B981' : '#EF4444';
+        pill.style.color = isOnline ? '#047857' : '#B91C1C';
+      }
+      if (dot) {
+        dot.style.background = isOnline ? '#10B981' : '#EF4444';
+        dot.style.boxShadow = isOnline ? '0 0 8px #10B981' : '0 0 8px #EF4444';
+      }
+      if (text) {
+        text.textContent = isOnline 
+          ? `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`
+          : '🔴 Backend: Offline';
+      }
+    };
+
+    if (typeof window.TeacherAPI !== 'undefined') {
+      try {
+        const start = performance.now();
+        const health = await window.TeacherAPI.checkHealth();
+        const latency = Math.round(performance.now() - start);
+
+        if (health && health.status === 'OK') {
+          setStatus(true, latency);
+        } else {
+          setStatus(false);
+        }
+      } catch (err) {
+        setStatus(false);
+      }
+    } else {
+      if (pill) {
+        pill.style.display = 'inline-flex';
+        setStatus(true);
+        if (text) text.textContent = '🟢 Portal Active';
+      }
+    }
+  },
+
+  showToast(message, type = 'info') {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-stack";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `dashboard-toast toast-${type}`;
+    toast.innerHTML = `
+      <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info'}" style="width:16px;height:16px;flex-shrink:0;"></i>
+      <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    this.initLucideIcons();
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
+};
+
+// Aliases for compatibility
+window.TeacherTimetableApp = TeacherTimetableApp;
+window.TeacherApp = window.TeacherApp || TeacherTimetableApp;
+
+// Auto initialize on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  TeacherTimetableApp.init();
+});
