@@ -82,7 +82,7 @@ def seed_student_database(db: Session):
     # 3. Subject Syllabus
     if db.query(SubjectSyllabus).count() == 0:
         syllabus_items = [
-            ("CS-301", "Data Structures & Algorithms", 4, "Prof. Rajesh Sharma", "Associate Professor", "rajesh.sharma@ssgmce.ac.in", "Cabin 204", 85),
+            ("CS-301", "Data Structures & Algorithms", 4, "Dr. J.M.Patil", "Associate Professor", "jm.patil@ssgmce.ac.in", "Cabin 204", 85),
             ("CS-302", "Object Oriented Programming with Java", 4, "Dr. S. Kulkarni", "Professor & HOD", "s.kulkarni@ssgmce.ac.in", "HOD Cabin", 78),
             ("CS-303", "Operating System Principles", 4, "Prof. V. K. Ramanujan", "Assistant Professor", "v.ramanujan@ssgmce.ac.in", "Cabin 210", 82),
             ("CS-304", "Database Management Systems", 4, "Dr. P. Deshmukh", "Associate Professor", "p.deshmukh@ssgmce.ac.in", "Cabin 208", 90),

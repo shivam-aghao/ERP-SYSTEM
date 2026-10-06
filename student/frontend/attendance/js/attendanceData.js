@@ -27,7 +27,7 @@
     division: "A",
     batch: "2024-2028",
     avatarText: "SA",
-    mentorName: "Dr. Rohan Deshmukh"
+    mentorName: "Dr. J.M.Patil"
   };
 
   const attendanceData = [
@@ -38,7 +38,7 @@
       type: "TH",
       present: 5,
       total: 11,
-      faculty: "Prof. Rajesh Sharma",
+      faculty: "Dr. J.M.Patil",
       credits: 3.0,
       room: "LH-204"
     },
@@ -49,7 +49,7 @@
       type: "TH",
       present: 4,
       total: 9,
-      faculty: "Dr. Rohan Deshmukh",
+      faculty: "Dr. J.M.Patil",
       credits: 3.0,
       room: "LH-112"
     },
@@ -82,7 +82,7 @@
       type: "PR",
       present: 2,
       total: 2,
-      faculty: "Dr. Rohan Deshmukh",
+      faculty: "Dr. J.M.Patil",
       credits: 1.5,
       room: "Database Lab 1"
     },

@@ -21,3 +21,9 @@ Thumbs.db
 
 __pycache__/
 *.pyc
+
+# Local Python environments and generated databases
+**/venv/
+**/__pycache__/
+*.pyc
+*.db
