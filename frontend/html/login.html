@@ -2179,7 +2179,12 @@
     </div>
 
 
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
+        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+            window.location.replace(window.ERP_AUTH.getRedirectForRole());
+        }
 
 
         /* =====================================================
@@ -2237,30 +2242,81 @@
            LOGIN
         ===================================================== */
 
-        function handleLogin(event) {
-
+                async function handleLogin(event) {
             event.preventDefault();
 
-            const userId =
-                document.getElementById("userId").value.trim();
-
-            const password =
-                document.getElementById("password").value;
-
-            const rememberMe =
-                document.getElementById("rememberMe").checked;
-
-
-            /* USER ID VALIDATION */
+            const userId = document.getElementById("userId").value.trim();
+            const password = document.getElementById("password").value;
+            const rememberMe = document.getElementById("rememberMe").checked;
+            const submitBtn = document.querySelector("button[type='submit']") || document.getElementById("loginBtn");
 
             if (!userId) {
-
-                alert(
-                    "Please enter your Enrollment / User ID."
-                );
-
+                alert("Please enter your User ID / Enrollment / Faculty ID.");
                 return false;
             }
+
+            if (!password) {
+                alert("Please enter your password.");
+                return false;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Signing in...";
+            }
+
+            try {
+                let result;
+                if (window.ERP_AUTH && typeof window.ERP_AUTH.login === "function") {
+                    result = await window.ERP_AUTH.login(userId, password);
+                } else {
+                    const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id: userId, password: password, remember_me: rememberMe })
+                    });
+                    const resData = await response.json();
+                    if (!response.ok) {
+                        throw new Error(resData.detail || resData.message || "Invalid credentials.");
+                    }
+                    result = resData.data || resData;
+                }
+
+                const role = String(result.role || result.user?.role || "student").toLowerCase().trim();
+                let redirectUrl = result.redirect;
+
+                if (!redirectUrl) {
+                    if (role === "teacher" || role === "faculty" || role === "employee") {
+                        redirectUrl = "teacher-dashboard.html";
+                    } else if (role === "admin") {
+                        redirectUrl = "admin-dashboard.html";
+                    } else {
+                        redirectUrl = "student-dashboard.html";
+                    }
+                }
+
+                // Storage permissions
+                const storage = rememberMe ? localStorage : sessionStorage;
+                storage.setItem("user_role", role);
+                storage.setItem("dashboard_permissions", JSON.stringify({
+                    student_dashboard: role === "student",
+                    employee_dashboard: role === "teacher" || role === "employee",
+                    faculty_dashboard: role === "teacher" || role === "faculty",
+                    admin_dashboard: role === "admin"
+                }));
+
+                window.location.href = redirectUrl;
+                return false;
+            } catch (error) {
+                console.error("Login error:", error);
+                alert(error.message || "Unable to login. Please check your credentials.");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Login";
+                }
+                return false;
+            }
+        }
 
 
             /* PASSWORD VALIDATION */

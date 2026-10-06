@@ -14,6 +14,16 @@
 
   const DEFAULT_BASE_URL = 'http://localhost:8000/api/v1/student';
 
+  function getActiveStudentCode() {
+    if (typeof window !== 'undefined' && window.ERP_AUTH) {
+      const user = window.ERP_AUTH.getCurrentUser();
+      if (user && (user.student_code || user.studentCode || user.id)) {
+        return user.student_code || user.studentCode || user.id;
+      }
+    }
+    return '308637';
+  }
+
   const StudentApi = {
     baseUrl: (typeof window !== 'undefined' && window.__STUDENT_API_BASE__) || DEFAULT_BASE_URL,
 
@@ -48,25 +58,35 @@
       return await this.request('/health');
     },
 
-    async getOverview() {
-      return await this.request('/overview');
+    async getOverview(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/overview?student_code=${encodeURIComponent(code)}`);
     },
 
     // 1. Profile
-    async getProfile(studentCode = '308637') {
-      return await this.request(`/profile?student_code=${encodeURIComponent(studentCode)}`);
+    async getProfile(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/profile?student_code=${encodeURIComponent(code)}`);
     },
 
-    async updateProfile(updates, studentCode = '308637') {
-      return await this.request(`/profile?student_code=${encodeURIComponent(studentCode)}`, {
+    async updateProfile(updates, studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/profile?student_code=${encodeURIComponent(code)}`, {
         method: 'PUT',
         body: updates
       });
     },
 
     // 2. Academic Metrics
-    async getMetrics(studentCode = '308637') {
-      return await this.request(`/metrics?student_code=${encodeURIComponent(studentCode)}`);
+    async getMetrics(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/metrics?student_code=${encodeURIComponent(code)}`);
+    },
+
+    // 2.1 Attendance
+    async getAttendance(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/attendance?student_code=${encodeURIComponent(code)}`);
     },
 
     // 3. Timetable

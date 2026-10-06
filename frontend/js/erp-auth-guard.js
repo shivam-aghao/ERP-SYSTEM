@@ -58,7 +58,9 @@
      */
     getSession: function () {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem('ssgmce_user') || 
+                    localStorage.getItem(STORAGE_KEY) || 
+                    sessionStorage.getItem(STORAGE_KEY);
         if (!raw) return null;
         return JSON.parse(raw);
       } catch (e) {
@@ -73,7 +75,9 @@
      * @param {boolean} rememberMe 
      */
     setSession: function (sessionData, rememberMe = true) {
+      if (!sessionData) return;
       const payload = JSON.stringify(sessionData);
+      localStorage.setItem('ssgmce_user', payload);
       if (rememberMe) {
         localStorage.setItem(STORAGE_KEY, payload);
       } else {
@@ -83,24 +87,26 @@
 
     /**
      * Clear session and return to login portal
-     * @param {string} [redirectUrl]
-     */
     logout: function (redirectUrl) {
+      if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
+        window.ERP_AUTH.logout();
+        return;
+      }
       localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(STORAGE_KEY);
-      const target = redirectUrl || this.getLoginUrl();
-      window.location.href = target;
+      localStorage.removeItem('ssgmce_user');
+      localStorage.removeItem('ssgmce_user_session');
+      localStorage.removeItem('ssgmce_active_role');
+      localStorage.removeItem('ssgmce_teacher_token');
+      localStorage.removeItem('ssgmce_student_token');
+      sessionStorage.clear();
+      window.location.href = redirectUrl || 'login.html';
     },
 
     /**
      * Helper to resolve relative login URL based on current pathname
      */
     getLoginUrl: function () {
-      const path = window.location.pathname.replace(/\\/g, '/');
-      if (path.includes('/student/') || path.includes('/faculty/')) {
-        return '../../login page/frontend/login.html';
-      }
-      return 'login page/frontend/login.html';
+      return 'login.html';
     },
 
     /**
@@ -136,24 +142,33 @@
 
     /**
      * Protect a page against unauthenticated or wrong-role access
-     * @param {'student'|'faculty'|'any'} requiredRole 
+     * @param {'student'|'faculty'|'teacher'|'admin'|'any'} requiredRole 
      */
     guard: function (requiredRole = 'any') {
       const session = this.getSession();
       if (!session) {
         console.warn('[ERPAuth] Access denied: No active session. Redirecting to login.');
-        // Set fallback demo session automatically if running locally for ease of preview
-        // or redirect to login
+        window.location.href = 'login.html';
         return null;
       }
-      if (requiredRole !== 'any' && session.role !== requiredRole) {
-        console.warn(`[ERPAuth] Role mismatch. Required: ${requiredRole}, Found: ${session.role}`);
-        if (session.role === 'faculty') {
-          window.location.href = this.resolvePath('faculty/dashboard/index.html');
-        } else {
-          window.location.href = this.resolvePath('student/dashboard/index.html');
+      var role = (session.role || '').toLowerCase();
+      if (role === 'faculty') role = 'teacher';
+
+      if (requiredRole !== 'any') {
+        var req = requiredRole.toLowerCase();
+        if (req === 'faculty') req = 'teacher';
+
+        if (role !== req) {
+          console.warn(`[ERPAuth] Role mismatch. Required: ${req}, Found: ${role}`);
+          if (role === 'teacher') {
+            window.location.href = 'teacher-dashboard.html';
+          } else if (role === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+          } else {
+            window.location.href = 'student-dashboard.html';
+          }
+          return null;
         }
-        return null;
       }
       return session;
     },

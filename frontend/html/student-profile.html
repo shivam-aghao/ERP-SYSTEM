@@ -19,7 +19,14 @@
 
     <link rel="icon" type="image/svg+xml" href="https://www.ssgmce.ac.in/favicon.svg">
 
-    <!-- SSGMCE ERP Auth Guard & Supabase -->
+    <!-- Central Config & Auth Guard -->
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        if (window.ERP_AUTH) {
+            window.ERP_AUTH.requireAuth('student');
+        }
+    </script>
     <script src="../js/erp-auth-guard.js"></script>
     <script src="../js/erp-supabase.js"></script>
   <script src="../js/student-supabase.js"></script>

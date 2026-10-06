@@ -287,15 +287,18 @@ api = APIRouter(prefix="/api/v1")
 # 4. SYSTEM HEALTH & DIAGNOSTICS
 # ==============================================================================
 @app.get("/health", tags=["System Diagnostics"])
+@app.get("/api/health", tags=["System Diagnostics"])
 @api.get("/health", tags=["System Diagnostics"])
 def health_check():
     return {
         "status": "healthy",
         "service": "SSGMCE College ERP Unified Backend",
         "framework": "FastAPI + SQLAlchemy",
-        "database": "SQLite (backend/erp.db) / Supabase Ready",
+        "database": "connected",
+        "database_type": "SQLite / Supabase Ready",
         "port": 8000
     }
+
 
 @api.get("/status", tags=["System Diagnostics"])
 def status_check(db: Session = Depends(get_db)):
@@ -312,68 +315,21 @@ def status_check(db: Session = Depends(get_db)):
 # ==============================================================================
 # 5. AUTHENTICATION MODULE
 # ==============================================================================
+from backend.services.auth_service import AuthService
+
+@app.post("/api/v1/auth/login", tags=["Authentication"])
+@app.post("/api/auth/login", tags=["Authentication"])
+@app.post("/auth/login", tags=["Authentication"])
 @api.post("/auth/login", tags=["Authentication"])
 def auth_login(payload: LoginRequest, db: Session = Depends(get_db)):
-    uid = payload.user_id or payload.username or payload.roll_number or payload.email or ""
-    role = (payload.role or "student").lower()
+    result = AuthService.authenticate_user(payload, db)
+    resp = success_response(result, "Authenticated successfully")
+    resp["user"] = result.get("user")
+    resp["token"] = result.get("token")
+    resp["role"] = result.get("role")
+    resp["redirect"] = result.get("redirect")
+    return resp
 
-    if role in ("student", "learner"):
-        # Match student
-        st = db.execute(
-            text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :uid OR s.id = :uid OR s.roll_no = :uid LIMIT 1"),
-            {"uid": uid}
-        ).fetchone()
-        if not st:
-            # Fallback to default student if demo
-            st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
-
-        if st:
-            m = st._mapping
-            user_data = {
-                "id": m["id"],
-                "student_code": m["student_code"],
-                "full_name": m["full_name"],
-                "roll_no": m["roll_no"],
-                "class_name": m.get("class_name", "3R"),
-                "class_id": m.get("class_id"),
-                "role": "student"
-            }
-            return success_response({
-                "token": f"st_token_{m['id']}",
-                "user": user_data,
-                "role": "student",
-                "redirect": "student-dashboard.html"
-            }, "Student authenticated successfully")
-
-    # Faculty / Teacher Match
-    t = db.execute(
-        text("SELECT * FROM teachers WHERE email = :uid OR teacher_code = :uid OR id = :uid LIMIT 1"),
-        {"uid": uid}
-    ).fetchone()
-    if not t:
-        t = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
-
-    if t:
-        m = t._mapping
-        return success_response({
-            "token": f"teach_token_{m['id']}",
-            "user": {
-                "id": m["id"],
-                "name": f"{m['first_name']} {m['last_name']}".strip(),
-                "email": m["email"],
-                "department": m.get("department_id", "CSE"),
-                "role": "faculty"
-            },
-            "role": "faculty",
-            "redirect": "teacher-dashboard.html"
-        }, "Faculty authenticated successfully")
-
-    return success_response({
-        "token": "admin_token_default",
-        "user": {"name": "Administrator", "role": "admin"},
-        "role": "admin",
-        "redirect": "admin-dashboard.html"
-    }, "Administrator login")
 
 @api.post("/auth/logout", tags=["Authentication"])
 def auth_logout():
@@ -392,7 +348,7 @@ def auth_me(role: str = Query("student"), db: Session = Depends(get_db)):
 # ==============================================================================
 @api.get("/departments", tags=["Master Data"])
 def get_departments(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT * FROM departments ORDER BY dept_name ASC")).fetchall()
+    rows = db.execute(text("SELECT id, code, name, name as dept_name, icon, classes_count, description FROM departments ORDER BY name ASC")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/classes", tags=["Master Data"])
@@ -510,7 +466,7 @@ def delete_class_card(card_id: str, db: Session = Depends(get_db)):
 def check_duplicate_attendance(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
     row = db.execute(text("""
         SELECT id FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND session_date = :sdate AND period_number = :pnum
+        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum
         LIMIT 1
     """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
     return success_response({"duplicate_exists": bool(row), "session_id": row[0] if row else None})
@@ -519,7 +475,7 @@ def check_duplicate_attendance(class_id: str, subject_id: str, session_date: str
 def get_attendance_draft(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
     row = db.execute(text("""
         SELECT * FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND session_date = :sdate AND period_number = :pnum AND status = 'draft'
+        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum AND status = 'draft'
         LIMIT 1
     """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
     if not row:
@@ -531,11 +487,11 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     sess_id = str(uuid.uuid4())
     db.execute(text("""
         INSERT OR REPLACE INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, session_date, period_number, session_type, status, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, :stype, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        (id, teacher_id, class_id, subject_id, attendance_date, period, status, created_at, updated_at)
+        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number, "stype": payload.session_type
+        "sdate": payload.session_date, "pnum": payload.period_number
     })
     db.commit()
     return success_response({"session_id": sess_id}, "Attendance draft saved")
@@ -545,22 +501,25 @@ def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(ge
     sess_id = str(uuid.uuid4())
     db.execute(text("""
         INSERT INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, session_date, period_number, session_type, status, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, :stype, 'submitted', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        (id, teacher_id, class_id, subject_id, attendance_date, period, status, total_students, present_count, absent_count, submitted_at, created_at, updated_at)
+        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'submitted', :tot, :pres, :abs, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number, "stype": payload.session_type
+        "sdate": payload.session_date, "pnum": payload.period_number,
+        "tot": len(payload.present_student_ids) + len(payload.absent_student_ids),
+        "pres": len(payload.present_student_ids),
+        "abs": len(payload.absent_student_ids)
     })
     # Insert attendance records
     for sid in payload.present_student_ids:
         db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, is_present, created_at)
-            VALUES (:id, :sess_id, :sid, 1, CURRENT_TIMESTAMP)
+            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
+            VALUES (:id, :sess_id, :sid, 'present', CURRENT_TIMESTAMP)
         """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
     for sid in payload.absent_student_ids:
         db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, is_present, created_at)
-            VALUES (:id, :sess_id, :sid, 0, CURRENT_TIMESTAMP)
+            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
+            VALUES (:id, :sess_id, :sid, 'absent', CURRENT_TIMESTAMP)
         """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
     db.commit()
     return success_response({
@@ -582,7 +541,7 @@ def get_attendance_records(class_id: Optional[str] = None, subject_id: Optional[
         LEFT JOIN classes c ON ass.class_id = c.id
         LEFT JOIN subjects s ON ass.subject_id = s.id
         {clause}
-        ORDER BY ass.session_date DESC, ass.period_number ASC
+        ORDER BY ass.created_at DESC
         LIMIT 50
     """), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])
@@ -663,9 +622,9 @@ def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depe
 @api.get("/student/timetable", tags=["Student Portal"])
 @api.get("/timetable", tags=["Student Portal"])
 def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_db)):
-    clause = "WHERE day_of_week = :d" if day else ""
+    clause = "WHERE LOWER(day) = LOWER(:d)" if day else ""
     params = {"d": day} if day else {}
-    rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY period_number ASC"), params).fetchall()
+    rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY period_num ASC"), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/student/attendance", tags=["Student Portal"])
@@ -1516,17 +1475,44 @@ def export_quiz_results(
 # Include the unified API Router
 app.include_router(api)
 
+# Include modular routers under /api/v1
+try:
+    from backend.routes.admin import router as admin_router
+    from backend.routes.faculty import router as faculty_router
+    from backend.routes.attendance import router as attendance_router
+    app.include_router(admin_router, prefix="/api/v1")
+    app.include_router(faculty_router, prefix="/api/v1")
+    app.include_router(attendance_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance) included under /api/v1")
+except Exception as e:
+    logger.warning("Could not load some modular routers: %s", e)
+
 # ==============================================================================
 # 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
 # Serves the frontend directory so everything is available on port 8000!
 # ==============================================================================
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
+HTML_DIR = os.path.join(FRONTEND_DIR, "html")
+
 if os.path.isdir(FRONTEND_DIR):
-    app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
-    app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="js")
-    app.mount("/images", StaticFiles(directory=os.path.join(FRONTEND_DIR, "images")), name="images")
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
-    logger.info("Mounted frontend static assets from %s", FRONTEND_DIR)
+    css_dir = os.path.join(FRONTEND_DIR, "css")
+    js_dir = os.path.join(FRONTEND_DIR, "js")
+    img_dir = os.path.join(FRONTEND_DIR, "images")
+
+    if os.path.isdir(css_dir):
+        app.mount("/css", StaticFiles(directory=css_dir), name="css")
+    if os.path.isdir(js_dir):
+        app.mount("/js", StaticFiles(directory=js_dir), name="js")
+    if os.path.isdir(img_dir):
+        app.mount("/images", StaticFiles(directory=img_dir), name="images")
+
+    if os.path.isdir(HTML_DIR):
+        app.mount("/html", StaticFiles(directory=HTML_DIR, html=True), name="html")
+        app.mount("/", StaticFiles(directory=HTML_DIR, html=True), name="frontend")
+    else:
+        app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
+    logger.info("Mounted frontend static assets from %s and %s", FRONTEND_DIR, HTML_DIR)
 
 # Root fallback
 @app.get("/", include_in_schema=False)

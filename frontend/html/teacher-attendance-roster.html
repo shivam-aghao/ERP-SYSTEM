@@ -454,13 +454,28 @@
         display: none !important;
       }
     }
-  </style>
+  <!-- Central Config & Auth Guard -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (window.ERP_AUTH) {
+      window.ERP_AUTH.requireAuth('teacher');
+    }
+  </script>
 </head>
 <body>
 
   <div class="roster-container">
-    <!-- Centered Header Title -->
-    <h1 class="erp-page-title">Attendance List</h1>
+    <!-- Centered Header Title & Back Navigation -->
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#F1F5F9; padding:8px 16px; border-bottom:2px solid #034694;">
+      <a href="teacher-attendance.html" style="text-decoration:none; color:#034694; font-weight:700; font-size:13px; display:inline-flex; align-items:center; gap:4px;">
+        &larr; Back to Daily Attendance
+      </a>
+      <h1 class="erp-page-title" style="border-bottom:none; background:transparent; padding:0;">Attendance List</h1>
+      <a href="teacher-dashboard.html" style="text-decoration:none; color:#034694; font-weight:700; font-size:13px;">
+        Faculty Dashboard &rarr;
+      </a>
+    </div>
     <div class="provisional-note">* Provisionally Admitted Student</div>
 
     <!-- Metadata Information Bar -->
