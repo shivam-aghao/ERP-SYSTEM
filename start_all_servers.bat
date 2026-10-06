@@ -6,7 +6,7 @@ echo  Database: Cloud Supabase (gftqvclenyplnuoocbwe)
 echo ==============================================================================
 echo.
 echo [1/3] Starting Teacher Dashboard Backend on Port 5001...
-start "SSGMCE Teacher Dashboard API (Port 5001)" cmd /k "cd /d %~dp0Teacher _dashbord\backend && node src/server.js"
+start "SSGMCE Teacher Dashboard API (Port 5001)" cmd /k "cd /d %~dp0Teacher_Dashboard\backend && node server.js"
 
 timeout /t 2 /nobreak >nul
 

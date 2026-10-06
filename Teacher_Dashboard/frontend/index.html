@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) — Teacher ERP Portal</title>
+  
+  <!-- Academic Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/attendance.css">
+  <link rel="stylesheet" href="css/modules.css">
+</head>
+<body>
+
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Official SSGMCE Logo & College Title -->
+      <a href="#" class="header-brand header-college-brand" onclick="TeacherApp.switchView('dashboard'); return false;" aria-label="SSGMCE Home">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
+        </div>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
+        </div>
+      </a>
+
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Notifications & Teacher Profile -->
+    <div class="header-right header-right-controls">
+      <!-- Hidden Search Input to preserve Ctrl+K and JS search handlers without cluttering header -->
+      <div style="display:none;" aria-hidden="true">
+        <input type="text" id="header-search-input">
+      </div>
+
+      <!-- Live Backend & Database Connection Indicator Pill -->
+      <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" onclick="TeacherApp.checkBackendConnection(true)" title="Click to test live backend connection">
+        <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
+        <span id="backend-status-text">Backend: Connecting...</span>
+      </div>
+
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button type="button" class="header-icon-btn" id="notifBtn" onclick="TeacherApp.switchView('notifications')" aria-label="Notifications, 4 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge">4</span>
+        </button>
+      </div>
+
+      <!-- Teacher Profile Pill Trigger & Menu -->
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="avatar-circle profile-avatar" id="header-profile-avatar">
+            <span>RD</span>
+          </div>
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="header-profile-name">Dr. Rohan Deshmukh</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">Associate Professor • CSE</span>
+          </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Profile Dropdown Menu -->
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Dr. Rohan Deshmukh</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Associate Professor • CSE</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">Faculty ID: FAC-CSE-1048</div>
+          </div>
+          <div class="p-links">
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('profile')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>View Profile</span>
+            </div>
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('information')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span>Information</span>
+            </div>
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('settings')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </div>
+            <div class="p-divider"></div>
+            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="TeacherApp.showToast('Faculty logged out successfully.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-wrapper">
+    <!-- Off-canvas Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ========================================================
+         2. LEFT SIDEBAR (Dark Navy #0B1F3A)
+         ======================================================== -->
+    <aside class="app-sidebar dashboard-sidebar" id="app-sidebar" aria-label="Faculty Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard (Active) - At Very Top! -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- TEACHER MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">TEACHER MODULE</span>
+              </div>
+            </li>
+
+            <!-- 2. Attendance (with badge & chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+                <span class="nav-badge" id="sidebar-attendance-badge">02 Pending</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 3. Timetable (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="timetable" onclick="TeacherApp.switchView('timetable')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Timetable</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 4. Classes (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="classes" onclick="TeacherApp.switchView('classes')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h20"></path>
+                  <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+                  <path d="m7 21 5-5 5 5"></path>
+                </svg>
+                <span class="nav-label">Classes</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 5. Students (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="students" onclick="TeacherApp.switchView('students')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="nav-label">Students</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 6. Syllabus (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="syllabus" onclick="TeacherApp.switchView('syllabus')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 7. Results (with chevron) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="results" onclick="TeacherApp.switchView('results')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="nav-label">Results</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- Preferences & Info Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Preferences &amp; Info</span>
+            </li>
+
+            <!-- 8. Profile -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="profile" onclick="TeacherApp.switchView('profile')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
+
+            <!-- 9. Information -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="information" onclick="TeacherApp.switchView('information')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="nav-label">Information</span>
+              </a>
+            </li>
+
+            <!-- 10. Notifications -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="notifications" onclick="TeacherApp.switchView('notifications')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="nav-label">Notifications</span>
+                <span class="nav-badge" style="background:#00A6D6;color:#fff;">4</span>
+              </a>
+            </li>
+
+            <!-- 11. Settings -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" data-view="settings" onclick="TeacherApp.switchView('settings')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+        <div class="sidebar-footer-artwork">
+          <div class="ssgmce-dome-illustration" aria-hidden="true">
+            <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
+              <!-- Central Dome Outline -->
+              <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
+              <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
+              <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
+              <!-- Pediment Triangle -->
+              <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
+              <!-- Portico Columns -->
+              <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <!-- Base Foundation Steps -->
+              <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
+              <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
+              <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="sidebar-motto-text">
+            <span>Discipline</span>
+            <span class="dot">•</span>
+            <span>Development</span>
+            <span class="dot">•</span>
+            <span>Dedication</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================================
+         MAIN CONTENT WRAPPER
+         ======================================================== -->
+    <div class="app-main">
+
+      <!-- ========================================================
+           MAIN DASHBOARD CONTENT AREA
+           ======================================================== -->
+      <main class="content-container">
+
+        <!-- ========================================================
+             PANE 1: MAIN DASHBOARD VIEW
+             ======================================================== -->
+        <section id="dashboard-view" class="view-section-pane" style="display:block;">
+          
+          <!-- 6. HERO SECTION: FULL-WIDTH IMMERSIVE CAMPUS BACKGROUND -->
+          <div class="welcome-banner">
+            <!-- College Building Background Image & Gradient Overlay -->
+            <img src="images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-bg-image" id="heroCampusImg" loading="eager">
+            <div class="hero-overlay" aria-hidden="true"></div>
+
+            <!-- Top Overlay Bar: Campus Tag -->
+            <div class="hero-unified-top-bar">
+              <span class="campus-photo-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                SSGMCE Shegaon • Vidya Bhavan
+              </span>
+            </div>
+
+            <!-- Top Area: Greeting, Teacher Info, Subtitle & Date Widget -->
+            <div class="welcome-hero-top">
+              <div class="welcome-content">
+                <div class="hero-faculty-meta">
+                  <span class="hero-badge-pill">
+                    <span class="pulse-indicator"></span>
+                    <span id="hero-faculty-department">Computer Science & Engineering</span>
+                  </span>
+                  <span class="hero-meta-divider">•</span>
+                  <span class="hero-faculty-sub" id="hero-faculty-role">Faculty Portal</span>
+                </div>
+                <h2 class="welcome-title" id="welcome-greeting-text">Good Morning, Professor 👋</h2>
+                <div class="hero-teacher-meta-row">
+                  <span class="hero-teacher-name" id="hero-teacher-name">Dr. Rohan Deshmukh</span>
+                  <span class="hero-meta-dot">•</span>
+                  <span class="hero-teacher-designation" id="hero-teacher-designation">Associate Professor</span>
+                  <span class="hero-meta-dot">•</span>
+                  <span class="hero-teacher-id" id="hero-teacher-id">FAC-CSE-1048</span>
+                </div>
+                <div class="hero-accent-bar" aria-hidden="true"></div>
+                <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
+                <div class="hero-pillars-horizontal" aria-hidden="true">
+                  <span>Learn</span>
+                  <span class="dot">•</span>
+                  <span>Innovate</span>
+                  <span class="dot">•</span>
+                  <span>Build</span>
+                  <span class="dot">•</span>
+                  <span>Lead</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Caption: Vidya Bhavan Info -->
+            <div class="hero-unified-bottom-tag" aria-hidden="true">
+              <span class="building-name">विद्या भवन (Vidya Bhavan)</span>
+              <span class="tag-sep">•</span>
+              <span class="campus-sub">Main Academic Block</span>
+            </div>
+          </div>
+
+          <!-- Middle Area: Horizontal Quick-Access / Statistics Cards (Below Campus Photo) -->
+          <div class="stats-grid hero-stats-grid faculty-stats-strip" id="stats-cards-container">
+            <!-- Injected by JS -->
+          </div>
+
+          <!-- ========================================================
+               LOWER DASHBOARD SECTION: DATE & SCHEDULE BAR (BELOW HERO)
+               ======================================================== -->
+          <div class="dashboard-date-strip">
+            <div class="date-strip-heading-wrap">
+              <span class="date-strip-badge">
+                <span class="pulse-indicator"></span>
+                <span>Active Semester • B.Tech 2025-26</span>
+              </span>
+              <h3 class="date-strip-title">
+                <i data-lucide="calendar-check-2" style="width:20px;height:20px;color:var(--primary-blue);"></i>
+                Academic Operations &amp; Daily Schedule
+              </h3>
+            </div>
+
+            <!-- Today's Date Calendar Card (Repositioned Below Hero) -->
+            <div class="welcome-date-widget" id="welcome-date-widget" onclick="TeacherApp.openDashboardDatePicker()" title="Click to view or change dashboard date">
+              <div class="date-widget-icon">
+                <i data-lucide="calendar" style="width:20px;height:20px;"></i>
+              </div>
+              <div class="date-widget-text">
+                <span class="date-day-label" id="dashboard-date-label">Today's Date</span>
+                <span class="date-full-string" id="dashboard-today-date">Current Date</span>
+              </div>
+              <input type="date" 
+                     id="dashboard-date-picker-input" 
+                     class="dashboard-hidden-date-input" 
+                     onclick="event.stopPropagation()"
+                     onchange="TeacherApp.handleDashboardDateChange(this.value)">
+              <button class="btn-dashboard-date-picker" 
+                      type="button" 
+                      onclick="event.stopPropagation(); TeacherApp.openDashboardDatePicker();" 
+                      title="Select date">
+                <i data-lucide="calendar-days" style="width:14px;height:14px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 8 & 9. TWO-COLUMN DASHBOARD SECTIONS (Today's Classes & Attendance) -->
+          <div class="dashboard-grid-two-col">
+            
+            <!-- 8. TODAY'S CLASSES SECTION -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="calendar-clock" style="color:var(--primary-blue); width:20px;height:20px;"></i>
+                  Today's Classes
+                </h3>
+                <a class="card-action-link" href="javascript:void(0)" onclick="TeacherApp.switchView('timetable')">
+                  View Timetable →
+                </a>
+              </div>
+              <div class="card-body">
+                <div id="today-classes-timeline">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- 9. ATTENDANCE SECTION -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="check-circle-2" style="color:var(--primary-blue); width:20px;height:20px;"></i>
+                  Attendance
+                </h3>
+                <span class="badge badge-cyan">Daily Status</span>
+              </div>
+              <div class="card-body">
+                <div id="attendance-progress-container">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 11 & 12. CLASS OVERVIEW SECTION -->
+          <div class="dashboard-section-block">
+            <div class="section-header-row">
+              <h3 class="section-heading">
+                <i data-lucide="layout-grid" style="color:var(--primary-blue); width:20px;height:20px;"></i>
+                Class Overview
+              </h3>
+              <a class="card-action-link" href="javascript:void(0)" onclick="TeacherApp.switchView('classes')">
+                View All Classes →
+              </a>
+            </div>
+
+            <div class="class-overview-grid" id="class-overview-grid">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+          <!-- 13. RECENT ACTIVITY SECTION -->
+          <div class="card dashboard-section-block">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i data-lucide="history" style="color:var(--primary-blue); width:20px;height:20px;"></i>
+                Recent Activity
+              </h3>
+              <a class="card-action-link" href="javascript:void(0)" onclick="TeacherApp.showToast('All 24 faculty activity logs loaded.')">
+                View All →
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="activity-list" id="recent-activity-list">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 14. QUICK ACTIONS SECTION -->
+          <div class="dashboard-section-block">
+            <h4 class="section-subheading">
+              Quick Actions
+            </h4>
+            <div class="quick-actions-bar">
+              <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceModule()">
+                <i data-lucide="calendar-check" style="width:16px;height:16px;"></i>
+                Mark Attendance
+              </button>
+              <button class="quick-action-btn" onclick="TeacherApp.switchView('timetable')">
+                <i data-lucide="calendar" style="width:16px;height:16px;"></i>
+                View Timetable
+              </button>
+              <button class="quick-action-btn" onclick="TeacherApp.switchView('students')">
+                <i data-lucide="users" style="width:16px;height:16px;"></i>
+                View Students
+              </button>
+              <button class="quick-action-btn" onclick="TeacherApp.switchView('syllabus')">
+                <i data-lucide="book-open" style="width:16px;height:16px;"></i>
+                Update Syllabus
+              </button>
+              <button class="quick-action-btn" onclick="TeacherApp.switchView('results')">
+                <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
+                Upload Results
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ========================================================
+             PANE 2: TEACHER ATTENDANCE MANAGEMENT WORKFLOW
+             ======================================================== -->
+        <section id="attendance-module" class="view-section-pane attendance-management-wrapper">
+          
+          <!-- Top Navigation & Breadcrumb Trail -->
+          <div class="attendance-top-bar">
+            <button class="btn-dash-back-link" onclick="TeacherApp.switchView('dashboard')">
+              <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+              Back to Dashboard
+            </button>
+
+            <!-- Clickable Reactive Breadcrumb -->
+            <div class="attendance-breadcrumb" id="attendance-breadcrumb-trail">
+              <span class="bc-item current">Attendance</span>
+            </div>
+          </div>
+
+          <!-- Attendance Landing Banner -->
+          <div style="margin-bottom:20px;">
+            <h2 style="font-size:22px; font-weight:800; color:var(--dark-navy);">Attendance Management</h2>
+            <p style="font-size:13.5px; color:var(--text-muted); margin-top:2px;">
+              Mark attendance directly using the dynamic selector below, from the Timetable, or via the step-by-step wizard.
+            </p>
+          </div>
+
+          <!-- Attendance Module View Mode Selector / Manual Card -->
+          <div class="manual-attendance-card" style="margin-bottom:24px;">
+            <div class="manual-card-header">
+              <div>
+                <h3 style="font-size:16px; font-weight:750; color:var(--dark-navy); display:flex; align-items:center; gap:8px;">
+                  <i data-lucide="calendar-check" style="width:18px;height:18px; color:var(--primary-blue);"></i>
+                  Manual Attendance Marking Module
+                </h3>
+                <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
+                  Select a date to dynamically load scheduled classes from your timetable, or toggle Override for substitute lectures.
+                </p>
+              </div>
+              <div id="manual-pending-indicator">
+                <span class="badge badge-pending" id="manual-pending-badge">02 Pending Today</span>
+              </div>
+            </div>
+
+            <div class="manual-form-grid">
+              <!-- Date Picker -->
+              <div class="manual-form-group">
+                <label for="manual-attendance-date" class="manual-label">
+                  <i data-lucide="calendar" style="width:14px;height:14px; color:var(--primary-blue);"></i>
+                  <span>1. Attendance Date</span>
+                </label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <input type="date" id="manual-attendance-date" class="manual-input" onchange="AttendanceDrawer.handleManualDateChange(this.value)">
+                  <span id="manual-date-day-chip" class="manual-day-chip">Today</span>
+                </div>
+              </div>
+
+              <!-- Scheduled Class Dropdown -->
+              <div class="manual-form-group" id="scheduled-class-group">
+                <label for="manual-attendance-slot-select" class="manual-label">
+                  <i data-lucide="clock" style="width:14px;height:14px; color:var(--primary-blue);"></i>
+                  <span>2. Scheduled Timetable Lectures for Date</span>
+                </label>
+                <select id="manual-attendance-slot-select" class="manual-input">
+                  <!-- Dynamically populated based on date -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Override / Substitute Checkbox -->
+            <div class="manual-override-box">
+              <label class="manual-override-checkbox-label">
+                <input type="checkbox" id="manual-attendance-override-toggle" onchange="AttendanceDrawer.toggleOverrideMode(this.checked)">
+                <span><strong>Override / Other Class</strong> (Mark unscheduled lecture, lab, or substitute class)</span>
+              </label>
+
+              <!-- Hidden by default, revealed when override checked -->
+              <div id="manual-override-fields" class="manual-override-fields" style="display:none; margin-top:14px;">
+                <div class="manual-override-grid">
+                  <div class="manual-form-group">
+                    <label class="manual-label">Department</label>
+                    <select id="override-dept-select" class="manual-input" onchange="AttendanceDrawer.handleOverrideDeptChange(this.value)">
+                      <option value="CSE">Computer Science & Eng (CSE)</option>
+                      <option value="IT">Information Technology (IT)</option>
+                      <option value="EE">Electrical Engineering (EE)</option>
+                      <option value="MECH">Mechanical Engineering (MECH)</option>
+                    </select>
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Class</label>
+                    <select id="override-class-select" class="manual-input">
+                      <option value="2R1">2R1 (Second Year CSE Div 1)</option>
+                      <option value="2R2">2R2 (Second Year CSE Div 2)</option>
+                      <option value="3R">3R (Third Year CSE)</option>
+                      <option value="4R">4R (Final Year CSE)</option>
+                    </select>
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Subject / Topic Name</label>
+                    <input type="text" id="override-subject-input" class="manual-input" value="Data Structures" placeholder="e.g. Data Structures">
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Room / Lab</label>
+                    <input type="text" id="override-room-input" class="manual-input" value="Room 201" placeholder="e.g. Room 201">
+                  </div>
+                  <div class="manual-form-group">
+                    <label class="manual-label">Timeslot</label>
+                    <select id="override-timeslot-select" class="manual-input">
+                      <option value="09:00 - 10:30 AM">09:00 - 10:30 AM</option>
+                      <option value="11:00 - 12:30 PM">11:00 - 12:30 PM</option>
+                      <option value="01:30 - 03:00 PM">01:30 - 03:00 PM</option>
+                      <option value="03:30 - 05:00 PM">03:30 - 05:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+              <button type="button" class="btn-load-students-drawer" onclick="AttendanceDrawer.loadManualStudents()">
+                <i data-lucide="users" style="width:16px;height:16px;"></i>
+                <span>Load Students & Open Attendance Drawer</span>
+              </button>
+              <span style="font-size:12px; color:var(--text-muted);">Or use the step-by-step wizard below:</span>
+            </div>
+          </div>
+
+          <!-- 5-Step Continuous Horizontal Stepper -->
+          <div class="stepper-workflow-container">
+            <div class="workflow-step-node active" onclick="AttendanceWorkflow.goToStep(1)">
+              <div class="step-bubble">01</div>
+              <span>Department</span>
+            </div>
+            <div class="workflow-step-connector"></div>
+
+            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(2)">
+              <div class="step-bubble">02</div>
+              <span>Class</span>
+            </div>
+            <div class="workflow-step-connector"></div>
+
+            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(3)">
+              <div class="step-bubble">03</div>
+              <span>Date</span>
+            </div>
+            <div class="workflow-step-connector"></div>
+
+            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(4)">
+              <div class="step-bubble">04</div>
+              <span>Subject</span>
+            </div>
+            <div class="workflow-step-connector"></div>
+
+            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(5)">
+              <div class="step-bubble">05</div>
+              <span>Students</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Container for Step 1 through 6 -->
+          <div id="attendance-step-content">
+            <!-- Dynamically rendered by js/attendance.js -->
+          </div>
+
+        </section>
+
+        <!-- ========================================================
+             PANE 3: TIMETABLE VIEW
+             ======================================================== -->
+        <section id="timetable-view" class="view-section-pane app-module-view">
+          <div id="timetable-content">
+            <!-- Timetable generated by JS -->
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 3B: STUDENT ATTENDANCE MARKING PAGE (CLICK-TO-MARK)
+             ======================================================== -->
+        <section id="attendance-marking-page" class="view-section-pane app-module-view attendance-marking-page-wrapper" style="display:none;">
+          
+          <!-- 1. TOP BAR: BACK BUTTON & BREADCRUMBS -->
+          <div class="mark-page-top-bar">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <button type="button" class="btn-dash-back-link" onclick="AttendanceMarkingManager.backToTimetable()">
+                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+                <span>Back to Timetable</span>
+              </button>
+
+              <!-- Dynamic Breadcrumb Navigation: Attendance > Department > Class > Date > Subject -->
+              <nav class="mark-page-breadcrumb" id="mark-page-breadcrumb">
+                <a onclick="AttendanceMarkingManager.backToTimetable()">Attendance</a>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-dept-text" style="font-weight:700;">CSE</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-class-text" style="font-weight:700;">2R1</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-date-text">17 September 2026</span>
+                <span class="bc-separator">&gt;</span>
+                <span id="bc-subject-text" class="bc-current">Data Structures</span>
+              </nav>
+            </div>
+
+            <!-- Top Action Controls -->
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openSaveModal()">
+                <i data-lucide="save" style="width:14px;height:14px;"></i>
+                <span>Save Attendance</span>
+              </button>
+              <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.openSubmitModal()">
+                <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                <span>Submit Attendance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- TOP HEADER: CLASS CONTEXT -->
+          <div class="mark-page-context-header">
+            <div class="mark-context-top">
+              <div>
+                <div class="mark-badges-row">
+                  <span class="mark-badge-pill dept" id="mark-header-dept-badge">CSE Department</span>
+                  <span class="mark-badge-pill cls" id="mark-header-class-badge">Class 2R1</span>
+                  <span class="mark-badge-pill status-done" id="mark-header-logged-badge" style="display:none;">
+                    <i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Previously Logged
+                  </span>
+                </div>
+
+                <h1 class="mark-header-title" id="mark-header-subject-title">Data Structures</h1>
+
+                <div class="mark-header-meta">
+                  <span class="mark-meta-item">
+                    <i data-lucide="calendar" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <strong id="mark-header-date-str">17 September 2026</strong>
+                  </span>
+                  <span style="color:#64748B;">•</span>
+                  <span class="mark-meta-item">
+                    <i data-lucide="clock" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <span id="mark-header-slot-str">09:00 - 10:30 AM</span>
+                  </span>
+                  <span style="color:#64748B;">•</span>
+                  <span class="mark-meta-item">
+                    <i data-lucide="map-pin" style="width:15px;height:15px;color:#60A5FA;"></i>
+                    <span id="mark-header-room-str">Room 201</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Top Right Rate Pill -->
+              <div class="mark-context-stat-box">
+                <div class="mark-stat-box-rate" id="mark-header-rate-display">0%</div>
+                <div class="mark-stat-box-lbl" id="mark-header-summary-lbl">0 / 60 Present</div>
+              </div>
+            </div>
+
+            <!-- 2. THE DUAL-METHOD ATTENDANCE INTERFACE TAB SWITCHER -->
+            <div class="mark-mode-switcher-bar">
+              <div class="mark-tab-pills">
+                <button type="button" class="mark-tab-btn active" id="tab-btn-swipe" onclick="AttendanceMarkingManager.switchTab('swipe')">
+                  <i data-lucide="credit-card" style="width:15px;height:15px;"></i>
+                  <span>Swipe Card Mode</span>
+                  <span class="mark-tab-chip">Interactive</span>
+                </button>
+                <button type="button" class="mark-tab-btn" id="tab-btn-roster" onclick="AttendanceMarkingManager.switchTab('roster')">
+                  <i data-lucide="list-checks" style="width:15px;height:15px;"></i>
+                  <span>Roster List Mode</span>
+                  <span class="mark-tab-chip" id="tab-roster-count-chip">60</span>
+                </button>
+                <button type="button" class="mark-tab-btn" id="tab-btn-summary" onclick="AttendanceMarkingManager.switchTab('summary')">
+                  <i data-lucide="pie-chart" style="width:15px;height:15px;"></i>
+                  <span>Review & Summary</span>
+                </button>
+              </div>
+
+              <div class="mark-live-counters-pill">
+                <span style="color:#6EE7B7;" id="top-counter-present">0 Present</span>
+                <span style="color:rgba(255,255,255,0.3);">•</span>
+                <span style="color:#FCA5A5;" id="top-counter-absent">0 Absent</span>
+                <span style="color:rgba(255,255,255,0.3);">•</span>
+                <span style="color:#93C5FD;" id="top-counter-remaining">60 Remaining</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               TAB 1: SWIPE CARD MODE (CLEAN HIGH-CONTRAST CARD DESIGN)
+               ======================================================== -->
+          <div id="mark-pane-swipe" class="swipe-card-workspace">
+            <!-- Top Progress & Counter ("Student 21 of 60") -->
+            <div class="swipe-progress-card">
+              <div class="swipe-progress-header">
+                <div class="swipe-counter-text">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#2563EB;display:inline-block;"></span>
+                  <span id="swipe-counter-label">Student 1 of 60</span>
+                </div>
+                <span class="swipe-percent-chip" id="swipe-progress-chip">0% Complete</span>
+              </div>
+
+              <div class="swipe-progress-track">
+                <div class="swipe-progress-fill" id="swipe-progress-fill" style="width:0%;"></div>
+              </div>
+
+              <div class="swipe-stats-strip">
+                <div class="swipe-stat-cell pres">Present: <strong id="swipe-cell-present">0</strong></div>
+                <div class="swipe-stat-cell abs">Absent: <strong id="swipe-cell-absent">0</strong></div>
+                <div class="swipe-stat-cell rem">Remaining: <strong id="swipe-cell-remaining">60</strong></div>
+              </div>
+            </div>
+
+            <!-- Swipe Deck Stage with Physics & Live Stamps -->
+            <div class="swipe-deck-stage" id="swipe-deck-stage">
+              <!-- Underneath Card Peek -->
+              <div class="swipe-peek-card" id="swipe-peek-card" style="display:none;">
+                <div class="mark-badge-pill cls" id="swipe-peek-roll">NEXT: ROLL 2</div>
+                <h4 style="font-size:22px; font-weight:900; color:#475569; margin-top:8px;" id="swipe-peek-name">STUDENT NAME</h4>
+                <span style="font-size:12px; color:#94A3B8; font-family:monospace;" id="swipe-peek-enroll">EN24CSE002</span>
+              </div>
+
+              <!-- Active Swipe Card (Clean Design - No Main Photo) -->
+              <div class="swipe-card-clean" id="swipe-active-card">
+                <!-- Top Row -->
+                <div class="swipe-card-top-row">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="swipe-card-cls-badge" id="card-class-badge">CLASS 2R1</span>
+                    <span class="swipe-card-sub-name" id="card-subject-name">Data Structures</span>
+                  </div>
+                  <span style="font-size:12px; font-weight:800; color:#94A3B8; font-family:monospace;" id="card-index-indicator">#1</span>
+                </div>
+
+                <!-- Live Stamps -->
+                <div class="swipe-stamp present" id="swipe-stamp-present" style="opacity:0;">PRESENT ✓</div>
+                <div class="swipe-stamp absent" id="swipe-stamp-absent" style="opacity:0;">ABSENT ✗</div>
+
+                <!-- High-Contrast Body Center -->
+                <div class="swipe-card-body-center">
+                  <!-- Large Roll Number Badge -->
+                  <div class="swipe-card-roll-badge" id="card-roll-number">ROLL 1</div>
+
+                  <!-- High-Contrast Bold Name -->
+                  <h3 class="swipe-card-name" id="card-student-name">SHIVAM AGHAO</h3>
+
+                  <div class="swipe-card-enroll" id="card-enrollment-id">EN24CSE001</div>
+                </div>
+
+                <!-- Bottom Instruction -->
+                <div class="swipe-card-instruction-row">
+                  <div class="swipe-instruction-pill">
+                    <span class="abs-hint">← ABSENT</span>
+                    <span class="center-badge">← SWIPE →</span>
+                    <span class="pres-hint">PRESENT →</span>
+                  </div>
+                  <small style="font-size:11px; color:#94A3B8;">Drag card or press Left/Right arrow keys</small>
+                </div>
+              </div>
+
+              <!-- Completion State (Rendered when all cards swiped) -->
+              <div id="swipe-completion-card" class="swipe-card-clean" style="display:none; text-align:center; justify-content:center; align-items:center; gap:16px;">
+                <div style="width:72px; height:72px; border-radius:50%; background:#DCFCE7; color:#15803D; font-size:32px; font-weight:900; display:flex; align-items:center; justify-content:center;">✓</div>
+                <h3 style="font-size:24px; font-weight:900; color:#0F172A; margin:0;">All Students Swiped!</h3>
+                <p style="font-size:13px; color:#64748B; max-width:320px; margin:0;">Every student in this lecture has been marked. Review the breakdown or submit attendance.</p>
+                <button type="button" class="btn-swipe-present" style="max-width:240px; margin-top:8px;" onclick="AttendanceMarkingManager.switchTab('summary')">
+                  Review Summary &rarr;
+                </button>
+              </div>
+            </div>
+
+            <!-- Desktop Action Buttons -->
+            <div class="swipe-desktop-controls">
+              <button type="button" class="btn-swipe-absent" onclick="AttendanceMarkingManager.markActiveCard('absent')">
+                <span>&larr;</span>
+                <span>ABSENT</span>
+              </button>
+
+              <button type="button" class="btn-swipe-util" title="Undo previous student" onclick="AttendanceMarkingManager.undoLast()">
+                ⟲ Undo
+              </button>
+
+              <button type="button" class="btn-swipe-util" title="Skip student" onclick="AttendanceMarkingManager.skipStudent()">
+                Skip
+              </button>
+
+              <button type="button" class="btn-swipe-present" onclick="AttendanceMarkingManager.markActiveCard('present')">
+                <span>PRESENT</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+
+            <!-- Keyboard Shortcut Helpers -->
+            <div class="swipe-kbd-shortcuts-bar">
+              <span><kbd>&larr;</kbd> Mark Absent</span>
+              <span style="color:#CBD5E1;">•</span>
+              <span><kbd>&rarr;</kbd> Mark Present</span>
+              <span style="color:#CBD5E1;">•</span>
+              <span><kbd>Space</kbd> Skip / Review</span>
+            </div>
+
+            <!-- Hardware Card Reader Fallback Input -->
+            <div style="background:#0F172A; border-radius:18px; padding:12px 18px; color:#fff; display:flex; align-items:center; gap:10px;">
+              <i data-lucide="scan" style="width:16px;height:16px;color:#60A5FA;"></i>
+              <input type="text" id="hardware-card-reader-input" placeholder="RFID Reader Active — Tap card or enter CARD-2R1-001..." 
+                     style="flex:1; background:#1E293B; border:1px solid #334155; border-radius:10px; padding:8px 12px; color:#fff; font-size:12px; outline:none;" 
+                     onkeydown="if(event.key==='Enter'){event.preventDefault(); AttendanceMarkingManager.handleHardwareInput(this.value); this.value='';}">
+              <button type="button" class="btn-rfid-mark" onclick="AttendanceMarkingManager.handleHardwareInput(document.getElementById('hardware-card-reader-input').value); document.getElementById('hardware-card-reader-input').value='';">
+                Mark
+              </button>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               TAB 2: ROSTER LIST MODE (CROSS-SYNCED & BULK CONTROLS)
+               ======================================================== -->
+          <div id="mark-pane-roster" style="display:none;" class="space-y-4">
+            <div class="drawer-toolbar" style="background:#FFFFFF; border-radius:18px; padding:16px 20px; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button type="button" class="btn-quick-present" onclick="AttendanceMarkingManager.markAll('present')">
+                  <i data-lucide="check" style="width:14px;height:14px;"></i> Mark All Present
+                </button>
+                <button type="button" class="btn-quick-absent" onclick="AttendanceMarkingManager.markAll('absent')">
+                  <i data-lucide="x" style="width:14px;height:14px;"></i> Mark All Absent
+                </button>
+              </div>
+
+              <!-- Search Filter Bar -->
+              <div class="drawer-search-wrapper" style="width:320px; max-width:100%;">
+                <i data-lucide="search" style="width:15px;height:15px;color:#94A3B8;"></i>
+                <input type="text" id="roster-page-search" placeholder="Search by roll number or student name..." 
+                       oninput="AttendanceMarkingManager.filterRoster(this.value)" 
+                       style="width:100%; border:none; background:transparent; font-size:12.5px; outline:none;">
+              </div>
+            </div>
+
+            <!-- Scrollable Student Roster List -->
+            <div id="roster-page-student-list" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+              <!-- Dynamically populated by AttendanceMarkingManager -->
+            </div>
+          </div>
+
+          <!-- ========================================================
+               TAB 3: REVIEW ATTENDANCE & SUMMARY VIEW
+               ======================================================== -->
+          <div id="mark-pane-summary" style="display:none;" class="attendance-summary-wrapper">
+            <!-- KPI Cards Grid -->
+            <div class="summary-metrics-grid">
+              <div class="summary-kpi-card">
+                <span class="summary-kpi-lbl">Total Students</span>
+                <div class="summary-kpi-val" id="sum-kpi-total">60</div>
+                <span class="summary-kpi-sub">Enrolled in class</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:linear-gradient(135deg, #0A2540 0%, #1E3A8A 100%); color:#fff;">
+                <span class="summary-kpi-lbl" style="color:#93C5FD;">Attendance Rate</span>
+                <div class="summary-kpi-val" style="color:#34D399;" id="sum-kpi-rate">86.67%</div>
+                <span class="summary-kpi-sub" style="color:#CBD5E1;" id="sum-kpi-ratio">52 / 60 Attended</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:#F0FDF4; border-color:#DCFCE7;">
+                <span class="summary-kpi-lbl" style="color:#15803D;">Present Students</span>
+                <div class="summary-kpi-val" style="color:#15803D;" id="sum-kpi-present">52</div>
+                <span class="summary-kpi-sub" style="color:#16A34A;">Physically marked present</span>
+              </div>
+
+              <div class="summary-kpi-card" style="background:#FEF2F2; border-color:#FEE2E2;">
+                <span class="summary-kpi-lbl" style="color:#B91C1C;">Absent Students</span>
+                <div class="summary-kpi-val" style="color:#DC2626;" id="sum-kpi-absent">8</div>
+                <span class="summary-kpi-sub" style="color:#EF4444;">Marked absent</span>
+              </div>
+            </div>
+
+            <!-- Doughnut Chart & Summary Controls -->
+            <div class="summary-chart-card">
+              <div class="doughnut-container">
+                <svg width="150" height="150" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="60" stroke="#F1F5F9" stroke-width="18" fill="none"></circle>
+                  <circle id="sum-doughnut-absent" cx="80" cy="80" r="60" stroke="#EF4444" stroke-width="18" stroke-dasharray="0 377" fill="none" stroke-linecap="round"></circle>
+                  <circle id="sum-doughnut-present" cx="80" cy="80" r="60" stroke="#10B981" stroke-width="18" stroke-dasharray="0 377" fill="none" stroke-linecap="round"></circle>
+                </svg>
+                <div class="doughnut-center-info">
+                  <span class="doughnut-center-rate" id="sum-doughnut-percent-text">87%</span>
+                  <span class="doughnut-center-lbl">Attended</span>
+                </div>
+              </div>
+
+              <div style="flex:1; min-width:240px;">
+                <h4 style="font-size:16px; font-weight:800; color:#0F172A; margin:0 0 6px;">Attendance Breakdown</h4>
+                <p style="font-size:12.5px; color:#64748B; margin:0 0 16px;">
+                  All records are updated and synced across Swipe Card Mode and Roster List Mode. You can edit any individual student before official submission.
+                </p>
+
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openEditModal()">
+                    <i data-lucide="edit-3" style="width:14px;height:14px;"></i>
+                    <span>Edit Attendance</span>
+                  </button>
+                  <button type="button" class="quick-action-btn" onclick="AttendanceMarkingManager.openSaveModal()">
+                    <i data-lucide="save" style="width:14px;height:14px;"></i>
+                    <span>Save Draft</span>
+                  </button>
+                  <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.openSubmitModal()">
+                    <i data-lucide="check-check" style="width:14px;height:14px;"></i>
+                    <span>Submit Attendance</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two Breakdown Lists (PRESENT & ABSENT) -->
+            <div class="summary-breakdown-lists-grid">
+              <!-- PRESENT Students Breakdown -->
+              <div class="breakdown-list-card">
+                <div class="breakdown-list-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#10B981;"></span>
+                    <strong style="font-size:14px; color:#0F172A;">Present Students (<span id="sum-list-present-count">0</span>)</strong>
+                  </div>
+                  <span class="mark-badge-pill" style="background:#DCFCE7; color:#15803D;">Verified</span>
+                </div>
+                <div class="breakdown-list-scroll" id="sum-present-list-container">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- ABSENT Students Breakdown -->
+              <div class="breakdown-list-card">
+                <div class="breakdown-list-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#EF4444;"></span>
+                    <strong style="font-size:14px; color:#0F172A;">Absent Students (<span id="sum-list-absent-count">0</span>)</strong>
+                  </div>
+                  <span class="mark-badge-pill" style="background:#FEE2E2; color:#B91C1C;">Attention</span>
+                </div>
+                <div class="breakdown-list-scroll" id="sum-absent-list-container">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ========================================================
+               MODAL 1: EDIT ATTENDANCE (TABLE VIEW WITH "CHANGE" BUTTON)
+               ======================================================== -->
+          <div id="modal-edit-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog large">
+              <div class="app-modal-header">
+                <div>
+                  <h3>Edit Attendance Records</h3>
+                  <small style="color:#64748B;">Toggle student attendance quickly with the "Change" button</small>
+                </div>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeEditModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <div style="margin-bottom:12px;">
+                  <input type="text" id="edit-modal-search" placeholder="Search by student name or roll number..." 
+                         oninput="AttendanceMarkingManager.filterEditTable(this.value)"
+                         style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid #CBD5E1; font-size:12.5px; outline:none;">
+                </div>
+                <div style="max-height:360px; overflow-y:auto; border-radius:12px; border:1px solid #E2E8F0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead style="background:#F8FAFC; position:sticky; top:0; border-bottom:1px solid #E2E8F0; color:#475569; font-weight:800;">
+                      <tr>
+                        <th style="padding:10px 12px;">Roll</th>
+                        <th style="padding:10px 12px;">Student Name</th>
+                        <th style="padding:10px 12px; text-align:center;">Current Status</th>
+                        <th style="padding:10px 12px; text-align:center;">Action</th>
+                        <th style="padding:10px 12px;">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody id="edit-attendance-table-body">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.closeEditModal()">
+                  Done Editing
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               MODAL 2: SAVE ATTENDANCE CONFIRMATION (DRAFT)
+               ======================================================== -->
+          <div id="modal-save-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog">
+              <div class="app-modal-header">
+                <h3>Save Attendance Draft</h3>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSaveModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <p style="font-size:13px; color:#475569; margin:0 0 14px;">
+                  Save your current attendance progress as a draft session. You can return and make adjustments at any time.
+                </p>
+                <div style="background:#F8FAFC; border-radius:14px; padding:14px; border:1px solid #E2E8F0; font-size:12.5px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Subject:</span>
+                    <strong id="save-modal-subject">Data Structures</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Class & Date:</span>
+                    <strong id="save-modal-class-date">2R1 • 17 Sep 2026</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Present Students:</span>
+                    <strong style="color:#15803D;" id="save-modal-present">0</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Absent Students:</span>
+                    <strong style="color:#DC2626;" id="save-modal-absent">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSaveModal()">Cancel</button>
+                <button type="button" class="quick-action-btn primary" onclick="AttendanceMarkingManager.confirmSaveDraft()">
+                  Confirm & Save Draft
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               MODAL 3: SUBMIT ATTENDANCE CONFIRMATION (FINAL SUBMIT)
+               ======================================================== -->
+          <div id="modal-submit-attendance" class="app-modal-backdrop" style="display:none;">
+            <div class="app-modal-dialog">
+              <div class="app-modal-header">
+                <h3>Submit Attendance</h3>
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSubmitModal()">✕</button>
+              </div>
+              <div class="app-modal-body">
+                <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+                  <div style="width:36px; height:36px; border-radius:10px; background:#FEF3C7; color:#D97706; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i data-lucide="alert-circle" style="width:20px;height:20px;"></i>
+                  </div>
+                  <div>
+                    <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 4px;">Are you sure you want to submit attendance?</h4>
+                    <p style="font-size:12.5px; color:#64748B; margin:0;">
+                      Once submitted, the records for <strong id="submit-modal-subject">Data Structures</strong> (<span id="submit-modal-class">2R1</span>) will be officially logged and updated in the ERP database.
+                    </p>
+                  </div>
+                </div>
+
+                <div style="background:#F8FAFC; border-radius:14px; padding:14px; border:1px solid #E2E8F0; font-size:12.5px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Date:</span>
+                    <strong id="submit-modal-date">17 Sep 2026</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Total Enrolled:</span>
+                    <strong id="submit-modal-total">60 Students</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Present Count:</span>
+                    <strong style="color:#15803D;" id="submit-modal-present">0 (0%)</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:#64748B;">Absent Count:</span>
+                    <strong style="color:#DC2626;" id="submit-modal-absent">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="app-modal-footer">
+                <button type="button" class="btn-drawer-cancel" onclick="AttendanceMarkingManager.closeSubmitModal()">Cancel</button>
+                <button type="button" class="quick-action-btn primary" id="btn-confirm-final-submit" onclick="AttendanceMarkingManager.confirmFinalSubmit()">
+                  Confirm & Submit
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ========================================================
+             PANE 4: CLASSES VIEW
+             ======================================================== -->
+        <section id="classes-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Assigned Classes & Batches</h3>
+            <div class="class-overview-grid">
+              <!-- Re-use class overview cards -->
+              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R1', 'Data Structures')">
+                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
+                <div class="class-card-middle"><div class="class-name-large">2R1</div><div class="class-subject-name">Data Structures</div></div>
+                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 60 Students</div><span class="badge badge-completed">Completed</span></div>
+              </div>
+              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R2', 'Java Programming')">
+                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
+                <div class="class-card-middle"><div class="class-name-large">2R2</div><div class="class-subject-name">Java Programming</div></div>
+                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 58 Students</div><span class="badge badge-pending">Pending</span></div>
+              </div>
+              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('3R', 'Database Management')">
+                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
+                <div class="class-card-middle"><div class="class-name-large">3R</div><div class="class-subject-name">Database Management</div></div>
+                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 62 Students</div><span class="badge badge-pending">Pending</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 5: STUDENTS DIRECTORY VIEW
+             ======================================================== -->
+        <section id="students-view" class="view-section-pane app-module-view">
+          <div id="students-content">
+            <!-- Students roster generated by JS -->
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 6: SYLLABUS TRACKER VIEW
+             ======================================================== -->
+        <section id="syllabus-view" class="view-section-pane app-module-view">
+          <div id="syllabus-content">
+            <!-- Syllabus tracker generated by JS -->
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 7: RESULTS VIEW
+             ======================================================== -->
+        <section id="results-view" class="view-section-pane app-module-view">
+          <div id="results-content">
+            <!-- Results generated by JS -->
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 8: NOTIFICATIONS HUB VIEW
+             ======================================================== -->
+        <section id="notifications-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Academic Notifications & Circulars</h3>
+            <div class="activity-list" id="notifications-full-list">
+              <!-- Re-use notification content -->
+              <div class="activity-item">
+                <div class="activity-icon-box blue"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
+                <div class="activity-content">
+                  <div class="activity-title-row"><span class="activity-title">New attendance reminder</span><span class="activity-time">15 mins ago</span></div>
+                  <span class="activity-desc">Please submit pending attendance for CSE 2R2 before 4:00 PM.</span>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon-box cyan"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
+                <div class="activity-content">
+                  <div class="activity-title-row"><span class="activity-title">Department meeting</span><span class="activity-time">1 hour ago</span></div>
+                  <span class="activity-desc">Department academic progress review scheduled at 4:30 PM in Seminar Hall A.</span>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon-box green"><i data-lucide="file-text" style="width:18px;height:18px;"></i></div>
+                <div class="activity-content">
+                  <div class="activity-title-row"><span class="activity-title">Result submission deadline</span><span class="activity-time">3 hours ago</span></div>
+                  <span class="activity-desc">Internal Assessment 1 marks portal will close on Friday 5:00 PM.</span>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon-box navy"><i data-lucide="book-open" style="width:18px;height:18px;"></i></div>
+                <div class="activity-content">
+                  <div class="activity-title-row"><span class="activity-title">Syllabus update notification</span><span class="activity-time">1 day ago</span></div>
+                  <span class="activity-desc">NBA accreditation module mappings revised by Academic Council.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 9: PROFILE / INFORMATION / SETTINGS VIEW
+             ======================================================== -->
+        <section id="profile-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:28px;">
+            <div style="display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;">
+              <div class="profile-avatar" style="width:80px; height:80px; font-size:26px;">RD</div>
+              <div>
+                <h2 style="font-size:22px; color:var(--dark-navy);">Dr. Rohan Deshmukh</h2>
+                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;">Associate Professor • Department of Computer Science & Engineering</p>
+                <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;">Employee ID: FAC-CSE-1048 | Ph.D. in Distributed Systems</p>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:20px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Official Email</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">rohan.deshmukh@college.edu</div>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cabin Location</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Cabin 304, CS Department Wing</div>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Office Hours</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Mon - Thu, 02:00 PM - 03:30 PM</div>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">2026-2027 (Odd Semester)</div>
+              </div>
+            </div>
+          </div>
+        <!-- ========================================================
+             PANE 10: ACADEMICS HUB VIEW
+             ======================================================== -->
+        <section id="academics-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Academics Management Hub</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Curriculum delivery, assigned subjects, timetable scheduling, and syllabus progress.</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="quick-action-btn primary" onclick="TeacherApp.switchView('timetable')">
+                  <i data-lucide="calendar" style="width:14px;height:14px;"></i> View Timetable
+                </button>
+                <button class="quick-action-btn secondary" onclick="TeacherApp.switchView('syllabus')">
+                  <i data-lucide="book-open" style="width:14px;height:14px;"></i> Syllabus Tracker
+                </button>
+              </div>
+            </div>
+            <div class="dashboard-grid-two-col">
+              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+                <h4 style="font-size:14px; color:var(--primary-blue); font-weight:700; margin-bottom:10px;">Active Academic Semester</h4>
+                <p style="font-size:13px; color:var(--text-dark); line-height:1.5;" id="academics-active-semester-desc"><strong>Academic Year:</strong> 2026-2027 (Odd Term)<br><strong>Current Phase:</strong> Mid-Semester Instruction Cycle<br><strong>Accreditation Tier:</strong> NBA Accredited & Autonomous Curriculum</p>
+              </div>
+              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+                <h4 style="font-size:14px; color:var(--accent-cyan); font-weight:700; margin-bottom:10px;">Quick Academic Operations</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="module-filter-chip active" onclick="TeacherApp.switchView('classes')">Assigned Classes</button>
+                  <button class="module-filter-chip" onclick="TeacherApp.switchView('attendance')">Class Attendance</button>
+                  <button class="module-filter-chip" onclick="TeacherApp.switchView('students')">Students Directory</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 11: EXAMINATION & ASSESSMENTS VIEW
+             ======================================================== -->
+        <section id="examination-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Examinations & Continuous Evaluation</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Internal tests, mid-semester exams, practical submissions, and semester-end grade cards.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.switchView('results')">
+                <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Open Marksheets & Results
+              </button>
+            </div>
+            <div class="results-grid-summary" style="margin-bottom:24px;">
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">IA - 1</div>
+                <div style="font-size:12px; color:var(--text-muted);">Current Evaluation Phase</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--success);">Completed</div>
+                <div style="font-size:12px; color:var(--text-muted);">Marks Moderation Status</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--dark-navy);" id="exam-midsem-date">14 Oct 2026</div>
+                <div style="font-size:12px; color:var(--text-muted);">Mid-Semester Exam Begins</div>
+              </div>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:var(--radius-md); padding:16px;">
+              <h4 style="font-size:13.5px; font-weight:700; color:var(--dark-navy); margin-bottom:8px;">Autonomous Examination Cell Notice</h4>
+              <p style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">All internal assessment marks for Semester 5 are moderated following autonomous curriculum rules. Hall tickets and seating allotments are automatically synced with the SSGMCE student portal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 12: FEES & ACCOUNTS VIEW
+             ======================================================== -->
+        <section id="fees-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">College Fees & Payment Accounts</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Academic fees, institutional ledger, online payment receipts, and scholarship adjustment status.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Fee reconciliation statement downloaded.')">
+                <i data-lucide="download" style="width:14px;height:14px;"></i> Download Ledger (.PDF)
+              </button>
+            </div>
+            <div class="stats-grid" style="margin-bottom:24px;">
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Academic Fee Status</span>
+                  <span class="stat-value" style="color:var(--success); font-size:18px;">Verified Paid</span>
+                </div>
+                <div class="stat-icon-wrapper cyan"><i data-lucide="check-circle" style="width:22px;height:22px;"></i></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Exam Fee Clearance</span>
+                  <span class="stat-value" style="color:var(--primary-blue); font-size:18px;">Cleared (100%)</span>
+                </div>
+                <div class="stat-icon-wrapper blue"><i data-lucide="credit-card" style="width:22px;height:22px;"></i></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Scholarship / Freeship</span>
+                  <span class="stat-value" style="color:var(--dark-navy); font-size:18px;">EBC Approved</span>
+                </div>
+                <div class="stat-icon-wrapper navy"><i data-lucide="award" style="width:22px;height:22px;"></i></div>
+              </div>
+            </div>
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:var(--radius-md); padding:16px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <i data-lucide="shield-check" style="color:var(--success); width:20px;height:20px;"></i>
+                <span style="font-size:13px; font-weight:600; color:#166534;" id="fees-clearance-note">Official Accounts Clearance: No pending institutional dues recorded for Academic Session 2026-2027.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 13: DOCUMENTS & CERTIFICATES VIEW
+             ======================================================== -->
+        <section id="documents-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Official Documents & Verification</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Bonafide certificates, institutional ID verification, transcripts, and approval documents.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Document request forwarded to registrar office.')">
+                <i data-lucide="file-plus" style="width:14px;height:14px;"></i> Request New Document
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+              <div style="padding:16px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                  <i data-lucide="file-text" style="color:var(--primary-blue); width:22px;height:22px;"></i>
+                  <span style="font-weight:700; font-size:14px; color:var(--dark-navy);">Bonafide Certificate</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Digitally signed institutional bonafide with autonomous institute seal.</p>
+                <button class="quick-action-btn secondary" style="font-size:12px; padding:6px 12px;" onclick="TeacherApp.showToast('Generating signed Bonafide PDF...')">
+                  <i data-lucide="download" style="width:13px;height:13px;"></i> Download PDF
+                </button>
+              </div>
+              <div style="padding:16px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                  <i data-lucide="credit-card" style="color:var(--accent-cyan); width:22px;height:22px;"></i>
+                  <span style="font-weight:700; font-size:14px; color:var(--dark-navy);">Digital Identity Card</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Verified smart campus RFID credential & digital barcode verification.</p>
+                <button class="quick-action-btn secondary" style="font-size:12px; padding:6px 12px;" onclick="TeacherApp.showToast('Displaying digital RFID smart ID...')">
+                  <i data-lucide="eye" style="width:13px;height:13px;"></i> View Smart Card
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 14: HOSTEL MANAGEMENT VIEW
+             ======================================================== -->
+        <section id="hostel-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Campus Hostel Administration</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Hostel room allocation, dining mess calendar, gate pass approvals, and warden directory.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Gate pass application submitted for warden approval.')">
+                <i data-lucide="send" style="width:14px;height:14px;"></i> Apply for Gate Pass
+              </button>
+            </div>
+            <div class="dashboard-grid-two-col">
+              <div style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px; background:var(--bg-light);">
+                <h4 style="font-size:14px; font-weight:700; color:var(--primary-blue); margin-bottom:12px;">Room & Block Information</h4>
+                <p style="font-size:13px; line-height:1.6; color:var(--dark-navy);"><strong>Hostel Block:</strong> Block-B (Senior Engineering Wing)<br><strong>Room Allotment:</strong> B-312 (Double Occupancy)<br><strong>Resident Warden:</strong> Prof. M. S. Patil (Ext: 2105)</p>
+              </div>
+              <div style="border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px; background:var(--bg-light);">
+                <h4 style="font-size:14px; font-weight:700; color:var(--accent-cyan); margin-bottom:12px;">Mess & Amenities Schedule</h4>
+                <p style="font-size:13px; line-height:1.6; color:var(--dark-navy);"><strong>Breakfast:</strong> 07:30 AM – 09:00 AM<br><strong>Lunch:</strong> 12:30 PM – 02:00 PM<br><strong>Dinner:</strong> 07:45 PM – 09:30 PM</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 15: LIBRARY & E-RESOURCES VIEW
+             ======================================================== -->
+        <section id="library-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Central Library & Digital Knowledge Hub</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Book borrowing ledger, e-journal catalog, IEEE / Springer access, and return due dates.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Searching Central Library catalog...')">
+                <i data-lucide="search" style="width:14px;height:14px;"></i> Search OPAC Catalog
+              </button>
+            </div>
+            <div class="results-grid-summary" style="margin-bottom:20px;">
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">04</div>
+                <div style="font-size:12px; color:var(--text-muted);">Books Currently Issued</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--success);">0</div>
+                <div style="font-size:12px; color:var(--text-muted);">Overdue / Fine Incurred</div>
+              </div>
+              <div class="result-stat-box">
+                <div style="font-size:24px; font-weight:800; color:var(--accent-cyan);" id="library-renewal-date">28 Sep 2026</div>
+                <div style="font-size:12px; color:var(--text-muted);">Next Book Renewal Date</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 16: TRAINING & PLACEMENT (T&P) VIEW
+             ======================================================== -->
+        <section id="placement-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Training & Placement (T&P) Cell</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Campus recruitment drives, aptitude training modules, resume approvals, and interview rounds.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('T&P Corporate Drive Schedule 2026-27 opened.')">
+                <i data-lucide="calendar" style="width:14px;height:14px;"></i> Campus Drives Schedule
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+              <div style="padding:18px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; color:var(--dark-navy); font-size:15px;">Tata Consultancy Services (TCS)</span>
+                  <span class="badge badge-completed">Shortlisting Active</span>
+                </div>
+                <p style="font-size:12.5px; color:var(--text-muted);">Role: System Engineer • Eligibility: 60%+ in B.Tech • Package: ₹7.0 – ₹9.0 LPA</p>
+              </div>
+              <div style="padding:18px; border:1px solid var(--border-light); border-radius:var(--radius-md); background:var(--bg-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; color:var(--dark-navy); font-size:15px;">Cognizant Technologies</span>
+                  <span class="badge badge-pending">Registration Open</span>
+                </div>
+                <p style="font-size:12.5px; color:var(--text-muted);" id="placement-assessment-date">Role: GenC Elevate • Technical Assessment Date: 05 October 2026</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 17: GRIEVANCE REDRESSAL VIEW
+             ======================================================== -->
+        <section id="grievance-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+              <div>
+                <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700;">Student Grievance Redressal Cell</h2>
+                <p style="font-size:13px; color:var(--text-muted);">Autonomous institute grievance committee, submit petitions, and track resolution progress.</p>
+              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Grievance ticket registered. Committee reference ID #GRV-8821.')">
+                <i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Register New Grievance
+              </button>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--border-light); border-radius:var(--radius-md); padding:18px;">
+              <h4 style="font-size:13.5px; font-weight:700; color:var(--dark-navy); margin-bottom:8px;">Confidential Redressal Guarantee</h4>
+              <p style="font-size:12.5px; color:var(--text-muted); line-height:1.6;">SSGMCE maintains a zero-tolerance policy against academic harassment, ragging, and unfair evaluation. All submissions are directly reviewed by the autonomous Grievance Redressal Committee chaired by the Institute Principal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 18: SETTINGS VIEW
+             ======================================================== -->
+        <section id="settings-view" class="view-section-pane app-module-view">
+          <div class="card" style="padding:24px;">
+            <h2 style="font-size:20px; color:var(--dark-navy); font-weight:700; margin-bottom:16px;">Portal Preferences & Security Settings</h2>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--bg-light); border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div>
+                  <div style="font-weight:700; color:var(--dark-navy); font-size:14px;">SMS & Email Alerts for Attendance Updates</div>
+                  <div style="font-size:12px; color:var(--text-muted);">Receive instant notifications upon successful attendance or session sync.</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary-blue);">
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--bg-light); border-radius:var(--radius-sm); border:1px solid var(--border-light);">
+                <div>
+                  <div style="font-weight:700; color:var(--dark-navy); font-size:14px;">Two-Factor Authentication (2FA)</div>
+                  <div style="font-size:12px; color:var(--text-muted);">Enforce OTP validation when accessing sensitive examination records.</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary-blue);">
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ========================================================
+           16. FOOTER (Dark Navy #0B1F3A)
+           ======================================================== -->
+      <footer class="app-footer">
+        <div class="footer-top">
+          <!-- College Branding Column -->
+          <div class="footer-brand">
+            <div class="footer-logo-row">
+              <div class="college-logo-container" style="width:38px;height:38px;">
+                <i data-lucide="graduation-cap" style="width:20px;height:20px;"></i>
+              </div>
+              <div>
+                <div class="footer-college-name">SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING</div>
+                <div class="footer-portal-subtitle">SSGMCE — Teacher Portal</div>
+              </div>
+            </div>
+            <p class="footer-desc">
+              Centralized Academic & Faculty Management Portal. Streamlining class timetables, attendance tracking, internal assessments, and student progress reporting.
+            </p>
+          </div>
+
+          <!-- Quick Links Column -->
+          <div class="footer-links-col">
+            <span class="footer-heading">Quick Links</span>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('dashboard')">Dashboard</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('profile')">Profile</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('attendance')">Attendance</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('timetable')">Timetable</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('classes')">Classes</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.switchView('students')">Students</a>
+          </div>
+
+          <!-- Support Column -->
+          <div class="footer-links-col">
+            <span class="footer-heading">Support & Help</span>
+            <a href="javascript:void(0)" onclick="TeacherApp.showToast('Connecting to Faculty Help Center...')">Help Center</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.showToast('Administration desk: admin@college.edu | Ext: 4102')">Contact Administration</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.showToast('Opening Institutional Privacy Policy')">Privacy Policy</a>
+            <a href="javascript:void(0)" onclick="TeacherApp.showToast('Opening Faculty Terms & Conduct')">Terms</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span id="footer-copyright-text">&copy; 2026 SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.</span>
+          <span>Designed with <span style="color:var(--accent-cyan);">&hearts;</span> for College Faculty</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       SHARED ATTENDANCE MARKING SLIDE-OUT DRAWER / MODAL
+       ======================================================== -->
+  <div id="attendance-drawer-backdrop" class="attendance-drawer-backdrop" onclick="AttendanceDrawer.close()" style="display:none;"></div>
+  
+  <aside id="attendance-slide-drawer" class="attendance-slide-drawer" aria-hidden="true" style="display:none;">
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <div class="drawer-header-content">
+        <div class="drawer-badges-row">
+          <span class="drawer-badge-class" id="drawer-header-class-badge">Class 2R1</span>
+          <span class="drawer-badge-override" id="drawer-header-override-badge" style="display:none;">Substitute / Override</span>
+          <span class="drawer-badge-marked" id="drawer-header-marked-badge" style="display:none;">
+            <i data-lucide="check-circle" style="width:12px;height:12px;"></i> Previously Marked
+          </span>
+        </div>
+        <h3 class="drawer-title" id="drawer-header-subject-title">Data Structures</h3>
+        <div class="drawer-meta-row">
+          <span class="drawer-meta-item">
+            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
+            <span id="drawer-header-date">2026-10-05</span>
+          </span>
+          <span class="drawer-meta-dot">•</span>
+          <span class="drawer-meta-item">
+            <i data-lucide="clock" style="width:13px;height:13px;"></i>
+            <span id="drawer-header-timeslot">09:00 - 10:30 AM</span>
+          </span>
+          <span class="drawer-meta-dot">•</span>
+          <span class="drawer-meta-item">
+            <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
+            <span id="drawer-header-room">Room 201</span>
+          </span>
+        </div>
+      </div>
+      <button type="button" class="drawer-close-btn" onclick="AttendanceDrawer.close()" title="Close Drawer" aria-label="Close">
+        <i data-lucide="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+
+    <!-- Dual-Mode Tab Switcher -->
+    <div class="drawer-mode-tabs-bar">
+      <div class="drawer-mode-toggle-group">
+        <button type="button" class="drawer-mode-tab-btn active" id="drawer-tab-btn-swipe" onclick="AttendanceDrawer.switchMode('swipe')">
+          <i data-lucide="credit-card" style="width:14px;height:14px;"></i>
+          <span>Swipe Card Mode</span>
+          <span class="mode-pill-chip">RFID/NFC</span>
+        </button>
+        <button type="button" class="drawer-mode-tab-btn" id="drawer-tab-btn-roster" onclick="AttendanceDrawer.switchMode('roster')">
+          <i data-lucide="list-checks" style="width:14px;height:14px;"></i>
+          <span>Roster List Mode</span>
+          <span class="mode-pill-chip" id="drawer-roster-count-badge">30</span>
+        </button>
+      </div>
+
+      <!-- Live Roster Stat Pill -->
+      <div class="drawer-live-stats" id="drawer-stats-pill">
+        <span class="stat-p" id="drawer-stat-present">0 Present</span>
+        <span class="stat-div">•</span>
+        <span class="stat-a" id="drawer-stat-absent">0 Absent</span>
+        <span class="stat-div">•</span>
+        <span class="stat-l" id="drawer-stat-late">0 Late</span>
+        <span class="stat-div">•</span>
+        <span class="stat-rate" id="drawer-stat-rate">100%</span>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         VIEW A: SWIPE CARD MODE (RFID / NFC SCANNER)
+         ======================================================== -->
+    <div id="drawer-view-swipe" class="drawer-view-section">
+      <!-- High-contrast RFID Scanner Zone -->
+      <div class="rfid-scanner-panel" onclick="document.getElementById('rfid-card-input').focus()">
+        <div class="rfid-panel-decor-glow"></div>
+        <div class="rfid-panel-content">
+          <div class="rfid-radar-visual">
+            <span class="rfid-ping-ring"></span>
+            <span class="rfid-icon-box">
+              <i data-lucide="credit-card" style="width:24px;height:24px;"></i>
+            </span>
+          </div>
+          <div class="rfid-text-group">
+            <div class="rfid-status-line">
+              <span class="rfid-live-dot"></span>
+              <span class="rfid-status-title">Waiting for Card Swipe...</span>
+            </div>
+            <p class="rfid-status-desc">Tap RFID/NFC smart card on scanner or enter Card ID below.</p>
+          </div>
+          <div class="rfid-counter-box">
+            <span class="rfid-counter-num" id="rfid-present-counter">0 / 30</span>
+            <span class="rfid-counter-lbl">Present</span>
+          </div>
+        </div>
+
+        <!-- Hardware Reader Auto-focused Input -->
+        <form class="rfid-input-form" onsubmit="event.preventDefault(); AttendanceDrawer.handleSwipeSubmit();">
+          <div class="rfid-input-wrap">
+            <i data-lucide="scan" style="width:16px;height:16px;" class="rfid-input-icon"></i>
+            <input type="text" id="rfid-card-input" class="rfid-card-input" placeholder="Scanner active — Scan card or enter CARD-2R1-001..." autocomplete="off">
+            <button type="submit" class="btn-rfid-mark">Mark</button>
+          </div>
+        </form>
+
+        <!-- Fast Simulator Buttons for Testing -->
+        <div class="rfid-simulator-toolbar">
+          <span class="sim-label">Simulator:</span>
+          <button type="button" class="sim-btn" onclick="AttendanceDrawer.simulateSwipe('CARD-2R1-001')">Scan Roll 1</button>
+          <button type="button" class="sim-btn" onclick="AttendanceDrawer.simulateSwipe('CARD-2R1-002')">Scan Roll 2</button>
+          <button type="button" class="sim-btn" onclick="AttendanceDrawer.simulateSwipe('CARD-2R1-003')">Scan Roll 3</button>
+          <button type="button" class="sim-btn sim-wrong" onclick="AttendanceDrawer.simulateSwipe('CARD-3R-001')">Wrong Class</button>
+          <button type="button" class="sim-btn sim-unreg" onclick="AttendanceDrawer.simulateSwipe('CARD-999-999')">Unregistered</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Feedback Alert Card -->
+      <div id="swipe-feedback-banner" class="swipe-feedback-banner" style="display:none;"></div>
+
+      <!-- Live Stream Feed of Recent Swipes -->
+      <div class="swipe-live-feed-card">
+        <div class="feed-header">
+          <div class="feed-header-title">
+            <span class="feed-indicator-dot"></span>
+            <span>Live Swiped Feed (<span id="swipe-feed-count">0</span>)</span>
+          </div>
+          <span class="feed-header-sub">Real-time attendance stream</span>
+        </div>
+        <div class="feed-list" id="swipe-live-feed-list">
+          <div class="feed-empty-state">
+            <i data-lucide="radio" style="width:24px;height:24px;color:#94a3b8;"></i>
+            <p>No cards swiped yet for this session.</p>
+            <small>Students will appear here instantly as they tap their cards.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         VIEW B: ROSTER LIST MODE (MANUAL / FALLBACK MARKING)
+         ======================================================== -->
+    <div id="drawer-view-roster" class="drawer-view-section" style="display:none;">
+      <!-- Quick Actions Toolbar -->
+      <div class="drawer-toolbar">
+        <div class="drawer-quick-actions">
+          <button type="button" class="btn-quick-present" onclick="AttendanceDrawer.markAll('present')">
+            <i data-lucide="check" style="width:13px;height:13px;"></i> All Present
+          </button>
+          <button type="button" class="btn-quick-absent" onclick="AttendanceDrawer.markAll('absent')">
+            <i data-lucide="x" style="width:13px;height:13px;"></i> All Absent
+          </button>
+        </div>
+      </div>
+
+      <!-- Search in Drawer -->
+      <div class="drawer-filter-bar">
+        <div class="drawer-search-wrapper">
+          <i data-lucide="search" style="width:14px;height:14px; color:var(--text-muted);"></i>
+          <input type="text" id="drawer-student-search-input" placeholder="Search by roll number or student name..." oninput="AttendanceDrawer.filterStudents(this.value)">
+        </div>
+      </div>
+
+      <!-- Student List Scrollable Body -->
+      <div class="drawer-body" id="drawer-student-list">
+        <!-- Populated dynamically by AttendanceDrawer.render() -->
+      </div>
+    </div>
+
+    <!-- Sticky Drawer Footer -->
+    <div class="drawer-footer">
+      <div class="drawer-footer-summary">
+        Total Students: <strong id="drawer-footer-total-count">0</strong>
+      </div>
+      <div class="drawer-footer-actions">
+        <button type="button" class="btn-drawer-cancel" onclick="AttendanceDrawer.close()">Cancel</button>
+        <button type="button" class="btn-drawer-submit" id="btn-drawer-submit" onclick="AttendanceDrawer.submit()">
+          <i data-lucide="check-check" style="width:16px;height:16px;"></i>
+          <span>Submit Attendance</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Application Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/attendance.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Fallback icon renderer -->
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
