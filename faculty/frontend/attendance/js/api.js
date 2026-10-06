@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SSGMCE ERP - High-Resilience Dual-Tier API Client
  * Tier 1: Local Python FastAPI Backend (http://localhost:8000/api/v1)
  * Tier 2: Direct Cloud Supabase Client (window.supabaseClient)
