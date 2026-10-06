@@ -190,14 +190,18 @@
      * Centralized Logout
      */
     logout: function () {
-      localStorage.removeItem(STORAGE_USER_KEY);
-      localStorage.removeItem(STORAGE_SESSION_KEY);
-      localStorage.removeItem(STORAGE_LEGACY_KEY);
-      sessionStorage.removeItem(STORAGE_SESSION_KEY);
-      localStorage.removeItem(STORAGE_ROLE_KEY);
-      localStorage.removeItem(STORAGE_TEACHER_TOKEN);
-      localStorage.removeItem(STORAGE_STUDENT_TOKEN);
-      window.location.href = 'login.html';
+      try {
+        localStorage.removeItem(STORAGE_USER_KEY);
+        localStorage.removeItem(STORAGE_SESSION_KEY);
+        localStorage.removeItem(STORAGE_LEGACY_KEY);
+        localStorage.removeItem(STORAGE_ROLE_KEY);
+        localStorage.removeItem(STORAGE_TEACHER_TOKEN);
+        localStorage.removeItem(STORAGE_STUDENT_TOKEN);
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('dashboard_permissions');
+        sessionStorage.clear();
+      } catch (e) {}
+      window.location.replace('login.html?logout=true');
     },
 
     /**
@@ -208,7 +212,7 @@
     requireAuth: function (expectedRole) {
       if (!this.isAuthenticated()) {
         console.warn('[ERP_AUTH] Unauthenticated access attempt. Redirecting to login.html');
-        window.location.href = 'login.html';
+        window.location.replace('login.html');
         return false;
       }
 
@@ -217,13 +221,19 @@
         var exp = expectedRole.toLowerCase();
         if (exp === 'faculty') exp = 'teacher';
 
-        // If user is currently a teacher/faculty and visits teacher page, or student visits student page
-        if (currentRole !== exp) {
-          console.warn('[ERP_AUTH] Accessing page with role ' + currentRole + ' (page role: ' + exp + ')');
-          // Allow teacher/faculty to view pages or adjust role if authenticated
-          if (exp === 'teacher' && (currentRole === 'teacher' || currentRole === 'faculty')) {
-            return true;
-          }
+        var isTeacher = (currentRole === 'teacher' || currentRole === 'faculty' || currentRole === 'employee');
+        var isStudent = (currentRole === 'student');
+
+        if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
+          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access teacher portal. Redirecting to student-dashboard.');
+          window.location.replace('student-dashboard.html');
+          return false;
+        }
+
+        if (exp === 'student' && !isStudent) {
+          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access student portal. Redirecting to teacher-dashboard.');
+          window.location.replace('teacher-dashboard.html');
+          return false;
         }
       }
       return true;
@@ -267,6 +277,7 @@
   window.ERPAuth = ERP_AUTH; // Compatibility alias
   window.getCurrentUser = function () { return ERP_AUTH.getCurrentUser(); };
   window.logout = function () { ERP_AUTH.logout(); };
+  window.handleLogout = function () { ERP_AUTH.logout(); };
 
   // Auto-hydrate on DOM ready if user exists
   if (typeof document !== 'undefined') {

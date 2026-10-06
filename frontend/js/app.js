@@ -220,6 +220,19 @@ const TeacherApp = {
   // Dynamic Teacher Profile Management
   getLoggedInTeacher() {
     try {
+      if (window.ERP_AUTH) {
+        const u = window.ERP_AUTH.getCurrentUser();
+        if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
+          const fn = u.full_name || u.name || u.fullName || 'Faculty Member';
+          return {
+            name: fn,
+            department: u.department || 'Computer Science & Engineering',
+            departmentCode: u.department_code || 'CSE',
+            title: u.designation || 'Faculty Member',
+            avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+          };
+        }
+      }
       const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
       if (stored) {
         return JSON.parse(stored);
@@ -1082,6 +1095,9 @@ const TeacherApp = {
   // TOAST FEEDBACK SYSTEM
   // ----------------------------------------------------
   showToast(message, type = "info") {
+    if (window.ERPToast) {
+      return window.ERPToast.show(message, type);
+    }
     let toastContainer = document.getElementById("toast-container");
     if (!toastContainer) {
       toastContainer = document.createElement("div");

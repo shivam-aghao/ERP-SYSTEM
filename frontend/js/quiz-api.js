@@ -297,7 +297,23 @@
       return `${this.apiBase}/quizzes/${quizId}/export?filter=${encodeURIComponent(filter)}&format=${encodeURIComponent(format)}`;
     },
 
-    // 18. Student: Anti-Cheating & Proctoring Event (Tab switch, fullscreen exit, blur)
+    // 18. Teacher: Toggle Release Results to Students
+    async toggleReleaseResults(quizId, shouldRelease = null) {
+      const payload = shouldRelease !== null ? { release: shouldRelease } : {};
+      const res = await this._fetch(`/quizzes/${quizId}/toggle-release-results`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return res.data;
+    },
+
+    // 19. Student: Get Detailed Attempt Result
+    async getAttemptResult(attemptId) {
+      const res = await this._fetch(`/attempts/${attemptId}/result`);
+      return res.data;
+    },
+
+    // 20. Student: Anti-Cheating & Proctoring Event (Tab switch, fullscreen exit, blur)
     async recordSecurityEvent(attemptId, eventType, metadata = {}) {
       try {
         const res = await this._fetch(`/attempts/${attemptId}/security-event`, {

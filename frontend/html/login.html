@@ -16,6 +16,7 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../css/toast.css">
 
 
     <style>
@@ -2181,6 +2182,7 @@
 
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/toast.js"></script>
     <script>
         // Reset existing cached role/session on login page so user can choose who to log in as
         try {
@@ -2318,7 +2320,12 @@
                 return false;
             } catch (error) {
                 console.error("Login error:", error);
-                alert(error.message || "Unable to login. Please check your credentials.");
+                const errMsg = error.message || "Unable to login. Please check your credentials.";
+                if (window.ERPToast) {
+                    window.ERPToast.error(errMsg, "Authentication Failed");
+                } else {
+                    alert(errMsg);
+                }
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Login";

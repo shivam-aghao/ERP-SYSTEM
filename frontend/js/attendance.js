@@ -1904,7 +1904,7 @@ const AttendanceMarkingManager = {
   async init() {
     // 1. Fetch previously marked sessions from backend
     try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/sessions');
+      const res = await fetch('/api/v1/teacher/attendance/sessions');
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.sessions) {
@@ -2016,6 +2016,58 @@ const AttendanceMarkingManager = {
     card.addEventListener('pointercancel', finishDrag);
   },
 
+  loadFromManualForm() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    const date = document.getElementById('manual-attendance-date')?.value || new Date().toISOString().split('T')[0];
+
+    if (isOverride) {
+      const classCode = document.getElementById('override-class-select')?.value || '2R1';
+      const subject = document.getElementById('override-subject-input')?.value || 'Data Structures';
+      const room = document.getElementById('override-room-input')?.value || 'Room 201';
+      const timeslot = document.getElementById('override-timeslot-select')?.value || '09:00 - 10:30 AM';
+      return this.openFromSlot(subject, room, timeslot, classCode, date);
+    }
+
+    const slotSelect = document.getElementById('manual-attendance-slot-select');
+    if (!slotSelect || !slotSelect.value) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Please select a scheduled lecture or check Override to choose a class.', 'warning');
+      } else {
+        alert('Please select a scheduled lecture.');
+      }
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(slotSelect.value);
+      return this.openFromSlot(parsed.subject, parsed.room, parsed.timeslot, parsed.classCode, date);
+    } catch (e) {
+      console.error('Error parsing manual slot:', e);
+      return this.openFromSlot('Data Structures', 'Room 201', '09:00 - 10:30 AM', '2R1', date);
+    }
+  },
+
+  exportAttendanceSheet() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    let className = '2R1';
+    if (isOverride) {
+      className = document.getElementById('override-class-select')?.value || '2R1';
+    } else {
+      const slotSelect = document.getElementById('manual-attendance-slot-select');
+      if (slotSelect && slotSelect.value) {
+        try {
+          const parsed = JSON.parse(slotSelect.value);
+          if (parsed.classCode) className = parsed.classCode;
+        } catch (_) {}
+      }
+    }
+    const url = `/api/v1/teacher/attendance/export?class_name=${encodeURIComponent(className)}`;
+    window.open(url, '_blank');
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Downloading attendance records CSV for Class ${className}...`, 'info');
+    }
+  },
+
   async openFromSlot(subject, room, timeslot, classCode, date) {
     let dept = 'CSE';
     if (classCode.includes('IT')) dept = 'IT';
@@ -2072,7 +2124,7 @@ const AttendanceMarkingManager = {
     // Fetch class roster
     let studentsList = [];
     try {
-      const res = await fetch(`http://localhost:5001/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
+      const res = await fetch(`/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
       if (res.ok) {
         const json = await res.json();
         studentsList = json.data?.students || [];
@@ -2713,7 +2765,7 @@ const AttendanceMarkingManager = {
 
     let savedSession = null;
     try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/bulk', {
+      const res = await fetch('/api/v1/teacher/attendance/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

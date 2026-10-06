@@ -30,6 +30,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+  <!-- Toast Notifications -->
+  <link rel="stylesheet" href="../css/toast.css">
+  <script src="../js/toast.js"></script>
+
   <!-- Central Config & Auth Guard -->
   <script src="../js/config.js"></script>
   <script src="../js/auth.js"></script>
@@ -818,6 +822,12 @@
 
       </a>
 
+      <button onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(220,38,38,0.1); color: #ef4444; border-color: rgba(220,38,38,0.3); cursor: pointer;">
+
+        <i data-lucide="log-out"></i> Logout
+
+      </button>
+
     </div>
 
   </header>
@@ -839,6 +849,12 @@
       <div class="nav-tab" onclick="switchTab('analytics')">
 
         <i data-lucide="bar-chart-3"></i> Quiz Analytics & Monitoring
+
+      </div>
+
+      <div class="nav-tab" onclick="switchTab('results')">
+
+        <i data-lucide="file-spreadsheet"></i> Results & Export
 
       </div>
 
@@ -1122,11 +1138,108 @@
 
         </div>
 
+    <!-- SECTION 4: FULL CLASS QUIZ RESULTS & EXPORT -->
+    <section id="sec-results" class="view-section">
+      <div class="action-bar" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 class="page-title">Quiz Results & Student Roster</h2>
+          <p class="page-desc">View student scores, export attendance & grade reports, and release results to student portal</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <select id="resultsQuizSelect" class="form-control" style="min-width: 280px;" onchange="loadQuizResultsView()">
+            <!-- Populated dynamically -->
+          </select>
+          <select id="resultsFilterSelect" class="form-control" style="width: 170px;" onchange="loadQuizResultsView()">
+            <option value="all">All Students</option>
+            <option value="attempted">Attempted Only</option>
+            <option value="not_attempted">Not Attempted</option>
+            <option value="passed">Passed</option>
+            <option value="failed">Failed</option>
+          </select>
+          <button id="btnToggleReleaseResults" class="btn btn-secondary" onclick="handleToggleReleaseResults()" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+            <i data-lucide="eye"></i> Toggle Result Release
+          </button>
+          <div style="display: inline-flex; gap: 0.5rem;">
+            <button class="btn btn-success" onclick="exportQuizCSV()" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+              <i data-lucide="download"></i> Export CSV (Excel)
+            </button>
+            <button class="btn btn-secondary" onclick="exportQuizJSON()" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+              <i data-lucide="file-code"></i> Export JSON
+            </button>
+          </div>
+        </div>
       </div>
 
+      <!-- Release Status Banner -->
+      <div id="resultsReleaseBanner" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; background: #FEF3C7; border: 1px solid #FCD34D;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i data-lucide="info" style="color: #B45309; width: 22px; height: 22px;"></i>
+          <div>
+            <strong id="releaseBannerTitle" style="color: #92400E; font-size: 0.92rem;">Results Status: Hidden from Students</strong>
+            <div id="releaseBannerSub" style="color: #B45309; font-size: 0.8rem;">Students cannot view their marks or answer review until you release them.</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btnReleaseBannerAction" onclick="handleToggleReleaseResults()" style="padding: 0.45rem 1rem; font-size: 0.82rem;">
+          Release Now
+        </button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.5rem;">
+        <div class="stat-card">
+          <div class="stat-num" id="resTotalEnrolled">0</div>
+          <div class="stat-label">Total Enrolled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="resAttemptedCount" style="color: var(--primary);">0</div>
+          <div class="stat-label">Attempted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="resNotAttemptedCount" style="color: var(--danger);">0</div>
+          <div class="stat-label">Not Attempted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="resAverageScore">0.0</div>
+          <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="resPassRate" style="color: var(--success);">0%</div>
+          <div class="stat-label">Pass Percentage</div>
+        </div>
+      </div>
+
+      <!-- Full Class Student Roster Table -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1rem 1.5rem; background: #FFFFFF; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.05rem; color: var(--navy);" id="resTableTitle">Student Scores & Attendance Roster</h3>
+            <span style="font-size: 0.78rem; color: var(--text-muted);" id="resTableSubtitle">Class enrolled student roster</span>
+          </div>
+          <span class="badge" id="resRosterCountBadge" style="background: #EFF6FF; color: var(--primary); font-size: 0.8rem; font-weight: 700;">0 Students</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="quiz-table" id="resultsTable">
+            <thead>
+              <tr>
+                <th>Sr No</th>
+                <th>Roll No</th>
+                <th>Student Name</th>
+                <th>Class</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Time Taken</th>
+                <th>Correct / Wrong</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
-
-
 
   </main>
 
@@ -1524,9 +1637,19 @@
 
         loadQuizAnalytics();
 
-      } else if (tab === 'question-bank') {
+      } else if (tab === 'results') {
 
         document.querySelectorAll('.nav-tab')[2].classList.add('active');
+
+        document.getElementById('sec-results').classList.add('active');
+
+        populateResultsDropdown();
+
+        loadQuizResultsView();
+
+      } else if (tab === 'question-bank') {
+
+        document.querySelectorAll('.nav-tab')[3].classList.add('active');
 
         document.getElementById('sec-question-bank').classList.add('active');
 
@@ -1589,6 +1712,12 @@
           <td><strong>${q.attempts_count || 0}</strong> submissions</td>
 
           <td style="text-align: right; white-space: nowrap;">
+
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="viewQuizResultsDirect('${q.id}')" title="View Full Class Results & Export">
+
+              <i data-lucide="file-spreadsheet"></i> Results (${q.attempts_count || 0})
+
+            </button>
 
             <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="openManageQuestions('${q.id}')">
 
@@ -2213,6 +2342,191 @@
     }
 
 
+
+    // ==========================================
+    // Full Class Results & Export Management
+    // ==========================================
+    let currentResultsData = null;
+
+    function populateResultsDropdown() {
+      const sel = document.getElementById('resultsQuizSelect');
+      if (!sel) return;
+      sel.innerHTML = quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
+    }
+
+    function viewQuizResultsDirect(quizId) {
+      switchTab('results');
+      const sel = document.getElementById('resultsQuizSelect');
+      if (sel) {
+        sel.value = quizId;
+        loadQuizResultsView();
+      }
+    }
+
+    async function loadQuizResultsView() {
+      const sel = document.getElementById('resultsQuizSelect');
+      const filterSel = document.getElementById('resultsFilterSelect');
+      const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
+      const filter = (filterSel && filterSel.value) || 'all';
+
+      if (!qid) {
+        document.getElementById('resultsTableBody').innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">No quizzes found.</td></tr>`;
+        return;
+      }
+
+      const q = quizzes.find(x => x.id === qid);
+      if (q) {
+        document.getElementById('resTableTitle').textContent = `Results: ${q.title}`;
+        document.getElementById('resTableSubtitle').textContent = `Target Class: ${q.class_name} • Total Marks: ${q.total_marks || 100}`;
+      }
+
+      // Fetch export rows to get full enrolled roster (both attempted & not attempted)
+      try {
+        const exportUrl = QuizAPI.getExportUrl(qid, filter, 'json');
+        const res = await fetch(exportUrl);
+        const exportData = await res.json();
+        const roster = (exportData && exportData.data) ? exportData.data : (Array.isArray(exportData) ? exportData : []);
+        
+        // Also get summary metrics
+        const summary = await QuizAPI.getQuizResults(qid, filter);
+        currentResultsData = { qid, quiz: q, roster, summary };
+
+        // Update KPIs
+        const totalEnrolled = summary ? summary.total_students : roster.length;
+        const attempted = summary ? summary.attempted_count : roster.filter(r => r["Attempt Status"] === "Attempted").length;
+        const notAttempted = summary ? summary.not_attempted_count : (totalEnrolled - attempted);
+        const avgScore = summary ? summary.average_score : 0;
+        const passRate = summary ? summary.pass_percentage : 0;
+
+        document.getElementById('resTotalEnrolled').textContent = totalEnrolled;
+        document.getElementById('resAttemptedCount').textContent = attempted;
+        document.getElementById('resNotAttemptedCount').textContent = notAttempted;
+        document.getElementById('resAverageScore').textContent = `${avgScore} Marks`;
+        document.getElementById('resPassRate').textContent = `${passRate}%`;
+        document.getElementById('resRosterCountBadge').textContent = `${roster.length} Students Listed`;
+
+        // Update Release Status Banner
+        const isReleased = q ? (q.result_release_mode === 'IMMEDIATE' || q.show_result_immediately) : false;
+        const banner = document.getElementById('resultsReleaseBanner');
+        const bannerTitle = document.getElementById('releaseBannerTitle');
+        const bannerSub = document.getElementById('releaseBannerSub');
+        const bannerBtn = document.getElementById('btnReleaseBannerAction');
+        const toggleBtn = document.getElementById('btnToggleReleaseResults');
+
+        if (isReleased) {
+          banner.style.background = '#DCFCE7';
+          banner.style.borderColor = '#86EFAC';
+          bannerTitle.style.color = '#15803D';
+          bannerTitle.textContent = 'Results Status: Released to Students';
+          bannerSub.style.color = '#166534';
+          bannerSub.textContent = 'Students can now view their scores and detailed question review on their portal.';
+          bannerBtn.textContent = 'Hide from Students';
+          bannerBtn.className = 'btn btn-secondary';
+          if (toggleBtn) {
+            toggleBtn.innerHTML = '<i data-lucide="eye-off"></i> Hide Results';
+            toggleBtn.className = 'btn btn-secondary';
+          }
+        } else {
+          banner.style.background = '#FEF3C7';
+          banner.style.borderColor = '#FCD34D';
+          bannerTitle.style.color = '#92400E';
+          bannerTitle.textContent = 'Results Status: Hidden from Students';
+          bannerSub.style.color = '#B45309';
+          bannerSub.textContent = 'Students cannot view their marks or answer review until you release them.';
+          bannerBtn.textContent = 'Release to Students';
+          bannerBtn.className = 'btn btn-primary';
+          if (toggleBtn) {
+            toggleBtn.innerHTML = '<i data-lucide="eye"></i> Release Results';
+            toggleBtn.className = 'btn btn-success';
+          }
+        }
+
+        // Render Table Body
+        const tbody = document.getElementById('resultsTableBody');
+        tbody.innerHTML = '';
+
+        if (roster.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No students matched the selected filter.</td></tr>`;
+          lucide.createIcons();
+          return;
+        }
+
+        roster.forEach(r => {
+          const isAtt = r["Attempt Status"] === "Attempted";
+          const isPass = r["Result"] === "Passed";
+          const resBadge = isAtt ? (isPass ? '<span class="badge badge-published">Passed</span>' : '<span class="badge" style="background:#FEE2E2; color:#DC2626;">Failed</span>') : '<span class="badge badge-closed">Not Attempted</span>';
+          const statusBadge = isAtt ? '<span class="badge" style="background:#EFF6FF; color:#1D4ED8; font-weight:700;">Attempted</span>' : '<span class="badge" style="background:#F1F5F9; color:#64748B;">Pending</span>';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r["Sr No"]}</td>
+            <td><strong>${r["Roll No"]}</strong></td>
+            <td><strong>${r["Student Name"]}</strong><div style="font-size:0.75rem; color:var(--text-muted);">${r["Student ID"]}</div></td>
+            <td><span class="badge" style="background:#EFF6FF; color:var(--primary); font-weight:700;">${r["Class"]}</span></td>
+            <td>${statusBadge}</td>
+            <td><strong style="color:var(--navy); font-size:0.95rem;">${isAtt ? r["Score"] : '-'}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">/ ${r["Total Marks"]}</span></td>
+            <td><strong>${isAtt ? r["Percentage"] : '-'}</strong></td>
+            <td>${r["Time Taken"]}</td>
+            <td>${isAtt ? `<span style="color:#15803D;">${r["Correct"]} C</span> • <span style="color:#DC2626;">${r["Wrong"]} W</span>` : '-'}</td>
+            <td>${resBadge}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error('Error loading quiz results:', err);
+        document.getElementById('resultsTableBody').innerHTML = `<tr><td colspan="10" style="text-align: center; color: #DC2626; padding: 2rem;">Error loading quiz results: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function handleToggleReleaseResults() {
+      const sel = document.getElementById('resultsQuizSelect');
+      const qid = sel ? sel.value : null;
+      if (!qid) return showToast('Please select a quiz first', 'warning');
+
+      const q = quizzes.find(x => x.id === qid);
+      const isCurrentlyReleased = q ? (q.result_release_mode === 'IMMEDIATE' || q.show_result_immediately) : false;
+      const targetState = !isCurrentlyReleased;
+
+      const confirmMsg = targetState
+        ? 'Release quiz results and answers to all enrolled students now?'
+        : 'Hide quiz results from students? (Students will only see "Results Pending")';
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const resp = await QuizAPI.toggleReleaseResults(qid, targetState);
+        showToast(resp.message || (targetState ? 'Results RELEASED to students!' : 'Results HIDDEN from students.'), 'success');
+        await refreshQuizzes();
+        loadQuizResultsView();
+      } catch (err) {
+        showToast('Failed to update result release status: ' + err.message, 'error');
+      }
+    }
+
+    function exportQuizCSV() {
+      const sel = document.getElementById('resultsQuizSelect');
+      const filterSel = document.getElementById('resultsFilterSelect');
+      const qid = sel ? sel.value : null;
+      const filter = filterSel ? filterSel.value : 'all';
+      if (!qid) return showToast('Please select a quiz first', 'warning');
+
+      showToast('Generating CSV class roster export...', 'info');
+      const exportUrl = QuizAPI.getExportUrl(qid, filter, 'csv');
+      window.open(exportUrl, '_blank');
+    }
+
+    function exportQuizJSON() {
+      const sel = document.getElementById('resultsQuizSelect');
+      const filterSel = document.getElementById('resultsFilterSelect');
+      const qid = sel ? sel.value : null;
+      const filter = filterSel ? filterSel.value : 'all';
+      if (!qid) return showToast('Please select a quiz first', 'warning');
+
+      showToast('Generating JSON report export...', 'info');
+      const exportUrl = QuizAPI.getExportUrl(qid, filter, 'json');
+      window.open(exportUrl, '_blank');
+    }
 
     // Init
 
