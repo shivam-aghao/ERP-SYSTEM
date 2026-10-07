@@ -28,6 +28,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from backend.services.attendance_service import AttendanceService
+from backend.services.syllabus_service import SyllabusService
 
 # Configure Logging
 logging.basicConfig(
@@ -688,20 +690,16 @@ def delete_class_card(card_id: str, db: Session = Depends(get_db)):
 
 @api.get("/attendance/check-duplicate", tags=["Attendance Marking"])
 def check_duplicate_attendance(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
-    row = db.execute(text("""
-        SELECT id FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum
-        LIMIT 1
-    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
-    return success_response({"duplicate_exists": bool(row), "session_id": row[0] if row else None})
+    data = AttendanceService.check_duplicate(class_id, subject_id, session_date, period_number, db)
+    return success_response(data)
 
 @api.get("/attendance/draft", tags=["Attendance Marking"])
 def get_attendance_draft(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
     row = db.execute(text("""
         SELECT * FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum AND status = 'draft'
+        WHERE class_id = :cid AND subject_id = :sid AND session_date = :sdate AND period_number = :pnum AND status = 'draft'
         LIMIT 1
-    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
+    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": str(period_number)}).fetchone()
     if not row:
         return success_response(None, "No draft found")
     return success_response(dict(row._mapping))
@@ -711,46 +709,19 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     sess_id = str(uuid.uuid4())
     db.execute(text("""
         INSERT OR REPLACE INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, attendance_date, period, status, created_at, updated_at)
+        (id, teacher_id, class_id, subject_id, session_date, period_number, status, created_at, updated_at)
         VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number
+        "sdate": payload.session_date, "pnum": str(payload.period_number)
     })
     db.commit()
     return success_response({"session_id": sess_id}, "Attendance draft saved")
 
 @api.post("/attendance/submit", tags=["Attendance Marking"])
 def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(get_db)):
-    sess_id = str(uuid.uuid4())
-    db.execute(text("""
-        INSERT INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, attendance_date, period, status, total_students, present_count, absent_count, submitted_at, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'submitted', :tot, :pres, :abs, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    """), {
-        "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number,
-        "tot": len(payload.present_student_ids) + len(payload.absent_student_ids),
-        "pres": len(payload.present_student_ids),
-        "abs": len(payload.absent_student_ids)
-    })
-    # Insert attendance records
-    for sid in payload.present_student_ids:
-        db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
-            VALUES (:id, :sess_id, :sid, 'present', CURRENT_TIMESTAMP)
-        """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
-    for sid in payload.absent_student_ids:
-        db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
-            VALUES (:id, :sess_id, :sid, 'absent', CURRENT_TIMESTAMP)
-        """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
-    db.commit()
-    return success_response({
-        "session_id": sess_id,
-        "present_count": len(payload.present_student_ids),
-        "absent_count": len(payload.absent_student_ids)
-    }, "Attendance recorded successfully")
+    data = AttendanceService.submit_attendance(payload, db)
+    return success_response(data, "Attendance recorded successfully")
 
 @api.get("/attendance/records", tags=["Attendance Marking"])
 def get_attendance_records(class_id: Optional[str] = None, subject_id: Optional[str] = None, db: Session = Depends(get_db)):
@@ -1150,7 +1121,12 @@ def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_d
 @api.get("/student/attendance", tags=["Student Portal"])
 @api.get("/attendance", tags=["Student Portal"])
 def get_student_attendance_summary(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    subjects = db.execute(
+        text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+        {"sc": student_code}
+    ).fetchall()
+    if not subjects:
+        subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
     sub_dicts = [dict(s._mapping) for s in subjects]
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
@@ -1191,25 +1167,8 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
 @api.get("/student/syllabus", tags=["Student Portal"])
 @api.get("/syllabus", tags=["Student Portal"])
 def get_student_syllabus(subject_id: Optional[str] = None, db: Session = Depends(get_db)):
-    clause = "WHERE subject_id = :sid" if subject_id else ""
-    params = {"sid": subject_id} if subject_id else {}
-    rows = db.execute(text(f"SELECT * FROM subject_syllabus {clause}")).fetchall()
-    items = []
-    for r in rows:
-        m = dict(r._mapping)
-        prog = m.get("syllabus_progress") or 75
-        items.append({
-            **m,
-            "subjectCode": m.get("subject_code") or "CS-301",
-            "subject_code": m.get("subject_code") or "CS-301",
-            "subjectName": m.get("subject_name") or "Course",
-            "subject_name": m.get("subject_name") or "Course",
-            "code": m.get("subject_code") or "CS-301",
-            "syllabusProgress": prog,
-            "syllabus_progress": prog,
-            "progress": prog
-        })
-    return success_response(items)
+    data = SyllabusService.get_syllabus(subject_id, db)
+    return success_response(data)
 
 @api.get("/student/documents", tags=["Student Portal"])
 @api.get("/documents", tags=["Student Portal"])
@@ -2247,10 +2206,14 @@ try:
     from backend.routes.admin import router as admin_router
     from backend.routes.faculty import router as faculty_router
     from backend.routes.attendance import router as attendance_router
+    from backend.routes.student import router as student_router
+    from backend.routes.syllabus import router as syllabus_router
     app.include_router(admin_router, prefix="/api/v1")
     app.include_router(faculty_router, prefix="/api/v1")
     app.include_router(attendance_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance) included under /api/v1")
+    app.include_router(student_router, prefix="/api/v1")
+    app.include_router(syllabus_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance, student, syllabus) included under /api/v1")
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 

@@ -42,7 +42,13 @@ def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depe
 @router.get("/student/attendance")
 @router.get("/attendance")
 def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    subjects = db.execute(
+        text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+        {"sc": student_code}
+    ).fetchall()
+    if not subjects:
+        # Fallback to first available student if code not found
+        subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
     sub_dicts = [dict(s._mapping) for s in subjects]
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
