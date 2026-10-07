@@ -89,12 +89,12 @@
 
             return {
               id: item.id || `sub-${idx}`,
-              code: item.code || item.subjectCode || 'SUB-101',
-              name: item.name || item.subjectName || 'Course',
+              code: item.code || item.subjectCode || item.subject_code || '',
+              name: item.name || item.subjectName || item.subject_name || '',
               type: item.type || (item.code && item.code.includes('LAB') ? 'PR' : 'TH'),
               typeName: item.typeName || (item.type === 'PR' ? 'Practical' : 'Theory'),
-              faculty: item.faculty || 'Course Faculty',
-              classroom: item.classroom || 'LH-201',
+              faculty: item.faculty || item.faculty_name || '',
+              classroom: item.classroom || item.room || '',
               present: attended,
               total: total,
               absent: total >= attended ? total - attended : 0,

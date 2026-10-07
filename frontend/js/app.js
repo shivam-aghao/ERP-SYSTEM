@@ -60,7 +60,7 @@ const TeacherApp = {
           }
           setStatus(true, latency);
 
-          const teacherName = (loginData && loginData.user && loginData.user.name) || 'Dr. Rohan Deshmukh';
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
             this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
@@ -307,12 +307,12 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");

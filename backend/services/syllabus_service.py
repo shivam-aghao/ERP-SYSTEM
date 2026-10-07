@@ -70,7 +70,7 @@ class SyllabusService:
                             try: books = json.loads(books)
                             except Exception: books = []
 
-                        prog = m.get("syllabus_progress") or 75
+                        prog = int(m.get("syllabus_progress") or 0)
 
                         results.append({
                             **m,
@@ -87,7 +87,7 @@ class SyllabusService:
                             "code": code,
                             "name": m.get("subject_name"),
                             "type": m.get("subject_type") or "Core",
-                            "faculty": m.get("faculty_name") or "Faculty Advisor"
+                            "faculty": m.get("faculty_name") or ""
                         })
                     if results:
                         return results
@@ -134,7 +134,7 @@ class SyllabusService:
                 um["hours"] = um.get("planned_hours")
                 units.append(um)
 
-            prog = m.get("syllabus_progress") or 75
+            prog = int(m.get("syllabus_progress") or 0)
             m["units"] = units
             m["progress"] = prog
             m["syllabusProgress"] = prog
@@ -144,7 +144,7 @@ class SyllabusService:
             m["code"] = m.get("subject_code")
             m["name"] = m.get("subject_name")
             m["type"] = m.get("subject_type") or "Core"
-            m["faculty"] = m.get("faculty_name") or "Faculty Advisor"
+            m["faculty"] = m.get("faculty_name") or ""
             m["outcomes"] = m.get("course_outcomes") or []
             m["books"] = m.get("reference_books") or []
             result.append(m)

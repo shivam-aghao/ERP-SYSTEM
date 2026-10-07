@@ -12,44 +12,8 @@
 
   const STORAGE_KEY = 'ssgmce_erp_session';
 
-  // Demo user fixtures matching Supabase 0002_seed.sql & existing project models
-  const DEMO_PROFILES = {
-    student: {
-      id: '307001',
-      role: 'student',
-      fullName: 'Student 2R1-01',
-      shortName: 'Student 2R1-01',
-      initials: 'ST',
-      rollNo: 1,
-      studentCode: '307001',
-      prn: '307001',
-      className: '2R1',
-      classCode: '2R1',
-      department: 'Computer Science and Engineering',
-      departmentCode: 'CSE',
-      division: 'A',
-      semester: 3,
-      academicYear: '2025-2026',
-      email: 'student.2r1-01@ssgmce.ac.in',
-      attendanceRate: 85.0,
-      cgpa: 8.5,
-      token: 'demo-student-token-ssgmce'
-    },
-    faculty: {
-      id: 'EMP-CSE-1048',
-      role: 'faculty',
-      fullName: 'Dr. Rohan Deshmukh',
-      shortName: 'Dr. R. Deshmukh',
-      initials: 'RD',
-      empCode: 'EMP-CSE-1048',
-      designation: 'Associate Professor',
-      department: 'Computer Science & Engineering',
-      departmentCode: 'CSE',
-      email: 'rohan.deshmukh@ssgmce.ac.in',
-      assignedClasses: ['TY-CSE-A', 'SY-CSE-A'],
-      token: 'demo-faculty-token-ssgmce-2026'
-    }
-  };
+  // Demo fixtures removed - sessions must be authenticated via backend
+  const DEMO_PROFILES = {};
 
   const ERPAuth = {
     /**

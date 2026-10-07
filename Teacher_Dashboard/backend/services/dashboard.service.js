@@ -52,71 +52,41 @@ export const dashboardService = {
 
       return {
         faculty: faculty || {
-          name: 'Dr. Rohan Deshmukh',
-          employeeId: 'FAC-CSE-1048',
-          title: 'Associate Professor',
+          name: 'Faculty',
+          employeeId: '',
+          title: 'Department Faculty',
           departmentCode: 'CSE',
         },
         metrics: {
-          totalClasses: faculty?.subjects?.length || 3,
-          totalStudents: 195,
+          totalClasses: faculty?.subjects?.length || 0,
+          totalStudents: 0,
           averageAttendance: `${avgAttendanceRate}%`,
           syllabusCompleted: `${avgSyllabusProgress}%`,
           unreadNotifications: unreadNotifsCount,
-          totalLecturesDelivered: totalSessions || 42,
+          totalLecturesDelivered: totalSessions || 0,
         },
-        todaySchedule: todaySchedule.length > 0 ? todaySchedule : [
-          {
-            time: '10:00 AM - 11:00 AM',
-            subject: 'Data Structures & Algorithms (CS302)',
-            class: '2R1 (CSE Div A)',
-            room: 'Room 201',
-            type: 'Lecture',
-          },
-          {
-            time: '11:15 AM - 12:15 PM',
-            subject: 'Database Management Systems (CS501)',
-            class: '3R (CSE)',
-            room: 'Room 301',
-            type: 'Lecture',
-          },
-        ],
+        todaySchedule: todaySchedule || [],
       };
     } catch (_) {
       return {
         faculty: {
           id: facultyId,
-          name: 'Dr. Rohan Deshmukh',
-          employeeId: 'FAC-CSE-1048',
-          prefix: 'Prof.',
-          title: 'Associate Professor',
+          name: 'Faculty',
+          employeeId: '',
+          prefix: '',
+          title: 'Department Faculty',
           departmentCode: 'CSE',
-          cabinLocation: 'Academic Block B, Room 204',
+          cabinLocation: '',
         },
         metrics: {
-          totalClasses: 3,
-          totalStudents: 195,
-          averageAttendance: '87.4%',
-          syllabusCompleted: '68%',
-          unreadNotifications: 2,
-          totalLecturesDelivered: 42,
+          totalClasses: 0,
+          totalStudents: 0,
+          averageAttendance: '0%',
+          syllabusCompleted: '0%',
+          unreadNotifications: 0,
+          totalLecturesDelivered: 0,
         },
-        todaySchedule: [
-          {
-            time: '10:00 AM - 11:00 AM',
-            subject: 'Data Structures & Algorithms (CS302)',
-            class: '2R1 (CSE Div A)',
-            room: 'Room 201',
-            type: 'Lecture',
-          },
-          {
-            time: '11:15 AM - 12:15 PM',
-            subject: 'Database Management Systems (CS501)',
-            class: '3R (CSE)',
-            room: 'Room 301',
-            type: 'Lecture',
-          },
-        ],
+        todaySchedule: [],
       };
     }
   },

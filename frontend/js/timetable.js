@@ -108,14 +108,13 @@
       const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
       const term = this.activeTerm || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getCurrentAcademicTerm() : { academicYear: "2026-2027", semesterType: "Odd" });
 
-      // Fallback schedule rows if TeacherERPData is not loaded
-      const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable) ? TeacherERPData.timetable : [
-        { day: "Monday", slots: ["Data Structures (Room 201)", "Java Programming (Room 305)", "Free Slot", "Data Structures Lab (Lab 02)"] },
-        { day: "Tuesday", slots: ["Free Slot", "Data Structures (Room 201)", "Database Systems (Room 304)", "Operating Systems (Lab 04)"] },
-        { day: "Wednesday", slots: ["Operating Systems (Room 201)", "Free Slot", "Data Structures Lab (Lab 01)", "Data Structures Lab (Lab 01)"] },
-        { day: "Thursday", slots: ["Data Structures (Room 201)", "Algorithms (Room 304)", "Free Slot", "Project Guidance (Seminar Hall)"] },
-        { day: "Friday", slots: ["Software Engg (Room 105)", "Operating Systems (Room 201)", "Free Slot", "Faculty Meeting (Dept Library)"] }
-      ];
+      // Dynamic schedule rows with empty day slot defaults
+      const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && TeacherERPData.timetable.length > 0)
+        ? TeacherERPData.timetable
+        : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(day => ({
+          day: day,
+          slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
+        }));
 
       return `
       <div class="timetable-grid-card">

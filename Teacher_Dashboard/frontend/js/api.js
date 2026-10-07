@@ -92,10 +92,10 @@
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
-    // 2. Authentication
     login: async function (email, password) {
-      email = email || 'rohan.deshmukh@ssgmce.ac.in';
-      password = password || 'Faculty@123';
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
@@ -108,16 +108,8 @@
         }
         return data;
       } catch (err) {
-        console.warn('[TeacherAPI] login attempt:', err.message);
-        return {
-          user: {
-            id: 'a0000000-0000-0000-0000-000000000001',
-            name: 'Dr. Rohan Deshmukh',
-            role: 'faculty',
-            employeeId: 'FAC-CSE-1048'
-          },
-          token: this.token || 'teach_token_default'
-        };
+        console.warn('[TeacherAPI] login failed:', err.message);
+        throw err;
       }
     },
 

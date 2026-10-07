@@ -28,10 +28,10 @@ export const verifyAuth = async (req, res, next) => {
         }).catch(() => null);
 
         req.faculty = faculty || {
-          id: 'a0000000-0000-0000-0000-000000000001',
-          name: user.user_metadata?.name || 'Dr. Rohan Deshmukh',
+          id: user.id || 'a0000000-0000-0000-0000-000000000001',
+          name: user.user_metadata?.name || 'Faculty',
           email: user.email,
-          employeeId: 'FAC-CSE-1048',
+          employeeId: '',
           departmentCode: 'CSE',
         };
         return next();
@@ -44,9 +44,9 @@ export const verifyAuth = async (req, res, next) => {
       req.user = decoded;
       req.faculty = decoded.faculty || {
         id: decoded.id || 'a0000000-0000-0000-0000-000000000001',
-        name: decoded.name || 'Dr. Rohan Deshmukh',
-        email: decoded.email || 'rohan.deshmukh@ssgmce.ac.in',
-        employeeId: decoded.employeeId || 'FAC-CSE-1048',
+        name: decoded.name || 'Faculty',
+        email: decoded.email || '',
+        employeeId: decoded.employeeId || '',
         departmentCode: decoded.departmentCode || 'CSE',
       };
       return next();

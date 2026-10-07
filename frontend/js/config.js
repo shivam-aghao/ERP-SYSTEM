@@ -26,7 +26,7 @@
     BACKEND_PORT: BACKEND_PORT,
     BACKEND_ORIGIN: origin,
     STUDENT_API_BASE: origin + '/api/v1/student',
-    TEACHER_API_BASE: 'http://localhost:5001/api/v1',
+    TEACHER_API_BASE: origin + '/api/v1',
     QUIZ_API_BASE: origin + '/api/v1/quiz',
     AUTH_API_BASE: origin + '/api/v1/auth',
     ADMIN_API_BASE: origin + '/api/v1',

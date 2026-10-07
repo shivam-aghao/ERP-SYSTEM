@@ -8,7 +8,7 @@ import { attendanceService } from '../services/attendance.service.js';
 import { studentService } from '../services/student.service.js';
 import { notificationService } from '../services/notification.service.js';
 
-// Default Dr. Rohan Deshmukh fallback ID
+// Default faculty fallback ID
 const DEFAULT_FACULTY_ID = 'a0000000-0000-0000-0000-000000000001';
 
 export const getProfile = asyncHandler(async (req, res) => {

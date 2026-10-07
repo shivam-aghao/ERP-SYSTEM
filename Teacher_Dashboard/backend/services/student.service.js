@@ -1,16 +1,10 @@
 import { prisma } from '../config/db.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const STUDENT_NAMES = [
-  'Aarav Sharma', 'Ananya Patel', 'Rohan Kulkarni', 'Priya Verma', 'Siddharth Joshi',
-  'Diya Deshmukh', 'Aditya More', 'Ishaan Chavan', 'Janhavi Pawar', 'Gaurav Jadhav',
-  'Manasi Kale', 'Nikhil Bhole', 'Pooja Mishra', 'Pranav Salunkhe', 'Rohit Gupta',
-  'Rutuja Gaikwad', 'Sahil Khan', 'Sakshi Mane', 'Sameer Inamdar', 'Sanjana Kadam',
-  'Sarang Patil', 'Shreya Thakur', 'Siddhant Rao', 'Snehal Wagh', 'Sujay Bhosale',
-  'Tanvi Sawant', 'Tejas Shirodkar', 'Utkarsh Narvekar', 'Vaishnavi Naik', 'Varun Mahajan'
-];
+const STUDENT_NAMES = [];
 
 function generateClassStudents(classCode = '2R1', dept = 'CSE') {
+  if (STUDENT_NAMES.length === 0) return [];
   return STUDENT_NAMES.map((name, idx) => {
     const roll = idx + 1;
     const rollFormatted = `${classCode}-${String(roll).padStart(2, '0')}`;

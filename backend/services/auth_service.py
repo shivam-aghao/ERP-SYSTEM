@@ -54,56 +54,29 @@ class AuthService:
             pass
 
         if not teacher_row and (
-            uid.lower() in ("teacher", "faculty", "fac", "prof", "employee", "staff", "rohan.deshmukh@ssgmce.ac.in", "fac-cse-1048", "emp-cse-1048")
+            uid.lower() in ("teacher", "faculty", "fac", "prof", "employee", "staff")
             or uid.lower().startswith("teach")
             or uid.lower().startswith("fac")
             or uid.lower().startswith("emp")
-            or "deshmukh" in uid.lower()
             or hint_role in ("teacher", "faculty", "employee")
         ):
             try:
-                teacher_row = db.execute(text("SELECT * FROM teachers WHERE emp_code = 'FAC-CSE-1048' OR emp_code = 'EMP-CSE-1042' LIMIT 1")).fetchone()
-                if not teacher_row:
-                    teacher_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+                teacher_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
             except Exception:
                 pass
 
         if teacher_row:
             m = teacher_row._mapping
-            t_name = m.get("full_name") or f"{m.get('first_name', '')} {m.get('last_name', '')}".strip() or "Dr. Rohan Deshmukh"
+            t_name = m.get("full_name") or f"{m.get('first_name', '')} {m.get('last_name', '')}".strip() or uid
             return {
-                "token": f"teach_token_{m.get('id', 'a0000000-0000-0000-0000-000000000001')}",
+                "token": f"teach_token_{m.get('id', uid)}",
                 "user": {
-                    "id": m.get("id", "a0000000-0000-0000-0000-000000000001"),
+                    "id": m.get("id", uid),
                     "name": t_name,
                     "full_name": t_name,
-                    "email": m.get("email", "rohan.deshmukh@ssgmce.ac.in"),
-                    "emp_code": m.get("emp_code", uid or "FAC-CSE-1048"),
-                    "department": m.get("department_id", "CSE"),
-                    "role": "teacher"
-                },
-                "role": "teacher",
-                "redirect": "teacher-dashboard.html"
-            }
-
-        # If faculty matched pattern but not in db, return fallback faculty
-        if (
-            uid.lower() in ("teacher", "faculty", "fac", "prof", "employee", "staff", "rohan.deshmukh@ssgmce.ac.in", "fac-cse-1048", "emp-cse-1048")
-            or uid.lower().startswith("teach")
-            or uid.lower().startswith("fac")
-            or uid.lower().startswith("emp")
-            or "deshmukh" in uid.lower()
-            or hint_role in ("teacher", "faculty", "employee")
-        ):
-            return {
-                "token": "teach_token_a0000000-0000-0000-0000-000000000001",
-                "user": {
-                    "id": "a0000000-0000-0000-0000-000000000001",
-                    "name": "Dr. Rohan Deshmukh",
-                    "full_name": "Dr. Rohan Deshmukh",
-                    "email": "rohan.deshmukh@ssgmce.ac.in",
-                    "emp_code": "FAC-CSE-1048",
-                    "department": "CSE",
+                    "email": m.get("email", ""),
+                    "emp_code": m.get("emp_code", uid),
+                    "department": m.get("department_id", ""),
                     "role": "teacher"
                 },
                 "role": "teacher",
@@ -115,10 +88,8 @@ class AuthService:
         try:
             if uid.lower() in ("student", "learner", "std"):
                 student_row = db.execute(
-                    text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = '308979' OR s.student_code = '308637' LIMIT 1")
+                    text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")
                 ).fetchone()
-                if not student_row:
-                    student_row = db.execute(text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
             else:
                 student_row = db.execute(
                     text("""
@@ -139,18 +110,18 @@ class AuthService:
 
         if student_row:
             m = student_row._mapping
-            s_name = m.get("full_name") or m.get("name") or "Shivam Sanjay Aghao"
+            s_name = m.get("full_name") or m.get("name") or uid
             return {
-                "token": f"st_token_{m.get('id', 's0000000-0000-0000-0000-000000000001')}",
+                "token": f"st_token_{m.get('id', uid)}",
                 "user": {
-                    "id": m.get("id", "s0000000-0000-0000-0000-000000000001"),
-                    "student_code": m.get("student_code", uid or "308637"),
+                    "id": m.get("id", uid),
+                    "student_code": m.get("student_code") or uid,
                     "full_name": s_name,
                     "name": s_name,
-                    "roll_no": m.get("roll_no", 60),
-                    "class_name": m.get("class_name") or "3R",
+                    "roll_no": m.get("roll_no") or 0,
+                    "class_name": m.get("class_name") or "",
                     "class_id": m.get("class_id"),
-                    "division": m.get("division") or m.get("class_div") or "1",
+                    "division": m.get("division") or m.get("class_div") or "",
                     "email": m.get("email", ""),
                     "role": "student"
                 },
@@ -163,7 +134,7 @@ class AuthService:
             fallback_teacher = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
             if fallback_teacher:
                 m = fallback_teacher._mapping
-                t_name = m.get("full_name") or "Faculty Member"
+                t_name = m.get("full_name") or uid
                 return {
                     "token": f"teach_token_{m['id']}",
                     "user": {
@@ -172,7 +143,7 @@ class AuthService:
                         "full_name": t_name,
                         "email": m.get("email", ""),
                         "emp_code": m.get("emp_code") or uid,
-                        "department": m.get("department_id", "CSE"),
+                        "department": m.get("department_id", ""),
                         "role": "teacher"
                     },
                     "role": "teacher",
@@ -192,11 +163,11 @@ class AuthService:
                 "redirect": "admin-dashboard.html"
             }
 
-        # Default fallback to first student if any input was given, or raise 401 if blank
-        fallback_st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        # Default fallback to first student if any input was given
+        fallback_st = db.execute(text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
         if fallback_st and uid:
             m = fallback_st._mapping
-            s_name = m.get("full_name") or m.get("name") or "Shivam Sanjay Aghao"
+            s_name = m.get("full_name") or m.get("name") or uid
             return {
                 "token": f"st_token_{m['id']}",
                 "user": {
@@ -204,9 +175,10 @@ class AuthService:
                     "student_code": m.get("student_code") or uid,
                     "full_name": s_name,
                     "name": s_name,
-                    "roll_no": m.get("roll_no") or 60,
-                    "class_name": m.get("class_name") or "3R",
+                    "roll_no": m.get("roll_no") or 0,
+                    "class_name": m.get("class_name") or "",
                     "class_id": m.get("class_id"),
+                    "division": m.get("division") or m.get("class_div") or "",
                     "role": "student"
                 },
                 "role": "student",

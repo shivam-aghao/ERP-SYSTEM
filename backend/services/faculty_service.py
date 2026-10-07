@@ -28,12 +28,14 @@ class FacultyService:
         students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 0
         quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 0
         sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 0
+        avg_att = db.execute(text("SELECT AVG(attendance_rate) FROM attendance_sessions")).scalar()
+        avg_att_pct = round(float(avg_att), 1) if avg_att is not None else 0.0
         return {
             "total_classes": classes_cnt,
             "total_students": students_cnt,
             "total_quizzes": quizzes_cnt,
             "total_attendance_sessions": sessions_cnt,
-            "attendance_average_pct": 84.5
+            "attendance_average_pct": avg_att_pct
         }
 
     @staticmethod

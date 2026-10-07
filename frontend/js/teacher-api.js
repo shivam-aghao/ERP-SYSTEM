@@ -68,8 +68,9 @@
 
     // 2. Authentication
     login: async function (email, password) {
-      email = email || 'rohan.deshmukh@ssgmce.ac.in';
-      password = password || 'Faculty@123';
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
       var res = await this.request('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: email, password: password }),

@@ -239,9 +239,9 @@ const StudentTimetableApp = {
     const s = this.studentSession;
     if (!s) return;
 
-    const displayName = s.shortName || s.fullName || "Shivam Aghao";
-    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
-    const initials = s.initials || "SA";
+    const displayName = s.shortName || s.fullName || s.name || "Student";
+    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '--'}` : (s.role || "Student");
+    const initials = s.initials || (displayName ? displayName.substring(0, 2).toUpperCase() : "ST");
 
     // Standard IDs
     const headerName = document.getElementById("header-profile-name");
@@ -578,53 +578,10 @@ const StudentTimetableApp = {
         return { day: dayName, slots };
       });
     } else {
-      timetableData = [
-        {
-          day: "Monday",
-          slots: [
-            "Operating Systems (LH-301)",
-            "Data Structures & Algorithms (LH-204)",
-            "Database Management Systems (LH-112)",
-            "DSA Lab (Software Lab 2)"
-          ]
-        },
-        {
-          day: "Tuesday",
-          slots: [
-            "Java Programming & OOP (LH-201)",
-            "Computer Networks (LH-108)",
-            "Data Structures (LH-204)",
-            "Java Lab (Adv Systems Lab 3)"
-          ]
-        },
-        {
-          day: "Wednesday",
-          slots: [
-            "Database Management Systems (LH-112)",
-            "Operating Systems (LH-301)",
-            "Java Programming (LH-201)",
-            "DBMS Lab (Database Lab 1)"
-          ]
-        },
-        {
-          day: "Thursday",
-          slots: [
-            "Data Structures (LH-204)",
-            "Java Programming Lab (Adv Systems Lab 3)",
-            "Operating Systems (LH-301)",
-            "Database Management Tutorial (Seminar Hall 1)"
-          ]
-        },
-        {
-          day: "Friday",
-          slots: [
-            "Computer Networks (LH-108)",
-            "Data Structures (LH-204)",
-            "Java Programming (LH-201)",
-            "OS Linux Kernel Lab (Systems Lab 1)"
-          ]
-        }
-      ];
+      timetableData = daysOfWeek.map(day => ({
+        day: day,
+        slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
+      }));
     }
 
     // Helper: Parse slot text into lecture/lab details

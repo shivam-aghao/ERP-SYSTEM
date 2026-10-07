@@ -52,12 +52,13 @@ const TeacherApp = {
           const loginData = await window.TeacherAPI.login();
           setStatus(true, latency);
 
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
-            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${loginData.user.name}`, 'success');
+            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
-            this.showToast('🟢 Connected to Backend API (Dr. Rohan Deshmukh)', 'success');
+            this.showToast(`🟢 Connected to Backend API (${teacherName})`, 'success');
           }
-          console.log('✅ Logged in successfully as:', loginData.user.name);
+          console.log('✅ Logged in successfully as:', teacherName);
           try {
             const data = await window.TeacherAPI.getDashboardSummary();
             console.log('📊 Live Dashboard KPI metrics:', data.metrics);
@@ -65,10 +66,10 @@ const TeacherApp = {
 
             // Seamlessly bind live Supabase data to UI cards
             if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
-              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
-              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
-              if (data.metrics.averageAttendance) {
-                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 87;
+              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses || 0).padStart(2, '0');
+              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents || 0);
+              if (data.metrics.averageAttendance !== undefined) {
+                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 0;
               }
               if (data.faculty) {
                 TeacherERPData.faculty.name = data.faculty.name;
@@ -277,12 +278,12 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");

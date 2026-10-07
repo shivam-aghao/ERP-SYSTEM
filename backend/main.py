@@ -490,53 +490,84 @@ def update_teacher_profile(payload: TeacherProfileUpdate, db: Session = Depends(
 
 @api.get("/dashboard/summary", tags=["Faculty Portal"])
 def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
-    classes_cnt, students_cnt, quizzes_cnt, sessions_cnt = 3, 195, 6, 42
+    classes_cnt = 0
+    students_cnt = 0
+    quizzes_cnt = 0
+    sessions_cnt = 0
+    avg_att_pct = 0.0
     try:
-        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 3
-        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 195
-        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 6
-        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 42
+        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 0
+        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 0
+        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 0
+        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 0
+        avg_att = db.execute(text("SELECT AVG(attendance_rate) FROM attendance_sessions")).scalar()
+        avg_att_pct = round(float(avg_att), 1) if avg_att is not None else 0.0
     except Exception:
         pass
+
+    # Dynamic Teacher Profile
+    faculty_dict = {
+        "id": "",
+        "name": "Faculty Member",
+        "employeeId": "",
+        "prefix": "Prof.",
+        "title": "Faculty Member",
+        "departmentCode": "",
+        "cabinLocation": ""
+    }
+    try:
+        t_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+        if t_row:
+            tm = dict(t_row._mapping)
+            faculty_dict = {
+                "id": str(tm.get("id") or ""),
+                "name": tm.get("full_name") or f"{tm.get('first_name', '')} {tm.get('last_name', '')}".strip() or "Faculty Member",
+                "employeeId": tm.get("emp_code") or "",
+                "prefix": "Prof.",
+                "title": tm.get("designation") or "Faculty Member",
+                "departmentCode": tm.get("department_id") or "CSE",
+                "cabinLocation": tm.get("cabin_location") or ""
+            }
+    except Exception:
+        pass
+
+    # Dynamic Today's Timetable Schedule
+    today_schedule = []
+    try:
+        from datetime import datetime
+        day_name = datetime.now().strftime("%A")
+        t_entries = db.execute(
+            text("SELECT * FROM timetable_entries WHERE LOWER(day_of_week) = LOWER(:d) ORDER BY period_number ASC"),
+            {"d": day_name}
+        ).fetchall()
+        for te in t_entries:
+            m = dict(te._mapping)
+            today_schedule.append({
+                "time": f"{m.get('start_time', '09:00')} - {m.get('end_time', '10:00')}",
+                "subject": m.get("subject_name") or m.get("course_name") or "Course",
+                "class": m.get("class_name") or "",
+                "room": m.get("room") or m.get("venue") or "",
+                "type": m.get("session_type") or "Lecture"
+            })
+    except Exception:
+        pass
+
     return success_response({
-        "faculty": {
-            "id": "a0000000-0000-0000-0000-000000000001",
-            "name": "Dr. Rohan Deshmukh",
-            "employeeId": "FAC-CSE-1048",
-            "prefix": "Prof.",
-            "title": "Associate Professor",
-            "departmentCode": "CSE",
-            "cabinLocation": "Academic Block B, Room 204"
-        },
+        "faculty": faculty_dict,
         "metrics": {
             "totalClasses": classes_cnt,
             "totalStudents": students_cnt,
-            "averageAttendance": "87.4%",
-            "syllabusCompleted": "68%",
-            "unreadNotifications": 2,
+            "averageAttendance": f"{avg_att_pct}%",
+            "syllabusCompleted": "0%",
+            "unreadNotifications": 0,
             "totalLecturesDelivered": sessions_cnt
         },
-        "todaySchedule": [
-            {
-                "time": "10:00 AM - 11:00 AM",
-                "subject": "Data Structures & Algorithms (CS302)",
-                "class": "2R1 (CSE Div A)",
-                "room": "Room 201",
-                "type": "Lecture"
-            },
-            {
-                "time": "11:15 AM - 12:15 PM",
-                "subject": "Database Management Systems (CS501)",
-                "class": "3R (CSE)",
-                "room": "Room 301",
-                "type": "Lecture"
-            }
-        ],
+        "todaySchedule": today_schedule,
         "total_classes": classes_cnt,
         "total_students": students_cnt,
         "total_quizzes": quizzes_cnt,
         "total_attendance_sessions": sessions_cnt,
-        "attendance_average_pct": 87.4
+        "attendance_average_pct": avg_att_pct
     })
 
 @api.get("/timetable/my", tags=["Faculty Portal"])
