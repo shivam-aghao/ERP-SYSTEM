@@ -197,6 +197,11 @@
       return this.getCurrentUser();
     },
 
+    getUserName: function () {
+      var user = this.getCurrentUser();
+      return user ? (user.fullName || user.full_name || user.name || 'Faculty') : 'Faculty';
+    },
+
     /**
      * Checks if current session is active
      */
