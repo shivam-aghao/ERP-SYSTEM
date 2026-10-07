@@ -848,6 +848,38 @@ const TeacherApp = {
     window.open(url, '_blank');
   },
 
+  openAttendanceReports() {
+    if (this.currentView !== 'attendance') {
+      this.switchView('attendance', 'marking');
+    } else if (this.currentAttendanceSubView !== 'marking') {
+      this.switchAttendanceSubView('marking');
+    }
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const openModal = () => {
+        try {
+          const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          if (doc) {
+            const m = doc.getElementById('modalPdfCenter');
+            if (m) {
+              m.classList.remove('hidden');
+              return true;
+            }
+          }
+        } catch (err) {
+          console.warn('[Attendance] Cannot access frame document:', err);
+        }
+        return false;
+      };
+
+      if (!openModal()) {
+        frame.addEventListener('load', () => {
+          setTimeout(openModal, 150);
+        }, { once: true });
+      }
+    }
+  },
+
   initHashRouting() {
     const handleHash = () => {
       const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();

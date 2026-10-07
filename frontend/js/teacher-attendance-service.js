@@ -167,7 +167,44 @@ const AttendanceService = {
   // Endpoints verify ownership: cards belong to the logged-in teacher.
   // =========================================================================
 
-  getAllClassCards() {
+  async getAllClassCards() {
+    this.init();
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
+      const parsed = data ? JSON.parse(data) : [];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (e) {}
+
+    // Fallback: load live cards from backend or ERP_DATA
+    try {
+      if (typeof window !== "undefined" && window.ErpApi) {
+        const liveCards = await window.ErpApi.getClassCards();
+        if (Array.isArray(liveCards) && liveCards.length > 0) {
+          localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(liveCards));
+          return liveCards;
+        }
+      }
+    } catch (apiErr) {}
+
+    if (typeof ERP_DATA !== "undefined" && Array.isArray(ERP_DATA.classCards) && ERP_DATA.classCards.length > 0) {
+      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(ERP_DATA.classCards));
+      return ERP_DATA.classCards;
+    }
+
+    return [];
+  },
+
+  async getTeacherCards(teacherId) {
+    if (!teacherId) {
+      throw new Error("Unauthorized: Teacher ID is required.");
+    }
+    const all = await this.getAllClassCards();
+    return all.filter((card) => card.teacher_id === teacherId);
+  },
+
+  getCachedClassCards() {
     this.init();
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
@@ -177,19 +214,8 @@ const AttendanceService = {
     }
   },
 
-  getTeacherCards(teacherId) {
-    return new Promise((resolve, reject) => {
-      if (!teacherId) {
-        return reject(new Error("Unauthorized: Teacher ID is required."));
-      }
-      const all = this.getAllClassCards();
-      const teacherCards = all.filter((card) => card.teacher_id === teacherId);
-      resolve(teacherCards);
-    });
-  },
-
   checkCardDuplicate(teacherId, department, classId, subjectCode, excludeCardId = null) {
-    const all = this.getAllClassCards();
+    const all = this.getCachedClassCards();
     return all.some(
       (c) =>
         c.teacher_id === teacherId &&
@@ -217,7 +243,7 @@ const AttendanceService = {
           return reject(new Error("Duplicate card: You already have a class card for this Department, Class, and Subject."));
         }
 
-        const all = this.getAllClassCards();
+        const all = this.getCachedClassCards();
         const newCard = {
           id: `CARD-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
           teacher_id: teacherId,
@@ -243,7 +269,7 @@ const AttendanceService = {
           return reject(new Error("Unauthorized: Teacher ID is missing."));
         }
 
-        const all = this.getAllClassCards();
+        const all = this.getCachedClassCards();
         const cardIndex = all.findIndex((c) => c.id === cardId);
 
         if (cardIndex === -1) {
@@ -284,7 +310,7 @@ const AttendanceService = {
           return reject(new Error("Unauthorized: Teacher ID is missing."));
         }
 
-        const all = this.getAllClassCards();
+        const all = this.getCachedClassCards();
         const card = all.find((c) => c.id === cardId);
 
         if (!card) {

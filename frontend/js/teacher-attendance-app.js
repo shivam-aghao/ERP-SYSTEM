@@ -289,13 +289,18 @@ document.addEventListener("DOMContentLoaded", () => {
       this.globalBackBtn.addEventListener("click", () => this.handleBackNavigation());
 
       // Step 1: Start Flow
-      this.btnStartFlow.addEventListener("click", () => this.goToStep(2));
+      this.btnStartFlow.addEventListener("click", () => {
+        if (!this.state.selectedDate) this.state.selectedDate = new Date();
+        const now = this.state.selectedDate;
+        this.state.calendarViewingMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        this.goToStep(2);
+      });
       this.btnRefreshRecent.addEventListener("click", () => {
         this.renderRecentAttendance();
         this.showToast("Recent attendance records refreshed", "info");
       });
 
-      // Step 4: Calendar controls
+      // Step 2: Calendar controls
       this.calPrevBtn.addEventListener("click", () => {
         this.state.calendarViewingMonth.setMonth(this.state.calendarViewingMonth.getMonth() - 1);
         this.renderCalendar();
@@ -311,6 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
         this.state.calendarViewingMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         this.state.selectedDate = now;
         this.renderCalendar();
+        this.updateSelectedDateDisplay();
       });
 
       if (this.btnContinueToCards) {
@@ -404,6 +410,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // PDF Reports Center & Header / Sidebar Handlers
       if (this.btnHeaderPdfReports) {
         this.btnHeaderPdfReports.addEventListener("click", () => {
+          if (this.modalPdfCenter) this.modalPdfCenter.classList.remove("hidden");
+        });
+      }
+      const btnTopbarReports = document.getElementById("btnTopbarReports");
+      if (btnTopbarReports) {
+        btnTopbarReports.addEventListener("click", () => {
           if (this.modalPdfCenter) this.modalPdfCenter.classList.remove("hidden");
         });
       }
@@ -529,13 +541,45 @@ document.addEventListener("DOMContentLoaded", () => {
       this.btnOpenSaveModal.addEventListener("click", () => this.openSaveModal());
       this.btnOpenSubmitModal.addEventListener("click", () => this.openSubmitModal());
 
-      // Modal Close Handlers (via data-close-modal)
+      // Universal Modal Close Handlers (via data-close-modal & .modal-close-btn)
       document.querySelectorAll("[data-close-modal]").forEach((btn) => {
         btn.addEventListener("click", (e) => {
+          e.preventDefault();
           const targetId = e.currentTarget.getAttribute("data-close-modal");
           const modal = document.getElementById(targetId);
           if (modal) modal.classList.add("hidden");
         });
+      });
+
+      // Global document-level delegated listener for closing modals & clicking backdrops
+      document.addEventListener("click", (e) => {
+        const closeBtn = e.target.closest("[data-close-modal], .modal-close-btn");
+        if (closeBtn) {
+          e.preventDefault();
+          const targetId = closeBtn.getAttribute("data-close-modal");
+          if (targetId) {
+            const modal = document.getElementById(targetId);
+            if (modal) modal.classList.add("hidden");
+          } else {
+            const modal = closeBtn.closest(".modal-backdrop");
+            if (modal) modal.classList.add("hidden");
+          }
+          return;
+        }
+
+        // Close on clicking modal backdrop outside modal-box
+        if (e.target.classList && e.target.classList.contains("modal-backdrop")) {
+          e.target.classList.add("hidden");
+        }
+      });
+
+      // Close open modals on Escape key press
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document.querySelectorAll(".modal-backdrop:not(.hidden)").forEach((m) => {
+            m.classList.add("hidden");
+          });
+        }
       });
 
       // Edit Modal Actions
@@ -705,8 +749,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Trigger step-specific setup
-      if (stepNumber === 3) {
-        this.renderClassCards();
+      if (stepNumber === 2) {
+        if (!this.state.selectedDate) this.state.selectedDate = new Date();
+        if (!this.state.calendarViewingMonth) {
+          const d = this.state.selectedDate;
+          this.state.calendarViewingMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+        }
+        this.renderCalendar();
+        this.updateSelectedDateDisplay();
+      } else if (stepNumber === 3) {
+        await this.renderClassCards();
       } else if (stepNumber === 4) {
         await this.initStudentAttendance();
       } else if (stepNumber === 5) {
@@ -1034,9 +1086,15 @@ document.addEventListener("DOMContentLoaded", () => {
         this.classCardsEmptyState.classList.add("hidden");
 
         cards.forEach((card) => {
-          const deptObj = (ERP_DATA.departments || []).find((d) => d.code === card.department);
+          const dept = card.department || card.department_code || card.departmentCode || "CSE";
+          const className = card.class || card.class_name || card.className || "2R1";
+          const subjectCode = card.subject_code || card.subjectCode || "CS302";
+          const subjectName = card.subject_name || card.subjectName || "Subject";
+          const timeSlot = card.time_slot || card.timeSlot || "";
+
+          const deptObj = (ERP_DATA.departments || []).find((d) => d.code === dept);
           const deptColor = deptObj ? deptObj.color : "#0B5CAD";
-          const isScheduled = card.card_type === "scheduled";
+          const isScheduled = (card.card_type || card.cardType) === "scheduled";
           const typeBadgeHtml = isScheduled
             ? `<span class="card-badge-pill" style="border-color: #22C55E40; color: #15803D; background-color: #DCFCE7; font-weight: 700;">Timetable Scheduled</span>`
             : `<span class="card-badge-pill" style="border-color: #F59E0B40; color: #B45309; background-color: #FEF3C7; font-weight: 700;">Extra / Replacement</span>`;
@@ -1050,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="card-top-row" style="align-items: flex-start; gap: 6px;">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   <span class="card-badge-pill" style="border-color: ${deptColor}40; color: ${deptColor}; background-color: ${deptColor}15;">
-                    ${card.department}
+                    ${dept}
                   </span>
                   ${typeBadgeHtml}
                 </div>
@@ -1068,10 +1126,10 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
 
               <div class="card-body-content" style="margin-top: 10px;">
-                <div class="card-class-heading">Class ${card.class}</div>
-                <div class="card-subject-name">${card.subject_name}</div>
-                <div class="card-subject-code">${card.subject_code}</div>
-                ${card.time_slot ? `<div style="font-size: 11.5px; color: #475569; margin-top: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;">${card.time_slot}</div>` : ''}
+                <div class="card-class-heading">Class ${className}</div>
+                <div class="card-subject-name">${subjectName}</div>
+                <div class="card-subject-code">${subjectCode}</div>
+                ${timeSlot ? `<div style="font-size: 11.5px; color: #475569; margin-top: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;">${timeSlot}</div>` : ''}
               </div>
             </div>
 
@@ -1137,25 +1195,30 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     async startAttendanceFromCard(card) {
-      const deptObj = (ERP_DATA.departments || []).find((d) => d.code === card.department) || {
-        id: card.department,
-        code: card.department,
-        name: card.department_name || card.department,
+      const cardDept = card.department || card.department_code || card.departmentCode || "CSE";
+      const cardClass = card.class || card.class_name || card.className || "2R1";
+      const cardSubCode = card.subject_code || card.subjectCode || "CS302";
+      const cardSubName = card.subject_name || card.subjectName || "Subject";
+
+      const deptObj = (ERP_DATA.departments || []).find((d) => d.code === cardDept) || {
+        id: cardDept,
+        code: cardDept,
+        name: card.department_name || cardDept,
         color: "#0B5CAD"
       };
 
-      const classList = (ERP_DATA.classes && ERP_DATA.classes[card.department]) || [];
-      const classObj = classList.find((c) => c.name === card.class || c.id === card.class) || {
-        id: card.class,
-        name: card.class,
+      const classList = (ERP_DATA.classes && ERP_DATA.classes[cardDept]) || [];
+      const classObj = classList.find((c) => c.name === cardClass || c.id === cardClass) || {
+        id: cardClass,
+        name: cardClass,
         year: "",
-        studentCount: 60
+        studentCount: 40
       };
 
-      const subjectList = (ERP_DATA.subjects && ERP_DATA.subjects[card.department]) || [];
-      const subjectObj = subjectList.find((s) => s.code === card.subject_code) || {
-        code: card.subject_code,
-        name: card.subject_name,
+      const subjectList = (ERP_DATA.subjects && ERP_DATA.subjects[cardDept]) || [];
+      const subjectObj = subjectList.find((s) => s.code === cardSubCode) || {
+        code: cardSubCode,
+        name: cardSubName,
         type: "Theory"
       };
 
@@ -1607,14 +1670,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const isAbsent = (student.status === "absent");
       const isPresent = (student.status === "present");
       const statusText = isAbsent ? "ABSENT" : (isPresent ? "PRESENT" : "PENDING");
-      const statusClass = isAbsent ? "absent" : (isPresent ? "present" : "pending");
-<<<<<<< HEAD
       const rollNo = student.rollNo || student.roll || (student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : srNo);
-      const studentCode = student.studentCode || student.enrollmentNo || student.prn || student.code || "-";
-=======
-      const rollNo = student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : `${student.roll || srNo}`;
-      const studentCode = student.studentCode || student.student_code || student.prn || student.code || `STU-${student.roll || srNo}`;
->>>>>>> 9ecf21c236e1425e37789315b9bca71c89a6ca6d
+      const studentCode = student.studentCode || student.enrollmentNo || student.student_code || student.prn || student.code || "-";
 
       // Generate 10 lecture history if not present
       if (!student.history || student.history.length < 10) {
