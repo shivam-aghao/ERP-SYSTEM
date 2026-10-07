@@ -366,6 +366,12 @@ class AcademicWalletService:
                         count += 1
                     except Exception:
                         pass
+            if count > 0:
+                try:
+                    from backend.services.notification_service import NotificationService
+                    NotificationService.send_result_published_notification(class_name, semester, performed_by)
+                except Exception as e:
+                    logger.warning("Notification trigger error on result publish: %s", e)
             return {"success": True, "published_count": count, "class_name": class_name, "semester": semester}
 
         raise ValueError("Must provide record_id, student_code, or class_name to publish")

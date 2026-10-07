@@ -144,6 +144,23 @@ class AttendanceService:
         except Exception:
             pass
 
+        # Step 7: Trigger low attendance notification for students whose attendance falls below 75%
+        try:
+            from backend.services.notification_service import NotificationService
+            for sid in payload.absent_student_ids:
+                row = db.execute(text("""
+                    SELECT present_periods, total_periods 
+                    FROM student_attendance_subjects 
+                    WHERE (student_id = :sid OR student_code = :sid) AND (subject_code = :scode OR subject_name = :sname)
+                    LIMIT 1
+                """), {"sid": sid, "scode": subject_code, "sname": subject_name}).fetchone()
+                if row and row[1] > 0:
+                    pct = round((row[0] / row[1] * 100), 1)
+                    if pct < 75:
+                        NotificationService.send_attendance_shortage_notification(sid, subject_name, pct)
+        except Exception:
+            pass
+
         return {
             "session_id": sess_id,
             "present_count": present_count,

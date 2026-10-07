@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
   hydrateDashboardData();
+
+  // Step 7: Real-Time Notifications & Alerts Engine
+  fetchLiveNotifications('all');
+  initRealtimeNotifications();
 });
 
 /* ==========================================================================
@@ -439,6 +443,7 @@ function initDropdowns() {
       if (!isOpen) {
         notifPanel.classList.add('open');
         notifBtn.setAttribute('aria-expanded', 'true');
+        fetchLiveNotifications(currentDropdownFilter);
       }
     });
   }
@@ -461,14 +466,10 @@ function initDropdowns() {
     }
   });
 
-  if (markAllReadBtn && notifBadge) {
-    markAllReadBtn.addEventListener('click', () => {
-      const unreadItems = notifPanel.querySelectorAll('.notif-item.unread');
-      unreadItems.forEach(item => item.classList.remove('unread'));
-      notifBadge.style.display = 'none';
-      const unreadTag = notifPanel.querySelector('.unread-tag');
-      if (unreadTag) unreadTag.textContent = '0 New';
-      showToast('All notifications marked as read', 'info');
+  if (markAllReadBtn) {
+    markAllReadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.markAllNotificationsRead();
     });
   }
 
@@ -940,6 +941,17 @@ const studentModuleConfig = {
     subtabs: [
       { key: 'subject-wise', label: 'Subject-wise Attendance' },
       { key: 'eligibility', label: 'Autonomous Eligibility' }
+    ]
+  },
+  notifications: {
+    title: 'Notification Center & Alerts',
+    eyebrow: 'CAMPUS COMMUNICATION CELL',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',
+    subtabs: [
+      { key: 'all-alerts', label: 'All Notifications' },
+      { key: 'unread-alerts', label: 'Unread' },
+      { key: 'important-alerts', label: 'Urgent & High' },
+      { key: 'notif-preferences', label: 'Preferences' }
     ]
   }
 };
@@ -1594,6 +1606,12 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
         `;
       }
     }
+
+    else if (moduleKey === 'notifications') {
+      if (typeof window.hydrateNotificationCenter === 'function') {
+        await window.hydrateNotificationCenter(subtabKey);
+      }
+    }
   } catch (err) {
     console.error('Error hydrating student module [' + moduleKey + ']:', err);
   }
@@ -1868,47 +1886,501 @@ function renderSubjectWiseAttendance(subjects) {
   container.innerHTML = html;
 }
 
-function renderNotifications(notifs) {
+/* ==========================================================================
+   STEP 7: NOTIFICATIONS & REAL-TIME ALERTS ENGINE
+   ========================================================================== */
+let cachedNotificationsList = [];
+let currentDropdownFilter = 'all';
+let realtimeSocket = null;
+let realtimeReconnectTimer = null;
+
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return 'Recently';
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffSec = Math.floor((now - d) / 1000);
+    if (diffSec < 60) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Recently';
+  }
+}
+
+function getPriorityBadgeHtml(priority) {
+  const p = (priority || 'normal').toLowerCase();
+  if (p === 'urgent') {
+    return '<span class="badge" style="background:#FFE4E6; color:#E11D48; border:1px solid #FECDD3; font-weight:700; font-size:10px; padding:2px 6px; border-radius:4px;">URGENT</span>';
+  }
+  if (p === 'high') {
+    return '<span class="badge" style="background:#FEF3C7; color:#D97706; border:1px solid #FDE68A; font-weight:700; font-size:10px; padding:2px 6px; border-radius:4px;">HIGH</span>';
+  }
+  if (p === 'low') {
+    return '<span class="badge" style="background:#F1F5F9; color:#64748B; font-size:10px; padding:2px 6px; border-radius:4px;">LOW</span>';
+  }
+  return '<span class="badge" style="background:#EBF3FC; color:#005A9C; font-size:10px; padding:2px 6px; border-radius:4px;">NORMAL</span>';
+}
+
+function getCategoryColor(type) {
+  const t = (type || 'announcement').toLowerCase();
+  if (t === 'quiz') return '#E11D48';
+  if (t === 'result') return '#7C3AED';
+  if (t === 'attendance') return '#D97706';
+  if (t === 'payment' || t === 'fee') return '#059669';
+  if (t === 'emergency') return '#DC2626';
+  if (t === 'certificate') return '#00A6D6';
+  if (t === 'timetable') return '#2563EB';
+  return '#005A9C';
+}
+
+async function fetchLiveNotifications(filter = 'all') {
+  const studentCode = '308637';
+  currentDropdownFilter = filter;
+  try {
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getNotifications === 'function') {
+      const res = await StudentApi.getNotifications({ studentCode, status: filter });
+      if (res && res.data) {
+        cachedNotificationsList = res.data;
+        renderNotifications(cachedNotificationsList, filter);
+      }
+
+      // Update badge counts
+      const countRes = await StudentApi.getUnreadCounts(studentCode);
+      if (countRes && countRes.data) {
+        updateNotificationBadges(countRes.data);
+      }
+    }
+  } catch (err) {
+    console.warn('[Notifications] fetchLiveNotifications error:', err);
+  }
+}
+
+function updateNotificationBadges(counts) {
   const badge = document.getElementById('topNotifBadge');
   const tag = document.getElementById('topUnreadTag');
+  const unreadCount = counts.unread_count !== undefined ? counts.unread_count : 0;
+  const urgentCount = counts.urgent_count || 0;
+
+  if (badge) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+    if (urgentCount > 0) {
+      badge.style.background = '#E11D48';
+      badge.style.animation = 'pulse 1.8s infinite';
+    } else {
+      badge.style.background = '#00A6D6';
+      badge.style.animation = 'none';
+    }
+  }
+
+  if (tag) {
+    tag.textContent = `${unreadCount} New`;
+    if (urgentCount > 0) {
+      tag.textContent = `${unreadCount} New (${urgentCount} Urgent)`;
+      tag.style.background = '#E11D48';
+    } else {
+      tag.style.background = '#00A6D6';
+    }
+  }
+
+  const unreadCenterBadge = document.getElementById('notifUnreadBadgeCount');
+  if (unreadCenterBadge) {
+    unreadCenterBadge.textContent = `${unreadCount} Unread`;
+  }
+}
+
+function renderNotifications(notifs, filter = 'all') {
   const list = document.getElementById('topNotifList');
   if (!list) return;
 
   if (!notifs || notifs.length === 0) {
-    if (badge) badge.style.display = 'none';
-    if (tag) tag.textContent = '0 New';
-    list.innerHTML = '<li class="notif-item"><div class="notif-info"><p class="notif-msg">No unread notifications.</p><span class="notif-time">All caught up</span></div></li>';
+    list.innerHTML = `
+      <li class="notif-item" style="padding:20px 16px; text-align:center; color:#64748B;">
+        <div style="font-size:24px; margin-bottom:6px;">🔔</div>
+        <p style="margin:0; font-size:13px; font-weight:600;">No notifications in this filter.</p>
+        <span style="font-size:11px; color:#94A3B8;">All caught up! Check back later.</span>
+      </li>
+    `;
     return;
-  }
-
-  const unreadCount = notifs.filter(n => !n.isRead && !n.is_read).length;
-  if (badge) {
-    badge.textContent = unreadCount;
-    badge.style.display = unreadCount > 0 ? '' : 'none';
-  }
-  if (tag) {
-    tag.textContent = `${unreadCount} New`;
   }
 
   let html = '';
   notifs.forEach(n => {
-    const isUnread = !(n.isRead || n.is_read);
-    const isQuiz = (n.type && n.type.toLowerCase().includes('quiz')) || (n.title && n.title.toLowerCase().includes('quiz'));
-    const bulletBg = isQuiz ? 'bg-danger' : (n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success'));
-    const timeFormatted = n.created_at || n.createdAt ? new Date(n.created_at || n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
-    const category = isQuiz ? 'Online Quiz Portal' : (n.category || 'Academic Cell');
+    const isUnread = !n.is_read;
+    const priority = n.priority || 'normal';
+    const type = n.notification_type || 'announcement';
+    const dotColor = getCategoryColor(type);
+    const timeFormatted = formatRelativeTime(n.received_at || n.created_at || n.sent_at);
+    const actionUrl = n.action_url || '';
 
     html += `
-      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}" ${isQuiz ? `onclick="window.location.href='student-quiz.html'"` : ''} style="${isQuiz ? 'cursor: pointer; background: rgba(225,29,72,0.03);' : ''}">
-        <span class="notif-bullet ${bulletBg}" style="${isQuiz ? 'background: #E11D48 !important;' : ''}"></span>
-        <div class="notif-info">
-          <p class="notif-msg" style="${isQuiz ? 'font-weight: 600; color: #1E293B;' : ''}">${n.message || n.title}</p>
-          <span class="notif-time">${timeFormatted} • <strong style="${isQuiz ? 'color: #E11D48;' : ''}">${category}</strong></span>
+      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.notification_id || n.id}" 
+          onclick="window.handleNotificationCardClick('${n.notification_id || n.id}', '${actionUrl}')"
+          style="cursor:pointer; padding:12px 16px; border-bottom:1px solid #F1F5F9; display:flex; gap:10px; align-items:flex-start; background:${isUnread ? 'rgba(0,166,214,0.04)' : '#fff'}; transition:background 0.2s ease;">
+        <span class="notif-bullet" style="background:${dotColor} !important; width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0;"></span>
+        <div class="notif-info" style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:2px;">
+            <span style="font-size:11px; font-weight:700; color:${dotColor}; text-transform:uppercase; letter-spacing:0.5px;">${type}</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              ${getPriorityBadgeHtml(priority)}
+              <span class="notif-time" style="font-size:11px; color:#94A3B8;">${timeFormatted}</span>
+            </div>
+          </div>
+          <p class="notif-msg" style="margin:0; font-size:12.5px; font-weight:${isUnread ? '700' : '500'}; color:#1E293B; line-height:1.4;">${n.title}</p>
+          <p style="margin:3px 0 0; font-size:11.5px; color:#64748B; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${n.message || ''}</p>
         </div>
       </li>
     `;
   });
+
   list.innerHTML = html;
+}
+
+window.filterDropdownNotifications = function(filter, event) {
+  if (event) event.stopPropagation();
+  document.querySelectorAll('.notif-filter-tabs .notif-pill-btn').forEach(btn => {
+    const isAct = btn.getAttribute('data-filter') === filter;
+    btn.style.background = isAct ? '#00A6D6' : '#fff';
+    btn.style.color = isAct ? '#fff' : '#475569';
+    btn.style.borderColor = isAct ? '#00A6D6' : '#CBD5E1';
+    btn.classList.toggle('active', isAct);
+  });
+  fetchLiveNotifications(filter);
+};
+
+window.handleNotificationCardClick = async function(notifId, actionUrl) {
+  try {
+    const studentCode = '308637';
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.markNotificationRead === 'function') {
+      await StudentApi.markNotificationRead(notifId, studentCode);
+    }
+    // Update local cache
+    const item = cachedNotificationsList.find(n => (n.notification_id || n.id) === notifId);
+    if (item) item.is_read = true;
+    renderNotifications(cachedNotificationsList, currentDropdownFilter);
+    fetchLiveNotifications(currentDropdownFilter);
+  } catch (err) {
+    console.warn('Error marking notification read:', err);
+  }
+
+  // Smart Routing based on action_url
+  if (!actionUrl || actionUrl === '#') return;
+
+  if (actionUrl.includes('quiz')) {
+    window.location.href = 'student-quiz.html';
+  } else if (actionUrl.includes('results')) {
+    openStudentModule('examination', 'marks-result');
+  } else if (actionUrl.includes('fees')) {
+    openStudentModule('fees', 'payable-fee');
+  } else if (actionUrl.includes('attendance')) {
+    openStudentModule('attendance', 'subject-wise');
+  } else if (actionUrl.includes('dwallet') || actionUrl.includes('certificate')) {
+    openStudentModule('dwallet', 'digital-certificates');
+  } else if (actionUrl.includes('announcement')) {
+    openStudentModule('notifications', 'all-alerts');
+  } else if (actionUrl.startsWith('http') || actionUrl.endsWith('.html')) {
+    window.location.href = actionUrl;
+  }
+};
+
+window.markAllNotificationsRead = async function() {
+  const studentCode = '308637';
+  try {
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.markAllNotificationsRead === 'function') {
+      const res = await StudentApi.markAllNotificationsRead(studentCode);
+      showToast('All notifications marked as read', 'success');
+      cachedNotificationsList.forEach(n => { n.is_read = true; });
+      updateNotificationBadges({ unread_count: 0, urgent_count: 0, high_priority_count: 0 });
+      renderNotifications(cachedNotificationsList, currentDropdownFilter);
+      if (activeModuleKey === 'notifications') {
+        hydrateNotificationCenter('all-alerts');
+      }
+    }
+  } catch (err) {
+    console.error('Error marking all notifications read:', err);
+    showToast('Failed to mark all as read', 'error');
+  }
+};
+
+window.refreshNotificationsFeed = function() {
+  showToast('Refreshing notifications stream...', 'info');
+  fetchLiveNotifications(currentDropdownFilter);
+  if (activeModuleKey === 'notifications') {
+    hydrateNotificationCenter('all-alerts');
+  }
+};
+
+window.dismissCenterNotification = async function(notifId, btn) {
+  const studentCode = '308637';
+  try {
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.dismissNotification === 'function') {
+      await StudentApi.dismissNotification(notifId, studentCode);
+      showToast('Notification dismissed', 'info');
+      const card = btn ? btn.closest('.notif-card') : null;
+      if (card) {
+        card.style.transition = 'all 0.3s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(20px)';
+        setTimeout(() => card.remove(), 300);
+      }
+    }
+  } catch (err) {
+    console.warn('Error dismissing notification:', err);
+  }
+};
+
+window.hydrateNotificationCenter = async function(subtabKey) {
+  const studentCode = '308637';
+  try {
+    const res = await StudentApi.getNotifications({ studentCode, status: 'all', limit: 100 });
+    const notifs = (res && res.data) ? res.data : [];
+    cachedNotificationsList = notifs;
+
+    if (subtabKey === 'all-alerts') {
+      renderCenterCards(notifs, 'notifCenterAllList');
+    } else if (subtabKey === 'unread-alerts') {
+      const unread = notifs.filter(n => !n.is_read);
+      renderCenterCards(unread, 'notifCenterUnreadList');
+    } else if (subtabKey === 'important-alerts') {
+      const important = notifs.filter(n => n.priority === 'urgent' || n.priority === 'high');
+      renderCenterCards(important, 'notifCenterImportantList');
+    } else if (subtabKey === 'notif-preferences') {
+      const prefRes = await StudentApi.getNotificationPreferences(studentCode);
+      renderNotificationPreferences((prefRes && prefRes.data) ? prefRes.data : []);
+    }
+  } catch (err) {
+    console.error('Error hydrating Notification Center:', err);
+  }
+};
+
+function renderCenterCards(notifs, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!notifs || notifs.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:8px;">
+        <div style="font-size:32px; margin-bottom:8px;">📭</div>
+        <h4 style="margin:0; font-size:15px; color:#334155;">No notifications found</h4>
+        <p style="margin:4px 0 0; font-size:12px; color:#64748B;">There are no notices matching this criteria.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = notifs.map(n => {
+    const isUnread = !n.is_read;
+    const type = n.notification_type || 'announcement';
+    const color = getCategoryColor(type);
+    const actionUrl = n.action_url || '';
+    const notifId = n.notification_id || n.id;
+    const timeFormatted = formatRelativeTime(n.received_at || n.created_at || n.sent_at);
+
+    return `
+      <div class="notif-card" data-type="${type}" data-priority="${n.priority || 'normal'}" data-title="${(n.title || '').toLowerCase()}"
+           style="background:#fff; border:1px solid ${isUnread ? '#93C5FD' : '#E2E8F0'}; border-left:4px solid ${color}; border-radius:8px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="font-size:11px; font-weight:700; color:${color}; text-transform:uppercase;">${type}</span>
+              ${getPriorityBadgeHtml(n.priority)}
+              ${isUnread ? '<span class="badge" style="background:#00A6D6; color:#fff; font-size:9px; font-weight:700; padding:1px 6px; border-radius:10px;">NEW</span>' : ''}
+            </div>
+            <h5 style="margin:0; font-size:15px; font-weight:700; color:#0F172A;">${n.title}</h5>
+          </div>
+          <span style="font-size:12px; color:#94A3B8; white-space:nowrap;">${timeFormatted}</span>
+        </div>
+        <p style="margin:0 0 12px 0; font-size:13px; color:#475569; line-height:1.5;">${n.message || ''}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-top:1px solid #F1F5F9; padding-top:10px;">
+          <div>
+            ${actionUrl ? `
+              <button type="button" class="btn btn-sm" onclick="window.handleNotificationCardClick('${notifId}', '${actionUrl}')" 
+                      style="background:#00A6D6; color:#fff; border:none; padding:5px 12px; border-radius:5px; font-size:12px; font-weight:600; cursor:pointer;">
+                Open Related Module →
+              </button>
+            ` : ''}
+          </div>
+          <div style="display:flex; gap:6px;">
+            ${isUnread ? `
+              <button type="button" class="btn btn-sm" onclick="window.handleNotificationCardClick('${notifId}', ''); this.style.display='none';" 
+                      style="background:#F1F5F9; color:#334155; border:1px solid #CBD5E1; padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer;">
+                Mark Read ✓
+              </button>
+            ` : ''}
+            <button type="button" class="btn btn-sm" onclick="window.dismissCenterNotification('${notifId}', this)" 
+                    style="background:#FFF1F2; color:#E11D48; border:1px solid #FECDD3; padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer;">
+              Dismiss ✕
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.filterCenterNotifs = function() {
+  const query = (document.getElementById('notifSearchInput')?.value || '').toLowerCase().trim();
+  const typeFilter = document.getElementById('notifTypeSelect')?.value || '';
+  const priorityFilter = document.getElementById('notifPrioritySelect')?.value || '';
+
+  const cards = document.querySelectorAll('#notifCenterAllList .notif-card');
+  cards.forEach(card => {
+    const title = card.getAttribute('data-title') || '';
+    const type = card.getAttribute('data-type') || '';
+    const priority = card.getAttribute('data-priority') || '';
+
+    const matchesQuery = !query || title.includes(query);
+    const matchesType = !typeFilter || type === typeFilter;
+    const matchesPriority = !priorityFilter || priority === priorityFilter;
+
+    card.style.display = (matchesQuery && matchesType && matchesPriority) ? 'block' : 'none';
+  });
+};
+
+function renderNotificationPreferences(prefs) {
+  const tbody = document.getElementById('notifPrefsTableBody');
+  if (!tbody) return;
+
+  const domains = [
+    { type: 'academic', label: 'Academic & Examination Results' },
+    { type: 'quiz', label: 'Quizzes & Continuous Assessments' },
+    { type: 'attendance', label: 'Attendance Shortage Alerts (<75%)' },
+    { type: 'fee', label: 'Fee Invoices & Payment Receipts' },
+    { type: 'announcement', label: 'Institutional Campus Announcements' },
+    { type: 'timetable', label: 'Timetable & Classroom Relocation' },
+    { type: 'emergency', label: 'Emergency Campus Bulletins (Mandatory)' }
+  ];
+
+  tbody.innerHTML = domains.map(d => {
+    const existing = prefs.find(p => p.notification_type === d.type) || {};
+    const inApp = existing.in_app_enabled !== undefined ? existing.in_app_enabled : true;
+    const email = existing.email_enabled !== undefined ? existing.email_enabled : false;
+    const push = existing.push_enabled !== undefined ? existing.push_enabled : true;
+    const isEmergency = d.type === 'emergency';
+
+    return `
+      <tr style="border-bottom:1px solid #F1F5F9;">
+        <td style="padding:12px 14px; font-weight:600; color:#1E293B;">
+          ${d.label}
+          ${isEmergency ? '<span style="font-size:10px; color:#E11D48; display:block; font-weight:500;">Overrides disabled status</span>' : ''}
+        </td>
+        <td style="padding:12px 14px; text-align:center;">
+          <input type="checkbox" data-type="${d.type}" data-channel="in_app" ${inApp ? 'checked' : ''} ${isEmergency ? 'disabled checked' : ''} style="width:16px; height:16px; accent-color:#00A6D6;">
+        </td>
+        <td style="padding:12px 14px; text-align:center;">
+          <input type="checkbox" data-type="${d.type}" data-channel="email" ${email ? 'checked' : ''} ${isEmergency ? 'disabled checked' : ''} style="width:16px; height:16px; accent-color:#00A6D6;">
+        </td>
+        <td style="padding:12px 14px; text-align:center;">
+          <input type="checkbox" data-type="${d.type}" data-channel="push" ${push ? 'checked' : ''} ${isEmergency ? 'disabled checked' : ''} style="width:16px; height:16px; accent-color:#00A6D6;">
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.saveNotificationPreferences = async function() {
+  const studentCode = '308637';
+  const tbody = document.getElementById('notifPrefsTableBody');
+  if (!tbody) return;
+
+  const rows = tbody.querySelectorAll('tr');
+  const prefsToSave = [];
+
+  rows.forEach(r => {
+    const inAppInput = r.querySelector('input[data-channel="in_app"]');
+    if (!inAppInput) return;
+    const notifType = inAppInput.getAttribute('data-type');
+    const emailInput = r.querySelector('input[data-channel="email"]');
+    const pushInput = r.querySelector('input[data-channel="push"]');
+
+    prefsToSave.push({
+      notification_type: notifType,
+      in_app_enabled: inAppInput.checked,
+      email_enabled: emailInput ? emailInput.checked : false,
+      push_enabled: pushInput ? pushInput.checked : true
+    });
+  });
+
+  try {
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.updateNotificationPreferences === 'function') {
+      await StudentApi.updateNotificationPreferences(prefsToSave, studentCode);
+      showToast('Notification preferences updated successfully!', 'success');
+    }
+  } catch (err) {
+    console.error('Error saving preferences:', err);
+    showToast('Failed to update preferences', 'error');
+  }
+};
+
+function initRealtimeNotifications() {
+  const studentCode = '308637';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsHost = window.location.host || 'localhost:8000';
+  const wsUrl = `${protocol}//${wsHost}/api/v1/notifications/ws?user_id=${studentCode}`;
+
+  try {
+    realtimeSocket = new WebSocket(wsUrl);
+
+    realtimeSocket.onopen = () => {
+      console.log('[Realtime] Connected to SSGMCE Notification Stream');
+      if (realtimeReconnectTimer) {
+        clearInterval(realtimeReconnectTimer);
+        realtimeReconnectTimer = null;
+      }
+    };
+
+    realtimeSocket.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.event === 'new_notification' || msg.event === 'broadcast_announcement') {
+          showToast(`🔔 ${msg.title}: ${msg.message || ''}`, 'warning');
+          // Sound chime
+          playNotificationBeep();
+          // Refresh notification lists
+          fetchLiveNotifications(currentDropdownFilter);
+          if (activeModuleKey === 'notifications') {
+            hydrateNotificationCenter('all-alerts');
+          }
+        }
+      } catch (e) {}
+    };
+
+    realtimeSocket.onclose = () => {
+      if (!realtimeReconnectTimer) {
+        realtimeReconnectTimer = setInterval(() => {
+          initRealtimeNotifications();
+        }, 8000);
+      }
+    };
+
+    realtimeSocket.onerror = () => {
+      try { realtimeSocket.close(); } catch (e) {}
+    };
+  } catch (err) {
+    console.warn('[Realtime] WebSocket init fallback:', err);
+  }
+
+  // Periodic polling fallback every 30 seconds
+  setInterval(() => {
+    fetchLiveNotifications(currentDropdownFilter);
+  }, 30000);
+}
+
+function playNotificationBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch (e) {}
 }
 
 async function hydrateSyllabusAnalytics() {

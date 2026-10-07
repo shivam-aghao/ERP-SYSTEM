@@ -219,16 +219,75 @@
       });
     },
 
-    // 12. Notifications
-    async getNotifications(studentCode = null) {
-      const code = studentCode || getActiveStudentCode();
-      return await this.request(`/notifications?student_code=${encodeURIComponent(code)}`);
+    // 12. Step 7 Notifications & Real-Time Alerts
+    async getNotifications(options = {}) {
+      const code = (typeof options === 'string' ? options : options.studentCode) || getActiveStudentCode();
+      const status = options.status || 'all';
+      const type = options.type || '';
+      const priority = options.priority || '';
+      const limit = options.limit || 50;
+      const offset = options.offset || 0;
+      let q = `/notifications/list?user_id=${encodeURIComponent(code)}&status=${encodeURIComponent(status)}&limit=${limit}&offset=${offset}`;
+      if (type) q += `&type=${encodeURIComponent(type)}`;
+      if (priority) q += `&priority=${encodeURIComponent(priority)}`;
+      
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}${q}`);
+      return await res.json();
     },
 
-    async markNotificationRead(id) {
-      return await this.request(`/notifications/${encodeURIComponent(id)}/read`, {
-        method: 'PATCH'
+    async getUnreadCounts(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/unread-count?user_id=${encodeURIComponent(code)}`);
+      return await res.json();
+    },
+
+    async markNotificationRead(id, studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/mark-read/${encodeURIComponent(id)}?user_id=${encodeURIComponent(code)}`, {
+        method: 'POST'
       });
+      return await res.json();
+    },
+
+    async markAllNotificationsRead(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/mark-all-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: code })
+      });
+      return await res.json();
+    },
+
+    async dismissNotification(id, studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/dismiss/${encodeURIComponent(id)}?user_id=${encodeURIComponent(code)}`, {
+        method: 'POST'
+      });
+      return await res.json();
+    },
+
+    async getNotificationPreferences(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/preferences?user_id=${encodeURIComponent(code)}`);
+      return await res.json();
+    },
+
+    async updateNotificationPreferences(preferences, studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      const rootUrl = this.baseUrl.replace(/\/student$/, '');
+      const res = await fetch(`${rootUrl}/notifications/preferences`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: code, preferences })
+      });
+      return await res.json();
     }
   };
 
