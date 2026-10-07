@@ -38,6 +38,7 @@
       var apiBase = getApiBase();
       var endpoints = [
         apiBase + '/auth/login',
+        'http://localhost:5001/api/v1/auth/login',
         '/api/v1/auth/login',
         '/auth/login',
         '/api/auth/login'
