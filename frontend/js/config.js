@@ -5,15 +5,26 @@
 (function (window) {
   'use strict';
 
-  // Determine current host or fallback to 8000
-  var origin = (window.location && window.location.origin && window.location.origin.startsWith('http')) 
+  // Backend runs on port 8000
+  var BACKEND_PORT = 8000;
+  var isHttp = window.location && window.location.protocol && window.location.protocol.startsWith('http');
+  var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
+    ? window.location.hostname 
+    : '127.0.0.1';
+  var currentPort = (window.location && window.location.port) ? window.location.port : '';
+
+  // If the web page is hosted directly on port 8000 (FastAPI serving static files), use current origin.
+  // Otherwise (e.g. VS Code Live Server on 5500, file://, or another frontend server),
+  // route API requests directly to the FastAPI backend on port 8000.
+  var origin = (currentPort === String(BACKEND_PORT))
     ? window.location.origin 
-    : 'http://localhost:8000';
+    : ((isHttp ? window.location.protocol : 'http:') + '//' + currentHost + ':' + BACKEND_PORT);
 
   var Config = {
     // API Endpoints
     API_BASE: window.__API_BASE__ || (origin + '/api/v1'),
-    BACKEND_PORT: 8000,
+    BACKEND_PORT: BACKEND_PORT,
+    BACKEND_ORIGIN: origin,
     STUDENT_API_BASE: origin + '/api/v1/student',
     TEACHER_API_BASE: 'http://localhost:5001/api/v1',
     QUIZ_API_BASE: origin + '/api/v1/quiz',

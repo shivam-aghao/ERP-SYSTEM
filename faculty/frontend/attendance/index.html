@@ -1,18 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>
-    .app-top-header,
-    .sidebar {
-  background-color: #0B1F3A  !important;
-   }
-.notification-badge {
-  border-color: #0B1F3A  !important;
-}
-  </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SSGMCE, Shegaon - Teacher Attendance ERP Portal</title>
+  <style>
+    .app-top-header,
+    .sidebar {
+      background-color: #0B1F3A !important;
+    }
+    .notification-badge {
+      border-color: #0B1F3A !important;
+    }
+    /* Reports Button */
+    .header-reports-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      padding: 0 16px !important;
+      height: 38px !important;
+      border-radius: 8px !important;
+      background: linear-gradient(135deg, #0B5CAD 0%, #034584 100%) !important;
+      color: #FFFFFF !important;
+      border: 1px solid rgba(56, 189, 248, 0.45) !important;
+      cursor: pointer !important;
+      box-shadow: 0 2px 8px rgba(11, 92, 173, 0.35) !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      white-space: nowrap !important;
+      font-family: inherit !important;
+      line-height: 1 !important;
+    }
+    .header-reports-btn:hover {
+      background: linear-gradient(135deg, #0d6ed0 0%, #0B5CAD 100%) !important;
+      border-color: #38BDF8 !important;
+      box-shadow: 0 4px 14px rgba(11, 92, 173, 0.5) !important;
+      transform: translateY(-1px) !important;
+    }
+    .header-reports-btn:active {
+      transform: translateY(0) !important;
+      box-shadow: 0 1px 4px rgba(11, 92, 173, 0.3) !important;
+    }
+    .header-reports-btn svg {
+      stroke: #FFFFFF !important;
+      flex-shrink: 0 !important;
+    }
+    .header-reports-btn span {
+      color: #FFFFFF !important;
+      font-weight: 600 !important;
+    }
+  </style>
   <link rel="stylesheet" href="css/styles.css?v=2.6">
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,7 +90,7 @@
       </div>
 
       <!-- Prominent Header Action: Reports -->
-      <button class="header-reports-btn" id="btnHeaderPdfReports" title="View &amp; Download Attendance Reports">
+      <button class="header-reports-btn" id="btnHeaderPdfReports" title="View &amp; Download Attendance Reports" onclick="var m=document.getElementById('modalPdfCenter'); if(m) m.classList.remove('hidden');">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
           <path d="M3 3v18h18"/>
           <path d="M18 17V9"/>
@@ -1211,7 +1250,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px;">
         
         <!-- Student PDF Card -->
-        <div class="report-card-tile" id="tileStudentReport" style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
+        <div class="report-card-tile" id="tileStudentReport" onclick="if(document.getElementById('modalPdfCenter')) document.getElementById('modalPdfCenter').classList.add('hidden'); if(document.getElementById('modalStudentReport')) document.getElementById('modalStudentReport').classList.remove('hidden');" style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
           <div>
             <div style="font-size: 32px; margin-bottom: 10px;">🎓</div>
             <h4 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0 0 8px 0;">Individual Student PDF Record</h4>
@@ -1219,13 +1258,13 @@
               Full student attendance profile, course-wise student attendance, Student Data Corner certificates, and lecture log.
             </p>
           </div>
-          <button class="btn-action-submit" id="btnPdfCenterOpenStudent" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px; font-weight: 700; pointer-events: none;">
+          <button class="btn-action-submit" id="btnPdfCenterOpenStudent" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px; font-weight: 700;">
             <span>🔍 View Student Record (PDF)</span>
           </button>
         </div>
 
         <!-- Teacher PDF Card -->
-        <div class="report-card-tile" id="tileTeacherReport" style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
+        <div class="report-card-tile" id="tileTeacherReport" onclick="if(document.getElementById('modalPdfCenter')) document.getElementById('modalPdfCenter').classList.add('hidden'); if(document.getElementById('modalTeacherReport')) document.getElementById('modalTeacherReport').classList.remove('hidden');" style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;">
           <div>
             <div style="font-size: 32px; margin-bottom: 10px;">👨‍🏫</div>
             <h4 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0 0 8px 0;">Employee Conducted Classes PDF</h4>
@@ -1233,7 +1272,7 @@
               Complete semester-wise, class-wise log of all academic lectures conducted by faculty with attendance percentages.
             </p>
           </div>
-          <button class="btn-action-submit" id="btnPdfCenterDownloadTeacher" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px; font-weight: 700; background: #16A34A; pointer-events: none;">
+          <button class="btn-action-submit" id="btnPdfCenterDownloadTeacher" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px; font-weight: 700; background: #16A34A;">
             <span>📥 View Lecture Report (PDF)</span>
           </button>
         </div>
@@ -1257,10 +1296,10 @@
 <script src="js/api.js?v=pdf_live_v2"></script>
 
 <!-- Scripts -->
-<script src="js/data.js?v=pdf_live_v2"></script>
-<script src="js/attendanceService.js?v=pdf_live_v2"></script>
-<script src="js/swipeEngine.js?v=pdf_live_v2"></script>
-<script src="js/app.js?v=pdf_live_v2"></script>
+<script charset="utf-8" src="js/data.js?v=clean_v3"></script>
+<script charset="utf-8" src="js/attendanceService.js?v=clean_v3"></script>
+<script charset="utf-8" src="js/swipeEngine.js?v=clean_v3"></script>
+<script charset="utf-8" src="js/app.js?v=clean_v3"></script>
 
 </body>
 </html>

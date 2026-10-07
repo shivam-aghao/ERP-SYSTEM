@@ -1,11 +1,12 @@
 /* ========================================================
-   TEACHER ERP — TIMETABLE MODULE STYLESHEET
-   teacher_timetable.css / teacher-timetable.css
-   SSGMCE Teacher Portal Design System
+   STUDENT ERP — TIMETABLE MODULE STYLESHEET
+   student_timetable.css
+   Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE)
+   Clean, Professional Student Academic Timetable Design System
    ======================================================== */
 
 /* --------------------------------------------------------
-   1. COLOR PALETTE & LOCAL VARIABLES
+   1. COLOR PALETTE & CSS CUSTOM PROPERTIES
    -------------------------------------------------------- */
 :root {
   --tt-navy: #0B1F3A;
@@ -20,25 +21,53 @@
   --tt-gray-border: #E2E8F0;
   --tt-gray-text: #64748B;
   --tt-dark-text: #1E293B;
+  --tt-white: #FFFFFF;
   --tt-card-shadow: 0 1px 3px rgba(11, 31, 58, 0.06), 0 1px 2px rgba(11, 31, 58, 0.04);
   --tt-hover-shadow: 0 6px 16px rgba(11, 92, 173, 0.09);
   --tt-radius-sm: 6px;
   --tt-radius-md: 8px;
   --tt-radius-lg: 12px;
   --tt-transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 260px;
+  --header-height: 68px;
 }
 
 /* --------------------------------------------------------
-   2. TOPBAR & BACK TO DASHBOARD ACTION
+   2. MAIN DEDICATED TIMETABLE PAGE WRAPPER & CONTAINER
+   Dedicated full-width layout with professional padding & auto centering
+   -------------------------------------------------------- */
+.timetable-page-main {
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  background-color: var(--tt-gray-bg);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.timetable-container,
+.content-container {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 28px 40px 28px;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------
+   5. TOPBAR & BACK TO DASHBOARD ACTION
    -------------------------------------------------------- */
 .timetable-page-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 22px;
-  padding-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--tt-gray-border);
 }
 
@@ -68,8 +97,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 18px;
-  background: var(--white, #FFFFFF);
+  padding: 8px 16px;
+  background: var(--tt-white);
   border: 1px solid var(--tt-gray-border);
   border-radius: var(--tt-radius-md);
   color: var(--tt-navy);
@@ -85,7 +114,7 @@
   background: var(--tt-gray-bg);
   border-color: var(--tt-blue);
   color: var(--tt-blue);
-  transform: translateX(-3px);
+  transform: translateX(-2px);
   box-shadow: 0 2px 6px rgba(11, 92, 173, 0.12);
 }
 
@@ -95,23 +124,23 @@
 }
 
 /* --------------------------------------------------------
-   3. TIMETABLE CONTAINER CARD
+   6. TIMETABLE CONTAINER CARD
    -------------------------------------------------------- */
 .timetable-card {
-  background: var(--white, #FFFFFF);
+  background: var(--tt-white);
   border: 1px solid var(--tt-gray-border);
   border-radius: var(--tt-radius-lg);
   box-shadow: var(--tt-card-shadow);
   overflow: hidden;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 /* --------------------------------------------------------
-   4. SCHEDULE HEADER & CONTROLS TOOLBAR
+   7. SCHEDULE HEADER & CONTROLS TOOLBAR
    -------------------------------------------------------- */
 .timetable-header {
-  padding: 24px 24px 18px 24px;
-  background: var(--white, #FFFFFF);
+  padding: 20px 24px 16px 24px;
+  background: var(--tt-white);
   border-bottom: 1px solid var(--tt-gray-border);
 }
 
@@ -120,8 +149,8 @@
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 18px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .schedule-meta {
@@ -159,16 +188,16 @@
   margin: 0;
 }
 
-/* Schedule Controls */
+/* Action Controls Toolbar (Student view: View Date, Today, Print) */
 .schedule-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 10px;
 }
 
 .date-control {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   background: var(--tt-gray-bg);
@@ -181,19 +210,17 @@
 .date-control:hover,
 .date-control:focus-within {
   border-color: var(--tt-blue);
-  background: var(--white, #FFFFFF);
   box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.08);
 }
 
 .date-control-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--tt-navy);
   cursor: pointer;
-  user-select: none;
 }
 
 .date-input {
@@ -205,18 +232,18 @@
   outline: none;
   font-family: inherit;
   cursor: pointer;
-  padding: 0;
 }
 
+/* Today Button */
 .today-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
+  background: var(--tt-white);
   border: 1px solid var(--tt-gray-border);
-  color: var(--tt-gray-text);
+  border-radius: var(--tt-radius-md);
+  color: var(--tt-navy);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
@@ -224,32 +251,27 @@
 }
 
 .today-button:hover {
+  background: var(--tt-gray-bg);
   border-color: var(--tt-blue);
   color: var(--tt-blue);
-  background: var(--tt-blue-light);
 }
 
 .today-button.active {
-  background: var(--tt-blue);
-  color: var(--white, #FFFFFF);
+  background: var(--tt-blue-light);
   border-color: var(--tt-blue);
-  box-shadow: 0 2px 6px rgba(11, 92, 173, 0.25);
+  color: var(--tt-blue);
+  font-weight: 700;
 }
 
-.today-button:focus-visible,
-.print-button:focus-visible {
-  outline: 2px solid var(--tt-blue);
-  outline-offset: 2px;
-}
-
+/* Print Button */
 .print-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
+  background: var(--tt-white);
   border: 1px solid var(--tt-gray-border);
+  border-radius: var(--tt-radius-md);
   color: var(--tt-navy);
   font-size: 12.5px;
   font-weight: 600;
@@ -259,165 +281,97 @@
 
 .print-button:hover {
   background: var(--tt-gray-bg);
-  border-color: var(--tt-navy);
+  border-color: var(--tt-blue);
   color: var(--tt-blue);
 }
 
-/* Test Action Button (Matching Today button structure with professional amber accent) */
-.test-button,
-.btn-add-test {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
-  border: 1px solid #FCD34D;
-  color: #B45309;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--tt-transition);
-}
-
-.test-button:hover,
-.btn-add-test:hover {
-  background: #FEF3C7;
-  border-color: #F59E0B;
-  color: #92400E;
-}
-
-.test-button:focus-visible,
-.btn-add-test:focus-visible {
-  outline: 2px solid #F59E0B;
-  outline-offset: 2px;
-}
-
-/* Demo Unlock Control (From reference demo checkbox) */
-.demo-unlock-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  color: var(--tt-gray-text);
-  cursor: pointer;
-  user-select: none;
-  padding: 7px 11px;
-  background: var(--white, #FFFFFF);
-  border: 1px dashed var(--tt-gray-border);
-  border-radius: var(--tt-radius-md);
-  transition: var(--tt-transition);
-}
-
-.demo-unlock-control:hover {
-  border-color: #F59E0B;
-  color: #92400E;
-  background: #FFFBEB;
-}
-
-.demo-unlock-control input[type="checkbox"] {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: #F59E0B;
-}
-
-/* --------------------------------------------------------
-   5. SCHEDULE STATUS BANNER
-   -------------------------------------------------------- */
+/* Schedule Status Banner */
 .schedule-status {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-radius: var(--tt-radius-md);
-  padding: 10px 16px;
-  font-size: 12.5px;
-  color: var(--tt-navy);
+  align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  transition: var(--tt-transition);
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--tt-radius-md);
+  font-size: 12.5px;
 }
 
 .schedule-status.status-today {
-  background: linear-gradient(90deg, #F0F7FF 0%, #F8FAFD 100%);
-  border: 1px solid var(--tt-blue-border);
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
 }
 
 .schedule-status.status-custom {
-  background: #F8FAFC;
-  border: 1px solid var(--tt-gray-border);
+  background: var(--tt-blue-light);
+  border: 1px solid var(--tt-blue-border);
+  color: var(--tt-blue);
 }
 
-.schedule-status .status-left {
+.status-left {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 .status-pulse-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #10B981;
-  display: inline-block;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
-  flex-shrink: 0;
+  background: #16A34A;
+  box-shadow: 0 0 6px #16A34A;
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
 }
 
 .status-date-text {
-  font-size: 13px;
-  color: var(--tt-navy);
-}
-
-.status-date-text strong {
-  font-weight: 700;
-  color: var(--tt-navy);
+  font-weight: 500;
 }
 
 .status-badge {
-  display: inline-flex;
-  align-items: center;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
-.status-badge.badge-today {
+.badge-today {
   background: #DCFCE7;
   color: #15803D;
   border: 1px solid #86EFAC;
 }
 
-.status-badge.badge-selected {
-  background: var(--tt-blue-light);
-  color: var(--tt-blue);
-  border: 1px solid var(--tt-blue-border);
+.badge-selected {
+  background: var(--tt-cyan-light);
+  color: #0369A1;
+  border: 1px solid var(--tt-cyan-border);
 }
 
-.schedule-status .status-hint {
+.status-hint {
   font-size: 12px;
   color: var(--tt-gray-text);
 }
 
 /* --------------------------------------------------------
-   6. TIMETABLE GRID TABLE & CELLS
+   8. TIMETABLE GRID TABLE & CELLS
    -------------------------------------------------------- */
 .timetable-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  background: var(--white, #FFFFFF);
+  background: var(--tt-white);
 }
 
 .timetable {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  min-width: 820px;
+  border-collapse: collapse;
+  min-width: 900px;
 }
 
 /* Header Cells */
@@ -463,42 +417,99 @@
 }
 
 .th-slot-num {
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: var(--tt-blue);
-  letter-spacing: 0.6px;
+  color: var(--tt-navy);
 }
 
 .th-time-range {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--tt-navy);
-  letter-spacing: -0.1px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--tt-gray-text);
+  font-family: var(--font-base, 'Inter', sans-serif);
 }
 
 .th-ampm {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--tt-gray-text);
+  font-size: 10px;
+  font-weight: 700;
+  background: #E2E8F0;
+  color: var(--tt-navy);
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 
-/* Schedule Rows & Cells */
+/* Table Rows & Cells */
 .schedule-row {
+  border-bottom: 1px solid var(--tt-gray-border);
   transition: background-color 0.15s ease;
 }
 
-.schedule-row:hover {
-  background: #FAFCFE;
+.schedule-row:last-child {
+  border-bottom: none;
 }
 
-.schedule-cell,
+.schedule-row:hover {
+  background-color: #F8FAFD;
+}
+
+.schedule-row.active-day-row {
+  background-color: #F0F7FF;
+}
+
+/* Day Column Cell */
 .day-cell {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--tt-gray-border);
+  padding: 16px 14px;
+  border-right: 2px solid var(--tt-gray-border);
+  background: #FCFDFE;
+  vertical-align: top;
+}
+
+.active-day-cell {
+  background: #EBF4FE !important;
+  border-right-color: var(--tt-blue) !important;
+}
+
+.day-cell-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-label {
+  font-family: var(--font-heading, 'Poppins', sans-serif);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--tt-navy);
+  letter-spacing: 0.5px;
+}
+
+.today-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  width: fit-content;
+  letter-spacing: 0.4px;
+}
+
+.today-badge-current {
+  background: #16A34A;
+  color: #FFFFFF;
+}
+
+.today-badge-active {
+  background: var(--tt-blue);
+  color: #FFFFFF;
+}
+
+/* Schedule Cell */
+.schedule-cell {
+  padding: 10px 12px;
   border-right: 1px solid var(--tt-gray-border);
   vertical-align: top;
 }
@@ -507,85 +518,25 @@
   border-right: none;
 }
 
-.schedule-row:last-child .schedule-cell,
-.schedule-row:last-child .day-cell {
-  border-bottom: none;
-}
-
-/* Day Column Cell */
-.day-cell {
-  background: #FCFDFE;
-  border-right: 2px solid var(--tt-gray-border);
-  vertical-align: middle;
-}
-
-.day-cell-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
-}
-
-.day-label {
-  font-family: var(--font-heading, 'Poppins', sans-serif);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--tt-navy);
-  letter-spacing: 0.5px;
-}
-
-.today-badge {
-  display: inline-block;
-  font-size: 9.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 12px;
-  letter-spacing: 0.4px;
-}
-
-.today-badge.today-badge-current {
-  background: var(--tt-blue);
-  color: var(--white, #FFFFFF);
-  box-shadow: 0 1px 4px rgba(11, 92, 173, 0.3);
-}
-
-.today-badge.today-badge-active {
-  background: var(--tt-blue-light);
-  color: var(--tt-blue);
-  border: 1px solid var(--tt-blue-border);
-}
-
-/* Active Day Row Subtle Highlighting */
-.schedule-row.active-day-row {
-  background: #F4F8FD;
-}
-
-.day-cell.active-day-cell {
-  background: #EBF3FD !important;
-  border-left: 4px solid var(--tt-blue) !important;
-}
-
-.day-cell.active-day-cell .day-label {
-  color: var(--tt-blue);
-}
-
-/* --------------------------------------------------------
-   7. CLASS & LAB SUBJECT CARDS
-   -------------------------------------------------------- */
-.class-card {
+.slot-cell-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 14px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
+  min-height: 100px;
+}
+
+/* --------------------------------------------------------
+   9. CLASS CARDS (Lectures & Labs)
+   -------------------------------------------------------- */
+.class-card {
+  background: var(--tt-white);
   border: 1px solid var(--tt-gray-border);
-  border-left-width: 4px;
+  border-radius: var(--tt-radius-md);
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(11, 31, 58, 0.04);
   transition: var(--tt-transition);
   position: relative;
-  min-height: 84px;
-  box-shadow: 0 1px 2px rgba(11, 31, 58, 0.04);
+  overflow: hidden;
 }
 
 .class-card:hover {
@@ -593,464 +544,261 @@
   box-shadow: var(--tt-hover-shadow);
 }
 
-/* Lecture Type Styling (Subtle Blue) */
-.class-card.class-lecture {
-  border-left-color: var(--tt-blue);
-  background: #FFFFFF;
-}
-
-.class-card.class-lecture:hover {
+.class-card-highlighted {
   border-color: var(--tt-blue-border);
-  border-left-color: var(--tt-blue);
-  background: #FBFDFF;
+  box-shadow: 0 2px 6px rgba(11, 92, 173, 0.1);
 }
 
-/* Lab Type Styling (Subtle Teal/Cyan) */
-.class-card.class-lab {
-  border-left-color: var(--tt-cyan);
-  background: #F8FCFD;
+.class-lecture {
+  border-left: 4px solid var(--tt-blue);
 }
 
-.class-card.class-lab:hover {
-  border-color: var(--tt-cyan-border);
-  border-left-color: var(--tt-cyan);
-  background: #F2FAFD;
-}
-
-/* Highlighted row class cards */
-.class-card.class-card-highlighted {
-  border-color: rgba(11, 92, 173, 0.28);
-  box-shadow: 0 2px 6px rgba(11, 92, 173, 0.08);
+.class-lab {
+  border-left: 4px solid var(--tt-cyan);
+  background: #F8FAFD;
 }
 
 .class-card-top {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
 }
 
 .class-type {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.class-type.type-lecture {
-  color: var(--tt-blue);
-  background: var(--tt-blue-light);
-}
-
-.class-type.type-lab {
-  color: #0284C7;
-  background: var(--tt-cyan-light);
-}
-
-.class-title {
-  font-family: var(--font-heading, 'Poppins', sans-serif);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--tt-navy);
-  line-height: 1.35;
-  word-break: break-word;
-}
-
-.class-location {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--tt-gray-text);
-  margin-top: auto;
-}
-
-.class-card.class-lecture .class-location {
-  color: var(--tt-blue);
-}
-
-.class-card.class-lab .class-location {
-  color: #0284C7;
-}
-
-/* --------------------------------------------------------
-   7B. MULTIPLE ITEMS CELL STACK & SCHEDULED TEST CARDS
-   -------------------------------------------------------- */
-.cell-stack-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.test-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: var(--tt-radius-md);
-  background: #FFFDF9;
-  border: 1px solid #FDE68A;
-  border-left: 4px solid #F59E0B;
-  cursor: pointer;
-  transition: var(--tt-transition);
-  position: relative;
-  text-align: left;
-  user-select: none;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08);
-}
-
-.test-card:hover {
-  transform: translateY(-2px);
-  background: #FFFBEB;
-  border-color: #F59E0B;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.16);
-}
-
-.test-card:focus-visible {
-  outline: 2px solid #F59E0B;
-  outline-offset: 2px;
-}
-
-/* Specific test type variants */
-.test-card.quiz-card {
-  border-left-color: #F59E0B;
-}
-
-.test-card.assignment-card {
-  border-left-color: #EA580C;
-}
-
-.test-card.tec-card {
-  border-left-color: #D97706;
-}
-
-.test-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.test-type-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 4px;
-  background: #FEF3C7;
-  color: #B45309;
-}
-
-.test-status-pill {
-  display: inline-block;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 10px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
-.test-status-pill.status-upcoming {
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border: 1px solid #BFDBFE;
+.type-lecture {
+  background: var(--tt-blue-light);
+  color: var(--tt-blue);
 }
 
-.test-status-pill.status-live {
-  background: #DCFCE7;
-  color: #15803D;
-  border: 1px solid #86EFAC;
-  animation: pulseLiveBadge 2s infinite ease-in-out;
+.type-lab {
+  background: var(--tt-cyan-light);
+  color: #0284C7;
 }
 
-@keyframes pulseLiveBadge {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
-}
-
-.test-status-pill.status-ended {
-  background: #F1F5F9;
-  color: #64748B;
-  border: 1px solid #CBD5E1;
-}
-
-.test-subject {
-  font-size: 11px;
-  font-weight: 700;
-  color: #B45309;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.test-title {
+.class-subject-title {
   font-family: var(--font-heading, 'Poppins', sans-serif);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--tt-navy);
+  margin-bottom: 6px;
   line-height: 1.3;
 }
 
-.test-time {
+.class-room-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  font-weight: 600;
-  color: #92400E;
-  margin-top: 2px;
+  font-weight: 500;
+  color: var(--tt-gray-text);
+  background: var(--tt-gray-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-/* --------------------------------------------------------
-   8. OFF / PREP PERIOD CELLS
-   -------------------------------------------------------- */
-.schedule-cell.off-prep-cell {
-  background: #FAFCFE;
-}
-
+/* Off / Prep Period */
 .off-prep {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: 84px;
-  padding: 10px;
+  height: 100%;
+  min-height: 90px;
+  border: 1px dashed #CBD5E1;
   border-radius: var(--tt-radius-md);
-  border: 1px dashed var(--tt-gray-border);
-  background: var(--tt-gray-bg);
-  text-align: center;
-  transition: var(--tt-transition);
-}
-
-.off-prep:hover {
-  background: #F1F5F9;
-  border-color: #CBD5E1;
-}
-
-.off-prep-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10.5px;
-  font-weight: 700;
   color: #94A3B8;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.off-prep-caption {
-  font-size: 11px;
-  color: #94A3B8;
-  font-style: italic;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: #FAFCFE;
 }
 
 /* --------------------------------------------------------
-   9. LEGEND & FOOTNOTE BAR
+   10. SCHEDULED TEST / ASSESSMENT CARDS (READ-ONLY FOR STUDENT)
+   -------------------------------------------------------- */
+.test-slot-item {
+  background: #FFFBEB;
+  border: 1.5px solid #FCD34D;
+  border-radius: var(--tt-radius-md);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: var(--tt-transition);
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
+}
+
+.test-slot-item:hover {
+  transform: translateY(-2px);
+  border-color: #F59E0B;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+}
+
+.test-slot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.test-type-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.test-type-badge.quiz-type {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.test-type-badge.assignment-type {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+.test-type-badge.tec-type {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.test-status-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+
+.status-upcoming {
+  background: #E2E8F0;
+  color: #475569;
+}
+
+.status-live {
+  background: #DCFCE7;
+  color: #15803D;
+  animation: pulseDot 2s infinite;
+}
+
+.status-ended {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.test-slot-title {
+  font-family: var(--font-heading, 'Poppins', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tt-navy);
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+
+.test-slot-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #92400E;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------
+   11. TIMETABLE FOOTER LEGEND BAR
    -------------------------------------------------------- */
 .timetable-legend-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   padding: 14px 24px;
   background: #F8FAFD;
   border-top: 1px solid var(--tt-gray-border);
   font-size: 12px;
-  color: var(--tt-gray-text);
 }
 
 .legend-items {
   display: flex;
   align-items: center;
-  gap: 16px;
   flex-wrap: wrap;
-}
-
-.legend-title {
-  font-weight: 700;
-  color: var(--tt-navy);
+  gap: 16px;
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  color: var(--tt-navy);
+  font-weight: 500;
 }
 
 .legend-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
 }
 
-.legend-dot.lecture-dot {
-  background: var(--tt-blue);
-}
+.lecture-dot { background: var(--tt-blue); }
+.lab-dot { background: var(--tt-cyan); }
+.test-dot { background: #F59E0B; }
+.off-dot { background: #CBD5E1; }
 
-.legend-dot.lab-dot {
-  background: var(--tt-cyan);
-}
-
-.legend-dot.test-dot {
-  background: #F59E0B;
-}
-
-.legend-dot.off-dot {
-  background: #CBD5E1;
-}
-
-.legend-dot.active-dot {
-  background: #10B981;
-}
-
-.legend-right {
-  font-size: 11.5px;
+.legend-note {
   color: var(--tt-gray-text);
-  font-weight: 500;
+  font-size: 11.5px;
 }
 
 /* --------------------------------------------------------
-   10. RESPONSIVE DESIGN BREAKPOINTS
-   -------------------------------------------------------- */
-@media (max-width: 1024px) {
-  .timetable-header-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .schedule-controls {
-    justify-content: flex-start;
-  }
-
-  .timetable-wrapper {
-    overflow-x: auto;
-  }
-
-  .timetable {
-    min-width: 780px;
-  }
-}
-
-@media (max-width: 768px) {
-  .timetable-page-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .btn-back-dashboard {
-    justify-content: center;
-  }
-
-  .timetable-header {
-    padding: 16px;
-  }
-
-  .schedule-main-title {
-    font-size: 17px;
-  }
-
-  .schedule-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .date-control {
-    justify-content: space-between;
-  }
-
-  .today-button,
-  .test-button,
-  .btn-add-test,
-  .print-button {
-    justify-content: center;
-  }
-
-  .schedule-status {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .timetable-legend-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 14px 16px;
-  }
-}
-
-/* --------------------------------------------------------
-   10B. MODAL DIALOGS & ASSESSMENT FORM STYLES
+   12. READ-ONLY TEST DETAILS DIALOG (STUDENT OVERVIEW)
    -------------------------------------------------------- */
 .test-modal-overlay {
+  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(11, 31, 58, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
-  display: flex;
+  background: rgba(11, 31, 58, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 1300;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.22s ease-in-out;
+  box-sizing: border-box;
 }
 
 .test-modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.test-modal-container {
-  background: var(--white, #FFFFFF);
-  border-radius: var(--tt-radius-lg);
-  box-shadow: 0 20px 40px rgba(11, 31, 58, 0.22);
-  width: 100%;
-  max-width: 580px;
-  border: 1px solid var(--tt-gray-border);
-  transform: translateY(16px) scale(0.98);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-.test-modal-overlay.active .test-modal-container {
-  transform: translateY(0) scale(1);
+  display: flex;
 }
 
 .test-details-container {
-  max-width: 540px;
+  background: var(--tt-white);
+  border-radius: var(--tt-radius-lg);
+  box-shadow: 0 16px 36px rgba(11, 31, 58, 0.22);
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.test-delete-container {
-  max-width: 440px;
-  padding: 28px 24px 24px;
-  text-align: center;
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Modal Header */
 .test-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
+  padding: 18px 22px;
   background: #F8FAFD;
   border-bottom: 1px solid var(--tt-gray-border);
 }
@@ -1062,11 +810,10 @@
 }
 
 .modal-badge-tag {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  letter-spacing: 0.6px;
-  color: #B45309;
-  text-transform: uppercase;
+  color: var(--tt-blue);
+  letter-spacing: 0.5px;
 }
 
 .test-modal-title {
@@ -1095,169 +842,21 @@
   color: var(--tt-navy);
 }
 
-/* Form Layout */
-.test-form {
-  padding: 22px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-row-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.form-row-grid.two-cols {
-  grid-template-columns: 1fr 1fr;
-}
-
-.form-row-grid.three-cols {
-  grid-template-columns: 1.4fr 1fr 1fr;
-}
-
-@media (max-width: 600px) {
-  .form-row-grid.two-cols,
-  .form-row-grid.three-cols {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--tt-navy);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.required-star {
-  color: #DC2626;
-  font-weight: bold;
-}
-
-.form-input,
-.form-select {
-  width: 100%;
-  padding: 9px 12px;
-  font-size: 13px;
-  color: var(--tt-dark-text);
-  background: var(--white, #FFFFFF);
-  border: 1px solid var(--tt-gray-border);
-  border-radius: var(--tt-radius-md);
-  font-family: inherit;
-  outline: none;
-  transition: var(--tt-transition);
-}
-
-.form-input:focus,
-.form-select:focus {
-  border-color: var(--tt-blue);
-  box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.12);
-}
-
-.input-with-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-with-icon .field-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--tt-gray-text);
-  pointer-events: none;
-}
-
-.form-input.with-icon {
-  padding-left: 36px;
-}
-
-.field-help-text {
-  font-size: 11px;
-  color: var(--tt-gray-text);
-  line-height: 1.35;
-}
-
-/* Modal Form Actions */
-.modal-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--tt-gray-border);
-}
-
-.modal-form-actions.center-actions {
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.btn-cancel {
-  padding: 8px 16px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
-  border: 1px solid var(--tt-gray-border);
-  color: var(--tt-gray-text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--tt-transition);
-}
-
-.btn-cancel:hover {
-  background: var(--tt-gray-bg);
-  color: var(--tt-navy);
-}
-
-.btn-save-test {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border-radius: var(--tt-radius-md);
-  background: var(--tt-blue);
-  border: 1px solid var(--tt-blue);
-  color: var(--white, #FFFFFF);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--tt-transition);
-  box-shadow: 0 2px 6px rgba(11, 92, 173, 0.25);
-}
-
-.btn-save-test:hover {
-  background: #094b8f;
-  transform: translateY(-1px);
-}
-
-/* --------------------------------------------------------
-   10C. TEST DETAILS BODY
-   -------------------------------------------------------- */
 .test-details-body {
-  padding: 22px 24px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-.test-details-grid {
+.test-details-info-grid {
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: #F8FAFD;
   border: 1px solid var(--tt-gray-border);
   border-radius: var(--tt-radius-md);
-  padding: 16px;
+  padding: 14px 16px;
 }
 
 .detail-row {
@@ -1271,10 +870,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  width: 95px;
-  min-width: 95px;
-  font-weight: 700;
-  color: var(--tt-navy);
+  width: 130px;
+  min-width: 130px;
+  font-weight: 600;
+  color: var(--tt-gray-text);
 }
 
 .detail-val {
@@ -1283,56 +882,41 @@
   flex: 1;
 }
 
-.status-caption {
-  font-size: 11.5px;
-  color: var(--tt-gray-text);
-  margin-left: 6px;
-}
-
-.test-external-link {
-  color: var(--tt-blue);
-  text-decoration: underline;
-  font-weight: 600;
-}
-
 .test-details-action-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding-top: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
 }
 
 .student-action-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .btn-test-action {
+  width: 100%;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 9px 20px;
+  padding: 10px 18px;
   border-radius: var(--tt-radius-md);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   transition: var(--tt-transition);
+  box-sizing: border-box;
 }
 
-.btn-test-action.active-live {
-  background: #15803D;
+.btn-test-action.live {
+  background: #16A34A;
   color: #FFFFFF;
-  border: 1px solid #15803D;
-  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.3);
+  border: 1px solid #16A34A;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
-.btn-test-action.active-live:hover {
-  background: #166534;
+.btn-test-action.live:hover {
+  background: #15803D;
   transform: translateY(-1px);
 }
 
@@ -1343,118 +927,58 @@
   cursor: not-allowed;
 }
 
-.btn-preview-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--tt-blue);
-  text-decoration: none;
-}
-
-.btn-preview-link:hover {
-  text-decoration: underline;
-}
-
-.teacher-manage-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-test-edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
-  border-radius: var(--tt-radius-md);
-  background: var(--white, #FFFFFF);
-  border: 1px solid var(--tt-gray-border);
-  color: var(--tt-navy);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--tt-transition);
-}
-
-.btn-test-edit:hover {
-  border-color: var(--tt-blue);
-  color: var(--tt-blue);
+.btn-test-action.upcoming {
   background: var(--tt-blue-light);
-}
-
-.btn-test-delete {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 14px;
-  border-radius: var(--tt-radius-md);
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
-  color: #DC2626;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--tt-transition);
-}
-
-.btn-test-delete:hover {
-  background: #DC2626;
-  color: #FFFFFF;
-  border-color: #DC2626;
-}
-
-/* Delete Confirmation Dialog */
-.delete-icon-wrap {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #FEE2E2;
-  color: #DC2626;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-}
-
-.delete-modal-title {
-  font-family: var(--font-heading, 'Poppins', sans-serif);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--tt-navy);
-  margin-bottom: 8px;
-}
-
-.delete-modal-desc {
-  font-size: 13px;
-  color: var(--tt-gray-text);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.btn-confirm-delete {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: var(--tt-radius-md);
-  background: #DC2626;
-  border: 1px solid #DC2626;
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--tt-transition);
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.28);
-}
-
-.btn-confirm-delete:hover {
-  background: #B91C1C;
+  color: var(--tt-blue);
+  border: 1px solid var(--tt-blue-border);
+  cursor: default;
 }
 
 /* --------------------------------------------------------
-   11. PRINT STYLESHEET (High Quality Clean Schedule)
+   13. RESPONSIVE DESIGN (TABLET & MOBILE)
+   -------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .timetable-container,
+  .content-container {
+    padding: 18px 20px 30px 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .timetable-container,
+  .content-container {
+    padding: 14px 16px 24px 16px;
+  }
+
+  .timetable-header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .schedule-controls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .timetable-page-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-back-dashboard {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .schedule-status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* --------------------------------------------------------
+   14. PRINT STYLESHEET (Clean Schedule Export)
    -------------------------------------------------------- */
 @media print {
   body {
@@ -1464,25 +988,21 @@
     margin: 0 !important;
   }
 
-  /* Hide app navigation chrome & interactive dialogs */
   .app-header,
+  .ssgmce-top-header,
   .app-sidebar,
-  .app-footer,
+  .dashboard-sidebar,
   .sidebar-overlay,
   .btn-back-dashboard,
   .schedule-controls,
-  .today-button,
-  .test-button,
-  .btn-add-test,
-  .print-button,
   .test-modal-overlay,
-  #backend-status-pill,
   .toast-stack,
-  .toast-container {
+  .app-footer {
     display: none !important;
   }
 
   .app-wrapper,
+  .dashboard-wrapper,
   .app-main,
   .content-container {
     margin: 0 !important;
@@ -1493,24 +1013,14 @@
 
   .timetable-page-topbar {
     border-bottom: 2px solid #000000 !important;
-    margin-bottom: 12px !important;
-    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 6px !important;
   }
 
   .timetable-card {
-    border: 1px solid #94A3B8 !important;
+    border: 1px solid #64748B !important;
     box-shadow: none !important;
     page-break-inside: avoid;
-  }
-
-  .timetable-header {
-    border-bottom: 1px solid #94A3B8 !important;
-    padding: 12px !important;
-  }
-
-  .schedule-status {
-    border: 1px solid #CBD5E1 !important;
-    background: #F8FAFC !important;
   }
 
   .timetable-wrapper {
@@ -1527,31 +1037,6 @@
   .schedule-cell,
   .day-cell {
     border: 1px solid #CBD5E1 !important;
-    padding: 8px !important;
-  }
-
-  .class-card {
-    border: 1px solid #94A3B8 !important;
-    box-shadow: none !important;
-    min-height: 0 !important;
-    padding: 6px 8px !important;
-  }
-
-  .test-card {
-    border: 1px solid #F59E0B !important;
-    box-shadow: none !important;
-    padding: 6px 8px !important;
-    page-break-inside: avoid;
-  }
-
-  .off-prep {
-    min-height: 0 !important;
     padding: 6px !important;
-    border: 1px dashed #94A3B8 !important;
-  }
-
-  .timetable-legend-bar {
-    border-top: 1px solid #CBD5E1 !important;
-    padding: 8px 12px !important;
   }
 }

@@ -351,8 +351,29 @@ function initSidebarLinks() {
         return;
       }
 
+<<<<<<< HEAD
+      // Timetable page
+      if (navKey === 'timetable' && href && href.includes('student_timetable.html')) {
+=======
+      // Timetable page navigation
+      if (navKey === 'timetable') {
+        if (href && !href.startsWith('#') && href !== 'javascript:void(0)') {
+          return;
+        }
+        e.preventDefault();
+        const timetableCard = document.getElementById('timetableCard');
+        if (timetableCard) {
+          timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          timetableCard.classList.add('card-highlight-pulse');
+          setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
+        }
+>>>>>>> 4497a8fe247df5d9fde5fdc8f6cddc7c312ac309
+        return;
+      }
+
       // Check on-page scroll targets
-      if (navKey === 'timetable' || href === '#timetableCard') {
+      if (href === '#timetableCard') {
         e.preventDefault();
         const timetableCard = document.getElementById('timetableCard');
         if (timetableCard) {
@@ -464,13 +485,14 @@ function initDropdowns() {
     logoutBtn.addEventListener('click', () => {
       showToast('Signing out from SSGMCE Autonomous Portal...', 'warning');
       setTimeout(() => {
-        showToast('Logged out successfully.', 'info');
-        if (window.ERPAuth) {
-          ERPAuth.logout();
+        if (typeof window.handleLogout === 'function') {
+          window.handleLogout();
+        } else if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
+          window.ERP_AUTH.logout();
         } else {
-          window.location.href = '../../login page/frontend/login.html';
+          window.location.href = 'login.html';
         }
-      }, 800);
+      }, 500);
     });
   }
 }
@@ -1245,36 +1267,46 @@ function renderTimetablePeriods(periods) {
 
   let html = '';
   periods.forEach(p => {
+    const isCompleted = Boolean(p.isCompleted || p.is_completed);
+    const isActiveNow = Boolean(p.isActiveNow || p.is_active_now);
+    const isCritical = Boolean(p.isCritical || p.is_critical);
+    const isQuiz = Boolean(p.is_assessment || p.type === 'quiz' || (p.code && p.code.toLowerCase().includes('quiz')) || (p.num && p.num.includes('QUIZ')));
+
     let cardClass = 'timetable-period';
-    if (p.isCompleted) cardClass += ' completed';
-    if (p.isActiveNow) cardClass += ' active-now';
-    if (p.isCritical) cardClass += ' upcoming critical-period';
-    else if (!p.isCompleted && !p.isActiveNow) cardClass += ' upcoming';
+    if (isQuiz) cardClass += ' quiz-period-card';
+    if (isCompleted) cardClass += ' completed';
+    if (isActiveNow) cardClass += ' active-now';
+    if (isCritical && !isQuiz) cardClass += ' upcoming critical-period';
+    else if (!isCompleted && !isActiveNow) cardClass += ' upcoming';
 
     let slotClass = 'period-slot-badge';
-    if (p.isActiveNow) slotClass += ' slot-live';
-    if (p.isCritical) slotClass += ' slot-critical';
+    if (isQuiz) slotClass += ' slot-quiz';
+    else if (isActiveNow) slotClass += ' slot-live';
+    else if (isCritical) slotClass += ' slot-critical';
 
-    const num = p.num || `Period ${p.periodNumber || ''}`;
-    const status = p.status || (p.isCompleted ? 'Completed ✓' : p.isActiveNow ? 'Live Now' : 'Scheduled');
-    const statusClass = p.statusClass || (p.isCompleted ? 'status-done' : p.isActiveNow ? 'status-live' : 'status-upcoming');
-    const time = p.time || `${p.startTime || ''} - ${p.endTime || ''}`;
-    const name = p.name || p.subjectName || p.code || 'Course Period';
-    const venue = p.venue || `${p.classroom || 'LH'} • ${p.teacher || p.faculty || ''}`;
-    const att = p.att || (p.isCompleted ? 'Attendance: Present' : p.isCritical ? 'Critical for 75%' : p.isActiveNow ? 'Live in Session' : 'Scheduled');
+    const num = p.num || (p.period_num ? `Period ${p.period_num}` : `Period ${p.periodNumber || 1}`);
+    const status = p.status || (isCompleted ? 'Completed ✓' : isActiveNow ? 'Live Now' : 'Scheduled');
+    const statusClass = isQuiz ? 'status-quiz-tag' : (p.statusClass || p.status_class || (isCompleted ? 'status-done' : isActiveNow ? 'status-live' : 'status-upcoming'));
+    const time = p.time || p.period_time || `${p.startTime || '09:00'} - ${p.endTime || '10:00'}`;
+    const name = p.name || p.course_name || p.subjectName || p.subject_name || p.code || 'Course Period';
+    const venue = p.venue || `${p.classroom || 'LH-204'} • ${p.teacher_name || p.teacher || 'Faculty'}`;
+    const att = p.att || p.att_label || (isCompleted ? 'Attendance: Present' : isCritical ? 'Critical for 75%' : isActiveNow ? 'Live in Session' : 'Scheduled');
+    const quizLink = p.link || 'student-quiz.html';
 
     html += `
-      <div class="${cardClass}">
+      <div class="${cardClass}" ${isQuiz ? `onclick="window.location.href='${quizLink}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"` : ''}>
         <div class="period-top-row">
           <div class="${slotClass}">${num}</div>
           <span class="period-status-tag ${statusClass}">${status}</span>
         </div>
         <div class="period-time">
-          <span class="time-main ${p.isActiveNow ? 'text-primary' : ''}">${time}</span>
+          <span class="time-main ${isActiveNow ? 'text-primary' : ''}">${time}</span>
         </div>
-        <div class="period-course ${p.isActiveNow ? 'text-primary' : ''}">${name}</div>
+        <div class="period-course ${isQuiz ? 'text-danger' : (isActiveNow ? 'text-primary' : '')}" style="${isQuiz ? 'font-weight:700;' : ''}">${name}</div>
         <div class="period-meta">${venue}</div>
-        <div class="period-att-status ${p.isCritical ? 'text-warning' : p.isActiveNow ? 'text-accent' : p.isCompleted ? 'text-success' : 'text-muted'}">${att}</div>
+        <div class="period-att-status ${isQuiz ? 'text-danger' : (isCritical ? 'text-warning' : isActiveNow ? 'text-accent' : isCompleted ? 'text-success' : 'text-muted')}">
+          ${isQuiz ? `🎯 Click to Open Quiz Portal →` : att}
+        </div>
       </div>
     `;
   });
@@ -1297,10 +1329,10 @@ function renderSubjectWiseAttendance(subjects) {
 
   let html = '';
   subjects.forEach(sub => {
-    const code = sub.code || sub.subjectCode || 'SUB-101';
-    const name = sub.name || sub.subjectName || 'Course';
-    const attended = sub.attended !== undefined ? sub.attended : (sub.attendedLectures || 0);
-    const total = sub.total !== undefined ? sub.total : (sub.totalLectures || 0);
+    const code = sub.code || sub.subjectCode || sub.subject_code || 'SUB-101';
+    const name = sub.name || sub.subjectName || sub.subject_name || 'Course';
+    const attended = sub.attended !== undefined ? sub.attended : (sub.present_periods !== undefined ? sub.present_periods : (sub.attendedLectures || 0));
+    const total = sub.total !== undefined ? sub.total : (sub.total_periods !== undefined ? sub.total_periods : (sub.totalLectures || 0));
     const pct = sub.percentage !== undefined ? Math.round(sub.percentage) : (total > 0 ? Math.round((attended / total) * 100) : 0);
     
     const isWarning = pct < 75;
@@ -1334,7 +1366,6 @@ function renderSubjectWiseAttendance(subjects) {
       </div>
     `;
   });
-
   container.innerHTML = html;
 }
 
@@ -1351,7 +1382,7 @@ function renderNotifications(notifs) {
     return;
   }
 
-  const unreadCount = notifs.filter(n => !n.isRead).length;
+  const unreadCount = notifs.filter(n => !n.isRead && !n.is_read).length;
   if (badge) {
     badge.textContent = unreadCount;
     badge.style.display = unreadCount > 0 ? '' : 'none';
@@ -1362,17 +1393,18 @@ function renderNotifications(notifs) {
 
   let html = '';
   notifs.forEach(n => {
-    const isUnread = !n.isRead;
-    const bulletBg = n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success');
-    const timeFormatted = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
-    const category = n.category || 'Academic Cell';
+    const isUnread = !(n.isRead || n.is_read);
+    const isQuiz = (n.type && n.type.toLowerCase().includes('quiz')) || (n.title && n.title.toLowerCase().includes('quiz'));
+    const bulletBg = isQuiz ? 'bg-danger' : (n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success'));
+    const timeFormatted = n.created_at || n.createdAt ? new Date(n.created_at || n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+    const category = isQuiz ? 'Online Quiz Portal' : (n.category || 'Academic Cell');
 
     html += `
-      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
-        <span class="notif-bullet ${bulletBg}"></span>
+      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}" ${isQuiz ? `onclick="window.location.href='student-quiz.html'"` : ''} style="${isQuiz ? 'cursor: pointer; background: rgba(225,29,72,0.03);' : ''}">
+        <span class="notif-bullet ${bulletBg}" style="${isQuiz ? 'background: #E11D48 !important;' : ''}"></span>
         <div class="notif-info">
-          <p class="notif-msg">${n.message || n.title}</p>
-          <span class="notif-time">${timeFormatted} • ${category}</span>
+          <p class="notif-msg" style="${isQuiz ? 'font-weight: 600; color: #1E293B;' : ''}">${n.message || n.title}</p>
+          <span class="notif-time">${timeFormatted} • <strong style="${isQuiz ? 'color: #E11D48;' : ''}">${category}</strong></span>
         </div>
       </li>
     `;
@@ -1384,16 +1416,41 @@ async function hydrateSyllabusAnalytics() {
   try {
     let syllabusList = [];
     if (typeof StudentApi !== 'undefined' && typeof StudentApi.getSyllabus === 'function') {
-      const res = await StudentApi.getSyllabus();
-      if (res && res.data) {
-        syllabusList = res.data;
+      try {
+        const res = await StudentApi.getSyllabus();
+        if (res && res.data && res.data.length > 0) {
+          syllabusList = res.data;
+        }
+      } catch (err) {
+        console.warn('StudentApi.getSyllabus error, using institutional defaults:', err);
       }
     }
 
-    if (!syllabusList || syllabusList.length === 0) return;
+    if (!syllabusList || syllabusList.length === 0) {
+      syllabusList = [
+        { subject_code: 'CS-301', subject_name: 'Data Structures & Algorithms', syllabus_progress: 85 },
+        { subject_code: 'CS-302', subject_name: 'Java Programming & OOP', syllabus_progress: 78 },
+        { subject_code: 'CS-303', subject_name: 'Operating System Principles', syllabus_progress: 82 },
+        { subject_code: 'CS-304', subject_name: 'Database Management Systems', syllabus_progress: 90 },
+        { subject_code: 'CS-305', subject_name: 'Computer Networks & Protocols', syllabus_progress: 70 }
+      ];
+    }
 
-    const subjects = syllabusList.map(s => s.subjectCode || s.code);
-    const progressData = syllabusList.map(s => s.syllabusProgress || 75);
+    const subjects = syllabusList.map(s => {
+      const code = s.subject_code || s.subjectCode || s.code || 'Course';
+      const name = s.subject_name || s.subjectName || s.name || '';
+      if (name.includes('Data Struct')) return 'Data Struct.';
+      if (name.includes('Java')) return 'Java Prog.';
+      if (name.includes('Operating')) return 'Operating Sys.';
+      if (name.includes('Database')) return 'Database Mgmt';
+      if (name.includes('Networks')) return 'Comp. Networks';
+      return code;
+    });
+
+    const progressData = syllabusList.map(s => {
+      const p = s.syllabus_progress !== undefined ? s.syllabus_progress : (s.syllabusProgress !== undefined ? s.syllabusProgress : (s.progress || 75));
+      return Number(p);
+    });
 
     renderSyllabusChart(subjects, progressData);
 
@@ -1413,11 +1470,12 @@ async function hydrateSyllabusAnalytics() {
     if (footerGrid) {
       let pillsHtml = '';
       syllabusList.forEach(s => {
-        const code = s.subjectCode || s.code;
-        const prog = s.syllabusProgress || 75;
-        const units = (5 * (prog / 100)).toFixed(1);
+        const code = s.subject_code || s.subjectCode || s.code || 'CS-301';
+        const prog = s.syllabus_progress !== undefined ? s.syllabus_progress : (s.syllabusProgress !== undefined ? s.syllabusProgress : (s.progress || 75));
+        const units = (5 * (Number(prog) / 100)).toFixed(1);
+        const fullName = s.subject_name || s.subjectName || s.name || code;
         pillsHtml += `
-          <div class="s-unit-pill">
+          <div class="s-unit-pill" title="${fullName}">
             <span class="sup-code">${code}</span>
             <strong class="sup-val text-primary">${prog}%</strong>
             <span class="sup-units">${units} / 5 Units</span>
@@ -1467,7 +1525,7 @@ async function hydrateDashboardData() {
     const statusText = document.getElementById('liveStatusText');
     const statusDot = document.getElementById('liveStatusDot');
     if (statusText) {
-      const source = overview.systemStatus?.dataSource || 'Supabase / Live DB';
+      const source = overview.systemStatus?.dataSource || 'SSGMCE Live Database';
       statusText.textContent = 'Backend & DB Online';
       if (statusDot) statusDot.style.background = '#10B981';
       if (statusBadge) {
@@ -1475,15 +1533,23 @@ async function hydrateDashboardData() {
         statusBadge.style.color = '#059669';
         statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
         statusBadge.onclick = () => {
-          showToast(`Live Connection Active • Source: ${source} (FastAPI :8001)`, 'success');
+          showToast(`Live Connection Active • Source: ${source} (FastAPI :8000)`, 'success');
         };
       }
     }
 
-
     // 1. Student Identity
     const s = overview.student || {};
-    const initials = s.fullName ? s.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA';
+    const fullName = s.fullName || s.full_name || 'Shivam Sanjay Aghao';
+    const rollNo = s.rollNo || s.roll_no || 21;
+    const studentCode = s.studentCode || s.student_code || s.prn || '308637';
+    const dept = s.department || 'Computer Science & Engineering';
+    const div = s.division || '2R1';
+    const cls = s.className || s.class_name || '2R1';
+    const sem = s.semester || s.current_semester || 4;
+    const yr = s.academicYear || '2026-2027';
+
+    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'SA';
     const topAvatar = document.getElementById('topAvatarInitials');
     const topName = document.getElementById('topStudentName');
     const topMeta = document.getElementById('topStudentMeta');
@@ -1497,24 +1563,24 @@ async function hydrateDashboardData() {
     const heroAcadBadge = document.getElementById('heroAcadYearSem');
 
     if (topAvatar) topAvatar.textContent = initials;
-    if (topName) topName.textContent = s.fullName || 'Student';
-    if (topMeta) topMeta.textContent = `Roll: ${s.rollNo || '--'} • ${s.department || 'CSE'} ${s.division || ''}`;
+    if (topName) topName.textContent = fullName;
+    if (topMeta) topMeta.textContent = `Roll: ${rollNo} • CSE ${div}`;
 
     if (dropAvatar) dropAvatar.textContent = initials;
-    if (dropName) dropName.textContent = s.fullName || 'Student';
-    if (dropDept) dropDept.textContent = `B.Tech - ${s.department || 'Computer Science & Engg.'}`;
-    if (dropRoll) dropRoll.textContent = `Roll No: ${s.rollNo || '--'} • Class: ${s.division || '2R1'} • Sem ${s.semester || 'IV'} (${s.studentCode || s.prn || ''})`;
+    if (dropName) dropName.textContent = fullName;
+    if (dropDept) dropDept.textContent = `B.Tech - ${dept}`;
+    if (dropRoll) dropRoll.textContent = `Roll No: ${rollNo} • Class: ${cls} • Sem ${sem} (${studentCode})`;
 
     if (heroTitle) {
-      const firstName = s.fullName ? s.fullName.split(' ')[0] : 'Student';
+      const firstName = fullName.split(' ')[0] || 'Student';
       heroTitle.textContent = `Welcome back, ${firstName}!`;
     }
-    if (heroDept) heroDept.textContent = s.department === 'CSE' ? 'Computer Science & Engineering' : (s.department || 'Engineering');
+    if (heroDept) heroDept.textContent = dept.includes('Computer') ? dept : 'Computer Science & Engineering';
     if (heroYearSem) {
-      heroYearSem.textContent = `Year ${s.semester ? Math.ceil(s.semester / 2) : 2} (Semester ${s.semester || 4}) • Class: ${s.className || '2R1'} • Roll No: ${s.rollNo || '--'} (${s.studentCode || s.prn || ''})`;
+      heroYearSem.textContent = `Year ${Math.ceil(Number(sem) / 2)} (Semester ${sem}) • Class: ${cls} • Roll No: ${rollNo} (${studentCode})`;
     }
     if (heroAcadBadge) {
-      heroAcadBadge.textContent = `${s.className ? s.className.split(' ')[0] + ' ' : ''}Semester ${s.semester || 4} • Academic Year ${s.academicYear || '2026-2027'}`;
+      heroAcadBadge.textContent = `Class ${cls} • Semester ${sem} • Academic Year ${yr}`;
     }
 
     // 2. Notifications
@@ -1574,6 +1640,37 @@ async function hydrateDashboardData() {
 
     // 5. Syllabus Progress
     hydrateSyllabusAnalytics();
+
+    // 6. Quizzes Notification Pill on Sidebar
+    try {
+      const qRes = await fetch(`/api/v1/student/quizzes?student_code=${studentCode}`);
+      if (qRes.ok) {
+        const qData = await qRes.json();
+        const quizzes = (qData && qData.data) ? qData.data : [];
+        const unattempted = quizzes.filter(q => !q.attempt_status || !['submitted', 'auto_submitted', 'SUBMITTED'].includes(q.attempt_status));
+        const sbQuizBadge = document.getElementById('sidebarQuizBadge');
+        if (sbQuizBadge) {
+          if (unattempted.length > 0) {
+            sbQuizBadge.textContent = `${unattempted.length} New`;
+            sbQuizBadge.style.background = '#E11D48';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = '0 0 10px rgba(225, 29, 72, 0.45)';
+          } else if (quizzes.length > 0) {
+            sbQuizBadge.textContent = 'Active';
+            sbQuizBadge.style.background = '#10B981';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = 'none';
+          } else {
+            sbQuizBadge.textContent = 'None';
+            sbQuizBadge.style.background = '#64748B';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = 'none';
+          }
+        }
+      }
+    } catch (qErr) {
+      console.warn('Could not update sidebar quiz badge:', qErr);
+    }
 
   } catch (err) {
     console.error('Error during dashboard dynamic hydration:', err);
