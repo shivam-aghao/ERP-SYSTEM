@@ -678,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (navGroupAttendance) navGroupAttendance.classList.add("active");
     },
 
-    goToStep(stepNumber) {
+    async goToStep(stepNumber) {
       if (stepNumber < 1 || stepNumber > 5) return;
 
       // Validation gates
@@ -708,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (stepNumber === 3) {
         this.renderClassCards();
       } else if (stepNumber === 4) {
-        this.initStudentAttendance();
+        await this.initStudentAttendance();
       } else if (stepNumber === 5) {
         this.renderSummaryReview();
       }
@@ -1427,13 +1427,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // STEP 4: STUDENT ATTENDANCE MARKING (SWIPE ENGINE & ROSTER)
     // =========================================================================
 
-    initStudentAttendance() {
+    async initStudentAttendance() {
       // Check if students array is already initialized for this class session
       if (!this.state.students || this.state.students.length === 0) {
-        this.state.students = ERP_DATA.generateStudentRoster(
-          this.state.selectedDept.code,
-          this.state.selectedClass.id
-        );
+        if (ERP_DATA.fetchStudentRoster) {
+          const classIdent = this.state.selectedClass.name || this.state.selectedClass.id;
+          const deptIdent = this.state.selectedDept.code || "CSE";
+          this.state.students = await ERP_DATA.fetchStudentRoster(deptIdent, classIdent);
+        }
+        if (!this.state.students || this.state.students.length === 0) {
+          this.state.students = ERP_DATA.generateStudentRoster(
+            this.state.selectedDept.code,
+            this.state.selectedClass.id
+          );
+        }
       }
 
       // Check if draft exists
@@ -1601,8 +1608,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const isPresent = (student.status === "present");
       const statusText = isAbsent ? "ABSENT" : (isPresent ? "PRESENT" : "PENDING");
       const statusClass = isAbsent ? "absent" : (isPresent ? "present" : "pending");
+<<<<<<< HEAD
+      const rollNo = student.rollNo || student.roll || (student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : srNo);
+      const studentCode = student.studentCode || student.enrollmentNo || student.prn || student.code || "-";
+=======
       const rollNo = student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : `${student.roll || srNo}`;
       const studentCode = student.studentCode || student.student_code || student.prn || student.code || `STU-${student.roll || srNo}`;
+>>>>>>> 9ecf21c236e1425e37789315b9bca71c89a6ca6d
 
       // Generate 10 lecture history if not present
       if (!student.history || student.history.length < 10) {

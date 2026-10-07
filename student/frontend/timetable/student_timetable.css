@@ -28,33 +28,20 @@
   --tt-radius-md: 8px;
   --tt-radius-lg: 12px;
   --tt-transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-width: 260px;
-  --header-height: 68px;
 }
 
 /* --------------------------------------------------------
-   2. MAIN DEDICATED TIMETABLE PAGE WRAPPER & CONTAINER
-   Dedicated full-width layout with professional padding & auto centering
+   2. TIMETABLE MODULE VIEW INTEGRATION
+   Integrates seamlessly into the Student Dashboard main content area
    -------------------------------------------------------- */
-.timetable-page-main {
+#timetable-view,
+.app-module-view {
   width: 100%;
-  min-height: calc(100vh - var(--header-height));
-  background-color: var(--tt-gray-bg);
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  display: block;
 }
 
-.timetable-container,
-.content-container {
-  flex: 1 1 auto;
+#timetable-content {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px 28px 40px 28px;
-  box-sizing: border-box;
 }
 
 /* --------------------------------------------------------
@@ -937,19 +924,7 @@
 /* --------------------------------------------------------
    13. RESPONSIVE DESIGN (TABLET & MOBILE)
    -------------------------------------------------------- */
-@media (max-width: 1024px) {
-  .timetable-container,
-  .content-container {
-    padding: 18px 20px 30px 20px;
-  }
-}
-
 @media (max-width: 900px) {
-  .timetable-container,
-  .content-container {
-    padding: 14px 16px 24px 16px;
-  }
-
   .timetable-header-content {
     flex-direction: column;
     align-items: stretch;

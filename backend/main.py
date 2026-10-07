@@ -28,6 +28,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from backend.services.attendance_service import AttendanceService
+from backend.services.syllabus_service import SyllabusService
 
 # Configure Logging
 logging.basicConfig(
@@ -552,26 +554,74 @@ def get_teacher_timetable(db: Session = Depends(get_db)):
 @api.get("/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/student/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/teacher/timetable/tests", tags=["Timetable Assessments"])
-def get_timetable_tests(class_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    """Fetch all scheduled tests & assessments from database (accessible to both faculty and students)."""
-    if class_code:
-        rows = db.execute(text("SELECT * FROM timetable_assessments WHERE LOWER(class_code) = LOWER(:cc) OR class_code IS NULL ORDER BY date ASC, start_time ASC"), {"cc": class_code}).fetchall()
-    else:
-        rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
+def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: Optional[str] = Query(None), request: Request = None, db: Session = Depends(get_db)):
+    """Fetch all scheduled tests & assessments from database with robust class/student mapping.
+    - Faculty callers see all scheduled tests.
+    - Students see tests matching their class, section, batch, or global assessments.
+    """
+    is_faculty = False
+    if request:
+        try:
+            headers = {k.lower(): v for k, v in request.headers.items()}
+            role = headers.get("x-user-role", "").lower()
+            auth_header = headers.get("authorization", "")
+            if role in ["faculty", "teacher", "admin"] or "teach_token" in auth_header:
+                is_faculty = True
+        except Exception:
+            pass
+
+    enrolled_classes = set()
+    if isinstance(student_code, str) and student_code.strip():
+        try:
+            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+            if st_row:
+                m = dict(st_row._mapping)
+                if m.get("class_name"): enrolled_classes.add(m["class_name"].strip().lower())
+                if m.get("c_code"): enrolled_classes.add(m["c_code"].strip().lower())
+        except Exception:
+            pass
+
+    if isinstance(class_code, str) and class_code.strip():
+        cc_clean = class_code.strip().lower()
+        enrolled_classes.add(cc_clean)
+        for token in ["2r1", "2r2", "3r", "4r", "2n1", "2n2", "3n", "4n", "2e1", "2e2", "3e", "4e", "2m1", "2m2", "3m", "4m"]:
+            if token in cc_clean:
+                enrolled_classes.add(token)
+
+    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
     tests = []
     for r in rows:
         m = dict(r._mapping)
-        tests.append({
-            "id": m["id"],
-            "type": m["type"],
-            "subject": m["subject"],
-            "title": m["title"],
-            "date": m["date"],
-            "start": m["start_time"],
-            "end": m["end_time"],
-            "link": m["link"],
-            "class_code": m.get("class_code", "2R1")
-        })
+        item_class = (m.get("class_code") or "").strip().lower()
+
+        visible = False
+        if is_faculty:
+            visible = True
+        elif not item_class or item_class in ["all", "any", "global"]:
+            visible = True
+        elif not enrolled_classes:
+            visible = True
+        else:
+            if item_class in enrolled_classes:
+                visible = True
+            else:
+                for ec in enrolled_classes:
+                    if item_class in ec or ec in item_class:
+                        visible = True
+                        break
+
+        if visible:
+            tests.append({
+                "id": m["id"],
+                "type": m["type"],
+                "subject": m["subject"],
+                "title": m["title"],
+                "date": m["date"],
+                "start": m["start_time"],
+                "end": m["end_time"],
+                "link": m["link"],
+                "class_code": m.get("class_code") or "2R1"
+            })
     return success_response(tests)
 
 @api.post("/timetable/tests", tags=["Timetable Assessments"])
@@ -688,20 +738,16 @@ def delete_class_card(card_id: str, db: Session = Depends(get_db)):
 
 @api.get("/attendance/check-duplicate", tags=["Attendance Marking"])
 def check_duplicate_attendance(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
-    row = db.execute(text("""
-        SELECT id FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum
-        LIMIT 1
-    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
-    return success_response({"duplicate_exists": bool(row), "session_id": row[0] if row else None})
+    data = AttendanceService.check_duplicate(class_id, subject_id, session_date, period_number, db)
+    return success_response(data)
 
 @api.get("/attendance/draft", tags=["Attendance Marking"])
 def get_attendance_draft(class_id: str, subject_id: str, session_date: str, period_number: int = 1, db: Session = Depends(get_db)):
     row = db.execute(text("""
         SELECT * FROM attendance_sessions
-        WHERE class_id = :cid AND subject_id = :sid AND attendance_date = :sdate AND period = :pnum AND status = 'draft'
+        WHERE class_id = :cid AND subject_id = :sid AND session_date = :sdate AND period_number = :pnum AND status = 'draft'
         LIMIT 1
-    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": period_number}).fetchone()
+    """), {"cid": class_id, "sid": subject_id, "sdate": session_date, "pnum": str(period_number)}).fetchone()
     if not row:
         return success_response(None, "No draft found")
     return success_response(dict(row._mapping))
@@ -711,46 +757,19 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     sess_id = str(uuid.uuid4())
     db.execute(text("""
         INSERT OR REPLACE INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, attendance_date, period, status, created_at, updated_at)
+        (id, teacher_id, class_id, subject_id, session_date, period_number, status, created_at, updated_at)
         VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number
+        "sdate": payload.session_date, "pnum": str(payload.period_number)
     })
     db.commit()
     return success_response({"session_id": sess_id}, "Attendance draft saved")
 
 @api.post("/attendance/submit", tags=["Attendance Marking"])
 def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(get_db)):
-    sess_id = str(uuid.uuid4())
-    db.execute(text("""
-        INSERT INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, attendance_date, period, status, total_students, present_count, absent_count, submitted_at, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'submitted', :tot, :pres, :abs, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    """), {
-        "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
-        "sdate": payload.session_date, "pnum": payload.period_number,
-        "tot": len(payload.present_student_ids) + len(payload.absent_student_ids),
-        "pres": len(payload.present_student_ids),
-        "abs": len(payload.absent_student_ids)
-    })
-    # Insert attendance records
-    for sid in payload.present_student_ids:
-        db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
-            VALUES (:id, :sess_id, :sid, 'present', CURRENT_TIMESTAMP)
-        """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
-    for sid in payload.absent_student_ids:
-        db.execute(text("""
-            INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
-            VALUES (:id, :sess_id, :sid, 'absent', CURRENT_TIMESTAMP)
-        """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": sid})
-    db.commit()
-    return success_response({
-        "session_id": sess_id,
-        "present_count": len(payload.present_student_ids),
-        "absent_count": len(payload.absent_student_ids)
-    }, "Attendance recorded successfully")
+    data = AttendanceService.submit_attendance(payload, db)
+    return success_response(data, "Attendance recorded successfully")
 
 @api.get("/attendance/records", tags=["Attendance Marking"])
 def get_attendance_records(class_id: Optional[str] = None, subject_id: Optional[str] = None, db: Session = Depends(get_db)):
@@ -1159,7 +1178,12 @@ def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_d
 @api.get("/student/attendance", tags=["Student Portal"])
 @api.get("/attendance", tags=["Student Portal"])
 def get_student_attendance_summary(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    subjects = db.execute(
+        text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+        {"sc": student_code}
+    ).fetchall()
+    if not subjects:
+        subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
     sub_dicts = [dict(s._mapping) for s in subjects]
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
@@ -1200,25 +1224,8 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
 @api.get("/student/syllabus", tags=["Student Portal"])
 @api.get("/syllabus", tags=["Student Portal"])
 def get_student_syllabus(subject_id: Optional[str] = None, db: Session = Depends(get_db)):
-    clause = "WHERE subject_id = :sid" if subject_id else ""
-    params = {"sid": subject_id} if subject_id else {}
-    rows = db.execute(text(f"SELECT * FROM subject_syllabus {clause}")).fetchall()
-    items = []
-    for r in rows:
-        m = dict(r._mapping)
-        prog = m.get("syllabus_progress") or 75
-        items.append({
-            **m,
-            "subjectCode": m.get("subject_code") or "CS-301",
-            "subject_code": m.get("subject_code") or "CS-301",
-            "subjectName": m.get("subject_name") or "Course",
-            "subject_name": m.get("subject_name") or "Course",
-            "code": m.get("subject_code") or "CS-301",
-            "syllabusProgress": prog,
-            "syllabus_progress": prog,
-            "progress": prog
-        })
-    return success_response(items)
+    data = SyllabusService.get_syllabus(subject_id, db)
+    return success_response(data)
 
 @api.get("/student/documents", tags=["Student Portal"])
 @api.get("/documents", tags=["Student Portal"])
@@ -2264,10 +2271,18 @@ try:
     from backend.routes.admin import router as admin_router
     from backend.routes.faculty import router as faculty_router
     from backend.routes.attendance import router as attendance_router
+    from backend.routes.student import router as student_router
+    from backend.routes.syllabus import router as syllabus_router
+    from backend.routes.student_records import router as student_records_router
+    from backend.routes.notifications import router as notifications_router
     app.include_router(admin_router, prefix="/api/v1")
     app.include_router(faculty_router, prefix="/api/v1")
     app.include_router(attendance_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance) included under /api/v1")
+    app.include_router(student_router, prefix="/api/v1")
+    app.include_router(syllabus_router, prefix="/api/v1")
+    app.include_router(student_records_router, prefix="/api/v1")
+    app.include_router(notifications_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications) included under /api/v1")
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 

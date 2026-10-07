@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SSGMCE ERP - High-Resilience Dual-Tier API Client
  * Tier 1: Local Python FastAPI Backend (http://localhost:8000/api/v1)
  * Tier 2: Direct Cloud Supabase Client (window.supabaseClient)
@@ -272,35 +272,72 @@ const ErpApi = {
   /**
    * Students Class Roster
    */
-  async getStudents(dept = "CSE", classId = "SY-CSE-A") {
+  async getStudents(dept = "CSE", classId = "2R1") {
+    // 1. Try FastAPI Backend (/teacher/class-roster or /students)
     try {
-      const res = await fetch(`${this.baseUrl}/students/roster?classId=${encodeURIComponent(classId)}&department=${encodeURIComponent(dept)}`, {
+      const res = await fetch(`${this.baseUrl}/teacher/class-roster?classId=${encodeURIComponent(classId)}`, {
         signal: AbortSignal.timeout(2500)
       });
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) return json.data;
+        const list = json.data?.students || (Array.isArray(json.data) ? json.data : []);
+        if (list.length > 0) {
+          return list.map(s => ({
+            id: s.id,
+            rollNo: s.rollNo || s.roll_no,
+            studentCode: s.studentCode || s.enrollmentNo || s.student_code,
+            enrollmentNo: s.enrollmentNo || s.student_code,
+            name: s.name || s.full_name,
+            departmentCode: s.departmentCode || "CSE",
+            className: s.classCode || s.class_name || classId,
+            isProvisional: false,
+            recentHistory: []
+          }));
+        }
       }
     } catch (e) {}
 
+    // Fallback to /students?class_name=
+    try {
+      const res = await fetch(`${this.baseUrl}/students?class_name=${encodeURIComponent(classId)}`, {
+        signal: AbortSignal.timeout(2500)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          return json.data.map(s => ({
+            id: s.id,
+            rollNo: s.roll_no,
+            studentCode: s.student_code,
+            enrollmentNo: s.student_code,
+            name: s.full_name,
+            departmentCode: "CSE",
+            className: s.class_name || classId,
+            isProvisional: false,
+            recentHistory: []
+          }));
+        }
+      }
+    } catch (e) {}
+
+    // 2. Direct Supabase Query
     if (window.supabaseClient) {
       try {
         const { data, error } = await window.supabaseClient
           .from("students")
-          .select("id, roll_no, student_code, enrollment_no, name, department_code, class_name, is_provisional")
+          .select("id, roll_no, student_code, full_name, class_name")
           .eq("class_name", classId)
-          .eq("is_active", true)
           .order("roll_no");
         if (!error && data && data.length > 0) {
           return data.map(s => ({
             id: s.id,
             rollNo: s.roll_no,
             studentCode: s.student_code,
-            enrollmentNo: s.enrollment_no,
-            name: s.name,
-            departmentCode: s.department_code,
+            enrollmentNo: s.student_code,
+            name: s.full_name,
+            departmentCode: "CSE",
             className: s.class_name,
-            isProvisional: s.is_provisional,
+            isProvisional: false,
             recentHistory: [],
           }));
         }
