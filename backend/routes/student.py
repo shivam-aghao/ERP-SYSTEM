@@ -12,7 +12,7 @@ router = APIRouter(tags=["Student Portal"])
 
 @router.get("/student/profile")
 @router.get("/profile")
-def get_student_profile(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     data = StudentService.get_profile(student_code, db)
     if not data:
         return error_response("Student profile not found", 404)
@@ -22,25 +22,39 @@ def get_student_profile(student_code: str = Query("308637"), db: Session = Depen
 @router.put("/profile")
 @router.post("/student/profile/update")
 @router.post("/profile/update")
-def update_student_profile(payload: StudentProfileUpdate, student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def update_student_profile(payload: StudentProfileUpdate, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     data = StudentService.update_profile(student_code, payload.model_dump(exclude_unset=True), db)
     return success_response(data or {}, "Profile updated successfully")
 
 @router.get("/student/overview")
 @router.get("/overview")
-def get_student_overview(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     data = StudentService.get_overview(student_code, db)
     return success_response(data)
 
 @router.get("/student/academic-metrics")
 @router.get("/academic-metrics")
 @router.get("/metrics")
-def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     data = StudentService.get_academic_metrics(student_code, db)
     return success_response(data)
 
 @router.get("/student/attendance")
 @router.get("/attendance")
+<<<<<<< HEAD
+def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
+    sub_dicts = [dict(s._mapping) for s in subjects]
+    tot_conducted = sum(s.get("total_periods", 0) for s in sub_dicts)
+    tot_attended = sum(s.get("present_periods", 0) for s in sub_dicts)
+    overall_pct = round((tot_attended / tot_conducted * 100), 1) if tot_conducted > 0 else 0.0
+    return success_response({
+        "student_code": student_code,
+        "overall_percentage": overall_pct,
+        "total_conducted": tot_conducted,
+        "total_attended": tot_attended,
+        "subjects": sub_dicts
+=======
 def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
     subjects = db.execute(
         text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
@@ -84,12 +98,13 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
         "absentLectures": max(0, tot_lecs - tot_pres),
         "subjects": sub_dicts,
         "subjectWise": subject_wise
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
     })
 
 @router.get("/student/documents")
 @router.get("/documents")
 @router.get("/dwallet")
-def get_student_documents(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_documents(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     rows = db.execute(text("SELECT * FROM student_documents LIMIT 10")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
@@ -100,7 +115,7 @@ def upload_student_document(payload: Dict[str, Any] = Body(...)):
 
 @router.get("/student/fees")
 @router.get("/fees")
-def get_student_fees(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_fees(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     records = db.execute(text("SELECT * FROM fee_records LIMIT 5")).fetchall()
     receipts = db.execute(text("SELECT * FROM fee_receipts LIMIT 5")).fetchall()
     return success_response({

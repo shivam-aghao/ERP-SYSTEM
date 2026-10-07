@@ -25,20 +25,20 @@ def get_active_faculty_profile(db: Session = Depends(get_db)):
             res = sb.table("faculty").select("*").limit(1).execute()
             if res.data and len(res.data) > 0:
                 row = res.data[0]
-                emp_code = row.get("employee_id") or "FAC-CSE-1048"
+                emp_code = row.get("employee_id") or row.get("emp_code") or ""
                 return success_response(data={
-                    "fullName": row.get("name") or "Dr. J.M.Patil",
+                    "fullName": row.get("name") or row.get("full_name") or "",
                     "empCode": emp_code,
                     "employeeCode": emp_code,
                     "employeeId": emp_code,
-                    "designation": row.get("title") or "Associate Professor",
-                    "department": row.get("department_code") or "CSE",
-                    "departmentName": "Computer Science & Engineering",
-                    "program": row.get("department_code") or "CSE",
-                    "programName": "Computer Science & Engineering",
-                    "email": row.get("email") or "jm.patil@ssgmce.ac.in",
-                    "phone": row.get("phone") or "+91 98765 43210",
-                    "avatar": row.get("avatar_initials") or "JP",
+                    "designation": row.get("title") or row.get("designation") or "",
+                    "department": row.get("department_code") or row.get("department") or "",
+                    "departmentName": row.get("department_name") or "",
+                    "program": row.get("department_code") or row.get("department") or "",
+                    "programName": row.get("department_name") or "",
+                    "email": row.get("email") or "",
+                    "phone": row.get("phone") or "",
+                    "avatar": row.get("avatar_initials") or row.get("avatar") or "",
                     "source": "supabase"
                 })
     except Exception as e:

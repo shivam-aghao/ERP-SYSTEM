@@ -303,7 +303,7 @@ def create_quiz(payload: QuizCreateSchema, db: Session = Depends(get_db)):
             """),
             {
                 "id": notif_id,
-                "teacher_id": "FAC-CSE-1048",
+                "teacher_id": getattr(payload, "teacher_id", None) or "",
                 "class_id": target_class_id,
                 "class_name": target_class_name,
                 "title": f"New Quiz: {payload.title}",
@@ -362,7 +362,7 @@ def toggle_publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
             """),
             {
                 "id": notif_id,
-                "teacher_id": "FAC-CSE-1048",
+                "teacher_id": quiz._mapping.get("teacher_id") or "",
                 "class_id": quiz._mapping['class_id'],
                 "class_name": c_name,
                 "title": f"Quiz Published: {quiz._mapping['title']}",
@@ -777,8 +777,8 @@ def get_quiz_analytics(quiz_id: str, db: Session = Depends(get_db)):
     # Fetch top performers
     top_rows = db.execute(text(f"""
         SELECT qa.id, qa.score, qa.accuracy, qa.time_taken_seconds,
-               COALESCE(s.full_name, 'Shivam Sanjay Aghao') as student_name,
-               COALESCE(s.roll_no, 60) as roll_no
+               COALESCE(s.full_name, 'Student') as student_name,
+               COALESCE(s.roll_no, 0) as roll_no
         FROM quiz_attempts qa
         LEFT JOIN students s ON (qa.student_id = s.id OR qa.student_id = s.student_code)
         WHERE qa.quiz_id = '{quiz_id}' AND qa.status = 'SUBMITTED'

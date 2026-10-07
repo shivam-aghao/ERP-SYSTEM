@@ -6,8 +6,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
  * Strict Design Specifications:
  * - Clean card design (Do NOT use profile pictures)
  * - Large high-contrast typography in College ERP style
- * - "ROLL [Number]" (e.g. ROLL 21)
- * - "[Student Name]" (e.g. SHIVAM AGHAO)
+ * - "ROLL [Number]" (e.g. ROLL 1)
+ * - "[Student Name]" (e.g. STUDENT NAME)
  * - "← SWIPE →" instruction
  * - Top Progress: "Student X of Y" and clean progress bar
  * - Live Counters: Present: X | Absent: Y | Remaining: Z

@@ -9,54 +9,28 @@ const AttendanceService = {
   STORAGE_KEY_DRAFTS: "erp_attendance_drafts",
   STORAGE_KEY_CLASS_CARDS: "erp_teacher_class_cards",
 
-  defaultClassCards: [
-    {
-      id: "CARD-1001",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "3R",
-      subject_code: "CS305",
-      subject_name: "Database Management",
-      created_at: "2026-09-01T08:00:00.000Z"
-    },
-    {
-      id: "CARD-1002",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "2R1",
-      subject_code: "CS303",
-      subject_name: "Java Programming",
-      created_at: "2026-09-02T09:30:00.000Z"
-    },
-    {
-      id: "CARD-1003",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "2R2",
-      subject_code: "CS302",
-      subject_name: "Data Structures",
-      created_at: "2026-09-03T10:15:00.000Z"
-    }
-  ],
+  defaultClassCards: [],
 
   init() {
     if (!localStorage.getItem(this.STORAGE_KEY_ATTENDANCE)) {
-      localStorage.setItem(
-        this.STORAGE_KEY_ATTENDANCE,
-        JSON.stringify(ERP_DATA.recentAttendance)
-      );
+      localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify([]));
     }
     if (!localStorage.getItem(this.STORAGE_KEY_DRAFTS)) {
       localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify({}));
     }
-    if (!localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS)) {
-      localStorage.setItem(
-        this.STORAGE_KEY_CLASS_CARDS,
-        JSON.stringify(this.defaultClassCards)
-      );
+    const savedCards = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
+    if (!savedCards || savedCards === "null") {
+      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
+    } else {
+      try {
+        const parsed = JSON.parse(savedCards);
+        const filtered = Array.isArray(parsed) ? parsed.filter(c => !["CARD-1001", "CARD-1002", "CARD-1003"].includes(c.id)) : [];
+        if (filtered.length !== parsed.length) {
+          localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(filtered));
+        }
+      } catch (e) {
+        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
+      }
     }
   },
 
@@ -199,8 +173,7 @@ const AttendanceService = {
       const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
       return JSON.parse(data) || [];
     } catch (e) {
-      console.error("Failed to parse class cards from storage:", e);
-      return [...this.defaultClassCards];
+      return [];
     }
   },
 

@@ -1,7 +1,6 @@
 /**
  * SSGMCE AUTONOMOUS COLLEGE ERP - STUDENT ATTENDANCE PORTAL CONTROLLER
  * Institution: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
- * Student: Shivam Sanjay Aghao | Roll: 21 | CSE 2R1 (Semester V)
  * 
  * STRICT ARCHITECTURAL PRINCIPLE:
  * This script runs independently for System B (Attendance Portal).
@@ -872,7 +871,7 @@
       btnExport.addEventListener('click', () => {
         showToast('Generating official Subject-wise Attendance Report (PDF)...', 'info');
         setTimeout(() => {
-          showToast('✓ Report ready: Shivam_Aghao_Attendance_SemV.pdf', 'success');
+          showToast('✓ Report ready: Student_Attendance_Report.pdf', 'success');
         }, 1200);
       });
     }

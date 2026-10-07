@@ -34,6 +34,19 @@
             return {
               success: true,
               data: {
+<<<<<<< HEAD
+                fullName: p.fullName || 'Student',
+                rollNumber: p.rollNo || '--',
+                enrollmentNumber: p.studentCode || '--',
+                department: p.department || 'Computer Science & Engineering',
+                semester: p.semester || '--',
+                division: p.division || '--',
+                academicYear: p.academicYear || '--',
+                prn: p.prn || '--',
+                facultyMentor: p.facultyMentor || '--',
+                email: p.email || '--',
+                phone: p.phone || '--'
+=======
                 fullName: p.fullName || p.full_name || '',
                 rollNumber: p.rollNo || p.roll_no || '',
                 enrollmentNumber: p.studentCode || p.student_code || '',
@@ -45,6 +58,7 @@
                 facultyMentor: p.facultyMentor || p.faculty_mentor || '',
                 email: p.email || p.institutional_email || '',
                 phone: p.phone || p.primary_mobile || ''
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
               }
             };
           }

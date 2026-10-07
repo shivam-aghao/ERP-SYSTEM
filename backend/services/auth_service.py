@@ -86,6 +86,22 @@ class AuthService:
                 "redirect": "teacher-dashboard.html"
             }
 
+<<<<<<< HEAD
+        # 3. Check Student aliases or in database
+        if uid.lower() in ("student", "learner", "std"):
+            student_row = db.execute(text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        else:
+            student_row = db.execute(
+                text("""
+                    SELECT s.*, c.class_name, c.division as class_div
+                    FROM students s
+                    LEFT JOIN classes c ON s.class_id = c.id
+                    WHERE LOWER(s.student_code) = LOWER(:uid) OR LOWER(s.sis_id) = LOWER(:uid) OR LOWER(s.email) = LOWER(:uid) OR s.id = :uid OR s.roll_no = :uid
+                    LIMIT 1
+                """),
+                {"uid": uid}
+            ).fetchone()
+=======
         # If faculty matched pattern but not in db, return fallback faculty
         if (
             uid.lower() in ("teacher", "faculty", "fac", "prof", "employee", "staff", "rohan.deshmukh@ssgmce.ac.in", "fac-cse-1048", "emp-cse-1048")
@@ -137,6 +153,7 @@ class AuthService:
         except Exception:
             pass
 
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
 
         if student_row:
             m = student_row._mapping
@@ -159,11 +176,62 @@ class AuthService:
                 "redirect": "student-dashboard.html"
             }
 
+<<<<<<< HEAD
+        # 4. Fallback resolution if role hint is explicitly provided
+        if hint_role in ("faculty", "teacher"):
+            fallback_teacher = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+            if fallback_teacher:
+                m = fallback_teacher._mapping
+                t_name = m.get("full_name") or "Faculty Member"
+                return {
+                    "token": f"teach_token_{m['id']}",
+                    "user": {
+                        "id": m["id"],
+                        "name": t_name,
+                        "full_name": t_name,
+                        "email": m.get("email", ""),
+                        "emp_code": m.get("emp_code") or uid,
+                        "department": m.get("department_id", "CSE"),
+                        "role": "teacher"
+                    },
+                    "role": "teacher",
+                    "redirect": "teacher-dashboard.html"
+                }
+
+        if hint_role == "admin":
+=======
         # Fallback to student if any user input provided
         if uid:
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
             return {
                 "token": "st_token_s0000000-0000-0000-0000-000000000001",
                 "user": {
+<<<<<<< HEAD
+                    "id": "admin-001",
+                    "name": "Administrator",
+                    "full_name": "Administrator",
+                    "role": "admin"
+                },
+                "role": "admin",
+                "redirect": "admin-dashboard.html"
+            }
+
+        # Default fallback to first student if any input was given, or raise 401 if blank
+        fallback_st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        if fallback_st and uid:
+            m = fallback_st._mapping
+            s_name = m.get("full_name") or m.get("name") or "Student"
+            return {
+                "token": f"st_token_{m['id']}",
+                "user": {
+                    "id": m["id"],
+                    "student_code": m.get("student_code") or uid,
+                    "full_name": s_name,
+                    "name": s_name,
+                    "roll_no": m.get("roll_no") or 1,
+                    "class_name": m.get("class_name") or "",
+                    "class_id": m.get("class_id"),
+=======
                     "id": "s0000000-0000-0000-0000-000000000001",
                     "student_code": uid,
                     "full_name": "Shivam Sanjay Aghao",
@@ -171,6 +239,7 @@ class AuthService:
                     "roll_no": 60,
                     "class_name": "3R",
                     "class_id": "c3r1",
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
                     "role": "student"
                 },
                 "role": "student",

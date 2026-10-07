@@ -278,27 +278,35 @@ function viewDocument(docType) {
         return;
     }
 
+    const p = window.currentStudentProfile || {};
+    const studentName = p.fullName || 'Student';
+    const rollNo = p.rollNo || '--';
+    const prn = p.prn || p.studentCode || '--';
+    const dept = p.department || 'Computer Science & Engineering';
+    const className = p.className || '--';
+    const initials = studentName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'ST';
+
     const docDetails = {
         'id-card': {
             title: 'SSGMCE Smart RFID Identity Card',
             html: `
                 <div style="border:2px solid var(--primary); border-radius:12px; padding:20px; background:#F8FAFC; text-align:center;">
                     <div style="font-weight:800; color:var(--navy); font-size:1.1rem;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</div>
-                    <div style="font-size:0.8rem; color:var(--primary); font-weight:600; margin-bottom:14px;">An Autonomous Institute â€¢ Shegaon - 444503</div>
+                    <div style="font-size:0.8rem; color:var(--primary); font-weight:600; margin-bottom:14px;">An Autonomous Institute • Shegaon - 444503</div>
                     <div style="display:flex; justify-content:center; margin-bottom:12px;">
-                        <div style="width:75px; height:85px; border-radius:8px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800;">SA</div>
+                        <div style="width:75px; height:85px; border-radius:8px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800;">${initials}</div>
                     </div>
-                    <div style="font-size:1.05rem; font-weight:700; color:var(--navy);">SHIVAM SANJAY AGHAO</div>
-                    <div style="font-size:0.85rem; color:var(--muted);">Roll No: 21 â€¢ PRN: 202401088219</div>
-                    <div style="font-size:0.85rem; color:var(--text); font-weight:600; margin-top:6px;">B.Tech Computer Science &amp; Engineering</div>
+                    <div style="font-size:1.05rem; font-weight:700; color:var(--navy);">${studentName}</div>
+                    <div style="font-size:0.85rem; color:var(--muted);">Roll No: ${rollNo} • PRN: ${prn}</div>
+                    <div style="font-size:0.85rem; color:var(--text); font-weight:600; margin-top:6px;">B.Tech ${dept}</div>
                     <div style="margin-top:14px; padding:6px 12px; background:rgba(16,185,129,0.12); color:#10B981; font-weight:700; font-size:0.75rem; border-radius:999px; display:inline-block;">
-                        âœ“ ACTIVE INSTITUTIONAL RFID â€¢ VALID THRU 2028
+                        ✓ ACTIVE INSTITUTIONAL RFID
                     </div>
                 </div>
             `
         },
         'grade-cards': {
-            title: 'Autonomous Semester Grade Cards (Sem I - IV)',
+            title: 'Autonomous Semester Grade Cards',
             html: `
                 <table class="attendance-data-table" style="width:100%; font-size:0.85rem;">
                     <thead>
@@ -310,15 +318,9 @@ function viewDocument(docType) {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Semester I</td><td>22 / 22</td><td><strong>8.42</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester II</td><td>22 / 22</td><td><strong>8.58</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester III</td><td>21 / 21</td><td><strong>8.64</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester IV</td><td>21 / 21</td><td><strong>8.84</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
+                        <tr><td colspan="4" style="text-align:center; padding:18px; color:var(--muted);">Grade sheets available upon semester result verification</td></tr>
                     </tbody>
                 </table>
-                <div style="margin-top:14px; text-align:right; font-weight:700; color:var(--navy);">
-                    Cumulative CGPA: <span style="color:var(--primary); font-size:1.1rem;">8.64</span>
-                </div>
             `
         },
         'bonafide': {
@@ -327,14 +329,14 @@ function viewDocument(docType) {
                 <div style="border:1px dashed var(--border-color); padding:20px; border-radius:10px; background:#FFF;">
                     <div style="text-align:center; margin-bottom:12px;">
                         <strong style="color:var(--navy); font-size:1rem;">INSTITUTIONAL BONAFIDE CERTIFICATE</strong>
-                        <div style="font-size:0.75rem; color:var(--muted);">Ref: SSGMCE/ACAD/2026/BONA-88219</div>
+                        <div style="font-size:0.75rem; color:var(--muted);">Ref: SSGMCE/ACAD/2026/BONA-${prn}</div>
                     </div>
                     <p style="font-size:0.85rem; line-height:1.6; color:var(--text);">
-                        This is to certify that <strong>Mr. Shivam Sanjay Aghao</strong> (Roll No: 21, PRN: 202401088219) is a bonafide student of <strong>Second Year B.Tech (Computer Science &amp; Engineering)</strong> at Shri Sant Gajanan Maharaj College of Engineering, Shegaon for the academic year 2025-2026.
+                        This is to certify that <strong>${studentName}</strong> (Roll No: ${rollNo}, PRN: ${prn}) is a bonafide student of <strong>B.Tech (${dept})</strong>, Class ${className} at Shri Sant Gajanan Maharaj College of Engineering, Shegaon.
                     </p>
                     <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:flex-end;">
-                        <span style="font-size:0.75rem; color:var(--muted);">Issue Date: 15 Jan 2026</span>
-                        <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">Dean (Academics) Seal âœ“</span>
+                        <span style="font-size:0.75rem; color:var(--muted);">Issue Date: Verified Digital Record</span>
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">Dean (Academics) Seal ✓</span>
                     </div>
                 </div>
             `
@@ -502,39 +504,61 @@ async function fetchAndHydrateLiveProfile() {
         }
 
         if (!p) return;
+        window.currentStudentProfile = p;
 
         // Personal & Contact Fields
         const valMobile = document.getElementById('valMobile');
         const valCardMobile = document.getElementById('valCardMobile');
-        if (valMobile && p.phone) valMobile.textContent = p.phone;
-        if (valCardMobile && p.phone) valCardMobile.textContent = p.phone;
+        if (valMobile) valMobile.textContent = p.phone || '--';
+        if (valCardMobile) valCardMobile.textContent = p.phone || '--';
 
         const valEmail = document.getElementById('valEmail');
         const valCardEmail = document.getElementById('valCardEmail');
-        if (valEmail && p.email) valEmail.textContent = p.email;
-        if (valCardEmail && p.email) valCardEmail.textContent = p.email;
+        if (valEmail) valEmail.textContent = p.email || '--';
+        if (valCardEmail) valCardEmail.textContent = p.email || '--';
 
         const valBlood = document.getElementById('valBloodGroup');
-        if (valBlood && p.bloodGroup) valBlood.textContent = p.bloodGroup;
+        if (valBlood) valBlood.textContent = p.bloodGroup || '--';
 
         const valEmergency = document.getElementById('valEmergency');
-        if (valEmergency && p.emergencyContact) valEmergency.textContent = p.emergencyContact;
+        if (valEmergency) valEmergency.textContent = p.emergencyContact || '--';
 
         const valAddress = document.getElementById('valAddress');
-        if (valAddress && p.permanentAddress) {
+        if (valAddress) {
             const addrParts = [p.permanentAddress, p.district, p.state, p.pincode].filter(Boolean);
-            valAddress.textContent = addrParts.join(', ');
+            valAddress.textContent = addrParts.length > 0 ? addrParts.join(', ') : '--';
         }
 
         // Student identity headers
-        const studentNameEls = document.querySelectorAll('.student-name, .p-name');
+        const studentNameEls = document.querySelectorAll('.student-name, .p-name, .profile-info h2');
         studentNameEls.forEach(el => {
             if (p.fullName) el.textContent = p.fullName;
         });
 
-        const avatarInitials = p.fullName ? p.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA';
+        const avatarInitials = p.fullName ? p.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'ST';
         document.querySelectorAll('.avatar-circle, .large-avatar').forEach(el => {
             el.textContent = avatarInitials;
+        });
+
+        // Meta subheaders
+        const metaSub = document.querySelector('.student-meta');
+        if (metaSub) metaSub.textContent = `Roll: ${p.rollNo || '--'} • Class: ${p.className || '--'}`;
+
+        const pRoll = document.querySelector('.p-roll');
+        if (pRoll) pRoll.textContent = `Roll No: ${p.rollNo || '--'} • Class: ${p.className || '--'}`;
+
+        const pId = document.querySelector('.profile-id');
+        if (pId) pId.textContent = `PRN: ${p.prn || p.studentCode || '--'} • Roll No: ${p.rollNo || '--'} • UID: ${p.studentCode || '--'}`;
+
+        // Personal info items
+        const infoItems = document.querySelectorAll('.profile-info-item');
+        infoItems.forEach(item => {
+            const label = item.querySelector('.profile-info-label')?.textContent.trim();
+            const valEl = item.querySelector('.profile-info-value');
+            if (!valEl) return;
+            if (label === 'Full Legal Name') valEl.textContent = p.fullName || '--';
+            else if (label === 'Roll & Section') valEl.textContent = `${p.rollNo || '--'} (Class ${p.className || '--'})`;
+            else if (label === 'PRN Number') valEl.textContent = p.prn || p.studentCode || '--';
         });
 
     } catch (e) {

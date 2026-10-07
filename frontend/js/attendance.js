@@ -2141,7 +2141,7 @@ const AttendanceMarkingManager = {
           id: `b0000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`,
           rollNo: i + 1,
           rollFormatted: `${classCode}-${String(i + 1).padStart(2, '0')}`,
-          name: i === 20 ? 'SHIVAM AGHAO' : `Student ${i + 1}`,
+          name: `Student ${i + 1}`,
           enrollmentNo: `EN24CSE${String(i + 1).padStart(3, '0')}`,
           cardId: `CARD-${classCode}-${String(i + 1).padStart(3, '0')}`,
           classCode
