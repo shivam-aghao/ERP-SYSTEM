@@ -1,136 +1,13 @@
 /**
  * SSGMCE AUTONOMOUS COLLEGE ERP - STUDENT ATTENDANCE PORTAL
- * Independent Attendance Mock Data Layer
+ * Attendance Data Layer Configuration & State
  * 
- * Student: Shivam Sanjay Aghao
- * Class: TY B.E. Computer Science and Engineering-A
- * Academic Year: 2026–2027
- * Semester: V
- * 
- * STRICT ARCHITECTURAL PRINCIPLE:
- * This data is strictly isolated to the Student Attendance System.
- * DO NOT link, import, or leak into the Student Dashboard.
+ * Strict Zero-Static-Mock Policy:
+ * Dynamic data loaded from Supabase / Backend API.
  */
 
 (function (global) {
   'use strict';
-
-  const studentProfile = {
-    name: "Shivam Sanjay Aghao",
-    rollNo: "21",
-    studentCode: "CSE2401",
-    prn: "202401088219",
-    class: "TY B.E. Computer Science and Engineering-A",
-    department: "Computer Science & Engineering",
-    academicYear: "2026–2027",
-    semester: "V",
-    division: "A",
-    batch: "2024-2028",
-    avatarText: "SA",
-    mentorName: "Dr. Rohan Deshmukh"
-  };
-
-  const attendanceData = [
-    {
-      id: 1,
-      subject: "Data Science and Statistics",
-      code: "5CS223PE-I-TH",
-      type: "TH",
-      present: 5,
-      total: 11,
-      faculty: "Prof. Rajesh Sharma",
-      credits: 3.0,
-      room: "LH-204"
-    },
-    {
-      id: 2,
-      subject: "Database Management Systems",
-      code: "5CS220PC",
-      type: "TH",
-      present: 4,
-      total: 9,
-      faculty: "Dr. Rohan Deshmukh",
-      credits: 3.0,
-      room: "LH-112"
-    },
-    {
-      id: 3,
-      subject: "Compiler Design",
-      code: "5CS221PC",
-      type: "TH",
-      present: 5,
-      total: 18,
-      faculty: "Prof. Priya Patil",
-      credits: 4.0,
-      room: "LH-301"
-    },
-    {
-      id: 4,
-      subject: "Computer Architecture & Organization",
-      code: "5CS222PC",
-      type: "TH",
-      present: 5,
-      total: 15,
-      faculty: "Prof. Vikram Joshi",
-      credits: 3.0,
-      room: "LH-108"
-    },
-    {
-      id: 5,
-      subject: "Database Management Systems-LAB",
-      code: "5CS224PC",
-      type: "PR",
-      present: 2,
-      total: 2,
-      faculty: "Dr. Rohan Deshmukh",
-      credits: 1.5,
-      room: "Database Lab 1"
-    },
-    {
-      id: 6,
-      subject: "Compiler Design_LAB",
-      code: "5CS225PC",
-      type: "PR",
-      present: 0,
-      total: 4,
-      faculty: "Prof. Priya Patil",
-      credits: 1.5,
-      room: "Systems Lab 2"
-    },
-    {
-      id: 7,
-      subject: "Introduction to Microprocessors",
-      code: "5ET227MD",
-      type: "TH",
-      present: 2,
-      total: 7,
-      faculty: "Dr. Sneha Kulkarni",
-      credits: 3.0,
-      room: "LH-201"
-    },
-    {
-      id: 8,
-      subject: "Microcontroller Applications",
-      code: "5ET228MD",
-      type: "TH",
-      present: 3,
-      total: 6,
-      faculty: "Prof. V. K. Ramanujan",
-      credits: 3.0,
-      room: "LH-302"
-    },
-    {
-      id: 9,
-      subject: "Microprocessor and Microcontroller Lab",
-      code: "5ET229ML",
-      type: "PR",
-      present: 0,
-      total: 2,
-      faculty: "Dr. Sneha Kulkarni",
-      credits: 1.5,
-      room: "Microprocessor Lab"
-    }
-  ];
 
   const attendanceThresholds = {
     good: 80,       // 80%+ -> Good
@@ -140,8 +17,8 @@
   };
 
   const attendanceDataExports = {
-    studentProfile,
-    attendanceData,
+    studentProfile: null,
+    attendanceData: [],
     attendanceThresholds
   };
 
