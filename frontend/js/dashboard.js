@@ -1,7 +1,6 @@
 /**
  * SSGMCE Student ERP Dashboard Interactive Script
  * Shri Sant Gajanan Maharaj College of Engineering, Shegaon
- * Student: Shivam Aghao | Roll: 21 | CSE 2R1 (CSE2401)
  */
 
 let attendanceChartInstance = null;

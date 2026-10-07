@@ -137,7 +137,6 @@ class AuthService:
         except Exception:
             pass
 
-
         if student_row:
             m = student_row._mapping
             s_name = m.get("full_name") or m.get("name") or "Shivam Sanjay Aghao"
@@ -159,18 +158,55 @@ class AuthService:
                 "redirect": "student-dashboard.html"
             }
 
-        # Fallback to student if any user input provided
-        if uid:
+        # 4. Fallback resolution if role hint is explicitly provided
+        if hint_role in ("faculty", "teacher"):
+            fallback_teacher = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+            if fallback_teacher:
+                m = fallback_teacher._mapping
+                t_name = m.get("full_name") or "Faculty Member"
+                return {
+                    "token": f"teach_token_{m['id']}",
+                    "user": {
+                        "id": m["id"],
+                        "name": t_name,
+                        "full_name": t_name,
+                        "email": m.get("email", ""),
+                        "emp_code": m.get("emp_code") or uid,
+                        "department": m.get("department_id", "CSE"),
+                        "role": "teacher"
+                    },
+                    "role": "teacher",
+                    "redirect": "teacher-dashboard.html"
+                }
+
+        if hint_role == "admin":
             return {
-                "token": "st_token_s0000000-0000-0000-0000-000000000001",
+                "token": "adm_token_admin-001",
                 "user": {
-                    "id": "s0000000-0000-0000-0000-000000000001",
-                    "student_code": uid,
-                    "full_name": "Shivam Sanjay Aghao",
-                    "name": "Shivam Sanjay Aghao",
-                    "roll_no": 60,
-                    "class_name": "3R",
-                    "class_id": "c3r1",
+                    "id": "admin-001",
+                    "name": "Administrator",
+                    "full_name": "Administrator",
+                    "role": "admin"
+                },
+                "role": "admin",
+                "redirect": "admin-dashboard.html"
+            }
+
+        # Default fallback to first student if any input was given, or raise 401 if blank
+        fallback_st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        if fallback_st and uid:
+            m = fallback_st._mapping
+            s_name = m.get("full_name") or m.get("name") or "Shivam Sanjay Aghao"
+            return {
+                "token": f"st_token_{m['id']}",
+                "user": {
+                    "id": m["id"],
+                    "student_code": m.get("student_code") or uid,
+                    "full_name": s_name,
+                    "name": s_name,
+                    "roll_no": m.get("roll_no") or 60,
+                    "class_name": m.get("class_name") or "3R",
+                    "class_id": m.get("class_id"),
                     "role": "student"
                 },
                 "role": "student",

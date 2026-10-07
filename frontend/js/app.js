@@ -10,15 +10,14 @@ const TeacherApp = {
     this.renderHeaderProfile();
     this.renderDynamicDates();
     this.renderDashboardData();
-    this.renderClassesView();
     this.renderTimetableView();
     this.renderStudentsView();
     this.renderSyllabusView();
     this.renderResultsView();
     this.renderNotificationsList();
-    this.renderProfileView();
     this.initLucideIcons();
     this.checkBackendConnection();
+    this.initHashRouting();
     if (typeof window.AttendanceMarkingManager !== 'undefined') {
       window.AttendanceMarkingManager.init();
     }
@@ -68,20 +67,12 @@ const TeacherApp = {
             this.showToast(`🟢 Connected to Backend API (${teacherName})`, 'success');
           }
           console.log('✅ Logged in successfully as:', teacherName);
-
-          // Concurrent fetch of all dynamic dashboard data
           try {
-            const [summaryRes, ttRes, classesRes, notifRes, studentsRes] = await Promise.allSettled([
-              window.TeacherAPI.getDashboardSummary(),
-              window.TeacherAPI.getMyTimetable(),
-              window.TeacherAPI.getClasses(),
-              window.TeacherAPI.getNotifications(),
-              window.TeacherAPI.getStudents('2R1')
-            ]);
+            const data = await window.TeacherAPI.getDashboardSummary();
+            console.log('📊 Live Dashboard KPI metrics:', data ? (data.metrics || data) : null);
 
-            // 1. Dashboard Summary & Faculty
-            if (summaryRes.status === 'fulfilled' && summaryRes.value) {
-              const data = summaryRes.value;
+            // Seamlessly bind live data to UI cards
+            if (data && typeof TeacherERPData !== 'undefined') {
               const metrics = data.metrics || {
                 totalClasses: data.total_classes,
                 totalStudents: data.total_students,
@@ -96,176 +87,16 @@ const TeacherApp = {
               if (metrics.averageAttendance) {
                 TeacherERPData.stats.attendancePercent = parseInt(metrics.averageAttendance, 10) || 87;
               }
-              if (metrics.todayClasses !== undefined) {
-                TeacherERPData.stats.todayClasses = String(metrics.todayClasses).padStart(2, '0');
-              }
-              if (metrics.attendancePending !== undefined) {
-                TeacherERPData.stats.attendancePending = String(metrics.attendancePending).padStart(2, '0');
-              }
-              if (metrics.attendanceCompletedCount !== undefined) {
-                TeacherERPData.stats.attendanceCompletedCount = metrics.attendanceCompletedCount;
-              }
-              if (metrics.attendancePendingCount !== undefined) {
-                TeacherERPData.stats.attendancePendingCount = metrics.attendancePendingCount;
-              }
               if (data.faculty) {
-                Object.assign(TeacherERPData.faculty, data.faculty);
-                localStorage.setItem("ssgmce_logged_in_teacher", JSON.stringify(TeacherERPData.faculty));
+                TeacherERPData.faculty.name = data.faculty.name;
+                TeacherERPData.faculty.employeeId = data.faculty.employeeId;
+                TeacherERPData.faculty.title = data.faculty.title || 'Associate Professor';
               }
+              this.renderHeaderProfile();
+              this.renderDashboardData();
             }
-
-            // 2. Timetable & Today Schedule
-            if (ttRes.status === 'fulfilled' && ttRes.value) {
-              const rawTimetable = Array.isArray(ttRes.value) ? ttRes.value : ((ttRes.value && ttRes.value.data) || []);
-              if (rawTimetable.length > 0) {
-                const standardDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-                const matrix = standardDays.map((d, dIdx) => {
-                  const dayOfWeekNum = dIdx + 1;
-                  const dayItems = rawTimetable.filter(item => item.dayOfWeek === dayOfWeekNum);
-                  const slots = ["Free Slot", "Free Slot", "Free Slot", "Free Slot"];
-                  dayItems.forEach(item => {
-                    const slotIdx = (item.slotIndex >= 1 && item.slotIndex <= 4) ? item.slotIndex - 1 : 0;
-                    const subName = (item.subject && (item.subject.name || item.subject.code)) || item.subjectCode || 'Lecture';
-                    const room = item.room || 'Room 201';
-                    slots[slotIdx] = `${subName} (${room})`;
-                  });
-                  return { day: d, slots: slots };
-                });
-                TeacherERPData.timetable = matrix;
-
-                const todayDayOfWeek = Math.max(1, Math.min(5, new Date().getDay()));
-                const todaySlots = rawTimetable.filter(i => i.dayOfWeek === todayDayOfWeek);
-                if (todaySlots.length > 0) {
-                  const timeSlots = ["09:00 AM", "11:00 AM", "01:30 PM", "03:30 PM"];
-                  TeacherERPData.todayClasses = todaySlots.map((item, idx) => ({
-                    time: timeSlots[item.slotIndex - 1] || "10:00 AM",
-                    subject: (item.subject && (item.subject.name || item.subject.code)) || item.subjectCode || "Data Structures",
-                    department: item.departmentCode || "CSE",
-                    classCode: item.classCode || (item.class && item.class.code) || "2R1",
-                    room: item.room || "Room 201",
-                    status: idx === 0 ? "completed" : "upcoming",
-                    isCurrent: idx === 1
-                  }));
-                }
-              }
-            }
-
-            // 3. Classes
-            if (classesRes.status === 'fulfilled' && classesRes.value) {
-              const rawClasses = Array.isArray(classesRes.value) ? classesRes.value : ((classesRes.value && classesRes.value.data) || []);
-              if (rawClasses.length > 0) {
-                TeacherERPData.assignedClasses = rawClasses.map(c => {
-                  const sub = (c.subjects && c.subjects[0] && (c.subjects[0].name || c.subjects[0].code)) || 'Data Structures';
-                  return {
-                    id: `cls-${c.code.toLowerCase()}`,
-                    department: c.departmentCode || 'CSE',
-                    classCode: c.code,
-                    subject: sub,
-                    studentsCount: c.studentsCount || 60,
-                    attendanceStatus: (c.code === '2R1' || c.code === '4R') ? 'Completed' : 'Pending',
-                    room: c.room || 'Room 201',
-                    semester: c.semester || 'Sem 3'
-                  };
-                });
-              }
-            }
-
-            // 4. Notifications
-            if (notifRes.status === 'fulfilled' && notifRes.value) {
-              const rawNotifs = Array.isArray(notifRes.value) ? notifRes.value : ((notifRes.value && notifRes.value.data) || []);
-              if (rawNotifs.length > 0) {
-                TeacherERPData.notifications = rawNotifs.map(n => ({
-                  id: n.id,
-                  title: n.title,
-                  description: n.description,
-                  time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (n.time || 'Recent'),
-                  unread: !n.isRead,
-                  icon: n.icon || (n.type === 'warning' ? 'alert-triangle' : 'bell')
-                }));
-              }
-            }
-
-            // 5. Students Roster for 2R1
-            if (studentsRes.status === 'fulfilled' && studentsRes.value) {
-              const rawStudents = studentsRes.value;
-              const list = Array.isArray(rawStudents) ? rawStudents : ((rawStudents && rawStudents.students) || []);
-              if (list.length > 0) {
-                TeacherERPData.students = TeacherERPData.students || {};
-                TeacherERPData.students["2R1"] = list.map(s => ({
-                  rollNo: s.rollFormatted || (s.rollNo < 10 ? `0${s.rollNo}` : `${s.rollNo}`),
-                  name: s.name,
-                  email: s.email || `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
-                  attendance: 75 + (s.rollNo % 22)
-                }));
-                TeacherERPData.studentsByClass = TeacherERPData.studentsByClass || {};
-                TeacherERPData.studentsByClass["2R1"] = list.map(s => ({
-                  rollNo: s.rollNo,
-                  rollFormatted: s.rollFormatted || (s.rollNo < 10 ? `0${s.rollNo}` : `${s.rollNo}`),
-                  name: s.name,
-                  enrollmentNo: s.enrollmentNo,
-                  division: s.classCode || "2R1",
-                  department: s.departmentCode || "CSE",
-                  defaultAttendance: (s.rollNo % 7 === 0) ? "absent" : "present"
-                }));
-              }
-            }
-
-            // 6. Live Syllabus Progress
-            try {
-              const sylRes1 = await window.TeacherAPI.getSyllabusProgress('CS302', '2R1');
-              const units1 = Array.isArray(sylRes1) ? sylRes1 : ((sylRes1 && (sylRes1.data || sylRes1.units)) || []);
-              if (units1.length > 0) {
-                const avg1 = Math.round(units1.reduce((acc, u) => acc + (u.completionPercent || 0), 0) / units1.length);
-                TeacherERPData.syllabus = [
-                  {
-                    subject: "Data Structures (CS302)",
-                    classCode: "CSE 2R1",
-                    progress: avg1,
-                    units: units1.map(u => ({
-                      name: `Unit ${u.unitNumber}: ${u.unitName}`,
-                      percent: u.completionPercent
-                    }))
-                  }
-                ];
-
-                try {
-                  const sylRes2 = await window.TeacherAPI.getSyllabusProgress('CS501', '3R');
-                  const units2 = Array.isArray(sylRes2) ? sylRes2 : ((sylRes2 && (sylRes2.data || sylRes2.units)) || []);
-                  if (units2.length > 0) {
-                    const avg2 = Math.round(units2.reduce((acc, u) => acc + (u.completionPercent || 0), 0) / units2.length);
-                    TeacherERPData.syllabus.push({
-                      subject: "Database Management (CS501)",
-                      classCode: "CSE 3R",
-                      progress: avg2,
-                      units: units2.map(u => ({
-                        name: `Unit ${u.unitNumber}: ${u.unitName}`,
-                        percent: u.completionPercent
-                      }))
-                    });
-                  }
-                } catch (e2) {}
-              }
-            } catch (sylErr) {
-              console.warn('Live syllabus progress notice:', sylErr.message);
-            }
-
-            // Seamless re-render across all dashboard panes
-            this.renderHeaderProfile();
-            this.renderProfileView();
-            this.renderDashboardData();
-            this.renderClassesView();
-            this.renderTimetableView();
-            this.renderStudentsView();
-            this.renderSyllabusView();
-            this.renderNotificationsList();
-            this.initLucideIcons();
-
-            // Re-trigger pre-class notification checks against new live timetable
-            if (window.NotificationManager) {
-              window.NotificationManager.checkTimetableForUpcomingClasses();
-            }
-          } catch (liveFetchErr) {
-            console.warn('Live dashboard fetch error:', liveFetchErr.message);
+          } catch (kpiErr) {
+            console.warn('Dashboard summary:', kpiErr.message);
           }
         } else {
           setStatus(false);
@@ -305,62 +136,6 @@ const TeacherApp = {
     const todayPickerInput = document.getElementById("dashboard-date-picker-input");
     if (todayPickerInput) {
       todayPickerInput.value = AcademicDateUtils.getTodayISO(now);
-    }
-
-    // 2. Dynamic Greeting based on current time
-    const hour = now.getHours();
-    const greetingText = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
-    const greetingElem = document.getElementById("welcome-greeting-text");
-    if (greetingElem) {
-      greetingElem.innerHTML = `${greetingText}, Professor 👋`;
-    }
-
-    // 3. Active Semester Badges
-    const activeBadge = document.getElementById("dashboard-active-term-badge");
-    if (activeBadge) {
-      activeBadge.textContent = `Active Semester • B.Tech ${term.academicYear}`;
-    }
-
-    // 4. Faculty Profile Academic Term
-    const profileTermElem = document.getElementById("profile-academic-term");
-    if (profileTermElem) {
-      profileTermElem.textContent = term.fullTerm;
-    }
-
-    // 5. Academics Hub Active Semester Description
-    const academicsTermElem = document.getElementById("academics-active-semester-desc");
-    if (academicsTermElem) {
-      academicsTermElem.innerHTML = `<strong>Academic Year:</strong> ${term.academicYear} (${term.semesterType} Term)<br><strong>Current Phase:</strong> Mid-Semester Instruction Cycle<br><strong>Accreditation Tier:</strong> NBA Accredited & Autonomous Curriculum`;
-    }
-
-    // 6. Examination Mid-Semester Exam Begins (+21 days)
-    const examDateElem = document.getElementById("exam-midsem-date");
-    if (examDateElem) {
-      examDateElem.textContent = AcademicDateUtils.getRelativeFutureDate(21);
-    }
-
-    // 7. Fees Clearance Note
-    const feesClearanceElem = document.getElementById("fees-clearance-note");
-    if (feesClearanceElem) {
-      feesClearanceElem.textContent = `Official Accounts Clearance: No pending institutional dues recorded for Academic Session ${term.academicYear}.`;
-    }
-
-    // 8. Library Next Book Renewal Date (+7 days)
-    const libraryRenewalElem = document.getElementById("library-renewal-date");
-    if (libraryRenewalElem) {
-      libraryRenewalElem.textContent = AcademicDateUtils.getRelativeFutureDate(7);
-    }
-
-    // 9. Training & Placement Technical Assessment Date (+14 days)
-    const placementDateElem = document.getElementById("placement-assessment-date");
-    if (placementDateElem) {
-      placementDateElem.textContent = `Role: GenC Elevate • Technical Assessment Date: ${AcademicDateUtils.getRelativeFutureDate(14)}`;
-    }
-
-    // 10. Footer Copyright Year
-    const footerElem = document.getElementById("footer-copyright-text");
-    if (footerElem) {
-      footerElem.innerHTML = `&copy; ${currentYear} SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.`;
     }
   },
 
@@ -405,11 +180,74 @@ const TeacherApp = {
     }
 
     this.showToast(`Dashboard date set to: ${AcademicDateUtils.formatReadableDate(d)}`);
+
+    // 2. Dynamic Greeting based on current time
+    const hour = now.getHours();
+    const greetingText = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
+    const greetingElem = document.getElementById("welcome-greeting-text");
+    if (greetingElem) {
+      greetingElem.innerHTML = `${greetingText}, Professor 👋`;
+    }
+
+    // 3. Faculty Profile Academic Term
+    const profileTermElem = document.getElementById("profile-academic-term");
+    if (profileTermElem) {
+      profileTermElem.textContent = term.fullTerm;
+    }
+
+    // 4. Academics Hub Active Semester Description
+    const academicsTermElem = document.getElementById("academics-active-semester-desc");
+    if (academicsTermElem) {
+      academicsTermElem.innerHTML = `<strong>Academic Year:</strong> ${term.academicYear} (${term.semesterType} Term)<br><strong>Current Phase:</strong> Mid-Semester Instruction Cycle<br><strong>Accreditation Tier:</strong> NBA Accredited & Autonomous Curriculum`;
+    }
+
+    // 5. Examination Mid-Semester Exam Begins (+21 days)
+    const examDateElem = document.getElementById("exam-midsem-date");
+    if (examDateElem) {
+      examDateElem.textContent = AcademicDateUtils.getRelativeFutureDate(21);
+    }
+
+    // 6. Fees Clearance Note
+    const feesClearanceElem = document.getElementById("fees-clearance-note");
+    if (feesClearanceElem) {
+      feesClearanceElem.textContent = `Official Accounts Clearance: No pending institutional dues recorded for Academic Session ${term.academicYear}.`;
+    }
+
+    // 7. Library Next Book Renewal Date (+7 days)
+    const libraryRenewalElem = document.getElementById("library-renewal-date");
+    if (libraryRenewalElem) {
+      libraryRenewalElem.textContent = AcademicDateUtils.getRelativeFutureDate(7);
+    }
+
+    // 8. Training & Placement Technical Assessment Date (+14 days)
+    const placementDateElem = document.getElementById("placement-assessment-date");
+    if (placementDateElem) {
+      placementDateElem.textContent = `Role: GenC Elevate • Technical Assessment Date: ${AcademicDateUtils.getRelativeFutureDate(14)}`;
+    }
+
+    // 9. Footer Copyright Year
+    const footerElem = document.getElementById("footer-copyright-text");
+    if (footerElem) {
+      footerElem.innerHTML = `&copy; ${currentYear} SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.`;
+    }
   },
 
   // Dynamic Teacher Profile Management
   getLoggedInTeacher() {
     try {
+      if (window.ERP_AUTH) {
+        const u = window.ERP_AUTH.getCurrentUser();
+        if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
+          const fn = u.full_name || u.name || u.fullName || 'Faculty Member';
+          return {
+            name: fn,
+            department: u.department || 'Computer Science & Engineering',
+            departmentCode: u.department_code || 'CSE',
+            title: u.designation || 'Faculty Member',
+            avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+          };
+        }
+      }
       const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
       if (stored) {
         return JSON.parse(stored);
@@ -479,7 +317,7 @@ const TeacherApp = {
 
     const heroIdElem = document.getElementById("hero-teacher-id");
     if (heroIdElem) {
-      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: FAC-CSE-1048";
+      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: --";
     }
   },
 
@@ -563,13 +401,13 @@ const TeacherApp = {
   // ----------------------------------------------------
   // VIEW ROUTING / SWITCHING
   // ----------------------------------------------------
-  switchView(viewName) {
+  switchView(viewName, subView) {
     this.currentView = viewName;
 
     // Update navigation active state
     document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
       item.classList.remove("active");
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === viewName || (viewName && viewName.startsWith('attendance') && item.dataset.view === 'attendance')) {
         item.classList.add("active");
       }
     });
@@ -603,7 +441,6 @@ const TeacherApp = {
       case 'profile':
         document.getElementById("profile-view").style.display = "block";
         setHeaderBadge("Faculty Profile");
-        this.renderProfileView();
         break;
       case 'academics':
         document.getElementById("academics-view").style.display = "block";
@@ -611,15 +448,18 @@ const TeacherApp = {
         break;
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance");
-        if (window.NotificationManager) window.NotificationManager.clearSidebarBadge();
-        AttendanceWorkflow.init();
+        setHeaderBadge("Teacher Attendance Hub");
+        this.initIntegratedAttendance(subView);
         break;
       case 'attendance-mark':
-        const markPage = document.getElementById("attendance-marking-page");
-        if (markPage) markPage.style.display = "block";
-        setHeaderBadge("Mark Attendance");
-        if (window.NotificationManager) window.NotificationManager.clearSidebarBadge();
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('marking');
+        break;
+      case 'attendance-roster':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('roster');
         break;
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
@@ -656,37 +496,30 @@ const TeacherApp = {
       case 'timetable':
         document.getElementById("timetable-view").style.display = "block";
         setHeaderBadge("Faculty Timetable");
-        this.renderTimetableView();
         break;
       case 'classes':
         document.getElementById("classes-view").style.display = "block";
         setHeaderBadge("Assigned Classes");
-        this.renderClassesView();
         break;
       case 'students':
         document.getElementById("students-view").style.display = "block";
         setHeaderBadge("Students Directory");
-        this.renderStudentsView();
         break;
       case 'syllabus':
         document.getElementById("syllabus-view").style.display = "block";
         setHeaderBadge("Syllabus Tracker");
-        this.renderSyllabusView();
         break;
       case 'results':
         document.getElementById("results-view").style.display = "block";
         setHeaderBadge("Exam Results");
-        this.renderResultsView();
         break;
       case 'notifications':
         document.getElementById("notifications-view").style.display = "block";
         setHeaderBadge("Notifications");
-        this.renderNotificationsList();
         break;
       case 'information':
         document.getElementById("profile-view").style.display = "block";
         setHeaderBadge("Faculty Information");
-        this.renderProfileView();
         break;
       default:
         document.getElementById("dashboard-view").style.display = "block";
@@ -749,29 +582,6 @@ const TeacherApp = {
           </div>
         </div>
       `;
-    }
-
-    // Dynamic Sidebar & Manual Attendance Pending Badges
-    const sideBadge = document.getElementById("sidebar-attendance-badge");
-    if (sideBadge) {
-      const pendingCount = parseInt(TeacherERPData.stats.attendancePending, 10) || 0;
-      if (pendingCount > 0) {
-        sideBadge.textContent = `${String(pendingCount).padStart(2, '0')} Pending`;
-        sideBadge.style.display = "inline-flex";
-      } else {
-        sideBadge.style.display = "none";
-      }
-    }
-
-    const manualBadge = document.getElementById("manual-pending-badge");
-    if (manualBadge) {
-      const pendingCount = parseInt(TeacherERPData.stats.attendancePending, 10) || 0;
-      if (pendingCount > 0) {
-        manualBadge.textContent = `${String(pendingCount).padStart(2, '0')} Pending Today`;
-        manualBadge.style.display = "inline-flex";
-      } else {
-        manualBadge.style.display = "none";
-      }
     }
 
     // 2. Today's Classes Timeline
@@ -907,122 +717,212 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-  openAttendanceModule() {
-    this.switchView('attendance');
-    AttendanceWorkflow.goToStep(1);
+  // ----------------------------------------------------
+  // INTEGRATED ATTENDANCE SUB-MODULE CONTROLLER
+  // ----------------------------------------------------
+  currentAttendanceSubView: 'marking',
+
+  openAttendanceModule(subView = 'marking') {
+    this.switchView('attendance', subView);
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance');
-    if (window.NotificationManager) {
-      window.NotificationManager.clearSidebarBadge();
+    this.switchView('attendance', 'marking');
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+      frame.src = q;
     }
-    AttendanceState.setClass(classCode);
-    if (subject) {
-      const subs = TeacherERPData.subjects[classCode] || [];
-      const match = subs.find(s => s.name.toLowerCase().includes(subject.toLowerCase()));
-      if (match) AttendanceState.setSubject(match.code);
-    }
-    AttendanceWorkflow.goToStep(3);
   },
 
-  // ----------------------------------------------------
-  // CLASSES VIEW
-  // ----------------------------------------------------
-  renderClassesView() {
-    const fullGrid = document.getElementById("assigned-classes-full-grid");
-    if (!fullGrid) return;
-
-    fullGrid.innerHTML = (TeacherERPData.assignedClasses || []).map(cls => `
-      <div class="class-card" onclick="TeacherApp.openAttendanceForClass('${cls.classCode}', '${cls.subject}')">
-        <div class="class-card-top">
-          <span class="dept-badge">${cls.department}</span>
-          <i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i>
-        </div>
-
-        <div class="class-card-middle">
-          <div class="class-name-large">${cls.classCode}</div>
-          <div class="class-subject-name">${cls.subject}</div>
-        </div>
-
-        <div class="class-card-bottom">
-          <div class="class-students-count">
-            <i data-lucide="users" style="width:14px;height:14px;"></i>
-            ${cls.studentsCount} Students
-          </div>
-          <span class="badge ${cls.attendanceStatus === 'Completed' ? 'badge-completed' : 'badge-pending'}">
-            <i data-lucide="${cls.attendanceStatus === 'Completed' ? 'check-circle-2' : 'clock'}" style="width:12px;height:12px;"></i>
-            ${cls.attendanceStatus}
-          </span>
-        </div>
-      </div>
-    `).join('');
-    this.initLucideIcons();
+  initIntegratedAttendance(subView) {
+    let target = subView;
+    if (!target) {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('roster')) {
+        target = 'roster';
+      } else {
+        try {
+          target = localStorage.getItem('ssgmce_teacher_attendance_subview') || 'marking';
+        } catch (_) {
+          target = 'marking';
+        }
+      }
+    }
+    this.switchAttendanceSubView(target, false);
   },
 
-  // ----------------------------------------------------
-  // PROFILE VIEW
-  // ----------------------------------------------------
-  renderProfileView() {
-    const faculty = (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty) ? TeacherERPData.faculty : {};
-    const avatar = document.getElementById("profile-view-avatar");
-    if (avatar) avatar.textContent = faculty.avatarInitials || "RD";
+  switchAttendanceSubView(subView, updateHash = true) {
+    const mode = (subView === 'roster') ? 'roster' : 'marking';
+    this.currentAttendanceSubView = mode;
+    try {
+      localStorage.setItem('ssgmce_teacher_attendance_subview', mode);
+    } catch (_) {}
 
-    const nameElem = document.getElementById("profile-view-name");
-    if (nameElem) nameElem.textContent = faculty.name || "Dr. Rohan Deshmukh";
+    const markTab = document.getElementById('tab-attendance-mark');
+    const rosterTab = document.getElementById('tab-attendance-roster');
+    const descElem = document.getElementById('attendance-active-subview-desc');
+    const frame = document.getElementById('attendance-integrated-frame');
+    const loaderText = document.getElementById('attendance-loader-text');
 
-    const deptElem = document.getElementById("profile-view-dept");
-    if (deptElem) deptElem.textContent = `${faculty.title || "Associate Professor"} • Department of ${faculty.department || "Computer Science & Engineering"}`;
+    if (markTab && rosterTab) {
+      if (mode === 'marking') {
+        markTab.classList.add('active');
+        markTab.style.background = '#0B5CAD';
+        markTab.style.color = '#FFFFFF';
+        markTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
 
-    const idElem = document.getElementById("profile-view-id");
-    if (idElem) idElem.textContent = `Employee ID: ${faculty.employeeId || "FAC-CSE-1048"} | Ph.D. in Computer Science`;
+        rosterTab.classList.remove('active');
+        rosterTab.style.background = 'transparent';
+        rosterTab.style.color = '#475569';
+        rosterTab.style.boxShadow = 'none';
 
-    const emailElem = document.getElementById("profile-view-email");
-    if (emailElem) emailElem.textContent = faculty.email || "rohan.deshmukh@ssgmce.ac.in";
+        if (descElem) descElem.textContent = "Mark lecture/lab attendance or record RFID swipes";
+        if (loaderText) loaderText.textContent = "Loading Mark Attendance...";
+      } else {
+        rosterTab.classList.add('active');
+        rosterTab.style.background = '#0B5CAD';
+        rosterTab.style.color = '#FFFFFF';
+        rosterTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
 
-    const cabinElem = document.getElementById("profile-view-cabin");
-    if (cabinElem) cabinElem.textContent = faculty.cabinLocation || "Academic Block B, Room 204";
+        markTab.classList.remove('active');
+        markTab.style.background = 'transparent';
+        markTab.style.color = '#475569';
+        markTab.style.boxShadow = 'none';
 
-    const hoursElem = document.getElementById("profile-view-hours");
-    if (hoursElem) hoursElem.textContent = faculty.officeHours || "Mon-Thu: 3:00 PM - 5:00 PM";
+        if (descElem) descElem.textContent = "Review detailed class-wise attendance roster, percentages, and summaries";
+        if (loaderText) loaderText.textContent = "Loading Attendance Roster...";
+      }
+    }
+
+    const targetSrc = (mode === 'roster') 
+      ? 'teacher-attendance-roster.html?embedded=true' 
+      : 'teacher-attendance.html?embedded=true';
+
+    if (frame) {
+      const currentSrc = frame.getAttribute('src') || '';
+      if (!currentSrc.includes(targetSrc)) {
+        this.showAttendanceLoader();
+        frame.src = targetSrc;
+      }
+    }
+
+    if (updateHash) {
+      const hashVal = mode === 'roster' ? '#attendance/roster' : '#attendance';
+      if (window.location.hash !== hashVal) {
+        history.pushState(null, null, hashVal);
+      }
+    }
+  },
+
+  showAttendanceLoader() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'flex';
+    if (errorEl) errorEl.style.display = 'none';
+  },
+
+  onAttendanceFrameLoaded() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+      const frame = document.getElementById('attendance-integrated-frame');
+      if (frame && frame.contentWindow) {
+        // Synchronize authenticated session into child iframe context
+        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+          const user = window.ERP_AUTH.getCurrentUser();
+          if (frame.contentWindow.ERP_AUTH && typeof frame.contentWindow.ERP_AUTH.setSession === 'function') {
+            frame.contentWindow.ERP_AUTH.setSession(user);
+          }
+          if (frame.contentWindow.ERP_DATA && !frame.contentWindow.ERP_DATA.teacher) {
+            frame.contentWindow.ERP_DATA.teacher = {
+              name: user.fullName || user.name,
+              id: user.empCode || user.emp_code || user.id,
+              department: user.department || 'CSE'
+            };
+          }
+        }
+
+        if (frame.contentWindow.document) {
+          const doc = frame.contentWindow.document;
+          const h = Math.max(doc.body.scrollHeight || 0, doc.documentElement.scrollHeight || 0, 880);
+          frame.style.height = (h + 30) + 'px';
+        }
+      }
+    } catch (e) {
+      console.info('[TeacherApp] Frame height auto-fit restricted by origin, standard layout preserved.');
+    }
+  },
+
+  onAttendanceFrameError(status = 'Network Error') {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+    console.error(`[Attendance] Fetch failed: ${status}. Module could not be loaded into dashboard frame.`);
+  },
+
+  reloadAttendanceFrame() {
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      this.showAttendanceLoader();
+      frame.src = frame.src;
+      this.showToast('Refreshing attendance module...');
+    }
+  },
+
+  openAttendanceStandalone() {
+    const url = (this.currentAttendanceSubView === 'roster')
+      ? 'teacher-attendance-roster.html'
+      : 'teacher-attendance.html';
+    window.open(url, '_blank');
+  },
+
+  initHashRouting() {
+    const handleHash = () => {
+      const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      if (!rawHash) return;
+      if (rawHash.startsWith('attendance')) {
+        const sub = rawHash.includes('roster') ? 'roster' : 'marking';
+        this.switchView('attendance', sub);
+      } else {
+        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
+        if (validViews.includes(rawHash)) {
+          this.switchView(rawHash);
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+
+    if (window.location.hash) {
+      handleHash();
+    }
   },
 
   // ----------------------------------------------------
   // NOTIFICATIONS LIST
   // ----------------------------------------------------
   renderNotificationsList() {
-    const items = TeacherERPData.notifications || [];
-    const unreadCount = items.filter(n => n.unread).length;
+    const container = document.getElementById("notification-items-list");
+    if (!container) return;
 
-    // Update header bell badge
-    const badge = document.getElementById("header-notif-count") || document.querySelector("#notifWrapper .notif-badge");
-    if (badge) {
-      badge.textContent = unreadCount;
-      badge.style.display = unreadCount > 0 ? "flex" : "none";
-    }
-
-    const html = items.map(notif => `
-      <div class="activity-item ${notif.unread ? 'unread-activity' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')" style="cursor:pointer;">
-        <div class="activity-icon-box ${notif.unread ? 'blue' : 'navy'}">
-          <i data-lucide="${notif.icon || 'bell'}" style="width:18px;height:18px;"></i>
+    container.innerHTML = TeacherERPData.notifications.map(notif => `
+      <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
+        <div class="notif-icon-box" style="background:#EBF3FC; color:var(--primary-blue);">
+          <i data-lucide="${notif.icon}" style="width:16px;height:16px;"></i>
         </div>
-        <div class="activity-content">
-          <div class="activity-title-row">
-            <span class="activity-title">${notif.title} ${notif.unread ? '<span style="width:7px;height:7px;background:var(--primary-blue);border-radius:50%;display:inline-block;margin-left:4px;"></span>' : ''}</span>
-            <span class="activity-time">${notif.time}</span>
-          </div>
-          <span class="activity-desc">${notif.description}</span>
+        <div class="notif-content">
+          <div class="notif-title">${notif.title}</div>
+          <div class="notif-desc">${notif.description}</div>
+          <div class="notif-time">${notif.time}</div>
         </div>
       </div>
     `).join('');
-
-    const sidebarList = document.getElementById("notification-items-list");
-    if (sidebarList) sidebarList.innerHTML = html;
-
-    const fullList = document.getElementById("notifications-full-list");
-    if (fullList) fullList.innerHTML = html;
-
-    this.initLucideIcons();
   },
 
   handleNotificationClick(id) {
@@ -1206,15 +1106,7 @@ const TeacherApp = {
     const container = document.getElementById("students-content");
     if (!container) return;
 
-    const allStudents = (TeacherERPData.students && TeacherERPData.students["2R1"]) || [];
-    const classOptions = (TeacherERPData.assignedClasses && TeacherERPData.assignedClasses.length > 0)
-      ? TeacherERPData.assignedClasses.map(c => `<option value="${c.classCode}">${c.department} ${c.classCode} (${c.subject})</option>`).join('')
-      : `
-        <option value="2R1">CSE 2R1 (Data Structures)</option>
-        <option value="2R2">CSE 2R2 (Java Programming)</option>
-        <option value="3R">CSE 3R (Database Management)</option>
-        <option value="4R">CSE 4R (Information Security)</option>
-      `;
+    const allStudents = TeacherERPData.students["2R1"];
 
     container.innerHTML = `
       <div class="card" style="padding:20px;">
@@ -1222,9 +1114,11 @@ const TeacherApp = {
           <div style="display:flex; gap:12px; align-items:center;">
             <input type="text" id="roster-filter-input" class="roster-search-input" 
                    placeholder="Filter student name or roll..." oninput="TeacherApp.filterStudentRoster(this.value)">
-            <select id="roster-class-selector" style="padding:8px 12px; border:1px solid var(--border-light); border-radius:var(--radius-sm);" 
+            <select style="padding:8px 12px; border:1px solid var(--border-light); border-radius:var(--radius-sm);" 
                     onchange="TeacherApp.changeRosterClass(this.value)">
-              ${classOptions}
+              <option value="2R1">CSE 2R1 (Data Structures)</option>
+              <option value="2R2">CSE 2R2 (Java Programming)</option>
+              <option value="3R">CSE 3R (Database Management)</option>
             </select>
           </div>
           <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceModule()">
@@ -1249,13 +1143,9 @@ const TeacherApp = {
         </table>
       </div>
     `;
-    this.initLucideIcons();
   },
 
   generateRosterRows(students) {
-    if (!students || students.length === 0) {
-      return `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">No student records found.</td></tr>`;
-    }
     return students.map(st => `
       <tr>
         <td style="font-weight:700; color:var(--primary-blue);">ROLL ${st.rollNo}</td>
@@ -1293,45 +1183,11 @@ const TeacherApp = {
     });
   },
 
-  async changeRosterClass(classCode) {
+  changeRosterClass(classCode) {
+    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"];
     const tbody = document.getElementById("roster-table-body");
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);"><i data-lucide="loader" style="width:16px;height:16px;display:inline-block;vertical-align:middle;animation:spin 1s linear infinite;"></i> Loading live roster for Class ${classCode}...</td></tr>`;
-      this.initLucideIcons();
-    }
-
-    try {
-      if (window.TeacherAPI) {
-        const res = await window.TeacherAPI.getStudents(classCode);
-        const list = Array.isArray(res) ? res : ((res && res.students) || []);
-        if (list && list.length > 0) {
-          TeacherERPData.students = TeacherERPData.students || {};
-          TeacherERPData.students[classCode] = list.map(s => ({
-            rollNo: s.rollFormatted || (s.rollNo < 10 ? `0${s.rollNo}` : `${s.rollNo}`),
-            name: s.name,
-            email: s.email || `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
-            attendance: 75 + (s.rollNo % 22)
-          }));
-          TeacherERPData.studentsByClass = TeacherERPData.studentsByClass || {};
-          TeacherERPData.studentsByClass[classCode] = list.map(s => ({
-            rollNo: s.rollNo,
-            rollFormatted: s.rollFormatted || (s.rollNo < 10 ? `0${s.rollNo}` : `${s.rollNo}`),
-            name: s.name,
-            enrollmentNo: s.enrollmentNo,
-            division: s.classCode || classCode,
-            department: s.departmentCode || "CSE",
-            defaultAttendance: (s.rollNo % 7 === 0) ? "absent" : "present"
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn("Could not fetch live students for class", classCode, err.message);
-    }
-
-    const currentList = (TeacherERPData.students && TeacherERPData.students[classCode]) || (TeacherERPData.getStudentsForClass && TeacherERPData.getStudentsForClass(classCode)) || [];
-    if (tbody) {
-      tbody.innerHTML = this.generateRosterRows(currentList);
-      this.initLucideIcons();
+      tbody.innerHTML = this.generateRosterRows(list);
     }
   },
 
@@ -1429,6 +1285,9 @@ const TeacherApp = {
   // TOAST FEEDBACK SYSTEM
   // ----------------------------------------------------
   showToast(message, type = "info") {
+    if (window.ERPToast) {
+      return window.ERPToast.show(message, type);
+    }
     let toastContainer = document.getElementById("toast-container");
     if (!toastContainer) {
       toastContainer = document.createElement("div");

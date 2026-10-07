@@ -23,8 +23,8 @@ class AcademicMetrics(Base):
     __table_args__ = {"extend_existing": True}
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    student_code = Column(String(20), default="308637", index=True)
-    academic_year = Column(String(20), default="2025-26")
-    current_semester = Column(Integer, default=4)
-    cgpa = Column(Float, default=8.64)
-    latest_sgpa = Column(Float, default=8.84)
+    student_code = Column(String(20), nullable=False, index=True)
+    academic_year = Column(String(20), nullable=True)
+    current_semester = Column(Integer, default=1)
+    cgpa = Column(Float, nullable=True)
+    latest_sgpa = Column(Float, nullable=True)

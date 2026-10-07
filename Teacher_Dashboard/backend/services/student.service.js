@@ -6,7 +6,7 @@ const STUDENT_NAMES = [
   'Diya Deshmukh', 'Aditya More', 'Ishaan Chavan', 'Janhavi Pawar', 'Gaurav Jadhav',
   'Manasi Kale', 'Nikhil Bhole', 'Pooja Mishra', 'Pranav Salunkhe', 'Rohit Gupta',
   'Rutuja Gaikwad', 'Sahil Khan', 'Sakshi Mane', 'Sameer Inamdar', 'Sanjana Kadam',
-  'Shivam Aghao', 'Shreya Thakur', 'Siddhant Rao', 'Snehal Wagh', 'Sujay Bhosale',
+  'Sarang Patil', 'Shreya Thakur', 'Siddhant Rao', 'Snehal Wagh', 'Sujay Bhosale',
   'Tanvi Sawant', 'Tejas Shirodkar', 'Utkarsh Narvekar', 'Vaishnavi Naik', 'Varun Mahajan'
 ];
 

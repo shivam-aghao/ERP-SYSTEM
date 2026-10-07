@@ -77,15 +77,15 @@ const StudentTimetableApp = {
 
     // Default student context from ERP model
     this.studentSession = {
-      fullName: "Shivam Sanjay Aghao",
-      shortName: "Shivam Aghao",
-      initials: "SA",
-      rollNo: 21,
-      studentCode: "308637",
-      className: "B.Tech CSE 2R1",
+      fullName: "Student",
+      shortName: "Student",
+      initials: "ST",
+      rollNo: "--",
+      studentCode: "",
+      className: "",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: "shivam.aghao@ssgmce.ac.in"
+      email: ""
     };
   },
 
@@ -94,7 +94,14 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   async loadTests() {
     try {
-      const res = await fetch(`${this.getApiBase()}/timetable/tests`);
+      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '2R1';
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code)) || '308637';
+      const params = new URLSearchParams();
+      if (classCode) params.append('class_code', classCode);
+      if (studentCode) params.append('student_code', studentCode);
+
+      const url = `${this.getApiBase()}/timetable/tests?${params.toString()}`;
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
@@ -123,18 +130,61 @@ const StudentTimetableApp = {
   },
 
   bindEvents() {
-    // Profile Dropdown Trigger
-    const profileTrigger = document.getElementById("profile-dropdown-trigger");
-    const profileMenu = document.getElementById("profile-dropdown-menu");
+    // Mobile Drawer Toggle (identical to Student Dashboard & Attendance)
+    const toggleBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.getElementById("dashboardSidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
 
-    if (profileTrigger && profileMenu) {
-      profileTrigger.addEventListener("click", (e) => {
+    if (toggleBtn && sidebar) {
+      toggleBtn.addEventListener("click", () => {
+        const isOpen = sidebar.classList.contains("drawer-open");
+        if (isOpen) {
+          sidebar.classList.remove("drawer-open");
+          if (backdrop) backdrop.classList.remove("active");
+          document.body.style.overflow = "";
+        } else {
+          sidebar.classList.add("drawer-open");
+          if (backdrop) backdrop.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
+      });
+
+      if (backdrop) {
+        backdrop.addEventListener("click", () => {
+          sidebar.classList.remove("drawer-open");
+          backdrop.classList.remove("active");
+          document.body.style.overflow = "";
+        });
+      }
+    }
+
+    // Profile Dropdown Toggle
+    const profileBtn = document.getElementById("profileBtn") || document.getElementById("profile-dropdown-trigger");
+    const profilePanel = document.getElementById("profilePanel") || document.getElementById("profile-dropdown-menu");
+    if (profileBtn && profilePanel) {
+      profileBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const isOpen = profileMenu.classList.contains("show");
+        const isOpen = profilePanel.classList.contains("active") || profilePanel.classList.contains("show");
         this.closeAllDropdowns();
         if (!isOpen) {
-          profileMenu.classList.add("show");
-          profileTrigger.classList.add("active");
+          profilePanel.classList.add("active");
+          profilePanel.classList.add("show");
+          profileBtn.classList.add("active");
+        }
+      });
+    }
+
+    // Notifications Dropdown Toggle
+    const notifBtn = document.getElementById("notifBtn");
+    const notifPanel = document.getElementById("notifPanel");
+    if (notifBtn && notifPanel) {
+      notifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = notifPanel.classList.contains("active") || notifPanel.classList.contains("show");
+        this.closeAllDropdowns();
+        if (!isOpen) {
+          notifPanel.classList.add("active");
+          notifPanel.classList.add("show");
         }
       });
     }
@@ -144,9 +194,10 @@ const StudentTimetableApp = {
       this.closeAllDropdowns();
     });
 
-    // Close modals on Escape key
+    // Close modals and popovers on Escape key
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
+        this.closeAllDropdowns();
         this.closeTestDetailsModal();
       }
     });
@@ -163,11 +214,19 @@ const StudentTimetableApp = {
   },
 
   closeAllDropdowns() {
-    const profileMenu = document.getElementById("profile-dropdown-menu");
-    const profileTrigger = document.getElementById("profile-dropdown-trigger");
+    const profilePanel = document.getElementById("profilePanel") || document.getElementById("profile-dropdown-menu");
+    const profileBtn = document.getElementById("profileBtn") || document.getElementById("profile-dropdown-trigger");
+    const notifPanel = document.getElementById("notifPanel");
 
-    if (profileMenu) profileMenu.classList.remove("show");
-    if (profileTrigger) profileTrigger.classList.remove("active");
+    if (profilePanel) {
+      profilePanel.classList.remove("active");
+      profilePanel.classList.remove("show");
+    }
+    if (profileBtn) profileBtn.classList.remove("active");
+    if (notifPanel) {
+      notifPanel.classList.remove("active");
+      notifPanel.classList.remove("show");
+    }
   },
 
   initLucideIcons() {
@@ -180,23 +239,33 @@ const StudentTimetableApp = {
     const s = this.studentSession;
     if (!s) return;
 
+    const displayName = s.shortName || s.fullName || "Shivam Aghao";
+    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
+    const initials = s.initials || "SA";
+
+    // Standard IDs
     const headerName = document.getElementById("header-profile-name");
     const headerDept = document.getElementById("header-profile-dept");
     const avatarElem = document.getElementById("header-profile-avatar");
     const menuName = document.getElementById("profile-menu-name");
     const menuTitle = document.getElementById("profile-menu-title");
 
-    const displayName = s.shortName || s.fullName || "Shivam Aghao";
-    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
-    const initials = s.initials || "SA";
-
     if (headerName) headerName.textContent = displayName;
     if (headerDept) headerDept.textContent = displayClass;
     if (menuName) menuName.textContent = s.fullName || displayName;
     if (menuTitle) menuTitle.textContent = `${displayClass} • ${s.departmentCode || 'CSE'}`;
-    if (avatarElem) {
-      avatarElem.innerHTML = `<span>${initials}</span>`;
-    }
+    if (avatarElem) avatarElem.innerHTML = `<span>${initials}</span>`;
+
+    // Common Dashboard classes
+    document.querySelectorAll('.avatar-circle, .large-avatar').forEach(el => {
+      el.textContent = initials;
+    });
+    document.querySelectorAll('.student-name, .p-name').forEach(el => {
+      el.textContent = displayName;
+    });
+    document.querySelectorAll('.student-meta').forEach(el => {
+      el.textContent = `Roll: ${s.rollNo || 21} • ${s.className || 'CSE 2R1'} (${s.studentCode || 'CSE2401'})`;
+    });
   },
 
   handleTimetableDateChange(dateVal) {
@@ -217,7 +286,17 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   timeToMinutes(timeStr) {
     if (!timeStr) return 0;
-    const parts = timeStr.split(":");
+    const str = timeStr.trim();
+    const match = str.match(/^(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?$/);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const meridiem = match[3] ? match[3].toUpperCase() : null;
+      if (meridiem === "PM" && h < 12) h += 12;
+      if (meridiem === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    const parts = str.split(":");
     const hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
     return hours * 60 + mins;
@@ -225,20 +304,43 @@ const StudentTimetableApp = {
 
   formatTime12Hour(timeStr) {
     if (!timeStr) return "";
-    const parts = timeStr.split(":");
-    let h = parseInt(parts[0], 10);
-    const m = parts[1] ? parts[1].padStart(2, "0") : "00";
+    const mins = this.timeToMinutes(timeStr);
+    let h = Math.floor(mins / 60);
+    const m = String(mins % 60).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12;
     h = h ? h : 12;
     return `${String(h).padStart(2, "0")}:${m} ${ampm}`;
   },
 
+  subjectsMatch(sub1, sub2) {
+    if (!sub1 || !sub2) return false;
+    const s1 = sub1.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const s2 = sub2.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (s1 === s2) return true;
+    if (s1.includes(s2) || s2.includes(s1)) return true;
+
+    const aliases = [
+      ['databasemanagementsystems', 'databasesystems', 'dbms'],
+      ['datastructuresandalgorithms', 'datastructures', 'dsa'],
+      ['operatingsystems', 'os', 'operatingsystem'],
+      ['computernetworks', 'cn', 'networks'],
+      ['javaprogrammingandoop', 'javaprogramming', 'java', 'javalab', 'javaprogramminglab']
+    ];
+
+    for (const group of aliases) {
+      const match1 = group.some(alias => s1.includes(alias));
+      const match2 = group.some(alias => s2.includes(alias));
+      if (match1 && match2) return true;
+    }
+    return false;
+  },
+
   getSlotIndexForTime(timeStr) {
-    // 0: 09:00 - 10:30 (540 to 630 mins)
-    // 1: 11:00 - 12:30 (660 to 750 mins)
-    // 2: 13:30 - 15:00 (810 to 900 mins)
-    // 3: 15:30 - 17:00 (930 to 1020 mins)
+    // 0: 09:00 - 10:30 (center ~ 585 mins)
+    // 1: 11:00 - 12:30 (center ~ 705 mins)
+    // 2: 13:30 - 15:00 (center ~ 855 mins)
+    // 3: 15:30 - 17:00 (center ~ 975 mins)
     const mins = this.timeToMinutes(timeStr);
     if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
     if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
@@ -669,9 +771,16 @@ const StudentTimetableApp = {
                     const slotTests = this.tests.filter(t => {
                       if (!t.date || !t.start) return false;
                       const [y, m, d] = t.date.split("-").map(Number);
-                      const testDayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+                      // Use noon local time to avoid midnight timezone day rollback
+                      const testDateObj = new Date(y, m - 1, d, 12, 0, 0);
+                      const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
                       if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
-                      return this.getSlotIndexForTime(t.start) === slotIdx;
+
+                      const timeSlotMatch = (this.getSlotIndexForTime(t.start) === slotIdx);
+                      const subjectMatch = (!parsed.isFree && this.subjectsMatch(t.subject, parsed.subject));
+
+                      // Associate test with slot by time slot index or by matching subject
+                      return timeSlotMatch || subjectMatch;
                     });
 
                     // Build regular class card HTML if not free
@@ -725,6 +834,9 @@ const StudentTimetableApp = {
                           <div class="test-subject">${t.subject}</div>
                           <div class="test-title" title="${t.title}">${t.title}</div>
                           <div class="test-time">
+                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                            <span>${t.date}</span>
+                            <span style="margin: 0 4px; opacity:0.5;">•</span>
                             <i data-lucide="clock" style="width:11px;height:11px;"></i>
                             <span>${start12} – ${end12}</span>
                           </div>

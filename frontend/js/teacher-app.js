@@ -17,6 +17,7 @@ const TeacherApp = {
     this.renderNotificationsList();
     this.initLucideIcons();
     this.checkBackendConnection();
+    this.initHashRouting();
   },
 
   async checkBackendConnection(isManualCheck = false) {
@@ -62,7 +63,7 @@ const TeacherApp = {
             console.log('📊 Live Dashboard KPI metrics:', data.metrics);
             console.log('📅 Today schedule slots:', data.todaySchedule);
 
-            // Seamlessly bind live database data to UI cards
+            // Seamlessly bind live Supabase data to UI cards
             if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
               TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
               TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
@@ -74,58 +75,8 @@ const TeacherApp = {
                 TeacherERPData.faculty.employeeId = data.faculty.employeeId;
                 TeacherERPData.faculty.title = data.faculty.title;
               }
-              if (data.todaySchedule && Array.isArray(data.todaySchedule) && data.todaySchedule.length > 0) {
-                TeacherERPData.todayClasses = data.todaySchedule;
-              }
               this.renderHeaderProfile();
               this.renderDashboardData();
-            }
-
-            // Fetch live Timetable, Students Roster, Classes & Notifications from Database
-            const [ttRes, stRes, clsRes, notRes] = await Promise.allSettled([
-              window.TeacherAPI.getMyTimetable(),
-              window.TeacherAPI.getStudents('2R1'),
-              window.TeacherAPI.getClasses(),
-              window.TeacherAPI.getNotifications()
-            ]);
-
-            if (ttRes.status === 'fulfilled' && ttRes.value) {
-              const ttData = ttRes.value.timetable || ttRes.value;
-              if (Array.isArray(ttData) && ttData.length > 0) {
-                TeacherERPData.timetable = ttData;
-                this.renderTimetableView();
-              }
-            }
-
-            if (stRes.status === 'fulfilled' && stRes.value) {
-              const studentsList = Array.isArray(stRes.value) ? stRes.value : (stRes.value.data || []);
-              if (studentsList.length > 0) {
-                TeacherERPData.students['2R1'] = studentsList;
-                this.renderStudentsView();
-              }
-            }
-
-            if (clsRes.status === 'fulfilled' && clsRes.value) {
-              const classList = Array.isArray(clsRes.value) ? clsRes.value : (clsRes.value.data || []);
-              if (classList.length > 0) {
-                TeacherERPData.assignedClasses = classList.map(c => ({
-                  id: c.id || `cls-${c.class_name || c.code}`,
-                  department: c.department || 'CSE',
-                  classCode: c.class_name || c.classCode || c.code || '2R1',
-                  subject: c.subject || c.subject_name || 'Data Structures',
-                  studentsCount: c.studentsCount || c.student_count || 60,
-                  attendanceStatus: c.attendanceStatus || 'Completed'
-                }));
-                this.renderDashboardData();
-              }
-            }
-
-            if (notRes.status === 'fulfilled' && notRes.value) {
-              const notifList = Array.isArray(notRes.value) ? notRes.value : (notRes.value.data || []);
-              if (notifList.length > 0) {
-                TeacherERPData.notifications = notifList;
-                this.renderNotificationsList();
-              }
             }
           } catch (kpiErr) {
             console.warn('Dashboard summary:', kpiErr.message);
@@ -336,7 +287,7 @@ const TeacherApp = {
 
     const heroIdElem = document.getElementById("hero-teacher-id");
     if (heroIdElem) {
-      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: FAC-CSE-1048";
+      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: --";
     }
   },
 
@@ -420,13 +371,13 @@ const TeacherApp = {
   // ----------------------------------------------------
   // VIEW ROUTING / SWITCHING
   // ----------------------------------------------------
-  switchView(viewName) {
+  switchView(viewName, subView) {
     this.currentView = viewName;
 
     // Update navigation active state
     document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
       item.classList.remove("active");
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === viewName || (viewName && viewName.startsWith('attendance') && item.dataset.view === 'attendance')) {
         item.classList.add("active");
       }
     });
@@ -467,12 +418,18 @@ const TeacherApp = {
         break;
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance");
-        if (window.NotificationManager) window.NotificationManager.clearSidebarBadge();
-        const attFrame = document.getElementById("attendance-embedded-frame");
-        if (attFrame && (!attFrame.src || !attFrame.src.includes('teacher-attendance.html'))) {
-          attFrame.src = 'teacher-attendance.html?embedded=1';
-        }
+        setHeaderBadge("Teacher Attendance Hub");
+        this.initIntegratedAttendance(subView);
+        break;
+      case 'attendance-mark':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('marking');
+        break;
+      case 'attendance-roster':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('roster');
         break;
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
@@ -601,20 +558,16 @@ const TeacherApp = {
     if (timelineContainer) {
       timelineContainer.innerHTML = `
         <div class="classes-timeline">
-          ${TeacherERPData.todayClasses.map(cls => {
-            const isStartingSoon = Boolean(cls.isStartingSoon);
-            return `
-            <div class="timeline-item ${isStartingSoon ? 'starting-soon active' : (cls.isCurrent ? 'active' : '')}">
+          ${TeacherERPData.todayClasses.map(cls => `
+            <div class="timeline-item ${cls.isCurrent ? 'active' : ''}">
               <div class="timeline-time">${cls.time}</div>
               <div class="timeline-dot-container">
-                <div class="timeline-dot ${isStartingSoon ? 'pulse-amber' : ''}"></div>
+                <div class="timeline-dot"></div>
               </div>
-              <div class="timeline-details ${isStartingSoon ? 'starting-soon-card' : ''}">
+              <div class="timeline-details">
                 <div class="timeline-header">
                   <div class="timeline-subject">${cls.subject}</div>
-                  ${isStartingSoon
-                    ? '<span class="current-badge starting-soon-badge"><span class="pulse-dot pulse-amber"></span> Starting in 5 Mins</span>'
-                    : (cls.isCurrent ? '<span class="current-badge"><span class="pulse-dot"></span> Next Up</span>' : '')}
+                  ${cls.isCurrent ? '<span class="current-badge"><span class="pulse-dot"></span> Next Up</span>' : ''}
                 </div>
                 <div class="timeline-meta">
                   <span><strong>${cls.department}</strong> • ${cls.classCode}</span>
@@ -623,8 +576,7 @@ const TeacherApp = {
                 </div>
               </div>
             </div>
-          `;
-          }).join('')}
+          `).join('')}
         </div>
       `;
     }
@@ -734,23 +686,188 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-  openAttendanceModule() {
-    this.switchView('attendance');
-    const iframe = document.getElementById('attendance-embedded-frame');
-    if (iframe && iframe.contentWindow) {
-      try {
-        if (iframe.contentWindow.TeacherAttendanceApp && typeof iframe.contentWindow.TeacherAttendanceApp.goToStep === 'function') {
-          iframe.contentWindow.TeacherAttendanceApp.goToStep(1);
-        }
-      } catch (e) {}
-    }
+  // ----------------------------------------------------
+  // INTEGRATED ATTENDANCE SUB-MODULE CONTROLLER
+  // ----------------------------------------------------
+  currentAttendanceSubView: 'marking',
+
+  openAttendanceModule(subView = 'marking') {
+    this.switchView('attendance', subView);
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance');
-    const iframe = document.getElementById('attendance-embedded-frame');
-    if (iframe) {
-      iframe.src = `teacher-attendance.html?embedded=1&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+    this.switchView('attendance', 'marking');
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+      frame.src = q;
+    }
+  },
+
+  initIntegratedAttendance(subView) {
+    let target = subView;
+    if (!target) {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('roster')) {
+        target = 'roster';
+      } else {
+        try {
+          target = localStorage.getItem('ssgmce_teacher_attendance_subview') || 'marking';
+        } catch (_) {
+          target = 'marking';
+        }
+      }
+    }
+    this.switchAttendanceSubView(target, false);
+  },
+
+  switchAttendanceSubView(subView, updateHash = true) {
+    const mode = (subView === 'roster') ? 'roster' : 'marking';
+    this.currentAttendanceSubView = mode;
+    try {
+      localStorage.setItem('ssgmce_teacher_attendance_subview', mode);
+    } catch (_) {}
+
+    const markTab = document.getElementById('tab-attendance-mark');
+    const rosterTab = document.getElementById('tab-attendance-roster');
+    const descElem = document.getElementById('attendance-active-subview-desc');
+    const frame = document.getElementById('attendance-integrated-frame');
+    const loaderText = document.getElementById('attendance-loader-text');
+
+    if (markTab && rosterTab) {
+      if (mode === 'marking') {
+        markTab.classList.add('active');
+        markTab.style.background = '#0B5CAD';
+        markTab.style.color = '#FFFFFF';
+        markTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        rosterTab.classList.remove('active');
+        rosterTab.style.background = 'transparent';
+        rosterTab.style.color = '#475569';
+        rosterTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Mark lecture/lab attendance or record RFID swipes";
+        if (loaderText) loaderText.textContent = "Loading Mark Attendance...";
+      } else {
+        rosterTab.classList.add('active');
+        rosterTab.style.background = '#0B5CAD';
+        rosterTab.style.color = '#FFFFFF';
+        rosterTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        markTab.classList.remove('active');
+        markTab.style.background = 'transparent';
+        markTab.style.color = '#475569';
+        markTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Review detailed class-wise attendance roster, percentages, and summaries";
+        if (loaderText) loaderText.textContent = "Loading Attendance Roster...";
+      }
+    }
+
+    const targetSrc = (mode === 'roster') 
+      ? 'teacher-attendance-roster.html?embedded=true' 
+      : 'teacher-attendance.html?embedded=true';
+
+    if (frame) {
+      const currentSrc = frame.getAttribute('src') || '';
+      if (!currentSrc.includes(targetSrc)) {
+        this.showAttendanceLoader();
+        frame.src = targetSrc;
+      }
+    }
+
+    if (updateHash) {
+      const hashVal = mode === 'roster' ? '#attendance/roster' : '#attendance';
+      if (window.location.hash !== hashVal) {
+        history.pushState(null, null, hashVal);
+      }
+    }
+  },
+
+  showAttendanceLoader() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'flex';
+    if (errorEl) errorEl.style.display = 'none';
+  },
+
+  onAttendanceFrameLoaded() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+      const frame = document.getElementById('attendance-integrated-frame');
+      if (frame && frame.contentWindow) {
+        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+          const user = window.ERP_AUTH.getCurrentUser();
+          if (frame.contentWindow.ERP_AUTH && typeof frame.contentWindow.ERP_AUTH.setSession === 'function') {
+            frame.contentWindow.ERP_AUTH.setSession(user);
+          }
+          if (frame.contentWindow.ERP_DATA && !frame.contentWindow.ERP_DATA.teacher) {
+            frame.contentWindow.ERP_DATA.teacher = {
+              name: user.fullName || user.name,
+              id: user.empCode || user.emp_code || user.id,
+              department: user.department || 'CSE'
+            };
+          }
+        }
+        if (frame.contentWindow.document) {
+          const doc = frame.contentWindow.document;
+          const h = Math.max(doc.body.scrollHeight || 0, doc.documentElement.scrollHeight || 0, 880);
+          frame.style.height = (h + 30) + 'px';
+        }
+      }
+    } catch (e) {
+      console.info('[TeacherApp] Frame height auto-fit restricted by origin, standard layout preserved.');
+    }
+  },
+
+  onAttendanceFrameError(status = 'Network Error') {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+    console.error(`[Attendance] Fetch failed: ${status}. Module could not be loaded into dashboard frame.`);
+  },
+
+  reloadAttendanceFrame() {
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      this.showAttendanceLoader();
+      frame.src = frame.src;
+      this.showToast('Refreshing attendance module...');
+    }
+  },
+
+  openAttendanceStandalone() {
+    const url = (this.currentAttendanceSubView === 'roster')
+      ? 'teacher-attendance-roster.html'
+      : 'teacher-attendance.html';
+    window.open(url, '_blank');
+  },
+
+  initHashRouting() {
+    const handleHash = () => {
+      const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      if (!rawHash) return;
+      if (rawHash.startsWith('attendance')) {
+        const sub = rawHash.includes('roster') ? 'roster' : 'marking';
+        this.switchView('attendance', sub);
+      } else {
+        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
+        if (validViews.includes(rawHash)) {
+          this.switchView(rawHash);
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+
+    if (window.location.hash) {
+      handleHash();
     }
   },
 
@@ -989,19 +1106,8 @@ const TeacherApp = {
     });
   },
 
-  async changeRosterClass(classCode) {
-    if (window.TeacherAPI && typeof window.TeacherAPI.getStudents === 'function') {
-      try {
-        const res = await window.TeacherAPI.getStudents(classCode);
-        const stList = Array.isArray(res) ? res : (res && res.data ? res.data : []);
-        if (stList.length > 0) {
-          TeacherERPData.students[classCode] = stList;
-        }
-      } catch (e) {
-        console.warn('Could not fetch students for class', classCode, e);
-      }
-    }
-    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"] || [];
+  changeRosterClass(classCode) {
+    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"];
     const tbody = document.getElementById("roster-table-body");
     if (tbody) {
       tbody.innerHTML = this.generateRosterRows(list);

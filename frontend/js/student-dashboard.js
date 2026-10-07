@@ -1,7 +1,6 @@
 /**
  * SSGMCE Student ERP Dashboard Interactive Script
  * Shri Sant Gajanan Maharaj College of Engineering, Shegaon
- * Student: Shivam Aghao | Roll: 21 | CSE 2R1 (CSE2401)
  */
 
 let attendanceChartInstance = null;
@@ -362,7 +361,7 @@ function initSidebarLinks() {
           timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
           timetableCard.classList.add('card-highlight-pulse');
           setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
-          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
+          showToast("Viewing Today's Timetable", 'info');
         }
         return;
       }
@@ -1998,16 +1997,16 @@ async function hydrateDashboardData() {
 
     // 1. Student Identity
     const s = overview.student || {};
-    const fullName = s.fullName || s.full_name || 'Shivam Sanjay Aghao';
-    const rollNo = s.rollNo || s.roll_no || 21;
-    const studentCode = s.studentCode || s.student_code || s.prn || '308637';
+    const fullName = s.fullName || s.full_name || 'Student';
+    const rollNo = s.rollNo || s.roll_no || '--';
+    const studentCode = s.studentCode || s.student_code || s.prn || '--';
     const dept = s.department || 'Computer Science & Engineering';
-    const div = s.division || '2R1';
-    const cls = s.className || s.class_name || '2R1';
+    const div = s.division || '';
+    const cls = s.className || s.class_name || '';
     const sem = s.semester || s.current_semester || 4;
     const yr = s.academicYear || '2026-2027';
 
-    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'SA';
+    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'ST';
     const topAvatar = document.getElementById('topAvatarInitials');
     const topName = document.getElementById('topStudentName');
     const topMeta = document.getElementById('topStudentMeta');

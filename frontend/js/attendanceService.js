@@ -34,17 +34,17 @@
             return {
               success: true,
               data: {
-                fullName: p.fullName || p.full_name || '',
-                rollNumber: p.rollNo || p.roll_no || '',
-                enrollmentNumber: p.studentCode || p.student_code || '',
-                department: p.department || p.department_name || '',
-                semester: p.semester || p.current_semester || '',
-                division: p.division || '',
-                academicYear: p.academicYear || p.academic_year || '',
-                prn: p.prn || '',
-                facultyMentor: p.facultyMentor || p.faculty_mentor || '',
-                email: p.email || p.institutional_email || '',
-                phone: p.phone || p.primary_mobile || ''
+                fullName: p.fullName || p.full_name || 'Student',
+                rollNumber: p.rollNo || p.roll_no || '--',
+                enrollmentNumber: p.studentCode || p.student_code || '--',
+                department: p.department || p.department_name || 'Computer Science & Engineering',
+                semester: p.semester || p.current_semester || '--',
+                division: p.division || '--',
+                academicYear: p.academicYear || p.academic_year || '--',
+                prn: p.prn || '--',
+                facultyMentor: p.facultyMentor || p.faculty_mentor || '--',
+                email: p.email || p.institutional_email || '--',
+                phone: p.phone || p.primary_mobile || '--'
               }
             };
           }

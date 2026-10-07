@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Quiz Management</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/quiz.css">
+    <script src="js/api.js"></script>
+    <script src="js/quiz-api.js"></script>
+</head>
+<body>
+    <header><h1>My Quizzes</h1></header>
+    <section id="quiz-list"><p>Loading…</p></section>
+
+    <!-- Create / Edit Modal -->
+    <dialog id="quiz-modal">
+        <form id="quiz-form" method="dialog">
+            <h2 id="modal-title">Create Quiz</h2>
+            <label>Title:<br><input type="text" name="title" required></label><br>
+            <label>Description:<br><textarea name="description" rows="3"></textarea></label><br>
+            <label>Subject ID:<br><input type="text" name="subject_id" required></label><br>
+            <label>Duration (mins):<br><input type="number" name="duration_minutes" min="1" required></label><br>
+            <label>Total Marks:<br><input type="number" name="total_marks" step="0.1" required></label><br>
+            <label>Passing Marks:<br><input type="number" name="passing_marks" step="0.1" required></label><br>
+            <button type="submit">Save</button>
+            <button type="button" id="modal-cancel">Cancel</button>
+        </form>
+    </dialog>
+
+    <section id="analytics" class="hidden">
+        <h2>Analytics – <span id="analytics-quiz-title"></span></h2>
+        <div id="leaderboard"></div>
+        <button id="close-analytics">Close</button>
+    </section>
+
+    <script>
+        const profile = JSON.parse(localStorage.getItem('profile')) || {};
+        if (!profile.teacherId) {
+            alert('Teacher profile missing – please log in again.');
+            window.location = 'index.html';
+        }
+
+        async function loadMyQuizzes() {
+            const list = document.getElementById('quiz-list');
+            list.innerHTML = '<p>Loading…</p>';
+            try {
+                const quizzes = await QuizAPI.getTeacherQuizzes(profile.teacherId);
+                if (quizzes.length === 0) {
+                    list.innerHTML = '<p>No quizzes created yet.</p>';
+                    return;
+                }
+                list.innerHTML = '';
+                quizzes.forEach(q => {
+                    const div = document.createElement('div');
+                    div.className = 'quiz-card';
+                    div.innerHTML = `
+                        <h3>${q.title}</h3>
+                        <p>${q.description ?? ''}</p>
+                        <p><strong>Status:</strong> ${q.is_published ? 'Published' : 'Draft'}</p>
+                        <button data-id="${q.id}" class="edit-btn">Edit</button>
+                        <button data-id="${q.id}" class="delete-btn">Delete</button>
+                        <button data-id="${q.id}" class="analytics-btn">Analytics</button>
+                    `;
+                    list.appendChild(div);
+                });
+                document.querySelectorAll('.edit-btn').forEach(b =>
+                    b.addEventListener('click', () => openModal('edit', b.dataset.id))
+                );
+                document.querySelectorAll('.delete-btn').forEach(b =>
+                    b.addEventListener('click', () => deleteQuiz(b.dataset.id))
+                );
+                document.querySelectorAll('.analytics-btn').forEach(b =>
+                    b.addEventListener('click', () => showAnalytics(b.dataset.id))
+                );
+            } catch (e) {
+                list.innerHTML = `<p class="error">Failed to load: ${e.message}</p>`;
+            }
+        }
+
+        // Modal handling
+        const modal = document.getElementById('quiz-modal');
+        const form = document.getElementById('quiz-form');
+        let currentQuizId = null;
+
+        function openModal(mode, quizId = null) {
+            currentQuizId = quizId;
+            document.getElementById('modal-title').textContent = mode === 'edit' ? 'Edit Quiz' : 'Create Quiz';
+            form.reset();
+            if (mode === 'edit') fetchQuiz(quizId);
+            modal.showModal();
+        }
+
+        async function fetchQuiz(id) {
+            const quiz = await QuizAPI.getQuizById(id);
+            form.title.value = quiz.title;
+            form.description.value = quiz.description;
+            form.subject_id.value = quiz.subject_id;
+            form.duration_minutes.value = quiz.duration_minutes;
+            form.total_marks.value = quiz.total_marks;
+            form.passing_marks.value = quiz.passing_marks;
+        }
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const payload = {
+                title: form.title.value,
+                description: form.description.value,
+                subject_id: form.subject_id.value,
+                duration_minutes: Number(form.duration_minutes.value),
+                total_marks: Number(form.total_marks.value),
+                passing_marks: Number(form.passing_marks.value),
+                teacher_id: profile.teacherId,
+                class_id: profile.classId || ''
+            };
+            try {
+                if (currentQuizId) {
+                    await QuizAPI.updateQuiz(currentQuizId, payload);
+                } else {
+                    await QuizAPI.createQuiz(payload);
+                }
+                modal.close();
+                loadMyQuizzes();
+            } catch (err) {
+                alert('Save failed: ' + err.message);
+            }
+        });
+
+        document.getElementById('modal-cancel').addEventListener('click', () => modal.close());
+
+        async function deleteQuiz(id) {
+            if (!confirm('Delete this quiz permanently?')) return;
+            try {
+                await QuizAPI.deleteQuiz(id);
+                loadMyQuizzes();
+            } catch (e) {
+                alert('Delete failed: ' + e.message);
+            }
+        }
+
+        async function showAnalytics(quizId) {
+            const analyticsSec = document.getElementById('analytics');
+            analyticsSec.classList.remove('hidden');
+            const quiz = await QuizAPI.getQuizById(quizId);
+            document.getElementById('analytics-quiz-title').textContent = quiz.title;
+            const board = await QuizAPI.getLeaderboard(quizId);
+            const html = board.map(row => `
+                <p><strong>${row.student_name}</strong>: ${row.score_obtained}/${quiz.total_marks} (${row.passed ? '✅ Passed' : '❌ Failed'})</p>
+            `).join('');
+            document.getElementById('leaderboard').innerHTML = html;
+        }
+
+        document.getElementById('close-analytics').addEventListener('click', () => {
+            document.getElementById('analytics').classList.add('hidden');
+        });
+
+        // Floating create button
+        const createBtn = document.createElement('button');
+        createBtn.textContent = '+ New Quiz';
+        createBtn.style.position = 'fixed';
+        createBtn.style.bottom = '20px';
+        createBtn.style.right = '20px';
+        createBtn.style.padding = '12px 20px';
+        createBtn.addEventListener('click', () => openModal('create'));
+        document.body.appendChild(createBtn);
+
+        // Init
+        loadMyQuizzes();
+    </script>
+</body>
+</html>
+

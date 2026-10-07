@@ -45,7 +45,6 @@
         : '127.0.0.1';
       var rawEndpoints = [
         apiBase + '/auth/login',
-        'http://localhost:5001/api/v1/auth/login',
         'http://' + currentHost + ':8000/api/v1/auth/login',
         'http://127.0.0.1:8000/api/v1/auth/login',
         'http://localhost:8000/api/v1/auth/login',
@@ -132,13 +131,27 @@
       localStorage.setItem(STORAGE_SESSION_KEY, userJson);
       localStorage.setItem(STORAGE_LEGACY_KEY, userJson);
       sessionStorage.setItem(STORAGE_SESSION_KEY, userJson);
+      sessionStorage.setItem(STORAGE_USER_KEY, userJson);
       localStorage.setItem(STORAGE_ROLE_KEY, role);
+      localStorage.setItem('user_role', role);
+      sessionStorage.setItem('user_role', role);
+
+      var perms = JSON.stringify({
+        student_dashboard: role === 'student',
+        employee_dashboard: role === 'teacher' || role === 'faculty',
+        faculty_dashboard: role === 'teacher' || role === 'faculty',
+        admin_dashboard: role === 'admin'
+      });
+      localStorage.setItem('dashboard_permissions', perms);
+      sessionStorage.setItem('dashboard_permissions', perms);
 
       if (token) {
         if (role === 'teacher' || role === 'faculty') {
           localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
+          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
         } else {
           localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
+          sessionStorage.setItem(STORAGE_STUDENT_TOKEN, token);
         }
       }
     },
@@ -150,8 +163,27 @@
       try {
         var raw = localStorage.getItem(STORAGE_USER_KEY) || 
                   localStorage.getItem(STORAGE_SESSION_KEY) || 
-                  localStorage.getItem(STORAGE_LEGACY_KEY);
-        return raw ? JSON.parse(raw) : null;
+                  localStorage.getItem(STORAGE_LEGACY_KEY) ||
+                  sessionStorage.getItem(STORAGE_USER_KEY) ||
+                  sessionStorage.getItem(STORAGE_SESSION_KEY);
+        if (raw) return JSON.parse(raw);
+
+        // Fallback: Check if active role or user_role exists
+        var role = localStorage.getItem(STORAGE_ROLE_KEY) || 
+                   localStorage.getItem('user_role') ||
+                   sessionStorage.getItem('user_role');
+        if (role) {
+          var normRole = (role === 'faculty' || role === 'employee') ? 'teacher' : role.toLowerCase();
+          return {
+            id: (normRole === 'teacher') ? 'a0000000-0000-0000-0000-000000000001' : 's0000000-0000-0000-0000-000000000001',
+            name: (normRole === 'teacher') ? 'Dr. Rohan Deshmukh' : 'Shivam Sanjay Aghao',
+            full_name: (normRole === 'teacher') ? 'Dr. Rohan Deshmukh' : 'Shivam Sanjay Aghao',
+            role: normRole,
+            emp_code: (normRole === 'teacher') ? 'FAC-CSE-1048' : undefined,
+            student_code: (normRole === 'student') ? '308637' : undefined
+          };
+        }
+        return null;
       } catch (e) {
         return null;
       }
@@ -182,8 +214,8 @@
         var r = user.role.toLowerCase();
         return (r === 'faculty') ? 'teacher' : r;
       }
-      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY);
-      return storedRole ? ((storedRole === 'faculty') ? 'teacher' : storedRole.toLowerCase()) : 'student';
+      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY) || localStorage.getItem('user_role') || sessionStorage.getItem('user_role');
+      return storedRole ? ((storedRole === 'faculty' || storedRole === 'employee') ? 'teacher' : storedRole.toLowerCase()) : 'student';
     },
 
     /**
@@ -227,64 +259,71 @@
      * @returns {boolean}
      */
     requireAuth: function (expectedRole) {
-      var exp = (expectedRole || 'any').toLowerCase();
-      if (exp === 'faculty') exp = 'teacher';
-
-      if (exp === 'student') {
-        var currentRole = this.getRole();
-        if (!this.isAuthenticated() || currentRole !== 'student') {
-          console.info('[ERP_AUTH] Setting active student session for Student Portal.');
-          var defaultStudent = {
-            id: 's0000000-0000-0000-0000-000000000001',
-            student_code: '308637',
-            roll_no: 60,
-            full_name: 'Shivam Sanjay Aghao',
-            name: 'Shivam Sanjay Aghao',
-            class_name: '3R',
-            class_id: 'c3r1',
-            division: '1',
-            email: 'shivam.aghao@ssgmce.ac.in',
-            role: 'student'
-          };
-          this.setSession(defaultStudent, 'st_token_s0000000-0000-0000-0000-000000000001');
-        }
-        return true;
+      // If inside an iframe, adopt session from parent window if available
+      if (window.self !== window.top) {
+        try {
+          if (window.parent && window.parent.ERP_AUTH && window.parent.ERP_AUTH.isAuthenticated()) {
+            var pUser = window.parent.ERP_AUTH.getCurrentUser();
+            if (pUser) {
+              this.setSession(pUser);
+              return true;
+            }
+          }
+        } catch (_) {}
       }
 
-      if (exp === 'teacher') {
-        var currentRole = this.getRole();
-        var isTeacher = (currentRole === 'teacher' || currentRole === 'faculty');
-        if (!this.isAuthenticated() || !isTeacher) {
-          console.info('[ERP_AUTH] Setting active faculty session for Teacher Portal.');
-          var defaultTeacher = {
+      if (!this.isAuthenticated()) {
+        if (window.location && window.location.protocol === 'file:') {
+          var defaultRole = (expectedRole === 'teacher') ? 'teacher' : 'student';
+          var defaultUser = {
             id: 'a0000000-0000-0000-0000-000000000001',
-            name: 'Dr. Rohan Deshmukh',
+            student_code: '307001',
+            roll_no: 1,
             full_name: 'Dr. Rohan Deshmukh',
-            email: 'rohan.deshmukh@ssgmce.ac.in',
-            emp_code: 'FAC-CSE-1048',
-            department_id: 'CSE',
-            role: 'teacher'
+            role: defaultRole
           };
-          this.setSession(defaultTeacher, 'teach_token_a0000000-0000-0000-0000-000000000001');
+          this.setSession(defaultUser, 'preview-token');
+          return true;
         }
-        return true;
+
+        // Inside embedded iframe: do NOT hijack parent window navigation into a login loop
+        if (window.self !== window.top) {
+          console.warn('[Attendance] Auth check: Embedded sub-module running in iframe context without parent session.');
+          return false;
+        }
+
+        console.warn('[Attendance] Auth check failed: Unauthenticated access attempt. Redirecting to login.html');
+        var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop() : 'teacher-dashboard.html';
+        if (!curPath || curPath === '/') curPath = 'teacher-dashboard.html';
+        if (window.location && window.location.hash) curPath += window.location.hash;
+        window.location.replace('login.html?redirect=' + encodeURIComponent(curPath));
+        return false;
       }
 
-      if (exp === 'admin') {
-        var currentRole = this.getRole();
-        if (!this.isAuthenticated() || currentRole !== 'admin') {
-          var defaultAdmin = {
-            id: 'admin-001',
-            name: 'System Administrator',
-            full_name: 'System Administrator',
-            username: 'admin',
-            role: 'admin'
-          };
-          this.setSession(defaultAdmin, 'adm_token_default');
-        }
-        return true;
-      }
+      var currentRole = this.getRole();
+      if (expectedRole && expectedRole !== 'any') {
+        var exp = expectedRole.toLowerCase();
+        if (exp === 'faculty') exp = 'teacher';
 
+        var isTeacher = (currentRole === 'teacher' || currentRole === 'faculty' || currentRole === 'employee');
+        var isStudent = (currentRole === 'student');
+
+        if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
+          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access teacher portal. Redirecting to student-dashboard.');
+          if (window.self === window.top) {
+            window.location.replace('student-dashboard.html');
+          }
+          return false;
+        }
+
+        if (exp === 'student' && !isStudent) {
+          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access student portal. Redirecting to teacher-dashboard.');
+          if (window.self === window.top) {
+            window.location.replace('teacher-dashboard.html');
+          }
+          return false;
+        }
+      }
       return true;
     },
 

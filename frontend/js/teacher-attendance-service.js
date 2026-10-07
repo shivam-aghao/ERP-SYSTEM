@@ -9,54 +9,28 @@ const AttendanceService = {
   STORAGE_KEY_DRAFTS: "erp_attendance_drafts",
   STORAGE_KEY_CLASS_CARDS: "erp_teacher_class_cards",
 
-  defaultClassCards: [
-    {
-      id: "CARD-1001",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "3R",
-      subject_code: "CS305",
-      subject_name: "Database Management",
-      created_at: "2026-09-01T08:00:00.000Z"
-    },
-    {
-      id: "CARD-1002",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "2R1",
-      subject_code: "CS303",
-      subject_name: "Java Programming",
-      created_at: "2026-09-02T09:30:00.000Z"
-    },
-    {
-      id: "CARD-1003",
-      teacher_id: "EMP-CSE-1042",
-      department: "CSE",
-      department_name: "Computer Science & Engineering",
-      class: "2R2",
-      subject_code: "CS302",
-      subject_name: "Data Structures",
-      created_at: "2026-09-03T10:15:00.000Z"
-    }
-  ],
+  defaultClassCards: [],
 
   init() {
     if (!localStorage.getItem(this.STORAGE_KEY_ATTENDANCE)) {
-      localStorage.setItem(
-        this.STORAGE_KEY_ATTENDANCE,
-        JSON.stringify(ERP_DATA.recentAttendance)
-      );
+      localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify([]));
     }
     if (!localStorage.getItem(this.STORAGE_KEY_DRAFTS)) {
       localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify({}));
     }
-    if (!localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS)) {
-      localStorage.setItem(
-        this.STORAGE_KEY_CLASS_CARDS,
-        JSON.stringify(this.defaultClassCards)
-      );
+    const savedCards = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
+    if (!savedCards || savedCards === "null") {
+      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
+    } else {
+      try {
+        const parsed = JSON.parse(savedCards);
+        const filtered = Array.isArray(parsed) ? parsed.filter(c => !["CARD-1001", "CARD-1002", "CARD-1003"].includes(c.id)) : [];
+        if (filtered.length !== parsed.length) {
+          localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(filtered));
+        }
+      } catch (e) {
+        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
+      }
     }
   },
 
@@ -111,49 +85,75 @@ const AttendanceService = {
     });
   },
 
-  submitAttendance(sessionData) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        this.init();
-        if (this.checkDuplicate(sessionData.department, sessionData.classId, sessionData.date, sessionData.subjectCode)) {
-          reject({
-            duplicate: true,
-            message: `Attendance for ${sessionData.classId} - ${sessionData.subjectName} on ${sessionData.date} is already submitted!`
-          });
-          return;
-        }
+  async submitAttendance(sessionData) {
+    this.init();
+    if (this.checkDuplicate(sessionData.department, sessionData.classId, sessionData.date, sessionData.subjectCode)) {
+      throw {
+        duplicate: true,
+        message: `Attendance for ${sessionData.classId} - ${sessionData.subjectName} on ${sessionData.date} is already submitted!`
+      };
+    }
 
-        const records = this.getAllRecords();
-        const newRecord = {
-          id: `REC-${Date.now().toString().slice(-6)}`,
-          department: sessionData.department,
-          departmentName: sessionData.departmentName,
-          classId: sessionData.classId,
-          subjectCode: sessionData.subjectCode,
-          subjectName: sessionData.subjectName,
-          date: sessionData.date,
-          dateFormatted: sessionData.dateFormatted,
-          totalStudents: sessionData.totalStudents,
-          presentCount: sessionData.presentCount,
-          absentCount: sessionData.absentCount,
-          percentage: sessionData.percentage,
-          students: sessionData.students,
-          status: "Submitted",
-          savedAt: "Just now"
-        };
+    // 1. Send live submission to FastAPI Backend & Supabase
+    try {
+      const presentIds = (sessionData.students || [])
+        .filter(s => s.status === "present")
+        .map(s => s.id || s.studentCode || s.prn || s.roll);
+      const absentIds = (sessionData.students || [])
+        .filter(s => s.status === "absent")
+        .map(s => s.id || s.studentCode || s.prn || s.roll);
 
-        records.unshift(newRecord);
-        localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify(records));
+      const payload = {
+        class_id: sessionData.classId,
+        subject_id: sessionData.subjectCode,
+        session_date: sessionData.date,
+        period_number: sessionData.periodNumber ? parseInt(sessionData.periodNumber) : 1,
+        session_type: "theory",
+        present_student_ids: presentIds,
+        absent_student_ids: absentIds
+      };
 
-        // Clear any corresponding draft
-        const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
-        const key = `${sessionData.department}_${sessionData.classId}_${sessionData.date}_${sessionData.subjectCode}`;
-        delete drafts[key];
-        localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify(drafts));
+      const resp = await fetch("http://localhost:8000/api/v1/attendance/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) {
+        console.warn("[AttendanceService] Backend submit responded with:", resp.status);
+      }
+    } catch (apiErr) {
+      console.warn("[AttendanceService] Backend submit error (persisting locally):", apiErr);
+    }
 
-        resolve({ success: true, record: newRecord, message: "Attendance submitted successfully." });
-      }, 400);
-    });
+    const records = this.getAllRecords();
+    const newRecord = {
+      id: `REC-${Date.now().toString().slice(-6)}`,
+      department: sessionData.department,
+      departmentName: sessionData.departmentName,
+      classId: sessionData.classId,
+      subjectCode: sessionData.subjectCode,
+      subjectName: sessionData.subjectName,
+      date: sessionData.date,
+      dateFormatted: sessionData.dateFormatted,
+      totalStudents: sessionData.totalStudents,
+      presentCount: sessionData.presentCount,
+      absentCount: sessionData.absentCount,
+      percentage: sessionData.percentage,
+      students: sessionData.students,
+      status: "Submitted",
+      savedAt: "Just now"
+    };
+
+    records.unshift(newRecord);
+    localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify(records));
+
+    // Clear any corresponding draft
+    const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
+    const key = `${sessionData.department}_${sessionData.classId}_${sessionData.date}_${sessionData.subjectCode}`;
+    delete drafts[key];
+    localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify(drafts));
+
+    return { success: true, record: newRecord, message: "Attendance submitted successfully." };
   },
 
   deleteRecord(id) {
@@ -173,8 +173,7 @@ const AttendanceService = {
       const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
       return JSON.parse(data) || [];
     } catch (e) {
-      console.error("Failed to parse class cards from storage:", e);
-      return [...this.defaultClassCards];
+      return [];
     }
   },
 

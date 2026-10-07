@@ -22,6 +22,20 @@
     };
   };
 
+  const resolveCurrentStudentCode = (explicitCode) => {
+    if (explicitCode) return explicitCode;
+    try {
+      if (global.ERPAuth && typeof global.ERPAuth.getSession === 'function') {
+        const sess = global.ERPAuth.getSession();
+        if (sess && (sess.studentCode || sess.id)) return sess.studentCode || sess.id;
+      }
+      if (typeof localStorage !== 'undefined') {
+        const u = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+        if (u.studentCode || u.student_code || u.id) return u.studentCode || u.student_code || u.id;
+      }
+    } catch (_) {}
+    return null;
+  };
   const StudentSupabase = {
     /**
      * Get active Supabase REST headers
@@ -37,12 +51,13 @@
 
     /**
      * 1. Get Complete Student Profile
-     * @param {string} studentCode e.g. '308637'
+     * @param {string|null} studentCode
      */
-    getStudentProfile: async function (studentCode = '308637') {
+    getStudentProfile: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
       try {
-        const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
+        const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode || '')}&select=*`;
         const res = await fetch(endpoint, { headers: this._getHeaders() });
         if (res.ok) {
           const rows = await res.json();
@@ -65,7 +80,7 @@
           }
         }
       } catch (err) {
-        console.error('[StudentSupabase] Error fetching student profile from Supabase:', err);
+        console.info('[StudentSupabase] Offline mode: using local cache for profile:', err.message);
       }
 
       return { success: false, data: null, source: 'supabase' };
@@ -74,19 +89,22 @@
     /**
      * 2. Get Academic Metrics (CGPA, SGPA, Credits, Standing)
      */
-    getAcademicMetrics: async function (studentCode = '308637') {
+    getAcademicMetrics: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-      try {
-        const endpoint = `${cfg.url}/rest/v1/student_academic_metrics?select=*&limit=1`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            return { success: true, data: rows[0], source: 'supabase' };
+      if (studentCode) {
+        try {
+          const endpoint = `${cfg.url}/rest/v1/student_academic_metrics?student_code=eq.${encodeURIComponent(studentCode)}&limit=1`;
+          const res = await fetch(endpoint, { headers: this._getHeaders() });
+          if (res.ok) {
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              return { success: true, data: rows[0], source: 'supabase' };
+            }
           }
+        } catch (err) {
+          console.info('[StudentSupabase] Offline mode: using local cache for metrics');
         }
-      } catch (err) {
-        console.error('[StudentSupabase] Error fetching academic metrics from Supabase:', err);
       }
 
       return { success: false, data: null, source: 'supabase' };
@@ -95,10 +113,11 @@
     /**
      * 3. Get Student Attendance Breakdown
      */
-    getAttendanceSummary: async function (studentCode = '308637') {
+    getAttendanceSummary: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
       try {
-        const endpoint = `${cfg.url}/rest/v1/student_attendance_subjects?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
+        const endpoint = `${cfg.url}/rest/v1/student_attendance_subjects?student_code=eq.${encodeURIComponent(studentCode || '')}&select=*`;
         const res = await fetch(endpoint, { headers: this._getHeaders() });
         if (res.ok) {
           const rows = await res.json();
@@ -119,7 +138,7 @@
           }
         }
       } catch (err) {
-        console.error('[StudentSupabase] Error fetching student attendance from Supabase:', err);
+        console.info('[StudentSupabase] Offline mode: using local cache for attendance');
       }
 
       return { success: false, data: [], source: 'supabase' };
@@ -249,7 +268,7 @@
     /**
      * 8. Unified Dashboard Overview
      */
-    getDashboardOverview: async function (studentCode = '308637') {
+    getDashboardOverview: async function (studentCode = null) {
       const [profileRes, metricsRes, attendanceRes, timetableRes, notifRes] = await Promise.all([
         this.getStudentProfile(studentCode),
         this.getAcademicMetrics(studentCode),

@@ -399,7 +399,7 @@ const TeacherERPData = {
     "Gaurav More", "Harshal Jadhav", "Ishaan Deshmukh", "Janhavi Pawar", "Krunal Chavan",
     "Manasi Kale", "Nikhil Bhole", "Pooja Mishra", "Pranav Salunkhe", "Rohit Gupta",
     "Rutuja Gaikwad", "Sahil Khan", "Sakshi Mane", "Sameer Inamdar", "Sanjana Kadam",
-    "Shivam Aghao", "Shreya Thakur", "Siddhant Rao", "Snehal Wagh", "Sujay Bhosale",
+    "Sarang Patil", "Shreya Thakur", "Siddhant Rao", "Snehal Wagh", "Sujay Bhosale",
     "Tanvi Sawant", "Tejas Shirodkar", "Utkarsh Narvekar", "Vaishnavi Naik", "Varun Mahajan",
     "Abhishek Sutar", "Aniket Phadke", "Avani Date", "Bhavesh Mehta", "Chinmayee Bapat",
     "Deepak Soni", "Gayatri Dixit", "Hrishikesh Gore", "Isha Ranade", "Jayesh Patil",
@@ -423,10 +423,6 @@ const TeacherERPData = {
     for (let i = 1; i <= count; i++) {
       const nameIndex = (i - 1) % this.baseStudentNames.length;
       let name = this.baseStudentNames[nameIndex];
-      // Special highlight for Roll 21 as specified in the prompt!
-      if (i === 21) {
-        name = "Shivam Aghao";
-      }
 
       const rollStr = i < 10 ? `0${i}` : `${i}`;
       students.push({

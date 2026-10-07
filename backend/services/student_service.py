@@ -14,10 +14,10 @@ class StudentService:
         if not row:
             return None
         m = dict(row._mapping)
-        m["studentCode"] = m.get("student_code", student_code)
-        m["fullName"] = m.get("full_name", "Shivam Sanjay Aghao")
-        m["rollNo"] = m.get("roll_no", 21)
-        m["className"] = m.get("class_name", "3R")
+        m["studentCode"] = m.get("student_code") or ""
+        m["fullName"] = m.get("full_name") or ""
+        m["rollNo"] = m.get("roll_no") or 0
+        m["className"] = m.get("class_name") or ""
         return m
 
     @staticmethod
@@ -33,15 +33,17 @@ class StudentService:
         st = StudentService.get_profile(student_code, db)
         return {
             "student": st or {},
-            "current_semester": 5,
-            "cgpa": 8.76,
-            "attendance_pct": 82.4,
-            "credits_earned": 112,
-            "alerts_count": 2
+            "current_semester": 4,
+            "cgpa": 0.0,
+            "attendance_pct": 0.0,
+            "credits_earned": 0,
+            "alerts_count": 0
         }
 
     @staticmethod
     def get_academic_metrics(student_code: str, db: Session) -> List[Dict[str, Any]]:
-        rows = db.execute(text("SELECT * FROM academic_metrics WHERE student_code = :code OR student_code IS NULL LIMIT 10"), {"code": student_code}).fetchall()
-        return [dict(r._mapping) for r in rows] if rows else []
-
+        try:
+            rows = db.execute(text("SELECT * FROM academic_metrics WHERE student_code = :code OR student_code IS NULL LIMIT 10"), {"code": student_code}).fetchall()
+            return [dict(r._mapping) for r in rows] if rows else []
+        except Exception:
+            return []

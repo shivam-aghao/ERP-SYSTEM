@@ -25,88 +25,8 @@
       dateMetaEl.innerHTML = `<strong>Date:</strong> ${dStr}`;
     }
 
-    // Default Fallback Students (Class 2R1 / CSE)
-    const fallbackStudents = [
-      { rollNo: 1, rollFormatted: "2RA1", studentCode: "312225E015", name: "Ghate Aakansha S", isProvisional: false },
-      { rollNo: 2, rollFormatted: "2RA2", studentCode: "312225E008", name: "Lohiya Aarya D", isProvisional: false },
-      { rollNo: 3, rollFormatted: "2RA3", studentCode: "312225E227", name: "Jadhao Anushka N", isProvisional: false },
-      { rollNo: 4, rollFormatted: "2RA4", studentCode: "312225E011", name: "Badukale Anushri U", isProvisional: false },
-      { rollNo: 5, rollFormatted: "2RA5", studentCode: "312225E002", name: "Kalantri Disha P", isProvisional: false },
-      { rollNo: 6, rollFormatted: "2RA6", studentCode: "312225E208", name: "Budhwani Ekta S", isProvisional: false },
-      { rollNo: 7, rollFormatted: "2RA7", studentCode: "312225E143", name: "Deshmukh Gargi R", isProvisional: false },
-      { rollNo: 8, rollFormatted: "2RA8", studentCode: "312225E151", name: "Thakare Jagruti D", isProvisional: false },
-      { rollNo: 9, rollFormatted: "2RA9", studentCode: "312225E140", name: "Adhao Komal A", isProvisional: false },
-      { rollNo: 10, rollFormatted: "2RA10", studentCode: "312225E461", name: "Deshmukh Komal B", isProvisional: false },
-      { rollNo: 11, rollFormatted: "2RA11", studentCode: "312225E478", name: "Gomase Manasvi A", isProvisional: false },
-      { rollNo: 12, rollFormatted: "2RA12", studentCode: "312225E181", name: "Kamajwar Namrata S", isProvisional: false },
-      { rollNo: 13, rollFormatted: "2RA13", studentCode: "312225E012", name: "Rathod Neha V", isProvisional: false },
-      { rollNo: 14, rollFormatted: "2RA14", studentCode: "312225E004", name: "Mawal Pournima A", isProvisional: false },
-      { rollNo: 15, rollFormatted: "2RA15", studentCode: "312225E443", name: "Bhople Pragati P", isProvisional: false },
-      { rollNo: 16, rollFormatted: "2RA16", studentCode: "312225E456", name: "Mohate Priti S", isProvisional: false },
-      { rollNo: 17, rollFormatted: "2RA17", studentCode: "312225E160", name: "Vyas Radha A", isProvisional: false },
-      { rollNo: 18, rollFormatted: "2RA18", studentCode: "312225E224", name: "Sable Radhika R", isProvisional: false },
-      { rollNo: 19, rollFormatted: "2RA19", studentCode: "312225E473", name: "Deshmukh Ragini S", isProvisional: false },
-      { rollNo: 20, rollFormatted: "2RA20", studentCode: "312225E016", name: "Tathe Sakshi D", isProvisional: false },
-      { rollNo: 21, rollFormatted: "2RA21", studentCode: "312225E450", name: "Hiwale Sakshi V", isProvisional: false },
-      { rollNo: 22, rollFormatted: "2RA22", studentCode: "312225E122", name: "Sawant Samiksha G", isProvisional: false },
-      { rollNo: 23, rollFormatted: "2RA23", studentCode: "312225E152", name: "Dandge Samruddhi P", isProvisional: false },
-      { rollNo: 24, rollFormatted: "2RA24", studentCode: "312225E465", name: "Gawande Sanika S", isProvisional: false },
-      { rollNo: 25, rollFormatted: "2RA25", studentCode: "312225E138", name: "Bole Shravani G", isProvisional: false },
-      { rollNo: 26, rollFormatted: "2RA26", studentCode: "312225E170", name: "Ingle Shruti G", isProvisional: false },
-      { rollNo: 27, rollFormatted: "2RA27", studentCode: "312225E144", name: "Wankhade Sneha P", isProvisional: false },
-      { rollNo: 28, rollFormatted: "2RA28", studentCode: "312225E013", name: "Kadu Tanaya P", isProvisional: false },
-      { rollNo: 29, rollFormatted: "2RA29", studentCode: "312225E148", name: "Bhutada Tanvi R", isProvisional: false },
-      { rollNo: 30, rollFormatted: "2RA30", studentCode: "312225E003", name: "Agrawal Tejaswini M", isProvisional: false },
-      { rollNo: 31, rollFormatted: "2RA31", studentCode: "312225E005", name: "Wadode Tejaswini N", isProvisional: false },
-      { rollNo: 32, rollFormatted: "2RA32", studentCode: "312225E164", name: "Pawar Vaishnavi G", isProvisional: false },
-      { rollNo: 33, rollFormatted: "2RA33", studentCode: "312225E173", name: "Pawar Vedanti P", isProvisional: false },
-      { rollNo: 34, rollFormatted: "2RA34", studentCode: "312225E010", name: "Sawale Vedashri G", isProvisional: false },
-      { rollNo: 35, rollFormatted: "2RA35", studentCode: "312225E007", name: "Tathe Yashshvi S", isProvisional: false },
-      { rollNo: 36, rollFormatted: "2RA36", studentCode: "312225E467", name: "Tayade Aayush A", isProvisional: false },
-      { rollNo: 37, rollFormatted: "2RA37", studentCode: "312225E017", name: "Bhalerao Abhishek P", isProvisional: false },
-      { rollNo: 38, rollFormatted: "2RA38", studentCode: "312225E019", name: "Bihani Aditya S", isProvisional: false },
-      { rollNo: 39, rollFormatted: "2RA39", studentCode: "312225E158", name: "Chandak Aditya S", isProvisional: false },
-      { rollNo: 40, rollFormatted: "2RA40", studentCode: "312225E195", name: "Narkhede Aditya V", isProvisional: false },
-      { rollNo: 41, rollFormatted: "2RA41", studentCode: "312225E009", name: "Wankhade Ajinkya D", isProvisional: false },
-      { rollNo: 42, rollFormatted: "2RA42", studentCode: "312225E001", name: "Khandelwal Aman K", isProvisional: false },
-      { rollNo: 43, rollFormatted: "2RA43", studentCode: "312225E149", name: "Warade Aniket N", isProvisional: false },
-      { rollNo: 44, rollFormatted: "2RA44", studentCode: "312225E150", name: "Sharma Anish P", isProvisional: false },
-      { rollNo: 45, rollFormatted: "2RA45", studentCode: "312225E210", name: "Rathod Anshul G", isProvisional: false },
-      { rollNo: 46, rollFormatted: "2RA46", studentCode: "312225E139", name: "Zope Anshuman M", isProvisional: false },
-      { rollNo: 47, rollFormatted: "2RA47", studentCode: "312225E153", name: "Pakhare Atharva P", isProvisional: false },
-      { rollNo: 48, rollFormatted: "2RA48", studentCode: "312225E452", name: "Chavan Avishkar R", isProvisional: false },
-      { rollNo: 49, rollFormatted: "2RA49", studentCode: "312225E198", name: "Gajare Ayush S", isProvisional: false },
-      { rollNo: 50, rollFormatted: "2RA50", studentCode: "312225E448", name: "Tale Bhavesh R", isProvisional: false },
-      { rollNo: 51, rollFormatted: "2RA51", studentCode: "312225E018", name: "Pachpor Chetan S", isProvisional: false },
-      { rollNo: 52, rollFormatted: "2RA52", studentCode: "312225E446", name: "Shelke Chinmay R", isProvisional: false },
-      { rollNo: 53, rollFormatted: "2RA53", studentCode: "312225E447", name: "Zanwar Dev R", isProvisional: false },
-      { rollNo: 54, rollFormatted: "2RA54", studentCode: "312225E474", name: "Bhoyar Gaurav M", isProvisional: false },
-      { rollNo: 55, rollFormatted: "2RA55", studentCode: "312225E162", name: "Chavhan Gopal S", isProvisional: false },
-      { rollNo: 56, rollFormatted: "2RA56", studentCode: "312225E444", name: "Hatekar Harshwardhan M", isProvisional: false },
-      { rollNo: 57, rollFormatted: "2RA57", studentCode: "312225E463", name: "Pimpale Jayant S", isProvisional: false },
-      { rollNo: 58, rollFormatted: "2RA58", studentCode: "312225E459", name: "Surse Jayesh B", isProvisional: false },
-      { rollNo: 59, rollFormatted: "2RA59", studentCode: "312225E178", name: "Rathod Jigar B", isProvisional: false },
-      { rollNo: 60, rollFormatted: "2RA60", studentCode: "312225E471", name: "Waghmare Kunal S", isProvisional: false },
-      { rollNo: 61, rollFormatted: "2RA61", studentCode: "312225E177", name: "Patil Mayur D", isProvisional: false },
-      { rollNo: 62, rollFormatted: "2RA62", studentCode: "312225E469", name: "Pawar Mohit P", isProvisional: false },
-      { rollNo: 63, rollFormatted: "2RA63", studentCode: "312225E172", name: "Patil Nayan S", isProvisional: false },
-      { rollNo: 64, rollFormatted: "2RA64", studentCode: "312225E180", name: "Gawali Nikhil D", isProvisional: false },
-      { rollNo: 65, rollFormatted: "2RA65", studentCode: "312225E006", name: "Wankhade Om S", isProvisional: false },
-      { rollNo: 66, rollFormatted: "2RA66", studentCode: "312225E445", name: "Chavan Parth B", isProvisional: false },
-      { rollNo: 67, rollFormatted: "2RA67", studentCode: "312225E171", name: "Bhangale Piyush S", isProvisional: false },
-      { rollNo: 68, rollFormatted: "2RA68", studentCode: "312225E457", name: "Bodade Pranay S", isProvisional: false },
-      { rollNo: 69, rollFormatted: "2RA69", studentCode: "312225E146", name: "Sarnaik Prathamesh G", isProvisional: false },
-      { rollNo: 70, rollFormatted: "2RA70", studentCode: "312225E449", name: "Patil Pratik G", isProvisional: false },
-      { rollNo: 71, rollFormatted: "2RA71", studentCode: "312225E464", name: "Chopde Ritesh P", isProvisional: false },
-      { rollNo: 72, rollFormatted: "2RA72", studentCode: "312225E179", name: "Siddhesh Pradeep Pande", isProvisional: false },
-      { rollNo: 73, rollFormatted: "2RA73", studentCode: "312225E453", name: "Shivam Sanjay Aghao", isProvisional: false },
-      { rollNo: 74, rollFormatted: "2RA74", studentCode: "312225E188", name: "Shubham Santosh Agrawal", isProvisional: false },
-      { rollNo: 75, rollFormatted: "2RA75", studentCode: "312225E460", name: "Swapnil Sudhakar Tale", isProvisional: false },
-      { rollNo: 76, rollFormatted: "2RA76", studentCode: "312225E192", name: "Utkarsh Vasant Wankhade", isProvisional: false },
-      { rollNo: 77, rollFormatted: "2RA77", studentCode: "312225E470", name: "Vaibhav Prabhakar Kale", isProvisional: false },
-      { rollNo: 78, rollFormatted: "2RA78", studentCode: "312225E475", name: "Yash Pradip Chopade", isProvisional: true },
-      { rollNo: 79, rollFormatted: "2RA79", studentCode: "312225E479", name: "Zaid Khan Pathan", isProvisional: true }
-    ];
+    // Pure dynamic data store - zero static fallback records
+    const fallbackStudents = [];
 
     let studentsData = [];
 
@@ -276,8 +196,8 @@
         console.warn("[Roster] Live roster fetch notice:", e);
       }
 
-      // Fallback to bundled student dataset if backend empty/offline
-      renderTable(fallbackStudents);
+      // Render empty state if no students found in database
+      renderTable([]);
     }
 
     loadLiveRoster();
@@ -380,7 +300,7 @@
           if (json.data && json.data.fullName) {
             const box = document.getElementById("roster-teacher-box");
             if (box) {
-              box.innerHTML = `${json.data.fullName} (${json.data.empCode || "FAC-CSE-1048"}) ${json.data.designation || "Associate Professor"} ${json.data.department || "CSE"} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;"></span> Live Connected (${json.data.source || "Supabase"})</span>`;
+              box.innerHTML = `${json.data.fullName} (${json.data.empCode || json.data.emp_code || ""}) ${json.data.designation || ""} ${json.data.department || ""} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;"></span> Live Connected (${json.data.source || "Database"})</span>`;
             }
           }
         }

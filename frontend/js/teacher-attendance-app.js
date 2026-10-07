@@ -267,8 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
       this.modalPdfCenter = document.getElementById("modalPdfCenter");
       this.btnPdfCenterOpenStudent = document.getElementById("btnPdfCenterOpenStudent");
       this.btnPdfCenterDownloadTeacher = document.getElementById("btnPdfCenterDownloadTeacher");
-      this.btnQuickPdfShivam = document.getElementById("btnQuickPdfShivam");
-      this.btnQuickPdfAarti = document.getElementById("btnQuickPdfAarti");
       this.btnDownloadSessionSummaryPdf = document.getElementById("btnDownloadSessionSummaryPdf");
 
       // Modal Class Card extra fields
@@ -680,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (navGroupAttendance) navGroupAttendance.classList.add("active");
     },
 
-    goToStep(stepNumber) {
+    async goToStep(stepNumber) {
       if (stepNumber < 1 || stepNumber > 5) return;
 
       // Validation gates
@@ -710,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (stepNumber === 3) {
         this.renderClassCards();
       } else if (stepNumber === 4) {
-        this.initStudentAttendance();
+        await this.initStudentAttendance();
       } else if (stepNumber === 5) {
         this.renderSummaryReview();
       }
@@ -1429,13 +1427,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // STEP 4: STUDENT ATTENDANCE MARKING (SWIPE ENGINE & ROSTER)
     // =========================================================================
 
-    initStudentAttendance() {
+    async initStudentAttendance() {
       // Check if students array is already initialized for this class session
       if (!this.state.students || this.state.students.length === 0) {
-        this.state.students = ERP_DATA.generateStudentRoster(
-          this.state.selectedDept.code,
-          this.state.selectedClass.id
-        );
+        if (ERP_DATA.fetchStudentRoster) {
+          const classIdent = this.state.selectedClass.name || this.state.selectedClass.id;
+          const deptIdent = this.state.selectedDept.code || "CSE";
+          this.state.students = await ERP_DATA.fetchStudentRoster(deptIdent, classIdent);
+        }
+        if (!this.state.students || this.state.students.length === 0) {
+          this.state.students = ERP_DATA.generateStudentRoster(
+            this.state.selectedDept.code,
+            this.state.selectedClass.id
+          );
+        }
       }
 
       // Check if draft exists
@@ -1603,8 +1608,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const isPresent = (student.status === "present");
       const statusText = isAbsent ? "ABSENT" : (isPresent ? "PRESENT" : "PENDING");
       const statusClass = isAbsent ? "absent" : (isPresent ? "present" : "pending");
-      const rollNo = student.rollFormatted ? student.rollFormatted.replace("ROLL ", "2UB") : `2UB${srNo}`;
-      const studentCode = student.prn || student.code || `312225E${300 + srNo}`;
+<<<<<<< HEAD
+      const rollNo = student.rollNo || student.roll || (student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : srNo);
+      const studentCode = student.studentCode || student.enrollmentNo || student.prn || student.code || "-";
+=======
+      const rollNo = student.rollFormatted ? student.rollFormatted.replace("ROLL ", "") : `${student.roll || srNo}`;
+      const studentCode = student.studentCode || student.student_code || student.prn || student.code || `STU-${student.roll || srNo}`;
+>>>>>>> 9ecf21c236e1425e37789315b9bca71c89a6ca6d
 
       // Generate 10 lecture history if not present
       if (!student.history || student.history.length < 10) {
@@ -2277,9 +2287,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         this.currentTeacherReportData = data;
 
-        document.getElementById("trReportName").innerText = data.teacher.name || "Dr. J.M.Patil";
-        document.getElementById("trReportEmpId").innerText = data.teacher.employeeId || "FAC-CSE-1048";
-        document.getElementById("trReportTitle").innerText = data.teacher.title || "Associate Professor";
+        document.getElementById("trReportName").innerText = data.teacher.name || (ERP_DATA.teacher?.name || "Faculty");
+        document.getElementById("trReportEmpId").innerText = data.teacher.employeeId || (ERP_DATA.teacher?.id || "");
+        document.getElementById("trReportTitle").innerText = data.teacher.title || (ERP_DATA.teacher?.designation || "Faculty");
         document.getElementById("trReportTotalCount").innerText = data.teacher.totalLecturesConducted ?? 0;
         document.getElementById("trReportAvgRate").innerText = `${data.teacher.averageAttendanceRate ?? 0}%`;
 
@@ -2687,7 +2697,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 12px; color: #334155;">
                 <span><strong>Program:</strong> ${record.department || 'CSE'}</span> • 
                 <span><strong>Class:</strong> ${record.classId}</span> • 
-                <span><strong>Teacher:</strong> Dr. J.M.Patil</span>
+                <span><strong>Teacher:</strong> ${(ERP_DATA.teacher?.name || "Faculty")}</span>
               </div>
             </div>
             <div style="background: #fff; border: 1.5px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; text-align: center;">
@@ -2706,7 +2716,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div>
               <div style="height: 36px;"></div>
               <div style="border-top: 1px solid #94A3B8; padding-top: 4px; font-weight: 700; color: #0F172A;">Teacher / Employee Signature</div>
-              <div>Dr. J.M.Patil (FAC-CSE-1048)</div>
+              <div>${(ERP_DATA.teacher?.name || "Faculty")} (${(ERP_DATA.teacher?.id || "")})</div>
             </div>
             <div>
               <div style="height: 36px;"></div>
@@ -2779,7 +2789,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 11.5px; color: #334155;">
                 <span><strong>Class:</strong> ${clsName}</span> • 
                 <span><strong>Program:</strong> CSE</span> • 
-                <span><strong>Employee:</strong> Dr. J.M.Patil</span>
+                <span><strong>Employee:</strong> ${(ERP_DATA.teacher?.name || "Faculty")}</span>
               </div>
             </div>
             <div style="background: #fff; border: 1.5px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; text-align: center;">
@@ -2817,7 +2827,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div>
               <div style="height: 36px;"></div>
               <div style="border-top: 1px solid #94A3B8; padding-top: 4px; font-weight: 700; color: #0F172A;">Teacher / Employee Signature</div>
-              <div>Dr. J.M.Patil (FAC-CSE-1048)</div>
+              <div>${(ERP_DATA.teacher?.name || "Faculty")} (${(ERP_DATA.teacher?.id || "")})</div>
             </div>
             <div>
               <div style="height: 36px;"></div>

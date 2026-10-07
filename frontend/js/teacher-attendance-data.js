@@ -19,6 +19,30 @@ const ERP_DATA = {
 
   async initDynamic() {
     try {
+      // 0. Resolve unified auth session from central ERP_AUTH / localStorage
+      let authUser = null;
+      if (window.ERP_AUTH && typeof window.ERP_AUTH.getCurrentUser === "function") {
+        authUser = window.ERP_AUTH.getCurrentUser();
+      } else {
+        try {
+          const raw = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
+          if (raw) authUser = JSON.parse(raw);
+        } catch (_) {}
+      }
+      if (authUser) {
+        this.teacher = {
+          name: authUser.fullName || authUser.name || "Dr. Rohan Deshmukh",
+          id: authUser.empCode || authUser.emp_code || authUser.id || "FAC-CSE-1048",
+          designation: authUser.designation || "Associate Professor",
+          department: authUser.department || authUser.departmentName || "CSE",
+          program: authUser.department || authUser.departmentName || "CSE",
+          email: authUser.email || "rohan.deshmukh@ssgmce.ac.in",
+          avatar: authUser.initials || "RD",
+          unreadNotifications: 3
+        };
+        this.employee = this.teacher;
+      }
+
       // 1. Fetch Teacher Profile from Backend / Supabase
       if (window.ErpApi) {
         const prof = await window.ErpApi.getProfile();

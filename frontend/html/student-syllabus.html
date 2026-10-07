@@ -127,10 +127,10 @@
             <!-- Student Profile Pill -->
             <div class="profile-wrapper" id="profileWrapper">
                 <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
-                    <div class="avatar-circle">SA</div>
+                    <div class="avatar-circle">--</div>
                     <div class="profile-details">
-                        <span class="student-name">Shivam Aghao</span>
-                        <span class="student-meta">Roll: 21 â€¢ CSE 2R1 (CSE2401)</span>
+                        <span class="student-name">Loading Profile...</span>
+                        <span class="student-meta">--</span>
                     </div>
                     <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -139,11 +139,11 @@
                 <!-- Profile Dropdown Popover -->
                 <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
                     <div class="profile-panel-header">
-                        <div class="large-avatar">SA</div>
+                        <div class="large-avatar">--</div>
                         <div>
-                            <div class="p-name">Shivam Aghao</div>
-                            <div class="p-dept">B.Tech - Computer Science & Engg.</div>
-                            <div class="p-roll">Roll No: 21 â€¢ Class: 2R1 â€¢ Sem IV (CSE2401)</div>
+                            <div class="p-name">Loading Profile...</div>
+                            <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
+                            <div class="p-roll">--</div>
                         </div>
                     </div>
                     <div class="p-links">
@@ -578,8 +578,8 @@
                     <div class="syllabus-panel">
                         <div class="syllabus-panel-header">
                             <div>
-                                <h2>Semester V Subjects</h2>
-                                <p>Information Technology Â· B.E.</p>
+                                <h2 id="syllabusSectionTitle">Computer Science &amp; Engineering Curriculum</h2>
+                                <p id="syllabusSectionSubtitle">Department of Computer Science &amp; Engineering · B.Tech</p>
                             </div>
                             <div class="syllabus-panel-tools">
                                 <div class="syllabus-search-box">
@@ -588,10 +588,10 @@
                                 </div>
                                 <select id="subjectTypeFilter" class="syllabus-select">
                                     <option value="all">All Types</option>
-                                    <option value="Core">Core</option>
-                                    <option value="PE1">Professional Elective</option>
-                                    <option value="MD">Multidisciplinary</option>
-                                    <option value="OE">Open Elective</option>
+                                    <option value="Core">Core Courses</option>
+                                    <option value="PE">Professional Elective (PE)</option>
+                                    <option value="MD">Multidisciplinary (MD)</option>
+                                    <option value="OE">Open Elective (OE)</option>
                                 </select>
                             </div>
                         </div>
@@ -619,7 +619,7 @@
                         <div class="syllabus-panel-header">
                             <div>
                                 <h2>Faculty Directory</h2>
-                                <p>Faculty assigned to Semester V subjects</p>
+                                <p id="facultySubtitle">Faculty assigned to Computer Science &amp; Engineering courses</p>
                             </div>
                             <div class="syllabus-search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
