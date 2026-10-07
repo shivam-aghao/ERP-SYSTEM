@@ -73,7 +73,7 @@ class AttendanceService:
 
         db.commit()
 
-        # Synchronize session and subject totals to Supabase Cloud asynchronously/safely
+        # Synchronize session and student records to Supabase Cloud asynchronously/safely
         try:
             import urllib.request, json
             from backend.config.settings import settings
@@ -84,7 +84,7 @@ class AttendanceService:
                     "Content-Type": "application/json",
                     "Prefer": "return=minimal"
                 }
-                # Insert session to Supabase
+                # 1. Insert session to Supabase
                 session_payload = {
                     "id": sess_id,
                     "session_code": f"REC-{sess_id[:8].upper()}",
@@ -93,6 +93,7 @@ class AttendanceService:
                     "subject_name": subject_name,
                     "session_date": payload.session_date,
                     "period_number": str(payload.period_number),
+                    "period": str(payload.period_number),
                     "session_type": payload.session_type,
                     "status": "SUBMITTED",
                     "total_students": total_count,
@@ -106,9 +107,40 @@ class AttendanceService:
                     headers=headers
                 )
                 try:
-                    urllib.request.urlopen(req, timeout=3)
+                    urllib.request.urlopen(req, timeout=4)
                 except Exception as sub_err:
                     pass
+
+                # 2. Insert records to Supabase
+                rec_payloads = []
+                for sid in payload.present_student_ids:
+                    rec_payloads.append({
+                        "id": str(uuid.uuid4()),
+                        "session_id": sess_id,
+                        "student_id": sid if len(sid) > 20 else None,
+                        "student_code": sid if len(sid) <= 20 else None,
+                        "is_present": True,
+                        "status": "PRESENT"
+                    })
+                for sid in payload.absent_student_ids:
+                    rec_payloads.append({
+                        "id": str(uuid.uuid4()),
+                        "session_id": sess_id,
+                        "student_id": sid if len(sid) > 20 else None,
+                        "student_code": sid if len(sid) <= 20 else None,
+                        "is_present": False,
+                        "status": "ABSENT"
+                    })
+                if rec_payloads:
+                    rec_req = urllib.request.Request(
+                        f"{settings.SUPABASE_URL}/rest/v1/attendance_records",
+                        data=json.dumps(rec_payloads).encode('utf-8'),
+                        headers=headers
+                    )
+                    try:
+                        urllib.request.urlopen(rec_req, timeout=5)
+                    except Exception as rec_err:
+                        pass
         except Exception:
             pass
 

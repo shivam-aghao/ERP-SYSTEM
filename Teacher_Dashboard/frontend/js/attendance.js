@@ -1904,7 +1904,8 @@ const AttendanceMarkingManager = {
   async init() {
     // 1. Fetch previously marked sessions from backend
     try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/sessions');
+      const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
+      const res = await fetch(`${apiHost}/api/teacher/attendance/sessions`);
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.sessions) {
@@ -2072,7 +2073,8 @@ const AttendanceMarkingManager = {
     // Fetch class roster
     let studentsList = [];
     try {
-      const res = await fetch(`http://localhost:5001/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
+      const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
+      const res = await fetch(`${apiHost}/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
       if (res.ok) {
         const json = await res.json();
         studentsList = json.data?.students || [];
@@ -2692,6 +2694,9 @@ const AttendanceMarkingManager = {
     const recordsArray = Object.values(this.rosterRecords).map(r => ({
       studentId: r.student.id || `b0000000-0000-0000-0000-${String(r.student.rollNo).padStart(12, '0')}`,
       rollNo: r.student.rollNo,
+      name: r.student.name || `Student ${r.student.rollNo}`,
+      studentCode: r.student.enrollmentNo || r.student.studentCode || '',
+      enrollmentNo: r.student.enrollmentNo || r.student.studentCode || '',
       status: r.status,
       remarks: r.remarks || '',
       markingMode: r.markingMethod || 'swipe'
@@ -2713,7 +2718,8 @@ const AttendanceMarkingManager = {
 
     let savedSession = null;
     try {
-      const res = await fetch('http://localhost:5001/api/teacher/attendance/bulk', {
+      const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
+      const res = await fetch(`${apiHost}/api/teacher/attendance/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

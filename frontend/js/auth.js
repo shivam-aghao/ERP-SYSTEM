@@ -136,6 +136,10 @@
       if (token) {
         if (role === 'teacher' || role === 'faculty') {
           localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
+          localStorage.setItem('ssgmce_active_teacher', userJson);
+          if (user.emp_code || user.empCode) {
+            localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
+          }
         } else {
           localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
         }

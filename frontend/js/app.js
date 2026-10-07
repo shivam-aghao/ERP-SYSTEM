@@ -238,28 +238,59 @@ const TeacherApp = {
         const u = window.ERP_AUTH.getCurrentUser();
         if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
           const fn = u.full_name || u.name || u.fullName || 'Faculty Member';
+          const empCode = u.emp_code || u.employeeId;
+          const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+            ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
+            : null;
           return {
             name: fn,
             department: u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || 'CSE',
-            title: u.designation || 'Faculty Member',
+            title: u.designation || (facObj && facObj.title) || 'Faculty Member',
+            employeeId: empCode || (facObj && facObj.empCode) || 'EMP-CSE-1001',
             avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
           };
         }
       }
-      const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
+      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_active_teacher") || sessionStorage.getItem("ssgmce_user");
       if (stored) {
-        return JSON.parse(stored);
+        const u = typeof stored === 'string' ? JSON.parse(stored) : stored;
+        const empCode = u.emp_code || u.employeeId;
+        const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+          ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
+          : null;
+        return {
+          name: u.full_name || u.name || (facObj && facObj.name) || "Dr. J. M. Patil",
+          department: "Computer Science & Engineering",
+          departmentCode: "CSE",
+          title: u.designation || (facObj && facObj.title) || "Professor & Head",
+          employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1001",
+          avatarInitials: (u.name || (facObj && facObj.name) || "JP").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+        };
       }
     } catch (e) {
       console.warn("Could not read teacher session from storage", e);
     }
-    return (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty) ? TeacherERPData.faculty : {
-      name: "Faculty Member",
+    const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+      ? TeacherERPData.getActiveTeacherEmpCode()
+      : 'EMP-CSE-1001';
+    const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+      ? TeacherERPData.facultyList.find(f => f.empCode === activeCode)
+      : null;
+    return facObj ? {
+      name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      title: "Faculty",
-      avatarInitials: "FM"
+      title: facObj.title,
+      employeeId: facObj.empCode,
+      avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+    } : {
+      name: "Dr. J. M. Patil",
+      department: "Computer Science & Engineering",
+      departmentCode: "CSE",
+      title: "Professor & Head",
+      employeeId: "EMP-CSE-1001",
+      avatarInitials: "JP"
     };
   },
 

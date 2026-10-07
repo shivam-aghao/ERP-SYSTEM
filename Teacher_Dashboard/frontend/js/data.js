@@ -138,6 +138,2279 @@ if (typeof window !== 'undefined') {
    TEACHER ERP DATA STORE - EXPANDED ACADEMIC MODEL
    ======================================================== */
 
+/* ========================================================
+   OFFICIAL SSGMCE CSE FACULTY PERSONAL TIMETABLES
+   Extracted directly from DATA/Personal Timtable for teacher.pdf
+   Department of Computer Science & Engineering, Session 2026-2027 (Autumn)
+   ======================================================== */
+const SSGMCE_FACULTY_TIMETABLES = {
+  "EMP-CSE-1001": {
+    "name": "Dr. J. M. Patil",
+    "teaching_load": [
+      {
+        "semester": "VII",
+        "code": "7KS03",
+        "abbr": "CC",
+        "theory": 4,
+        "practical": 0,
+        "total": 12
+      },
+      {
+        "semester": "V",
+        "code": "5CS224PC",
+        "abbr": "DBMS",
+        "theory": 0,
+        "practical": 8,
+        "total": 8
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "CC",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "DBMS Lab (Batch D)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 4,
+          "subject": "DBMS Lab (Batch D)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "CC",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "DBMS Lab (Batch B)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 4,
+          "subject": "DBMS Lab (Batch B)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "CC",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 3,
+          "subject": "DBMS Lab (Batch C)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 4,
+          "subject": "DBMS Lab (Batch C)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "CC",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "DBMS Lab (Batch A)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 4,
+          "subject": "DBMS Lab (Batch A)",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1002": {
+    "name": "Dr. N. M. Kandoi",
+    "teaching_load": [
+      {
+        "semester": "VII",
+        "code": "7KS05",
+        "abbr": "BF",
+        "theory": 3,
+        "practical": 0,
+        "total": 15
+      },
+      {
+        "semester": "VII",
+        "code": "7KS08",
+        "abbr": "ET LAB IV BF",
+        "theory": 0,
+        "practical": 8,
+        "total": 8
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 2,
+          "subject": "BF",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "BF Lab (Batch B)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 6,
+          "subject": "BF Lab (Batch B)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "CEP (Batch D)",
+          "class": "2R2",
+          "venue": "Seminar Hall",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (Batch D)",
+          "class": "2R2",
+          "venue": "Seminar Hall",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 5,
+          "subject": "BF Lab (Batch C)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "BF Lab (Batch C)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 2,
+          "subject": "BF",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "BF Lab (Batch A)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 4,
+          "subject": "BF Lab (Batch A)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 1,
+          "subject": "CEP (Batch D)",
+          "class": "2R2",
+          "venue": "Seminar Hall",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (Batch D)",
+          "class": "2R2",
+          "venue": "Seminar Hall",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 2,
+          "subject": "BF",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "BF Lab (Batch D)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 6,
+          "subject": "BF Lab (Batch D)",
+          "class": "4R",
+          "venue": "ET Lab IV",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1003": {
+    "name": "Prof. C. M. Mankar",
+    "teaching_load": [
+      {
+        "semester": "V",
+        "code": "5CS221PC",
+        "abbr": "CD",
+        "theory": 3,
+        "practical": 8,
+        "total": 17
+      },
+      {
+        "semester": "V",
+        "code": "5CS227MD",
+        "abbr": "MDM#3",
+        "theory": 2,
+        "practical": 0,
+        "total": 2
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 2,
+          "subject": "CD (Compiler Design)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "CD Lab (Batch B)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 4,
+          "subject": "CD Lab (Batch B)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#3",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 2,
+          "subject": "CD (Compiler Design)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "CD Lab (Batch A)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 4,
+          "subject": "CD Lab (Batch A)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#3",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 2,
+          "subject": "CD (Compiler Design)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "CD Lab (Batch D)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 4,
+          "subject": "CD Lab (Batch D)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 3,
+          "subject": "CD Lab (Batch C)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 4,
+          "subject": "CD Lab (Batch C)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1004": {
+    "name": "Dr. V. S. Mahalle",
+    "teaching_load": [
+      {
+        "semester": "III",
+        "code": "3CS201PC",
+        "abbr": "OOP",
+        "theory": 4,
+        "practical": 0,
+        "total": 17
+      },
+      {
+        "semester": "III",
+        "code": "3CS203PC",
+        "abbr": "OOP_LAB",
+        "theory": 0,
+        "practical": 8,
+        "total": 8
+      },
+      {
+        "semester": "V",
+        "code": "5KS04",
+        "abbr": "PE-I (ICS)",
+        "theory": 3,
+        "practical": 0,
+        "total": 3
+      },
+      {
+        "semester": "V",
+        "code": "5KS08",
+        "abbr": "ET LAB-I (ICS)",
+        "theory": 0,
+        "practical": 2,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "OOP Lab (Batch D)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 2,
+          "subject": "OOP Lab (Batch D)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 3,
+          "subject": "OOP",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "ICS",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "OOP Lab (Batch B)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 2,
+          "subject": "OOP Lab (Batch B)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 3,
+          "subject": "OOP",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "ICS",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "OOP Lab (Batch C)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 2,
+          "subject": "OOP Lab (Batch C)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 3,
+          "subject": "ET Lab: ICS (Batch H)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "H"
+        },
+        {
+          "slot": 4,
+          "subject": "ET Lab: ICS (Batch H)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "H"
+        },
+        {
+          "slot": 5,
+          "subject": "OOP",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 1,
+          "subject": "OOP Lab (Batch A)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 2,
+          "subject": "OOP Lab (Batch A)",
+          "class": "2R2",
+          "venue": "Computer Lab 1",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "ICS",
+          "class": "3R",
+          "venue": "DBMS Lab",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "OOP",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1005": {
+    "name": "Dr. P. K. Bharne",
+    "teaching_load": [
+      {
+        "semester": "V",
+        "code": "5CS223PE",
+        "abbr": "PE-I DSS",
+        "theory": 3,
+        "practical": 6,
+        "total": 18
+      },
+      {
+        "semester": "VII",
+        "code": "7KS04",
+        "abbr": "PE-III DWM",
+        "theory": 3,
+        "practical": 6,
+        "total": 9
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 4,
+          "subject": "DWM",
+          "class": "4R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 6,
+          "subject": "PE-I DSS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 2,
+          "subject": "DWM",
+          "class": "4R",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "ET Lab-I DSS (Batch G)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "G"
+        },
+        {
+          "slot": 4,
+          "subject": "ET Lab-I DSS (Batch G)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "G"
+        },
+        {
+          "slot": 6,
+          "subject": "PE-I DSS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 3,
+          "subject": "ET Lab-I DSS (Batch E)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "E"
+        },
+        {
+          "slot": 4,
+          "subject": "ET Lab-I DSS (Batch E)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "E"
+        },
+        {
+          "slot": 5,
+          "subject": "ET Lab III - DW&M (Batch G)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "G"
+        },
+        {
+          "slot": 6,
+          "subject": "ET Lab III - DW&M (Batch G)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "G"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 4,
+          "subject": "DWM",
+          "class": "4R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "ET Lab III- DWM (Batch F)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "F"
+        },
+        {
+          "slot": 6,
+          "subject": "ET Lab III- DWM (Batch F)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "F"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "PE-I DSS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "ET Lab III - DW&M (Batch E)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "E"
+        },
+        {
+          "slot": 4,
+          "subject": "ET Lab III - DW&M (Batch E)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "E"
+        },
+        {
+          "slot": 5,
+          "subject": "ET Lab-I DSS (Batch F)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "F"
+        },
+        {
+          "slot": 6,
+          "subject": "ET Lab-I DSS (Batch F)",
+          "class": "3R",
+          "venue": "ET Lab I",
+          "is_lab": true,
+          "batch": "F"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1006": {
+    "name": "Prof. K. P. Sable",
+    "teaching_load": [
+      {
+        "semester": "III",
+        "code": "3CS202PC",
+        "abbr": "DS",
+        "theory": 4,
+        "practical": 8,
+        "total": 17
+      },
+      {
+        "semester": "VII",
+        "code": "7KS01",
+        "abbr": "SSEE",
+        "theory": 3,
+        "practical": 0,
+        "total": 3
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "MDM#5",
+        "theory": 0,
+        "practical": 2,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "DS (Data Structures)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "SSEE",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "DS (Data Structures)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "SSEE",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "DS Lab (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "DS Lab (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "DS (Data Structures)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "SSEE",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "DS Lab (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 6,
+          "subject": "DS Lab (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 5,
+          "subject": "DS Lab (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 6,
+          "subject": "DS Lab (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "DS Lab (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 2,
+          "subject": "DS Lab (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 3,
+          "subject": "DS (Data Structures)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Saturday": [
+        {
+          "slot": 3,
+          "subject": "MDM (WT-B4)",
+          "class": "3R",
+          "venue": "Lab 04",
+          "is_lab": true,
+          "batch": "B4"
+        },
+        {
+          "slot": 4,
+          "subject": "MDM (WT-B4)",
+          "class": "3R",
+          "venue": "Lab 04",
+          "is_lab": true,
+          "batch": "B4"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1007": {
+    "name": "Prof. S. B. Pagrut",
+    "teaching_load": [
+      {
+        "semester": "III",
+        "code": "3CS201PC",
+        "abbr": "OOP",
+        "theory": 4,
+        "practical": 8,
+        "total": 17
+      },
+      {
+        "semester": "VII",
+        "code": "7KS04",
+        "abbr": "PE-III DF",
+        "theory": 3,
+        "practical": 2,
+        "total": 5
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 2,
+          "subject": "OOP (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 4,
+          "subject": "PE-III DF (Batch B6)",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": "B6"
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 2,
+          "subject": "PE-III DF",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 3,
+          "subject": "OOP (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "OOP Lab (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 6,
+          "subject": "OOP Lab (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 2,
+          "subject": "OOP (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "OOP Lab (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 6,
+          "subject": "OOP Lab (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 3,
+          "subject": "OOP (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 4,
+          "subject": "PE-III DF (Batch B2)",
+          "class": "4R",
+          "venue": "Room 402",
+          "is_lab": false,
+          "batch": "B2"
+        },
+        {
+          "slot": 5,
+          "subject": "OOP Lab (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 6,
+          "subject": "OOP Lab (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "OOP Lab (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 2,
+          "subject": "OOP Lab (2R1 Batch C)",
+          "class": "2R1",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 3,
+          "subject": "ET Lab III - DF (Batch H)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "H"
+        },
+        {
+          "slot": 4,
+          "subject": "ET Lab III - DF (Batch H)",
+          "class": "4R",
+          "venue": "ET Lab III",
+          "is_lab": true,
+          "batch": "H"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1008": {
+    "name": "Dr. R. A. Zamare",
+    "teaching_load": [
+      {
+        "semester": "V",
+        "code": "5CS222PC",
+        "abbr": "CAO",
+        "theory": 3,
+        "practical": 0,
+        "total": 17
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "I",
+        "code": "WS-R1",
+        "abbr": "WS(R1)",
+        "theory": 0,
+        "practical": 6,
+        "total": 6
+      },
+      {
+        "semester": "V",
+        "code": "5CS228MD",
+        "abbr": "WT (MDM#4 / MDM#5)",
+        "theory": 2,
+        "practical": 2,
+        "total": 4
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "CA&O (Computer Arch & Org)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 2,
+          "subject": "CA&O (Computer Arch & Org)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#4",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 1,
+          "subject": "CA&O (Computer Arch & Org)",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#4",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R1 Batch B)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Saturday": [
+        {
+          "slot": 1,
+          "subject": "MDM (WT-B1)",
+          "class": "3R",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B1"
+        },
+        {
+          "slot": 2,
+          "subject": "MDM (WT-B1)",
+          "class": "3R",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B1"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1009": {
+    "name": "Prof. R. V. Deshmukh",
+    "teaching_load": [
+      {
+        "semester": "VII",
+        "code": "7KS02 / 7KS06",
+        "abbr": "CG (Computer Graphics)",
+        "theory": 3,
+        "practical": 8,
+        "total": 18
+      },
+      {
+        "semester": "V",
+        "code": "5CS220PC",
+        "abbr": "DBMS",
+        "theory": 3,
+        "practical": 0,
+        "total": 3
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 5,
+          "subject": "CG Lab (Batch C)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "CG Lab (Batch C)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "C"
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "DBMS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 4,
+          "subject": "CG (Computer Graphics)",
+          "class": "4R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "CG Lab (Batch D)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 6,
+          "subject": "CG Lab (Batch D)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "DBMS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 4,
+          "subject": "CG (Computer Graphics)",
+          "class": "4R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "CG Lab (Batch B)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 6,
+          "subject": "CG Lab (Batch B)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "B"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 3,
+          "subject": "CG (Computer Graphics)",
+          "class": "4R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 2,
+          "subject": "DBMS",
+          "class": "3R",
+          "venue": "B206",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "CG Lab (Batch A)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 6,
+          "subject": "CG Lab (Batch A)",
+          "class": "4R",
+          "venue": "Graphics Lab",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1010": {
+    "name": "Prof. S. M. Jawake",
+    "teaching_load": [
+      {
+        "semester": "I",
+        "code": "CP-101",
+        "abbr": "CP (Computer Prog)",
+        "theory": 4,
+        "practical": 6,
+        "total": 18
+      },
+      {
+        "semester": "V",
+        "code": "5CS227MD",
+        "abbr": "DBMS",
+        "theory": 2,
+        "practical": 0,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 5,
+          "subject": "MDM#3",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 5,
+          "subject": "MDM#3",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch A)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Friday": [],
+      "Saturday": [
+        {
+          "slot": 3,
+          "subject": "MDM (WT-B2)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B2"
+        },
+        {
+          "slot": 4,
+          "subject": "MDM (WT-B2)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B2"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1011": {
+    "name": "Prof. T. A. Puranik",
+    "teaching_load": [
+      {
+        "semester": "III",
+        "code": "3CS200PC",
+        "abbr": "DSGT-R1",
+        "theory": 4,
+        "practical": 0,
+        "total": 19
+      },
+      {
+        "semester": "III",
+        "code": "3CS200PC",
+        "abbr": "DSGT-R2",
+        "theory": 4,
+        "practical": 0,
+        "total": 4
+      },
+      {
+        "semester": "I",
+        "code": "SKL-101",
+        "abbr": "Skill lab-I",
+        "theory": 1,
+        "practical": 6,
+        "total": 7
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 3,
+          "subject": "DS&GT (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 2,
+          "subject": "DS&GT (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "DSGT (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 3,
+          "subject": "DS&GT (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "DS&GT (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 2,
+          "subject": "DSGT (2R1)",
+          "class": "2R1",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "DS&GT (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 2,
+          "subject": "DS&GT (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Saturday": []
+    }
+  },
+  "EMP-CSE-1012": {
+    "name": "Prof. V. S. Kanherkar",
+    "teaching_load": [
+      {
+        "semester": "II",
+        "code": "1AL102ES",
+        "abbr": "CP",
+        "theory": 4,
+        "practical": 6,
+        "total": 18
+      },
+      {
+        "semester": "III",
+        "code": "3CS205MD",
+        "abbr": "MDM#1",
+        "theory": 2,
+        "practical": 0,
+        "total": 2
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "MDM#5",
+        "theory": 0,
+        "practical": 2,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 4,
+          "subject": "MDM#1",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 4,
+          "subject": "MDM#1",
+          "class": "3R",
+          "venue": "C2",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Room 305",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Thursday": [],
+      "Friday": [],
+      "Saturday": [
+        {
+          "slot": 1,
+          "subject": "MDM (WT-B3)",
+          "class": "3R",
+          "venue": "Lab 03",
+          "is_lab": true,
+          "batch": "B3"
+        },
+        {
+          "slot": 2,
+          "subject": "MDM (WT-B3)",
+          "class": "3R",
+          "venue": "Lab 03",
+          "is_lab": true,
+          "batch": "B3"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1013": {
+    "name": "Prof. N. N. Fatkar",
+    "teaching_load": [
+      {
+        "semester": "III",
+        "code": "3CS202PC",
+        "abbr": "DS-R2",
+        "theory": 4,
+        "practical": 8,
+        "total": 18
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "(MDM#5)",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "V",
+        "code": "5CS230OE",
+        "abbr": "OE-III",
+        "theory": 2,
+        "practical": 0,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 1,
+          "subject": "DS Lab (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "A"
+        },
+        {
+          "slot": 2,
+          "subject": "DS Lab (2R2 Batch A)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "A"
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 1,
+          "subject": "DS Lab (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 2,
+          "subject": "DS Lab (2R2 Batch C)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "C"
+        },
+        {
+          "slot": 6,
+          "subject": "DS (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Wednesday": [
+        {
+          "slot": 1,
+          "subject": "DS Lab (2R2 Batch D)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 2,
+          "subject": "DS Lab (2R2 Batch D)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 3,
+          "subject": "DS (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 6,
+          "subject": "OE-III",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 1,
+          "subject": "DS Lab (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 2,
+          "subject": "DS Lab (2R2 Batch B)",
+          "class": "2R2",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B"
+        },
+        {
+          "slot": 3,
+          "subject": "DS (2R2)",
+          "class": "2R2",
+          "venue": "B007",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 6,
+          "subject": "OE-III",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "DS (2R2)",
+          "class": "2R2",
+          "venue": "B108",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Saturday": [
+        {
+          "slot": 1,
+          "subject": "MDM (WT-B6)",
+          "class": "3R",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B6"
+        },
+        {
+          "slot": 2,
+          "subject": "MDM (WT-B6)",
+          "class": "3R",
+          "venue": "Lab 01",
+          "is_lab": true,
+          "batch": "B6"
+        },
+        {
+          "slot": 3,
+          "subject": "MDM (WT-B7)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B7"
+        },
+        {
+          "slot": 4,
+          "subject": "MDM (WT-B7)",
+          "class": "3R",
+          "venue": "Lab 02",
+          "is_lab": true,
+          "batch": "B7"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1014": {
+    "name": "Prof. M. D. Rakhonde",
+    "teaching_load": [
+      {
+        "semester": "V",
+        "code": "5CS228MD",
+        "abbr": "(MDM#4)",
+        "theory": 2,
+        "practical": 0,
+        "total": 16
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "MDM#5",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "III",
+        "code": "3CS206OE",
+        "abbr": "OE -I",
+        "theory": 3,
+        "practical": 0,
+        "total": 3
+      },
+      {
+        "semester": "I",
+        "code": "SKL-102",
+        "abbr": "Skill Lab-I(R2)",
+        "theory": 1,
+        "practical": 6,
+        "total": 7
+      }
+    ],
+    "schedule": {
+      "Monday": [],
+      "Tuesday": [],
+      "Wednesday": [
+        {
+          "slot": 4,
+          "subject": "OE-I",
+          "class": "2R1",
+          "venue": "A3",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#4",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Thursday": [
+        {
+          "slot": 4,
+          "subject": "OE-I",
+          "class": "2R1",
+          "venue": "A3",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "MDM#4",
+          "class": "3R",
+          "venue": "C1",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Friday": [
+        {
+          "slot": 4,
+          "subject": "OE-I",
+          "class": "2R1",
+          "venue": "A3",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Saturday": [
+        {
+          "slot": 1,
+          "subject": "MDM (WT-B5)",
+          "class": "3R",
+          "venue": "Lab 03",
+          "is_lab": true,
+          "batch": "B5"
+        },
+        {
+          "slot": 2,
+          "subject": "MDM (WT-B5)",
+          "class": "3R",
+          "venue": "Lab 03",
+          "is_lab": true,
+          "batch": "B5"
+        },
+        {
+          "slot": 3,
+          "subject": "MDM (WT-8)",
+          "class": "3R",
+          "venue": "Lab 04",
+          "is_lab": true,
+          "batch": "WT-8"
+        },
+        {
+          "slot": 4,
+          "subject": "MDM (WT-8)",
+          "class": "3R",
+          "venue": "Lab 04",
+          "is_lab": true,
+          "batch": "WT-8"
+        }
+      ]
+    }
+  },
+  "EMP-CSE-1015": {
+    "name": "Mr. Krushan. V. Kulthe",
+    "teaching_load": [
+      {
+        "semester": "I",
+        "code": "WS-102",
+        "abbr": "WS(R2)",
+        "theory": 1,
+        "practical": 6,
+        "total": 13
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "III",
+        "code": "5CS205MD",
+        "abbr": "MDM#1",
+        "theory": 2,
+        "practical": 0,
+        "total": 2
+      }
+    ],
+    "schedule": {
+      "Monday": [
+        {
+          "slot": 4,
+          "subject": "MDM#1",
+          "class": "2R1",
+          "venue": "A4",
+          "is_lab": false,
+          "batch": null
+        }
+      ],
+      "Tuesday": [
+        {
+          "slot": 4,
+          "subject": "MDM#1",
+          "class": "2R1",
+          "venue": "A4",
+          "is_lab": false,
+          "batch": null
+        },
+        {
+          "slot": 5,
+          "subject": "CEP (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 6,
+          "subject": "CEP (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Wednesday": [],
+      "Thursday": [],
+      "Friday": [
+        {
+          "slot": 1,
+          "subject": "CEP (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "D"
+        },
+        {
+          "slot": 2,
+          "subject": "CEP (2R1 Batch D)",
+          "class": "2R1",
+          "venue": "Room 201",
+          "is_lab": true,
+          "batch": "D"
+        }
+      ],
+      "Saturday": []
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.SSGMCE_FACULTY_TIMETABLES = SSGMCE_FACULTY_TIMETABLES;
+}
+
 const TeacherERPData = {
   faculty: {
     name: "Dr. Rohan Deshmukh",
@@ -459,68 +2732,134 @@ const TeacherERPData = {
   },
 
   // Today's classes schedule for Dashboard
-  todayClasses: [
-    {
-      time: "09:00 AM",
-      subject: "Data Structures",
-      department: "CSE",
-      classCode: "2R1",
-      room: "Room 201",
-      status: "completed",
-      isCurrent: false
-    },
-    {
-      time: "11:00 AM",
-      subject: "Java Programming",
-      department: "CSE",
-      classCode: "2R2",
-      room: "Room 305",
-      status: "upcoming",
-      isCurrent: true
-    },
-    {
-      time: "01:00 PM",
-      subject: "Database Management System",
-      department: "CSE",
-      classCode: "3R",
-      room: "Lab 02",
-      status: "upcoming",
-      isCurrent: false
-    },
-    {
-      time: "03:00 PM",
-      subject: "Operating Systems",
-      department: "CSE",
-      classCode: "3R",
-      room: "Lab 04",
-      status: "upcoming",
-      isCurrent: false
-    }
+    // All 15 Faculty Members from Official PDF
+  facultyList: [
+    { empCode: "EMP-CSE-1001", name: "Dr. J. M. Patil", title: "Professor & Head, CSE", totalLoad: 12 },
+    { empCode: "EMP-CSE-1002", name: "Dr. N. M. Kandoi", title: "Associate Professor", totalLoad: 15 },
+    { empCode: "EMP-CSE-1003", name: "Prof. C. M. Mankar", title: "Assistant Professor", totalLoad: 17 },
+    { empCode: "EMP-CSE-1004", name: "Dr. V. S. Mahalle", title: "Associate Professor", totalLoad: 17 },
+    { empCode: "EMP-CSE-1005", name: "Dr. P. K. Bharne", title: "Associate Professor", totalLoad: 18 },
+    { empCode: "EMP-CSE-1006", name: "Prof. K. P. Sable", title: "Assistant Professor", totalLoad: 17 },
+    { empCode: "EMP-CSE-1007", name: "Prof. S. B. Pagrut", title: "Assistant Professor", totalLoad: 17 },
+    { empCode: "EMP-CSE-1008", name: "Dr. R. A. Zamare", title: "Associate Professor", totalLoad: 17 },
+    { empCode: "EMP-CSE-1009", name: "Prof. R. V. Deshmukh", title: "Associate Professor", totalLoad: 18 },
+    { empCode: "EMP-CSE-1010", name: "Prof. S. M. Jawake", title: "Assistant Professor", totalLoad: 18 },
+    { empCode: "EMP-CSE-1011", name: "Prof. T. A. Puranik", title: "Assistant Professor", totalLoad: 19 },
+    { empCode: "EMP-CSE-1012", name: "Prof. V. S. Kanherkar", title: "Assistant Professor", totalLoad: 18 },
+    { empCode: "EMP-CSE-1013", name: "Prof. N. N. Fatkar", title: "Assistant Professor", totalLoad: 18 },
+    { empCode: "EMP-CSE-1014", name: "Prof. M. D. Rakhonde", title: "Assistant Professor", totalLoad: 16 },
+    { empCode: "EMP-CSE-1015", name: "Mr. Krushan. V. Kulthe", title: "Assistant Professor", totalLoad: 13 }
   ],
 
-  // Weekly timetable schedule
-  timetable: [
-    {
-      day: "Monday",
-      slots: ["Data Structures (Room 201)", "Java Programming (Room 305)", "Free Slot", "Data Structures Lab (Lab 02)"]
-    },
-    {
-      day: "Tuesday",
-      slots: ["Free Slot", "Data Structures (Room 201)", "Database Systems (Room 304)", "Operating Systems (Lab 04)"]
-    },
-    {
-      day: "Wednesday",
-      slots: ["Operating Systems (Room 201)", "Free Slot", "Data Structures Lab (Lab 01)", "Data Structures Lab (Lab 01)"]
-    },
-    {
-      day: "Thursday",
-      slots: ["Data Structures (Room 201)", "Algorithms (Room 304)", "Free Slot", "Project Guidance (Seminar Hall)"]
-    },
-    {
-      day: "Friday",
-      slots: ["Software Engg (Room 105)", "Operating Systems (Room 201)", "Free Slot", "Faculty Meeting (Dept Library)"]
+  facultyTimetables: SSGMCE_FACULTY_TIMETABLES,
+
+  // Get active teacher employee code from storage or default (Strict personal timetable)
+  getActiveTeacherEmpCode() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        // Priority 1: Check authenticated teacher user session so each teacher sees strictly their own timetable
+        const userStr = window.localStorage.getItem('ssgmce_user') || window.localStorage.getItem('ssgmce_active_teacher') || window.localStorage.getItem('ssgmce_logged_in_teacher');
+        if (userStr) {
+          const u = typeof userStr === 'string' ? JSON.parse(userStr) : userStr;
+          if (u.emp_code && SSGMCE_FACULTY_TIMETABLES[u.emp_code]) return u.emp_code;
+          if (u.employeeId && SSGMCE_FACULTY_TIMETABLES[u.employeeId]) return u.employeeId;
+          if (u.name) {
+            for (const [code, fac] of Object.entries(SSGMCE_FACULTY_TIMETABLES)) {
+              if (fac.name && (fac.name.toLowerCase().includes(u.name.toLowerCase()) || u.name.toLowerCase().includes(fac.name.split('. ').pop().toLowerCase()))) {
+                return code;
+              }
+            }
+          }
+        }
+        // Priority 2: Check manual selected faculty switcher
+        const selected = window.localStorage.getItem('ssgmce_selected_faculty');
+        if (selected && SSGMCE_FACULTY_TIMETABLES[selected]) return selected;
+      }
+    } catch (e) {}
+    return "EMP-CSE-1001"; // Default to Dr. J. M. Patil (HOD / First Faculty)
+  },
+
+  // Switch active teacher view
+  setActiveTeacherEmpCode(empCode) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('ssgmce_selected_faculty', empCode);
     }
-  ],
+    const fac = SSGMCE_FACULTY_TIMETABLES[empCode];
+    if (fac) {
+      this.faculty.name = fac.name;
+      this.faculty.employeeId = empCode;
+    }
+  },
+
+  // Get strict personal weekly timetable for specific teacher
+  getTimetableForTeacher(empCodeInput) {
+    const code = empCodeInput || this.getActiveTeacherEmpCode();
+    const facData = SSGMCE_FACULTY_TIMETABLES[code] || SSGMCE_FACULTY_TIMETABLES["EMP-CSE-1009"];
+    if (!facData || !facData.schedule) return [];
+
+    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return daysOrder.map(day => {
+      const daySlots = facData.schedule[day] || [];
+      const slotsArr = ["Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot"];
+      daySlots.forEach(s => {
+        const slotIdx = (s.slot || 1) - 1;
+        if (slotIdx >= 0 && slotIdx < 6) {
+          const venue = s.venue ? ` (${s.venue})` : '';
+          slotsArr[slotIdx] = `${s.subject}${venue}`;
+        }
+      });
+      return {
+        day: day,
+        slots: slotsArr
+      };
+    });
+  },
+
+  // Get today's classes dynamically from personal timetable
+  getTodayClassesForTeacher(empCodeInput, dateInput) {
+    const code = empCodeInput || this.getActiveTeacherEmpCode();
+    const facData = SSGMCE_FACULTY_TIMETABLES[code] || SSGMCE_FACULTY_TIMETABLES["EMP-CSE-1009"];
+    if (!facData || !facData.schedule) return [];
+
+    const dayName = AcademicDateUtils.getDayName(dateInput || new Date());
+    const daySlots = facData.schedule[dayName] || [];
+
+    const slotTimeMap = {
+      1: "11:00 AM - 12:00 PM",
+      2: "12:00 PM - 01:00 PM",
+      3: "01:15 PM - 02:15 PM",
+      4: "02:15 PM - 03:15 PM",
+      5: "03:45 PM - 04:45 PM",
+      6: "04:45 PM - 05:45 PM"
+    };
+
+    return daySlots.map((s, idx) => ({
+      time: slotTimeMap[s.slot] || "11:00 AM - 12:00 PM",
+      subject: s.subject,
+      department: "CSE",
+      classCode: s.class || "2R1",
+      room: s.venue || "Room 201",
+      status: idx === 0 ? "completed" : "upcoming",
+      isCurrent: idx === 1
+    }));
+  },
+
+  // Get teaching load summary from PDF
+  getTeachingLoadForTeacher(empCodeInput) {
+    const code = empCodeInput || this.getActiveTeacherEmpCode();
+    const facData = SSGMCE_FACULTY_TIMETABLES[code] || SSGMCE_FACULTY_TIMETABLES["EMP-CSE-1009"];
+    return facData ? (facData.teaching_load || []) : [];
+  },
+
+  // Getter for personal weekly timetable
+  get timetable() {
+    return this.getTimetableForTeacher();
+  },
+
+  // Getter for personal today classes
+  get todayClasses() {
+    return this.getTodayClassesForTeacher();
+  },
 
   // Assigned classes summary cards
   assignedClasses: [

@@ -1,6 +1,6 @@
 import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.config.database import get_db
@@ -10,27 +10,62 @@ from backend.utils.helpers import success_response, error_response
 
 router = APIRouter(tags=["Faculty Portal"])
 
+def extract_teacher_identifier(request: Request, teacher_id: Optional[str] = None, emp_code: Optional[str] = None) -> Optional[str]:
+    if teacher_id:
+        return teacher_id.strip()
+    if emp_code:
+        return emp_code.strip()
+    if request:
+        auth_hdr = request.headers.get("authorization", "")
+        if auth_hdr.startswith("Bearer "):
+            token = auth_hdr.split(" ", 1)[1].strip()
+            if token.startswith("teach_token_"):
+                return token.replace("teach_token_", "").strip()
+        if request.headers.get("x-teacher-id"):
+            return request.headers.get("x-teacher-id").strip()
+        if request.headers.get("x-emp-code"):
+            return request.headers.get("x-emp-code").strip()
+    return None
+
+@router.get("/teachers")
+def get_all_teachers(db: Session = Depends(get_db)):
+    """List all 15 faculty members with designation, department, and teaching load."""
+    data = FacultyService.get_all_teachers(db)
+    return success_response(data)
+
 @router.get("/teacher/profile")
-def get_teacher_profile(db: Session = Depends(get_db)):
-    data = FacultyService.get_profile(db)
+def get_teacher_profile(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier(request, teacher_id, emp_code)
+    data = FacultyService.get_profile(db, tid)
     if not data:
         return error_response("Teacher profile not found", 404)
     return success_response(data)
 
 @router.put("/teacher/profile")
-def update_teacher_profile(payload: TeacherProfileUpdate, db: Session = Depends(get_db)):
-    data = FacultyService.update_profile(payload.model_dump(exclude_unset=True), db)
+def update_teacher_profile(payload: TeacherProfileUpdate, request: Request, teacher_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier(request, teacher_id)
+    data = FacultyService.update_profile(payload.model_dump(exclude_unset=True), db, tid)
     return success_response(data or {}, "Profile updated successfully")
 
 @router.get("/dashboard/summary")
-def get_faculty_summary(db: Session = Depends(get_db)):
-    data = FacultyService.get_summary(db)
+def get_faculty_summary(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier(request, teacher_id, emp_code)
+    data = FacultyService.get_summary(db, tid)
     return success_response(data)
 
 @router.get("/timetable/my")
-def get_teacher_timetable(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT * FROM timetable_entries LIMIT 10")).fetchall()
-    return success_response([dict(r._mapping) for r in rows])
+@router.get("/teacher/timetable")
+def get_teacher_timetable(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    """Fetch strict personal weekly timetable from PDF schedule for the authenticated teacher."""
+    tid = extract_teacher_identifier(request, teacher_id, emp_code)
+    data = FacultyService.get_personal_timetable(tid, db)
+    return success_response(data)
+
+@router.get("/timetable/teacher/{teacher_id}")
+def get_specific_teacher_timetable(teacher_id: str, db: Session = Depends(get_db)):
+    """Fetch strict personal weekly timetable for any specific teacher ID or emp_code."""
+    data = FacultyService.get_personal_timetable(teacher_id, db)
+    return success_response(data)
 
 @router.get("/class-cards")
 def get_class_cards(db: Session = Depends(get_db)):

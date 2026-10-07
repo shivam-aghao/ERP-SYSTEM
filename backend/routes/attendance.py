@@ -44,16 +44,47 @@ def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(ge
     return success_response(data, "Attendance submitted successfully")
 
 @router.get("/attendance/records")
-def get_attendance_records(class_id: Optional[str] = None, db: Session = Depends(get_db)):
-    clause = "WHERE ass.class_id = :cid" if class_id else ""
-    params = {"cid": class_id} if class_id else {}
+@router.get("/attendance/recent")
+def get_attendance_records(
+    class_id: Optional[str] = None,
+    class_name: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    subject_code: Optional[str] = None,
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    target_class = class_name or class_id
+    # 1. Query Supabase Cloud v_recent_attendance
+    try:
+        import urllib.request, urllib.parse, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            url = f"{settings.SUPABASE_URL}/rest/v1/v_recent_attendance?select=*&order=session_date.desc,created_at.desc&limit={limit}"
+            if target_class:
+                url += f"&class_name=eq.{urllib.parse.quote(target_class)}"
+            if teacher_id:
+                url += f"&teacher_id=eq.{urllib.parse.quote(teacher_id)}"
+            if subject_code:
+                url += f"&subject_code=eq.{urllib.parse.quote(subject_code)}"
+            req = urllib.request.Request(
+                url,
+                headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data:
+                    return success_response(data)
+    except Exception:
+        pass
+
+    # 2. Fallback to SQLite
+    clause = "WHERE ass.class_id = :cid OR ass.class_name = :cid" if target_class else ""
+    params = {"cid": target_class, "lim": limit} if target_class else {"lim": limit}
     rows = db.execute(text(f"""
-        SELECT ass.*, c.class_name, s.name as subject_name
+        SELECT ass.*, ass.class_name, ass.subject_name
         FROM attendance_sessions ass
-        LEFT JOIN classes c ON ass.class_id = c.id
-        LEFT JOIN subjects s ON ass.subject_id = s.id
         {clause}
         ORDER BY ass.session_date DESC, ass.period_number ASC
-        LIMIT 50
+        LIMIT :lim
     """), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])

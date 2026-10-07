@@ -31,6 +31,11 @@
       if (this.token) {
         headers['Authorization'] = 'Bearer ' + this.token;
       }
+      try {
+        var stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+        if (stored && stored.id) headers['X-Teacher-Id'] = stored.id;
+        if (stored && stored.emp_code) headers['X-Emp-Code'] = stored.emp_code;
+      } catch (e) {}
       return headers;
     },
 
@@ -94,7 +99,13 @@
 
     // 2. Authentication
     login: async function (email, password) {
-      email = email || 'rohan.deshmukh@ssgmce.ac.in';
+      var storedUser = null;
+      try {
+        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+      } catch (e) {}
+
+      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
+      email = email || defaultIdentifier;
       password = password || 'Faculty@123';
       try {
         var res = await this.request('/auth/login', {
@@ -106,16 +117,25 @@
         if (token) {
           this.setToken(token);
         }
+        if (data && data.user) {
+          localStorage.setItem('ssgmce_user', JSON.stringify(data.user));
+          localStorage.setItem('ssgmce_active_teacher', JSON.stringify(data.user));
+          if (data.user.emp_code) {
+            localStorage.setItem('ssgmce_selected_faculty', data.user.emp_code);
+          }
+        }
         return data;
       } catch (err) {
         console.warn('[TeacherAPI] login attempt:', err.message);
+        var activeUser = (storedUser && storedUser.name) ? storedUser : {
+          id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
+          name: 'Dr. J. M. Patil',
+          role: 'teacher',
+          emp_code: 'EMP-CSE-1001',
+          employeeId: 'EMP-CSE-1001'
+        };
         return {
-          user: {
-            id: 'a0000000-0000-0000-0000-000000000001',
-            name: 'Dr. Rohan Deshmukh',
-            role: 'faculty',
-            employeeId: 'FAC-CSE-1048'
-          },
+          user: activeUser,
           token: this.token || 'teach_token_default'
         };
       }
@@ -189,8 +209,48 @@
     },
 
     // 6. Timetable & Syllabus
-    getMyTimetable: async function () {
-      var res = await this.request('/timetable/my');
+    getMyTimetable: async function (teacherId) {
+      try {
+        var query = teacherId ? '?teacher_id=' + encodeURIComponent(teacherId) : '';
+        var res = await this.request('/timetable/my' + query);
+        return res.data;
+      } catch (err) {
+        // Direct Supabase Fallback
+        if (typeof window !== 'undefined' && window.ERP_CONFIG && window.ERP_CONFIG.SUPABASE_URL) {
+          try {
+            var sUrl = window.ERP_CONFIG.SUPABASE_URL;
+            var sKey = window.ERP_CONFIG.SUPABASE_ANON_KEY;
+            var code = teacherId;
+            if (!code) {
+              var stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+              code = stored.emp_code || 'EMP-CSE-1001';
+            }
+            var resp = await fetch(sUrl + '/rest/v1/timetable_entries?emp_code=eq.' + encodeURIComponent(code) + '&order=slot_index.asc', {
+              headers: { 'apikey': sKey, 'Authorization': 'Bearer ' + sKey }
+            });
+            if (resp.ok) {
+              var sEntries = await resp.json();
+              if (sEntries && sEntries.length > 0) {
+                return {
+                  teacher: { emp_code: code, name: sEntries[0].teacher_name, total_load_hours: sEntries.length },
+                  entries: sEntries,
+                  total_load: sEntries.length
+                };
+              }
+            }
+          } catch (se) {}
+        }
+        throw err;
+      }
+    },
+
+    getAllTeachers: async function () {
+      var res = await this.request('/teachers');
+      return res.data;
+    },
+
+    getTeacherTimetable: async function (teacherId) {
+      var res = await this.request('/timetable/teacher/' + encodeURIComponent(teacherId));
       return res.data;
     },
 

@@ -70,10 +70,52 @@
             attData = res.data;
           }
         } else {
-          const res = await fetch(`${this.apiBaseUrl}/attendance`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json && json.data) attData = json.data;
+          try {
+            const res = await fetch(`${this.apiBaseUrl}/attendance`);
+            if (res.ok) {
+              const json = await res.json();
+              if (json && json.data) attData = json.data;
+            }
+          } catch (fetchErr) {
+            console.warn('[AttendanceService] Backend fetch notice:', fetchErr);
+          }
+        }
+
+        // Direct Cloud Supabase Fallback
+        if (!attData && (typeof window !== 'undefined')) {
+          try {
+            const sbUrl = 'https://gftqvclenyplnuoocbwe.supabase.co/rest/v1';
+            const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY';
+            let userCode = '308637';
+            try {
+              const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+              userCode = stored.student_code || stored.studentCode || stored.enrollmentNo || '308637';
+            } catch (e) {}
+
+            const sRes = await fetch(`${sbUrl}/student_attendance_subjects?student_code=eq.${encodeURIComponent(userCode)}&order=subject_code`, {
+              headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` }
+            });
+            if (sRes.ok) {
+              const subs = await sRes.json();
+              if (subs && subs.length > 0) {
+                attData = {
+                  student_code: userCode,
+                  subjectWise: subs.map(s => ({
+                    code: s.subject_code,
+                    name: s.subject_name,
+                    type: s.subject_type,
+                    typeName: s.type_name,
+                    attended: s.present_periods,
+                    total: s.total_periods,
+                    percentage: s.total_periods > 0 ? Number(((s.present_periods / s.total_periods) * 100).toFixed(2)) : 0,
+                    faculty: s.faculty_name,
+                    classroom: s.classroom
+                  }))
+                };
+              }
+            }
+          } catch (sbErr) {
+            console.warn('[AttendanceService] Direct Supabase fetch notice:', sbErr);
           }
         }
 
