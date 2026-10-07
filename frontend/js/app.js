@@ -906,8 +906,9 @@ const TeacherApp = {
     }
 
     const targetSrc = (mode === 'roster') 
-      ? 'teacher-attendance-roster.html?embedded=true' 
-      : 'teacher-attendance.html?embedded=true';
+      ? 'teacher-attendance-roster.html?embedded=true&class=3R' 
+      : 'teacher-attendance.html?embedded=true&class=3R';
+
 
     if (frame) {
       const currentSrc = frame.getAttribute('src') || '';
@@ -986,10 +987,11 @@ const TeacherApp = {
 
   openAttendanceStandalone() {
     const url = (this.currentAttendanceSubView === 'roster')
-      ? 'teacher-attendance-roster.html'
-      : 'teacher-attendance.html';
+      ? 'teacher-attendance-roster.html?class=3R'
+      : 'teacher-attendance.html?class=3R';
     window.open(url, '_blank');
   },
+
 
   initHashRouting() {
     const handleHash = () => {

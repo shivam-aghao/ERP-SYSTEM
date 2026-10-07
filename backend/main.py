@@ -929,8 +929,12 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
 
     # Helper for natural sorting (e.g. 3R1, 3R2, ..., 3R10, ..., 3R80)
     def extract_numeric(val):
-        m = re.search(r'\d+', str(val or ''))
+        s = str(val or "")
+        if s.upper().startswith(cid.upper()):
+            s = s[len(cid):]
+        m = re.search(r'\d+', s)
         return int(m.group()) if m else 9999
+
 
     # Fetch recent attendance history (last 10 sessions) for this class
     history_map = {}
