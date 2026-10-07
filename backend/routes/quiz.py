@@ -175,6 +175,19 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
         "cname": c_name
     })
     db.commit()
+
+    # Step 7: Push Real-Time Assessment Notification to Supabase Cloud
+    try:
+        from backend.services.notification_service import NotificationService
+        NotificationService.send_quiz_notification(
+            quiz_id=quiz_id,
+            class_id=str(q._mapping["class_id"]),
+            title=q._mapping["title"],
+            teacher_id=str(q._mapping.get("teacher_id")) if q._mapping.get("teacher_id") else None
+        )
+    except Exception as notif_err:
+        pass
+
     return success_response({"id": quiz_id, "is_published": True, "status": "active"}, "Quiz published successfully")
 
 @router.post("/quizzes/{quiz_id}/close")

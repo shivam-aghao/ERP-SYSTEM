@@ -2791,6 +2791,7 @@ try:
     from backend.routes.student_records import router as student_records_router
     from backend.routes.notifications import router as notifications_router
     from backend.routes.academic_wallet import router as academic_wallet_router
+    from backend.routes.management import router as management_router
     app.include_router(admin_router, prefix="/api/v1")
     app.include_router(faculty_router, prefix="/api/v1")
     app.include_router(attendance_router, prefix="/api/v1")
@@ -2799,7 +2800,8 @@ try:
     app.include_router(student_records_router, prefix="/api/v1")
     app.include_router(notifications_router, prefix="/api/v1")
     app.include_router(academic_wallet_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet) included under /api/v1")
+    app.include_router(management_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet, management) included under /api/v1")
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 

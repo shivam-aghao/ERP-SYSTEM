@@ -933,32 +933,132 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // NOTIFICATIONS LIST
+  // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
   // ----------------------------------------------------
-  renderNotificationsList() {
+  async renderNotificationsList() {
+    const listEl = document.getElementById("notifications-full-list");
     const container = document.getElementById("notification-items-list");
-    if (!container) return;
+    const empCode = (this.currentTeacher && this.currentTeacher.empCode) ? this.currentTeacher.empCode : 'EMP-CSE-1001';
 
-    container.innerHTML = TeacherERPData.notifications.map(notif => `
-      <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-        <div class="notif-icon-box" style="background:#EBF3FC; color:var(--primary-blue);">
-          <i data-lucide="${notif.icon}" style="width:16px;height:16px;"></i>
-        </div>
-        <div class="notif-content">
-          <div class="notif-title">${notif.title}</div>
-          <div class="notif-desc">${notif.description}</div>
-          <div class="notif-time">${notif.time}</div>
-        </div>
-      </div>
-    `).join('');
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/notifications/list?user_id=${encodeURIComponent(empCode)}&limit=30`).then(r => r.json()).catch(() => null);
+      const notifs = (res && res.data && res.data.length > 0) ? res.data : null;
+
+      // Update badge
+      const countRes = await fetch(`http://localhost:8000/api/v1/notifications/unread-count?user_id=${encodeURIComponent(empCode)}`).then(r => r.json()).catch(() => null);
+      const unreadCount = (countRes && countRes.data && countRes.data.unread_count !== undefined) ? countRes.data.unread_count : 0;
+
+      document.querySelectorAll('.notif-badge').forEach(b => {
+        b.textContent = unreadCount;
+        b.style.display = unreadCount > 0 ? '' : 'none';
+      });
+
+      if (listEl) {
+        if (!notifs || notifs.length === 0) {
+          listEl.innerHTML = `<div style="text-align:center; padding:30px; color:#64748B;">No notices or circulars right now. All caught up!</div>`;
+        } else {
+          listEl.innerHTML = notifs.map(n => {
+            const isUnread = !n.is_read;
+            const p = (n.priority || 'normal').toUpperCase();
+            const color = p === 'URGENT' ? '#E11D48' : (p === 'HIGH' ? '#D97706' : '#005A9C');
+            return `
+              <div class="activity-item" style="padding:14px; border-bottom:1px solid #F1F5F9; background:${isUnread ? 'rgba(0,166,214,0.03)' : '#fff'};">
+                <div class="activity-icon-box" style="background:#EBF3FC; color:${color}; font-weight:800; font-size:12px; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                  ${p === 'URGENT' ? '!' : '🔔'}
+                </div>
+                <div class="activity-content" style="flex:1;">
+                  <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="activity-title" style="font-weight:700; color:#1E293B;">${n.title}</span>
+                      <span class="badge" style="background:${p === 'URGENT' ? '#FFE4E6' : '#FEF3C7'}; color:${p === 'URGENT' ? '#E11D48' : '#D97706'}; font-size:10px; padding:1px 6px; border-radius:4px;">${p}</span>
+                      ${isUnread ? '<span style="width:6px; height:6px; border-radius:50%; background:#00A6D6;"></span>' : ''}
+                    </div>
+                    <span class="activity-time" style="font-size:12px; color:#94A3B8;">${new Date(n.received_at || n.sent_at || Date.now()).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</span>
+                  </div>
+                  <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      if (container && notifs) {
+        container.innerHTML = notifs.slice(0, 5).map(notif => `
+          <div class="notification-item ${!notif.is_read ? 'unread' : ''}">
+            <div class="notif-icon-box" style="background:#EBF3FC; color:var(--primary-blue);">
+              <i data-lucide="bell" style="width:16px;height:16px;"></i>
+            </div>
+            <div class="notif-content">
+              <div class="notif-title" style="font-weight:600;">${notif.title}</div>
+              <div class="notif-desc">${notif.message || ''}</div>
+              <div class="notif-time">${new Date(notif.received_at || Date.now()).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn("Error fetching teacher notifications:", e);
+    }
   },
 
-  handleNotificationClick(id) {
-    const notif = TeacherERPData.notifications.find(n => n.id === id);
-    if (notif) {
-      notif.unread = false;
+  async markAllTeacherNotificationsRead() {
+    const empCode = (this.currentTeacher && this.currentTeacher.empCode) ? this.currentTeacher.empCode : 'EMP-CSE-1001';
+    try {
+      await fetch(`http://localhost:8000/api/v1/notifications/mark-all-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: empCode })
+      });
+      this.showToast("All faculty notifications marked as read!");
       this.renderNotificationsList();
-      this.showToast(`Viewing: ${notif.title}`);
+    } catch (e) {
+      this.showToast("Failed to mark notifications read");
+    }
+  },
+
+  async dispatchClassAnnouncement() {
+    const classVal = document.getElementById("teacherNotifClass")?.value || '3R';
+    const priorityVal = document.getElementById("teacherNotifPriority")?.value || 'normal';
+    const titleVal = document.getElementById("teacherNotifTitle")?.value || '';
+    const msgVal = document.getElementById("teacherNotifMsg")?.value || '';
+    const empCode = (this.currentTeacher && this.currentTeacher.empCode) ? this.currentTeacher.empCode : 'EMP-CSE-1001';
+
+    if (!titleVal || !msgVal) {
+      this.showToast("Please provide both a headline and detailed message.", "error");
+      return;
+    }
+
+    try {
+      const payload = {
+        notification_type: "announcement",
+        title: titleVal,
+        message: msgVal,
+        priority: priorityVal,
+        target_type: classVal === 'student' ? 'role' : 'class',
+        target_id: classVal,
+        sender_id: empCode,
+        action_url: "/student/announcements"
+      };
+
+      const res = await fetch("http://localhost:8000/api/v1/notifications/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(r => r.json());
+
+      if (res && res.code === 200) {
+        this.showToast(`Notice successfully dispatched to ${classVal}!`, "success");
+        document.getElementById("teacherNotifTitle").value = "";
+        document.getElementById("teacherNotifMsg").value = "";
+        document.getElementById("teacherCreateNotifCard").style.display = "none";
+        this.renderNotificationsList();
+      } else {
+        this.showToast("Failed to dispatch notice", "error");
+      }
+    } catch (err) {
+      console.error("Error creating notification:", err);
+      this.showToast("Network error creating announcement", "error");
     }
   },
 
@@ -1084,94 +1184,148 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // STUDENTS ROSTER VIEW
+  // STUDENTS ROSTER VIEW (CONNECTED TO SUPABASE DATABASE)
   // ----------------------------------------------------
-  renderStudentsView() {
+  liveStudents: [],
+  selectedRosterClass: '3R',
+
+  async renderStudentsView() {
     const container = document.getElementById("students-content");
     if (!container) return;
 
-    const allStudents = TeacherERPData.students["2R1"];
+    // Show initial loading skeleton
+    container.innerHTML = `
+      <div class="card" style="padding:20px;">
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">
+          <div style="font-size:15px; font-weight:600; margin-bottom:8px;">Fetching Live Student Records from Supabase...</div>
+          <div style="font-size:12px;">Querying assigned cohorts (3R &amp; 2R1) with attendance rates &amp; academic standing</div>
+        </div>
+      </div>
+    `;
+
+    try {
+      const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+        ? TeacherERPData.getActiveTeacherEmpCode()
+        : 'EMP-CSE-1001';
+      const res = await fetch(`/api/v1/management/teacher/students?emp_code=${activeCode}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        this.liveStudents = data.data;
+      } else {
+        this.liveStudents = [];
+      }
+    } catch (e) {
+      console.warn("Could not fetch live students, falling back to local dataset:", e);
+      this.liveStudents = [];
+    }
+
+    // Default to 3R if students exist
+    const has3R = this.liveStudents.some(s => s.class_name === '3R');
+    const defaultClass = has3R ? '3R' : (this.liveStudents[0]?.class_name || '3R');
+    this.selectedRosterClass = defaultClass;
+
+    const classFiltered = this.liveStudents.filter(s => s.class_name === this.selectedRosterClass);
+    const displayList = classFiltered.length > 0 ? classFiltered : (this.liveStudents.length > 0 ? this.liveStudents : (TeacherERPData.students["2R1"] || []));
 
     container.innerHTML = `
       <div class="card" style="padding:20px;">
-        <div class="students-roster-controls">
-          <div style="display:flex; gap:12px; align-items:center;">
+        <div class="students-roster-controls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
             <input type="text" id="roster-filter-input" class="roster-search-input" 
-                   placeholder="Filter student name or roll..." oninput="TeacherApp.filterStudentRoster(this.value)">
-            <select style="padding:8px 12px; border:1px solid var(--border-light); border-radius:var(--radius-sm);" 
+                   placeholder="Filter student name, roll or code..." oninput="TeacherApp.filterStudentRoster(this.value)">
+            <select id="roster-class-selector" style="padding:8px 14px; border:1px solid var(--border-light); border-radius:var(--radius-sm); font-weight:600; color:var(--dark-navy);" 
                     onchange="TeacherApp.changeRosterClass(this.value)">
-              <option value="2R1">CSE 2R1 (Data Structures)</option>
-              <option value="2R2">CSE 2R2 (Java Programming)</option>
-              <option value="3R">CSE 3R (Database Management)</option>
+              <option value="3R" ${this.selectedRosterClass === '3R' ? 'selected' : ''}>Class 3R (Third Year CSE — 74 Students)</option>
+              <option value="2R1" ${this.selectedRosterClass === '2R1' ? 'selected' : ''}>Class 2R1 (Second Year CSE — 83 Students)</option>
             </select>
           </div>
-          <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceModule()">
-            <i data-lucide="check-square" style="width:14px;height:14px;"></i> Take Attendance for Batch
-          </button>
+          <div style="display:flex; gap:8px;">
+            <button class="quick-action-btn primary" onclick="TeacherApp.openBulkMarksModal()" style="background:#0B5CAD; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; cursor:pointer;">
+              <i data-lucide="edit-3" style="width:14px;height:14px;"></i> Bulk Marks Entry
+            </button>
+            <button class="quick-action-btn" onclick="TeacherApp.openAttendanceModule()" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#334155; padding:8px 16px; border-radius:6px; font-weight:600; cursor:pointer;">
+              <i data-lucide="check-square" style="width:14px;height:14px;"></i> Mark Attendance
+            </button>
+          </div>
         </div>
 
-        <table class="roster-table" id="students-roster-table">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Showing <strong>${displayList.length} students</strong> enrolled in Class <strong>${this.selectedRosterClass}</strong> • Data live synchronized from PostgreSQL
+        </div>
+
+        <table class="roster-table" id="students-roster-table" style="width:100%; border-collapse:collapse;">
           <thead>
-            <tr>
-              <th>Roll No</th>
-              <th>Student Full Name</th>
-              <th>Institute Email</th>
-              <th>Attendance Rate</th>
-              <th>Status</th>
-              <th>Action</th>
+            <tr style="background:#F8FAFC; text-align:left; border-bottom:2px solid #E2E8F0;">
+              <th style="padding:10px 12px;">Roll No</th>
+              <th style="padding:10px 12px;">Student Full Name</th>
+              <th style="padding:10px 12px;">Enrollment Code</th>
+              <th style="padding:10px 12px;">Class &amp; Div</th>
+              <th style="padding:10px 12px;">Attendance Rate</th>
+              <th style="padding:10px 12px;">Academic Alerts</th>
+              <th style="padding:10px 12px;">Action</th>
             </tr>
           </thead>
           <tbody id="roster-table-body">
-            ${this.generateRosterRows(allStudents)}
+            ${this.generateRosterRows(displayList)}
           </tbody>
         </table>
       </div>
     `;
+
+    if (window.lucide) window.lucide.createIcons();
   },
 
   generateRosterRows(students) {
-    return students.map(st => `
-      <tr>
-        <td style="font-weight:700; color:var(--primary-blue);">ROLL ${st.rollNo}</td>
-        <td style="font-weight:600; color:var(--dark-navy);">${st.name}</td>
-        <td style="color:var(--text-muted);">${st.email}</td>
-        <td>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:70px; height:6px; background:#E2E8F0; border-radius:10px; overflow:hidden;">
-              <div style="width:${st.attendance}%; height:100%; background:${st.attendance >= 85 ? 'var(--primary-blue)' : 'var(--warning)'};"></div>
-            </div>
-            <span style="font-weight:700; font-size:12px;">${st.attendance}%</span>
-          </div>
-        </td>
-        <td>
-          <span class="badge ${st.attendance >= 85 ? 'badge-completed' : 'badge-pending'}">
-            ${st.attendance >= 85 ? 'Eligible' : 'Low Attendance'}
-          </span>
-        </td>
-        <td>
-          <button style="font-size:12px; color:var(--primary-blue); font-weight:600;" 
-                  onclick="TeacherApp.showToast('Student academic record opened for ${st.name}')">
-            View Details
-          </button>
-        </td>
-      </tr>
-    `).join('');
-  },
+    if (!students || students.length === 0) {
+      return '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No student records found.</td></tr>';
+    }
 
-  filterStudentRoster(query) {
-    const q = query.toLowerCase();
-    const rows = document.querySelectorAll("#roster-table-body tr");
-    rows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(q) ? "" : "none";
-    });
+    return students.map(st => {
+      const roll = st.roll_no || st.rollNo || '-';
+      const name = st.full_name || st.name || 'Student';
+      const code = st.student_code || st.email || '-';
+      const cls = st.class_name ? `${st.class_name} (${st.division || 'A'})` : '3R (A)';
+      const att = (st.attendance_percentage !== undefined) ? st.attendance_percentage : (st.attendance || 85.0);
+      const alerts = st.academic_alerts || (att < 75 ? 'Low Attendance' : 'Clear');
+      const isEligible = att >= 75;
+
+      return `
+        <tr style="border-bottom:1px solid #E2E8F0;">
+          <td style="font-weight:700; color:var(--primary-blue); padding:10px 12px;">${roll}</td>
+          <td style="font-weight:600; color:var(--dark-navy); padding:10px 12px;">${name}</td>
+          <td style="color:var(--text-muted); font-size:12px; padding:10px 12px;"><code>${code}</code></td>
+          <td style="padding:10px 12px;"><span class="badge badge-info" style="font-size:11px;">${cls}</span></td>
+          <td style="padding:10px 12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="width:65px; height:6px; background:#E2E8F0; border-radius:10px; overflow:hidden;">
+                <div style="width:${Math.min(100, att)}%; height:100%; background:${isEligible ? 'var(--primary-blue)' : '#EF4444'};"></div>
+              </div>
+              <span style="font-weight:700; font-size:12px;">${att}%</span>
+            </div>
+          </td>
+          <td style="padding:10px 12px;">
+            <span class="badge ${alerts === 'Clear' ? 'badge-completed' : 'badge-pending'}" style="font-size:11px;">
+              ${alerts}
+            </span>
+          </td>
+          <td style="padding:10px 12px;">
+            <button style="font-size:12px; color:var(--primary-blue); font-weight:600; background:transparent; border:none; cursor:pointer;" 
+                    onclick="TeacherApp.showToast('Student academic record opened for ${name.replace(/'/g, "\\'")}')">
+              View Profile
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   },
 
   changeRosterClass(classCode) {
-    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"];
+    this.selectedRosterClass = classCode;
+    const filtered = this.liveStudents.filter(s => s.class_name === classCode);
     const tbody = document.getElementById("roster-table-body");
     if (tbody) {
-      tbody.innerHTML = this.generateRosterRows(list);
+      tbody.innerHTML = this.generateRosterRows(filtered.length > 0 ? filtered : (TeacherERPData.students[classCode] || []));
+      if (window.lucide) window.lucide.createIcons();
     }
   },
 
@@ -1367,6 +1521,279 @@ const TeacherApp = {
         const text = card.textContent.toLowerCase();
         card.style.opacity = text.includes(query) ? "1" : "0.3";
       });
+    }
+  },
+
+  // ----------------------------------------------------
+  // STEP 8: BULK MARKS ENTRY MODAL & WORKFLOW
+  // ----------------------------------------------------
+  openBulkMarksModal() {
+    let modal = document.getElementById("bulkMarksModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "bulkMarksModal";
+      modal.className = "modal-overlay";
+      modal.style.cssText = `
+        display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(11, 31, 58, 0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+      `;
+      document.body.appendChild(modal);
+    }
+
+    const students = (this.liveStudents && this.liveStudents.length > 0)
+      ? this.liveStudents.filter(s => s.class_name === '3R').slice(0, 15)
+      : (TeacherERPData.students["3R"] || []).slice(0, 15);
+
+    modal.innerHTML = `
+      <div style="background:#fff; width:92%; max-width:780px; max-height:90vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 35px rgba(0,0,0,0.25);">
+        <div style="padding:16px 22px; background:#0B1F3A; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="margin:0; font-size:16px; font-weight:700;">Bulk Marks Entry Sheet</h3>
+            <span style="font-size:12px; color:#00A6D6;">Autonomous Continuous Assessment &amp; Semester Internal Grading</span>
+          </div>
+          <button onclick="document.getElementById('bulkMarksModal').style.display='none'" style="background:transparent; border:none; color:#fff; font-size:22px; cursor:pointer;">&times;</button>
+        </div>
+        
+        <div style="padding:16px 22px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; display:flex; gap:16px; flex-wrap:wrap; font-size:13px;">
+          <div><strong>Class:</strong> <span class="badge badge-info" style="font-size:11px;">3R (Third Year CSE)</span></div>
+          <div><strong>Subject:</strong> <span class="badge badge-secondary" style="font-size:11px;">5CS220PC - Database Management Systems</span></div>
+          <div><strong>Max Marks:</strong> Internal: 30 • External: 70 • Total: 100</div>
+        </div>
+
+        <div style="padding:16px 22px; overflow-y:auto; flex:1;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr style="background:#F1F5F9; text-align:left; border-bottom:2px solid #CBD5E1;">
+                <th style="padding:8px 10px;">Roll No</th>
+                <th style="padding:8px 10px;">Student Name</th>
+                <th style="padding:8px 10px; width:130px;">Internal (Max 30)</th>
+                <th style="padding:8px 10px; width:130px;">External (Max 70)</th>
+                <th style="padding:8px 10px;">Calculated Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map(st => {
+                const sid = st.student_id || st.id || 'stud-' + st.roll_no;
+                const roll = st.roll_no || st.rollNo || '-';
+                const name = st.full_name || st.name || 'Student';
+                return `
+                  <tr style="border-bottom:1px solid #E2E8F0;">
+                    <td style="padding:8px 10px; font-weight:700; color:var(--primary-blue);">${roll}</td>
+                    <td style="padding:8px 10px; font-weight:600;">${name}</td>
+                    <td style="padding:8px 10px;">
+                      <input type="number" class="bulk-int-mark" data-id="${sid}" min="0" max="30" value="26" 
+                             style="width:80px; padding:6px; border:1px solid #CBD5E1; border-radius:4px;" 
+                             oninput="TeacherApp.calcRowTotal(this)">
+                    </td>
+                    <td style="padding:8px 10px;">
+                      <input type="number" class="bulk-ext-mark" data-id="${sid}" min="0" max="70" value="54" 
+                             style="width:80px; padding:6px; border:1px solid #CBD5E1; border-radius:4px;" 
+                             oninput="TeacherApp.calcRowTotal(this)">
+                    </td>
+                    <td style="padding:8px 10px; font-weight:700; color:#059669;" class="row-total-display">80 / 100 (A)</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding:14px 22px; background:#F8FAFC; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; color:var(--text-muted);">* Boundary enforcement: Marks cannot be negative or exceed max values.</span>
+          <div style="display:flex; gap:10px;">
+            <button onclick="document.getElementById('bulkMarksModal').style.display='none'" style="padding:8px 16px; border:1px solid #CBD5E1; background:#fff; border-radius:6px; cursor:pointer;">Cancel</button>
+            <button onclick="TeacherApp.submitBulkMarks()" style="padding:8px 20px; background:#0B5CAD; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Validate &amp; Submit Marks</button>
+          </div>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  },
+
+  calcRowTotal(input) {
+    const row = input.closest('tr');
+    const intInput = row.querySelector('.bulk-int-mark');
+    const extInput = row.querySelector('.bulk-ext-mark');
+    const totalEl = row.querySelector('.row-total-display');
+
+    const intVal = Math.max(0, Math.min(30, parseFloat(intInput.value) || 0));
+    const extVal = Math.max(0, Math.min(70, parseFloat(extInput.value) || 0));
+    intInput.value = intVal;
+    extInput.value = extVal;
+
+    const total = intVal + extVal;
+    const grade = total >= 80 ? 'A' : (total >= 70 ? 'B+' : (total >= 60 ? 'B' : (total >= 50 ? 'C' : 'P')));
+    totalEl.textContent = `${total} / 100 (${grade})`;
+  },
+
+  async submitBulkMarks() {
+    this.showToast('Validating boundaries and recording bulk marks...', 'info');
+    const rows = document.querySelectorAll('#bulkMarksModal tbody tr');
+    const marksData = [];
+
+    rows.forEach(r => {
+      const intInput = r.querySelector('.bulk-int-mark');
+      const extInput = r.querySelector('.bulk-ext-mark');
+      marksData.push({
+        student_id: intInput.getAttribute('data-id'),
+        internal_marks: parseFloat(intInput.value) || 0,
+        external_marks: parseFloat(extInput.value) || 0,
+        practical_marks: 0,
+        maximum_marks: 100
+      });
+    });
+
+    try {
+      const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+        ? TeacherERPData.getActiveTeacherEmpCode()
+        : 'EMP-CSE-1001';
+
+      const res = await fetch('/api/v1/management/teacher/marks/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emp_code: activeCode,
+          class_id: 'f6f20676-7307-415f-8e4b-92bc9f347646', // 3R
+          subject_id: 'a814f14f-5f86-4b6e-9fb7-a0bf2b6b588c', // DBMS
+          semester: 5,
+          marks: marksData
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`✅ Successfully validated and saved marks for ${data.data.processed_count} students!`, 'success');
+        document.getElementById('bulkMarksModal').style.display = 'none';
+      } else {
+        this.showToast(data.message || 'Error saving marks', 'error');
+      }
+    } catch (err) {
+      this.showToast(`Error: ${err.message}`, 'error');
+    }
+  },
+
+  // ----------------------------------------------------
+  // STEP 8: LEAVE APPLICATION WORKFLOW
+  // ----------------------------------------------------
+  openLeaveModal() {
+    let modal = document.getElementById("teacherLeaveModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "teacherLeaveModal";
+      modal.className = "modal-overlay";
+      modal.style.cssText = `
+        display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(11, 31, 58, 0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+      `;
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div style="background:#fff; width:90%; max-width:480px; border-radius:12px; overflow:hidden; box-shadow:0 15px 35px rgba(0,0,0,0.25);">
+        <div style="padding:16px 20px; background:#0B1F3A; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:15px; font-weight:700;">Apply for Faculty Leave</h3>
+          <button onclick="document.getElementById('teacherLeaveModal').style.display='none'" style="background:transparent; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:20px; font-size:13px;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-weight:600; margin-bottom:4px;">Leave Type</label>
+            <select id="teacherLeaveType" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px;">
+              <option value="casual">Casual Leave (CL)</option>
+              <option value="medical">Medical Leave (ML)</option>
+              <option value="duty">Duty Leave / Conference (DL)</option>
+              <option value="earned">Earned Leave (EL)</option>
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:4px;">Start Date</label>
+              <input type="date" id="teacherLeaveStart" value="2026-11-10" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px;">
+            </div>
+            <div>
+              <label style="display:block; font-weight:600; margin-bottom:4px;">End Date</label>
+              <input type="date" id="teacherLeaveEnd" value="2026-11-11" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px;">
+            </div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-weight:600; margin-bottom:4px;">Total Working Days</label>
+            <input type="number" id="teacherLeaveDays" value="2.0" step="0.5" min="0.5" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px;">
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-weight:600; margin-bottom:4px;">Reason / Academic Arrangement</label>
+            <textarea id="teacherLeaveReason" rows="3" placeholder="Specify reason and lecture adjustment..." style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px;"></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="document.getElementById('teacherLeaveModal').style.display='none'" style="padding:8px 14px; border:1px solid #CBD5E1; background:#fff; border-radius:6px; cursor:pointer;">Cancel</button>
+            <button onclick="TeacherApp.submitLeaveApplication()" style="padding:8px 18px; background:#0B5CAD; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Submit Application</button>
+          </div>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  },
+
+  async submitLeaveApplication() {
+    const leaveType = document.getElementById('teacherLeaveType').value;
+    const startDate = document.getElementById('teacherLeaveStart').value;
+    const endDate = document.getElementById('teacherLeaveEnd').value;
+    const totalDays = parseFloat(document.getElementById('teacherLeaveDays').value) || 1.0;
+    const reason = document.getElementById('teacherLeaveReason').value || 'Personal academic leave';
+
+    try {
+      const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+        ? TeacherERPData.getActiveTeacherEmpCode()
+        : 'EMP-CSE-1001';
+
+      const res = await fetch('/api/v1/management/teacher/leave/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emp_code: activeCode,
+          leave_type: leaveType,
+          start_date: startDate,
+          end_date: endDate,
+          total_days: totalDays,
+          reason: reason
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ Leave application successfully submitted to HOD/Admin for review!', 'success');
+        document.getElementById('teacherLeaveModal').style.display = 'none';
+      } else {
+        this.showToast(data.message || 'Leave submission failed', 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  // ----------------------------------------------------
+  // STEP 8: ATTENDANCE SUBMISSION FOR APPROVAL
+  // ----------------------------------------------------
+  async submitAttendanceSession(sessionId) {
+    if (!sessionId) {
+      this.showToast('Select an attendance session to submit', 'warning');
+      return;
+    }
+    try {
+      const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+        ? TeacherERPData.getActiveTeacherEmpCode()
+        : 'EMP-CSE-1001';
+
+      const res = await fetch('/api/v1/management/teacher/attendance/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, emp_code: activeCode })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ Session submitted for HOD approval and locking!', 'success');
+      } else {
+        this.showToast(data.message || 'Submission failed', 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
     }
   },
 

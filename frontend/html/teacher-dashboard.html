@@ -108,13 +108,13 @@
     if (window.ERP_AUTH) {
       if (!window.ERP_AUTH.isAuthenticated()) {
         window.ERP_AUTH.setSession({
-          id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
-          name: 'Prof. J. M. Patil',
+          id: '8f913c70-85ed-4261-bbd0-f2d3b42f4af1',
+          name: 'Dr. J. M. Patil',
           role: 'teacher',
-          email: 'emp-cse-1001@ssgmce.ac.in',
+          email: 'jmpatil@ssgmce.ac.in',
           emp_code: 'EMP-CSE-1001',
-          department_id: 'CSE'
-        }, 'teach_token_1f33bd6c-cab3-4205-8daa-1ac23b4d3552');
+          department_id: '945f3faf-8b04-45d8-a274-a96908abb7d9'
+        }, 'teach_token_8f913c70-85ed-4261-bbd0-f2d3b42f4af1');
       }
       window.ERP_AUTH.requireAuth('teacher');
     }
@@ -203,7 +203,7 @@
             <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">SSGMCE Faculty Record</div>
           </div>
           <div class="p-links">
-            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.showTeacherProfile()">
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('profile')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>View Profile</span>
             </div>
@@ -657,6 +657,14 @@
               <button class="quick-action-btn" onclick="TeacherApp.switchView('results')">
                 <i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i>
                 Upload Results
+              </button>
+              <button class="quick-action-btn primary" onclick="TeacherApp.openBulkMarksModal()" style="background:#0B5CAD; color:#fff;">
+                <i data-lucide="edit-3" style="width:16px;height:16px;"></i>
+                Bulk Marks Entry
+              </button>
+              <button class="quick-action-btn" onclick="TeacherApp.openLeaveModal()">
+                <i data-lucide="calendar-plus" style="width:16px;height:16px;"></i>
+                Apply Leave
               </button>
             </div>
           </div>
@@ -1243,97 +1251,6 @@
             </div>
           </div>
 
-          <!-- ========================================================
-               MODAL 4: FACULTY PROFILE MODAL (INSTANT PROFILE POPUP)
-               ======================================================== -->
-          <div id="modal-teacher-profile" class="app-modal-backdrop" style="display:none;" onclick="if(event.target === this) TeacherApp.closeTeacherProfileModal()">
-            <div class="app-modal-dialog" style="max-width: 580px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(11, 31, 58, 0.35);">
-              <div class="app-modal-header" style="background: linear-gradient(135deg, #0B1F3A 0%, #153A6B 100%); color: #FFFFFF; padding: 18px 24px; border-bottom: none; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 166, 214, 0.2); display: flex; align-items: center; justify-content: center; color: #00A6D6;">
-                    <i data-lucide="user-check" style="width: 18px; height: 18px;"></i>
-                  </div>
-                  <div>
-                    <h3 style="font-size: 16px; font-weight: 700; color: #FFFFFF; margin: 0;">Faculty Profile</h3>
-                    <small style="color: #94A3B8; font-size: 11.5px;">SSGMCE Verified Faculty Credential</small>
-                  </div>
-                </div>
-                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeTeacherProfileModal()" style="color: #FFFFFF; background: rgba(255, 255, 255, 0.12); border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;" title="Close Profile">✕</button>
-              </div>
-
-              <div class="app-modal-body" style="padding: 24px; background: #FFFFFF; max-height: calc(85vh - 120px); overflow-y: auto;">
-                <!-- Profile Header Banner Inside Modal -->
-                <div style="display: flex; gap: 18px; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
-                  <div class="avatar-circle profile-avatar" id="modal-profile-avatar" style="width: 72px; height: 72px; font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #00A6D6 0%, #0B5CAD 100%); color: #FFFFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 166, 214, 0.35); position: relative;">
-                    <span>JP</span>
-                    <span style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10B981; border: 2.5px solid #FFFFFF; border-radius: 50%;" title="Active Faculty"></span>
-                  </div>
-                  <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                      <h2 id="modal-profile-name" style="font-size: 20px; font-weight: 800; color: #0B1F3A; margin: 0;">Prof. J. M. Patil</h2>
-                      <span style="background: #E0F2FE; color: #0284C7; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">Verified Faculty</span>
-                    </div>
-                    <div id="modal-profile-title" style="color: #0B5CAD; font-weight: 600; font-size: 13.5px; margin-top: 3px;">Professor & Head, CSE</div>
-                    <div id="modal-profile-dept" style="color: #64748B; font-size: 12px; margin-top: 2px;">Department of Computer Science & Engineering</div>
-                  </div>
-                </div>
-
-                <!-- Info Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Employee Code</span>
-                    <div id="modal-profile-empid" style="font-weight: 700; color: #0B1F3A; font-size: 13.5px; margin-top: 3px;">EMP-CSE-1001</div>
-                  </div>
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Official Email</span>
-                    <div id="modal-profile-email" style="font-weight: 700; color: #0B1F3A; font-size: 13px; margin-top: 3px; word-break: break-all;">jmpatil@ssgmce.ac.in</div>
-                  </div>
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Office Location</span>
-                    <div id="modal-profile-cabin" style="font-weight: 700; color: #0B1F3A; font-size: 13.5px; margin-top: 3px;">Room B-204, Academic Block</div>
-                  </div>
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Office Consultation</span>
-                    <div id="modal-profile-hours" style="font-weight: 700; color: #0B1F3A; font-size: 13.5px; margin-top: 3px;">Mon - Fri, 10:00 AM - 04:00 PM</div>
-                  </div>
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Contact Phone</span>
-                    <div id="modal-profile-phone" style="font-weight: 700; color: #0B1F3A; font-size: 13.5px; margin-top: 3px;">+91 94228 12345</div>
-                  </div>
-                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 14px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Academic Term</span>
-                    <div id="modal-profile-term" style="font-weight: 700; color: #0B1F3A; font-size: 13.5px; margin-top: 3px;">2026-2027 (Odd Term)</div>
-                  </div>
-                </div>
-
-                <!-- Assigned Classes Quick List -->
-                <div style="background: #F1F5F9; border-radius: 14px; padding: 14px 16px;">
-                  <span style="font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Active Allocated Classes</span>
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
-                      <span style="background: #00A6D6; color: #FFFFFF; font-weight: 800; font-size: 11px; padding: 2px 6px; border-radius: 6px;">2R1</span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: #0B1F3A;">Data Structures</span>
-                      <small style="color: #64748B; font-size: 11px;">(60 Students)</small>
-                    </div>
-                    <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
-                      <span style="background: #0B5CAD; color: #FFFFFF; font-weight: 800; font-size: 11px; padding: 2px 6px; border-radius: 6px;">2R2</span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: #0B1F3A;">DBMS</span>
-                      <small style="color: #64748B; font-size: 11px;">(60 Students)</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="app-modal-footer" style="padding: 14px 24px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeTeacherProfileModal()" style="padding: 9px 18px; border-radius: 10px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #475569; font-weight: 600; font-size: 13px; cursor: pointer;">Close</button>
-                <div style="display: flex; gap: 8px;">
-                  <button type="button" class="quick-action-btn" onclick="TeacherApp.closeTeacherProfileModal(); TeacherApp.switchView('timetable');" style="padding: 9px 14px; font-size: 13px;">View Timetable</button>
-                  <button type="button" class="quick-action-btn primary" onclick="TeacherApp.closeTeacherProfileModal(); TeacherApp.switchView('profile');" style="padding: 9px 18px; font-size: 13px;">Open Full Profile Hub</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </section>
 
         <!-- ========================================================
@@ -1395,37 +1312,62 @@
              ======================================================== -->
         <section id="notifications-view" class="view-section-pane app-module-view">
           <div class="card" style="padding:24px;">
-            <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Academic Notifications & Circulars</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+              <div>
+                <h3 style="font-size:16px; margin:0; color:var(--dark-navy);">Faculty Notifications &amp; Circulars</h3>
+                <p style="font-size:12px; margin:4px 0 0; color:var(--text-muted);">Real-time stream of departmental notices and automated assessment/attendance triggers</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('teacherCreateNotifCard').style.display='block'" style="background:var(--primary-blue); color:#fff; border:none; padding:7px 14px; border-radius:6px; font-weight:600; cursor:pointer;">
+                  + Post Class Notice
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="TeacherApp.markAllTeacherNotificationsRead()" style="border:1px solid #CBD5E1; background:#F8FAFC; color:#334155; padding:7px 14px; border-radius:6px; font-weight:600; cursor:pointer;">
+                  Mark All Read ✓
+                </button>
+              </div>
+            </div>
+
+            <!-- Faculty Announcement Composer -->
+            <div id="teacherCreateNotifCard" style="display:none; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:18px; margin-bottom:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="margin:0; font-size:14px; color:var(--dark-navy); font-weight:700;">Broadcast Announcement / Class Alert</h4>
+                <button type="button" onclick="document.getElementById('teacherCreateNotifCard').style.display='none'" style="background:none; border:none; font-size:16px; cursor:pointer; color:#64748B;">✕</button>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                  <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Target Class</label>
+                  <select id="teacherNotifClass" class="form-control" style="width:100%; padding:7px; border:1px solid #CBD5E1; border-radius:5px; font-size:13px;">
+                    <option value="3R">Class 3R (Third Year CSE)</option>
+                    <option value="2R1">Class 2R1 (Second Year CSE)</option>
+                    <option value="student">All Students</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Priority &amp; Urgency</label>
+                  <select id="teacherNotifPriority" class="form-control" style="width:100%; padding:7px; border:1px solid #CBD5E1; border-radius:5px; font-size:13px;">
+                    <option value="normal">Normal</option>
+                    <option value="high">High Priority</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Notice Headline</label>
+                <input type="text" id="teacherNotifTitle" placeholder="e.g. Continuous Assessment Test Date Rescheduled" class="form-control" style="width:100%; padding:7px 10px; border:1px solid #CBD5E1; border-radius:5px; font-size:13px;">
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Detailed Message</label>
+                <textarea id="teacherNotifMsg" rows="3" placeholder="Provide complete facts, lecture instructions, or submission requirements..." class="form-control" style="width:100%; padding:7px 10px; border:1px solid #CBD5E1; border-radius:5px; font-size:13px;"></textarea>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" onclick="document.getElementById('teacherCreateNotifCard').style.display='none'" style="padding:6px 14px; border:1px solid #CBD5E1; background:#fff; border-radius:5px; font-size:12px; cursor:pointer;">Cancel</button>
+                <button type="button" onclick="TeacherApp.dispatchClassAnnouncement()" style="padding:6px 16px; background:#00A6D6; color:#fff; border:none; border-radius:5px; font-size:12px; font-weight:700; cursor:pointer;">Dispatch Notice Now 🚀</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Notification List -->
             <div class="activity-list" id="notifications-full-list">
-              <!-- Re-use notification content -->
-              <div class="activity-item">
-                <div class="activity-icon-box blue"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">New attendance reminder</span><span class="activity-time">15 mins ago</span></div>
-                  <span class="activity-desc">Please submit pending attendance for CSE 2R2 before 4:00 PM.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box cyan"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Department meeting</span><span class="activity-time">1 hour ago</span></div>
-                  <span class="activity-desc">Department academic progress review scheduled at 4:30 PM in Seminar Hall A.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box green"><i data-lucide="file-text" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Result submission deadline</span><span class="activity-time">3 hours ago</span></div>
-                  <span class="activity-desc">Internal Assessment 1 marks portal will close on Friday 5:00 PM.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box navy"><i data-lucide="book-open" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Syllabus update notification</span><span class="activity-time">1 day ago</span></div>
-                  <span class="activity-desc">NBA accreditation module mappings revised by Academic Council.</span>
-                </div>
-              </div>
+              <div style="text-align:center; padding:30px; color:#64748B;">Loading faculty notifications...</div>
             </div>
           </div>
         </section>
@@ -1434,81 +1376,40 @@
              PANE 9: PROFILE / INFORMATION / SETTINGS VIEW
              ======================================================== -->
         <section id="profile-view" class="view-section-pane app-module-view">
-          <div class="card" style="padding:28px; margin-bottom: 24px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:24px;">
-              <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-                <div class="profile-avatar" id="teacher-profile-avatar-large" style="width:84px; height:84px; font-size:28px; font-weight:800; background:linear-gradient(135deg, #00A6D6 0%, #0B5CAD 100%); color:#FFFFFF; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0, 166, 214, 0.35);">--</div>
-                <div>
-                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <h2 style="font-size:24px; color:var(--dark-navy); font-weight:800; margin:0;" id="teacher-profile-fullname">Faculty Member</h2>
-                    <span style="background:#E0F2FE; color:#0284C7; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px;">Verified SSGMCE Faculty</span>
-                  </div>
-                  <p style="color:var(--primary-blue); font-weight:600; font-size:15px; margin:4px 0 2px 0;" id="teacher-profile-dept-text">Department Faculty</p>
-                  <p style="color:var(--text-muted); font-size:13px; margin:0;" id="teacher-profile-empid">SSGMCE Faculty Record</p>
-                </div>
-              </div>
-              <div style="display:flex; gap:10px;">
-                <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openTeacherProfileModal()">
-                  <i data-lucide="id-card" style="width:14px;height:14px;"></i> View Profile Card
-                </button>
-                <button type="button" class="quick-action-btn" onclick="TeacherApp.switchView('timetable')">
-                  <i data-lucide="calendar" style="width:14px;height:14px;"></i> View Timetable
-                </button>
+          <div class="card" style="padding:28px;">
+            <div style="display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;">
+              <div class="profile-avatar" id="teacher-profile-avatar-large" style="width:80px; height:80px; font-size:26px;">--</div>
+              <div>
+                <h2 style="font-size:22px; color:var(--dark-navy);" id="teacher-profile-fullname">Faculty Member</h2>
+                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;" id="teacher-profile-dept-text">Department Faculty</p>
+                <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;" id="teacher-profile-empid">SSGMCE Faculty Record</p>
               </div>
             </div>
 
-            <!-- Profile Details Grid -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:24px;">
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Official Institutional Email</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px; word-break:break-all;" id="teacher-profile-email-text">--</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:20px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Official Email</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-email-text">--</div>
               </div>
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Designation & Role</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px;" id="teacher-profile-designation-text">Faculty Member</div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Designation</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-designation-text">Faculty Member</div>
               </div>
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Phone / Contact</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px;" id="teacher-profile-phone-text">--</div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Phone / Contact</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-phone-text">--</div>
               </div>
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Cabin Location</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px;" id="teacher-profile-cabin-text">Main Academic Block, Room B-204</div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cabin Location</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-cabin-text">Main Academic Block</div>
               </div>
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Office Consultation Hours</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px;" id="teacher-profile-office-hours-text">Mon - Fri, 10:00 AM - 04:00 PM</div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Office Hours</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-office-hours-text">Mon - Fri, 10:00 AM - 04:00 PM</div>
               </div>
-              <div style="background:var(--bg-light); border:1px solid var(--border-light); border-radius:12px; padding:16px;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Active Academic Term</label>
-                <div style="font-weight:700; color:var(--dark-navy); font-size:14px; margin-top:4px;" id="profile-academic-term">Active Academic Term</div>
-              </div>
-            </div>
-
-            <!-- Assigned Teaching Allocation Card inside Profile -->
-            <div style="margin-top:24px; padding:20px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:16px;">
-              <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Allocated Teaching Curriculum & Batches</h4>
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px;">
-                <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
-                  <div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span style="background:#00A6D6; color:#FFFFFF; font-weight:800; font-size:11px; padding:3px 7px; border-radius:6px;">CSE 2R1</span>
-                      <strong style="color:#0B1F3A; font-size:13.5px;">Data Structures</strong>
-                    </div>
-                    <small style="color:#64748B; font-size:12px; margin-top:3px; display:block;">Theory & Practical • 60 Students</small>
-                  </div>
-                  <button type="button" class="quick-action-btn" onclick="TeacherApp.openAttendanceForClass('2R1', 'Data Structures')" style="padding:6px 12px; font-size:12px;">Take Attendance</button>
-                </div>
-                <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
-                  <div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span style="background:#0B5CAD; color:#FFFFFF; font-weight:800; font-size:11px; padding:3px 7px; border-radius:6px;">CSE 2R2</span>
-                      <strong style="color:#0B1F3A; font-size:13.5px;">DBMS</strong>
-                    </div>
-                    <small style="color:#64748B; font-size:12px; margin-top:3px; display:block;">Database Systems • 60 Students</small>
-                  </div>
-                  <button type="button" class="quick-action-btn" onclick="TeacherApp.openAttendanceForClass('2R2', 'Database Management Systems')" style="padding:6px 12px; font-size:12px;">Take Attendance</button>
-                </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">Active Academic Term</div>
               </div>
             </div>
           </div>
@@ -1862,7 +1763,6 @@
 
 
   <!-- Application Scripts -->
-  <script src="../js/config.js"></script>
   <script src="../js/data.js"></script>
   <script src="../js/state.js"></script>
   <script src="../js/calendar.js"></script>
