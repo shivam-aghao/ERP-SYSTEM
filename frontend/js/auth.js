@@ -45,13 +45,9 @@
         : '127.0.0.1';
       var rawEndpoints = [
         apiBase + '/auth/login',
-<<<<<<< HEAD
-        'http://localhost:5001/api/v1/auth/login',
-=======
         'http://' + currentHost + ':8000/api/v1/auth/login',
         'http://127.0.0.1:8000/api/v1/auth/login',
         'http://localhost:8000/api/v1/auth/login',
->>>>>>> 3f6b09207df37440d46a828e243de03f141d60e3
         '/api/v1/auth/login',
         '/auth/login',
         '/api/auth/login'
@@ -234,10 +230,10 @@
         if (window.location && window.location.protocol === 'file:') {
           var defaultRole = (expectedRole === 'teacher') ? 'teacher' : 'student';
           var defaultUser = {
-            id: 'cdfaccff-7925-44f3-a0e0-de81ac811e86',
-            student_code: '308637',
-            roll_no: 21,
-            full_name: 'Shivam Sanjay Aghao',
+            id: '4609c17e-8d60-4cab-af65-b686552fc9fc',
+            student_code: '307001',
+            roll_no: 1,
+            full_name: 'Student 2R1-01',
             role: defaultRole
           };
           this.setSession(defaultUser, 'preview-token');

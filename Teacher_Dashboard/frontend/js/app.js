@@ -303,7 +303,7 @@ const TeacherApp = {
 
     const heroIdElem = document.getElementById("hero-teacher-id");
     if (heroIdElem) {
-      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: FAC-CSE-1048";
+      heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: --";
     }
   },
 

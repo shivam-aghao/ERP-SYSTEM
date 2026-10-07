@@ -56,9 +56,18 @@ def delete_class_card(card_id: str, db: Session = Depends(get_db)):
 @router.get("/reports/classes/{class_id}/stats")
 def get_class_stats(class_id: str, db: Session = Depends(get_db)):
     total = db.execute(text("SELECT count(*) FROM students WHERE class_id = :cid"), {"cid": class_id}).scalar() or 0
+    tot_records = db.execute(text("""
+        SELECT count(*) as total, sum(case when status='present' then 1 else 0 end) as present 
+        FROM attendance_records ar
+        JOIN students s ON ar.student_id = s.id
+        WHERE s.class_id = :cid
+    """), {"cid": class_id}).fetchone()
+    tot_rec = tot_records[0] or 0 if tot_records else 0
+    pres_rec = tot_records[1] or 0 if tot_records else 0
+    avg_att = round((pres_rec / tot_rec * 100), 1) if tot_rec > 0 else 0.0
     return success_response({
         "class_id": class_id,
         "total_enrolled": total,
-        "average_attendance": 84.2,
-        "defaulters_count": 4
+        "average_attendance": avg_att,
+        "defaulters_count": 0
     })

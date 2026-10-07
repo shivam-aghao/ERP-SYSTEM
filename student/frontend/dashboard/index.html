@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) - Autonomous Institute Student ERP Dashboard for Shivam Aghao. Real-time timetable, attendance monitoring, syllabus analytics, and academic services.">
+  <meta name="description" content="Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE) - Autonomous Institute Student ERP Dashboard. Real-time timetable, attendance monitoring, syllabus analytics, and academic services.">
   <title>Student Dashboard | SSGMCE Shegaon - College ERP</title>
 
   <!-- College Logo Favicon -->
-  <link rel="icon" type="image/png" href="../../../frontend/images/logo.png?v=2">
+  <link rel="icon" type="image/png" href="../images/logo.png?v=2">
 
   <!-- Google Fonts: Inter & Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,17 @@
   <!-- Chart.js for Attendance Doughnut & Curriculum Analytics Gradient Bar Chart -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/toast.css">
+  <script src="../js/toast.js"></script>
+  <!-- Authentication Guard -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (window.ERP_AUTH) {
+      window.ERP_AUTH.requireAuth('student');
+    }
+  </script>
 </head>
 <body class="dashboard-body">
 
@@ -129,7 +139,7 @@
               Account Settings
             </a>
             <div class="p-divider"></div>
-            <button type="button" class="p-link-item text-danger" id="logoutBtn">
+            <button type="button" class="p-link-item text-danger" id="logoutBtn" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               Sign Out
             </button>
@@ -169,7 +179,7 @@
 
             <!-- Timetable Tab (Dedicated Item) -->
             <li class="sidebar-item" data-module="timetable">
-              <a href="../timetable/student_timetable.html" class="sidebar-link" data-nav="timetable">
+              <a href="student_timetable.html" class="sidebar-link" data-nav="timetable">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -292,7 +302,7 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 <span class="nav-label">Quiz &amp; Examination</span>
-                <span class="nav-badge-pill" style="background:#00A6D6; color:#fff;">Live</span>
+                <span class="nav-badge-pill" id="sidebarQuizBadge" style="background:#00A6D6; color:#fff;">Live</span>
               </a>
             </li>
 
@@ -438,7 +448,7 @@
           
           <!-- Full Section Real Campus Image Background -->
           <div class="hero-unified-bg-media">
-            <img src="../../../frontend/images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-unified-campus-img" id="heroCampusImg" loading="eager">
+            <img src="../images/ssgmce_campus.jpg" alt="SSGMCE Shegaon - Vidya Bhavan Iconic Campus Building" class="hero-unified-campus-img" id="heroCampusImg" loading="eager">
             <div class="hero-unified-gradient-scrim" aria-hidden="true"></div>
           </div>
 
@@ -503,6 +513,10 @@
             </div>
 
             <div class="timetable-header-tags">
+              <a href="student_timetable.html" class="btn btn-outline" style="font-size:0.78rem; padding:4px 10px; text-decoration:none; display:inline-flex; align-items:center; gap:5px; border-radius:6px;" title="Open complete weekly student timetable">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Full Timetable ↗</span>
+              </a>
               <span class="schedule-day-badge" id="scheduleDayBadge">Loading Today's Schedule...</span>
               <span class="schedule-live-pill"><span class="pulse-ring"></span> Live Class in Session</span>
             </div>
@@ -630,9 +644,6 @@
             </div>
           </div>
 
-            </div>
-          </div>
-
           <!-- CARD 2: SYLLABUS COMPLETED GRAPH (Chart.js Bar Chart & Pacing Analytics) -->
           <div class="content-box-card syllabus-graph-card" id="syllabusCard">
             <div class="card-head-bar">
@@ -690,8 +701,6 @@
               </div>
             </div>
           </div>
-        </div>
-
         </div>
 
         <!-- ==================== 5. QUICK ACCESS & ACADEMIC SERVICES (FULL WIDTH) ==================== -->
@@ -1144,11 +1153,11 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Student Roll Number</label>
-                    <input type="text" class="form-control" value="21 (CSE2401)" readonly>
+                    <input type="text" class="form-control" value="--" readonly>
                   </div>
                   <div class="form-group">
                     <label>Student Name</label>
-                    <input type="text" class="form-control" value="Shivam Aghao" readonly>
+                    <input type="text" class="form-control" value="Student" readonly>
                   </div>
                 </div>
                 <div class="form-row">
@@ -1289,13 +1298,13 @@
                 <div class="quiz-badge">Active Quiz</div>
                 <h5>Operating Systems Unit 3: Deadlocks &amp; Concurrency</h5>
                 <p>20 Multiple Choice Questions • 30 Minutes • Max Marks: 20</p>
-                <button type="button" class="btn-start-quiz" onclick="showToast('Starting OS Unit 3 Online Quiz... Good Luck!', 'success')">Start Quiz Now &rarr;</button>
+                <button type="button" class="btn-start-quiz" onclick="window.location.href='student-quiz.html'">Open Quizzes Portal &rarr;</button>
               </div>
               <div class="quiz-item-card">
                 <div class="quiz-badge badge-past">Completed</div>
                 <h5>Data Structures Unit 2: Trees and Traversals</h5>
                 <p>Score: 18 / 20 (90%) • Completed on March 12, 2026</p>
-                <button type="button" class="btn-review-quiz" onclick="showToast('Opening quiz score review sheet...', 'info')">Review Responses</button>
+                <button type="button" class="btn-review-quiz" onclick="window.location.href='student-quiz.html'">View Results & Review</button>
               </div>
             </div>
           </div>
@@ -1312,7 +1321,7 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Current Name in College Record</label>
-                    <input type="text" class="form-control" value="Shivam Aghao" readonly>
+                    <input type="text" class="form-control" value="Student" readonly>
                   </div>
                   <div class="form-group">
                     <label>Requested Name (As per 10th Marksheet)</label>
@@ -2065,17 +2074,17 @@
           <div class="subtab-pane active" data-subpane="academic">
             <div class="profile-dossier-card">
               <div class="profile-dossier-header">
-                <div class="profile-avatar-large">SA</div>
+                <div class="profile-avatar-large">--</div>
                 <div>
-                  <h3 class="modal-title" style="color:var(--navy); font-size:1.35rem;">Shivam Aghao</h3>
+                  <h3 class="modal-title student-profile-name" style="color:var(--navy); font-size:1.35rem;">Student</h3>
                   <p style="color:var(--primary); font-weight:600; font-size:0.92rem;">B.Tech in Computer Science &amp; Engineering</p>
-                  <p style="color:var(--muted); font-size:0.8rem;">Autonomous Institute Permanent Registration No: <strong>202401088219</strong></p>
+                  <p style="color:var(--muted); font-size:0.8rem;">Autonomous Institute Permanent Registration No: <strong>--</strong></p>
                 </div>
               </div>
               <div class="profile-dossier-grid">
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Roll Number</span>
-                  <span class="profile-dossier-val">21 (Class 2R1)</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Current Semester</span>
@@ -2087,23 +2096,23 @@
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Cumulative CGPA</span>
-                  <span class="profile-dossier-val text-success">8.64 / 10.00</span>
+                  <span class="profile-dossier-val text-success">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Semester I SGPA</span>
-                  <span class="profile-dossier-val">8.42</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Semester II SGPA</span>
-                  <span class="profile-dossier-val">8.58</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Semester III SGPA</span>
-                  <span class="profile-dossier-val">8.64</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Earned Credits</span>
-                  <span class="profile-dossier-val text-primary">68 / 160 Credits</span>
+                  <span class="profile-dossier-val text-primary">--</span>
                 </div>
               </div>
             </div>
@@ -2119,27 +2128,27 @@
               <div class="profile-dossier-grid">
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Date of Birth</span>
-                  <span class="profile-dossier-val">14 August 2005</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Blood Group</span>
-                  <span class="profile-dossier-val">O+ (Positive)</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Social Category</span>
-                  <span class="profile-dossier-val">OBC (Other Backward Classes)</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">College Email</span>
-                  <span class="profile-dossier-val">shivam.aghao@ssgmce.ac.in</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Contact Mobile</span>
-                  <span class="profile-dossier-val">+91 98765 43210</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Permanent Address</span>
-                  <span class="profile-dossier-val">At Post Shegaon, Dist. Buldhana - 444203</span>
+                  <span class="profile-dossier-val">--</span>
                 </div>
               </div>
             </div>
@@ -2374,21 +2383,21 @@
           <div class="subtab-pane" data-subpane="eligibility">
             <div class="profile-dossier-card">
               <div class="pane-section-header">
-                <h4>Shivam Aghao • Placement Qualification Assessment</h4>
+                <h4>Placement Qualification Assessment</h4>
                 <span class="badge badge-success">100% Eligible</span>
               </div>
               <div class="profile-dossier-grid">
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">10th SSC Board</span>
-                  <span class="profile-dossier-val text-success">92.4% (Min 60%) ✓</span>
+                  <span class="profile-dossier-val text-success">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">12th HSC Board</span>
-                  <span class="profile-dossier-val text-success">88.6% (Min 60%) ✓</span>
+                  <span class="profile-dossier-val text-success">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Current B.Tech CGPA</span>
-                  <span class="profile-dossier-val text-success">8.64 (Min 6.50) ✓</span>
+                  <span class="profile-dossier-val text-success">--</span>
                 </div>
                 <div class="profile-dossier-item">
                   <span class="profile-dossier-label">Active Academic Backlogs</span>
@@ -2404,7 +2413,7 @@
               <h4>Verified Institutional Placement Resume</h4>
               <p>Your resume has been vetted and approved by T&amp;P Officer Prof. S. P. Trikal.</p>
               <div class="doc-item-card">
-                <h5>Shivam_Aghao_CSE_2026_Resume.pdf</h5>
+                <h5>Placement_Resume.pdf</h5>
                 <span class="file-size-tag">Verified PDF • 240 KB • Updated March 2026</span>
                 <div style="display:flex; gap:10px; margin-top:8px;">
                   <button type="button" class="btn-download-action" onclick="showToast('Downloading verified resume...', 'success')">Download Resume</button>
@@ -2526,11 +2535,11 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Primary Guardian Phone</label>
-                    <input type="tel" class="form-control" value="+91 94221 88219">
+                    <input type="tel" class="form-control" value="--">
                   </div>
                   <div class="form-group">
                     <label>Alternate Emergency Contact</label>
-                    <input type="tel" class="form-control" value="+91 98230 41092">
+                    <input type="tel" class="form-control" value="--">
                   </div>
                 </div>
                 <button type="submit" class="btn-submit-form">Update Emergency Contact</button>
@@ -2550,10 +2559,10 @@
                 <div class="ht-exam-title">ADMIT CARD / HALL TICKET • END SEMESTER EXAMINATION SUMMER 2026</div>
               </div>
               <div class="ht-meta-grid">
-                <div>Candidate: <strong>Shivam Aghao</strong></div>
-                <div>Seat No: <strong>CSE-2401-21</strong></div>
-                <div>PRN: <strong>202401088219</strong></div>
-                <div>Class: <strong>B.Tech CSE Sem IV (2R1)</strong></div>
+                <div>Candidate: <strong>Student</strong></div>
+                <div>Seat No: <strong>--</strong></div>
+                <div>PRN: <strong>--</strong></div>
+                <div>Class: <strong>--</strong></div>
                 <div>Exam Center: <strong>Vidya Bhavan Block (LH-204)</strong></div>
                 <div>Status: <strong>Regular • Eligible ✓</strong></div>
               </div>
@@ -2640,7 +2649,7 @@
               <div class="id-card-front">
                 <div class="id-card-top-bar">
                   <div class="id-card-crest">
-                    <img src="../../../frontend/images/logo.png" alt="SSGMCE Crest" style="width:28px;height:28px;object-fit:contain;">
+                    <img src="../images/logo.png" alt="SSGMCE Crest" style="width:28px;height:28px;object-fit:contain;">
                   </div>
                   <div>
                     <div class="id-card-college">SSGMCE SHEGAON</div>
@@ -2648,13 +2657,13 @@
                   </div>
                 </div>
                 <div class="id-card-middle">
-                  <div class="id-card-photo">SA</div>
+                  <div class="id-card-photo">ST</div>
                   <div class="id-card-info">
-                    <div class="id-card-name">SHIVAM AGHAO</div>
-                    <div>Roll No: <strong>21</strong> • Class: <strong>2R1</strong></div>
+                    <div class="id-card-name">STUDENT</div>
+                    <div>Roll No: <strong>--</strong> • Class: <strong>--</strong></div>
                     <div>Branch: <strong>B.Tech (CSE)</strong></div>
-                    <div>PRN: <strong>202401088219</strong></div>
-                    <div>Blood Group: <strong>O+ve</strong></div>
+                    <div>PRN: <strong>--</strong></div>
+                    <div>Blood Group: <strong>--</strong></div>
                   </div>
                 </div>
                 <div class="id-card-bottom">
@@ -2705,20 +2714,8 @@
 
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-  <!-- Central Config & Auth Guard -->
-  <script src="../../../frontend/js/config.js"></script>
-  <script src="../../../frontend/js/auth.js"></script>
-  <script>
-    if (window.ERP_AUTH) {
-      window.ERP_AUTH.requireAuth('student');
-    }
-  </script>
-  <script src="../../../frontend/js/erp-auth-guard.js"></script>
-  <script src="../../../frontend/js/erp-supabase.js"></script>
-  <script src="../../../frontend/js/student-supabase.js"></script>
-  <script src="../../../frontend/js/student-api.js"></script>
-
-  <!-- Dashboard JavaScript -->
-  <script src="../../../frontend/js/student-dashboard.js"></script>
+  <!-- Central Student API Client & Dashboard Engine -->
+  <script src="../js/student-api.js"></script>
+  <script src="../js/student-dashboard.js"></script>
 </body>
 </html>

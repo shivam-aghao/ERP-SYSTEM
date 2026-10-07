@@ -466,13 +466,13 @@
     <!-- Metadata Information Bar -->
     <div class="meta-top-bar">
       <div class="meta-box-teacher" id="roster-teacher-box">
-        Dr. J.M.Patil (FAC-CSE-1048) Associate Professor CSE
+        <span id="rosterTeacherName">Loading Faculty Profile...</span>
       </div>
       <div class="meta-box-subject" id="rosterSubjectBox">
-        <span id="rosterMetaClass"><strong>Class:</strong> 2R1</span>
-        <span id="rosterMetaSubject"><strong>Course:</strong> CS303 Java Programming (THEORY)</span>
-        <span id="rosterMetaTime"><strong>Time:</strong> 11:15 AM TO 12:15 PM (2)</span>
-        <span id="rosterMetaDate"><strong>Date:</strong> 01/10/2026</span>
+        <span id="rosterMetaClass"><strong>Class:</strong> --</span>
+        <span id="rosterMetaSubject"><strong>Course:</strong> --</span>
+        <span id="rosterMetaTime"><strong>Time:</strong> --</span>
+        <span id="rosterMetaDate"><strong>Date:</strong> --</span>
         <span><strong>Type:</strong> [REGULAR]</span>
       </div>
     </div>
@@ -567,7 +567,7 @@
           <input type="checkbox" checked>
           <span>Topic Taught</span>
         </label>
-        <input type="text" value="ER Diagram Normalization & Relational Schema" class="form-input" style="width: 280px;">
+        <input type="text" placeholder="Enter taught topic..." class="form-input" style="width: 280px;" id="rosterTopicInput">
         <label class="topic-check-item">
           <input type="checkbox">
           <span>Additional Topics / Other Work</span>
@@ -840,7 +840,7 @@
             if (json.data && json.data.fullName) {
               const box = document.getElementById("roster-teacher-box");
               if (box) {
-                box.innerHTML = `${json.data.fullName} (${json.data.empCode || "FAC-CSE-1048"}) ${json.data.designation || "Associate Professor"} ${json.data.department || "CSE"} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;"></span> Live Connected (${json.data.source || "Supabase"})</span>`;
+                box.innerHTML = `${json.data.fullName} (${json.data.empCode || json.data.emp_code || ""}) ${json.data.designation || ""} ${json.data.department || ""} <span style="margin-left:auto;font-size:10px;background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:10px;border:1px solid #86EFAC;display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block;"></span> Live Connected (${json.data.source || "Database"})</span>`;
               }
             }
           }

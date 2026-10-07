@@ -77,15 +77,15 @@ const StudentTimetableApp = {
 
     // Default student context from ERP model
     this.studentSession = {
-      fullName: "Shivam Sanjay Aghao",
-      shortName: "Shivam Aghao",
-      initials: "SA",
-      rollNo: 21,
-      studentCode: "308637",
-      className: "B.Tech CSE 2R1",
+      fullName: "Student",
+      shortName: "Student",
+      initials: "ST",
+      rollNo: "--",
+      studentCode: "",
+      className: "",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: "shivam.aghao@ssgmce.ac.in"
+      email: ""
     };
   },
 

@@ -126,27 +126,27 @@
         </div>
       </div>
 
-      <!-- Student Profile Pill -->
-      <div class="profile-wrapper" id="profileWrapper">
-        <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Shivam Aghao Profile Menu" aria-haspopup="true" aria-expanded="false">
-          <div class="avatar-circle">SA</div>
-          <div class="profile-details">
-            <span class="student-name">Shivam Aghao</span>
-            <span class="student-meta">Roll: 21 • CSE 2R1 (CSE2401)</span>
+      <!-- Student Profile Pill Trigger & Menu -->
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Student Account">
+          <div class="avatar-circle profile-avatar" id="header-profile-avatar">
+            <span>--</span>
           </div>
-          <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="header-profile-name">Loading Profile...</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">--</span>
+          </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </button>
-        <!-- Profile Dropdown Popover -->
-        <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
-          <div class="profile-panel-header">
-            <div class="large-avatar">SA</div>
-            <div>
-              <div class="p-name">Shivam Aghao</div>
-              <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
-              <div class="p-roll">Roll No: 21 • Class: 2R1 • Sem IV (CSE2401)</div>
-            </div>
+
+        <!-- Profile Dropdown Menu -->
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light, #E2E8F0); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--tt-navy);" id="profile-menu-name">Loading Profile...</div>
+            <div style="font-size:12px; color:var(--tt-blue); font-weight:500;" id="profile-menu-title">--</div>
+            <div style="font-size:11px; color:var(--tt-gray-text); margin-top:2px;">Computer Science &amp; Engineering</div>
           </div>
           <div class="p-links">
             <a href="student-profile.html" class="p-link-item">
@@ -535,13 +535,13 @@
   <div id="toast-container" class="toast-stack" aria-live="polite"></div>
 
   <!-- Shared Data & Configurations -->
-  <script src="../../../frontend/js/data.js"></script>
-  <script src="../../../frontend/js/config.js"></script>
-  <script src="../../../frontend/js/erp-auth-guard.js"></script>
-  <script src="../../../frontend/js/student-api.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/erp-auth-guard.js"></script>
+  <script src="../js/student-api.js"></script>
 
   <!-- Student Timetable JavaScript Module -->
-  <script src="student_timetable.js"></script>
+  <script src="../js/student_timetable.js"></script>
 
   <!-- Lucide Icon Renderer -->
   <script>

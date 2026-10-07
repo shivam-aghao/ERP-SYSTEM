@@ -248,8 +248,10 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 
 @router.get("/student/quizzes")
 @router.get("/quiz/student/quizzes")
-def get_student_available_quizzes(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    st = None
+    if student_code:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -275,8 +277,10 @@ def get_student_available_quizzes(student_code: str = Query("308637"), db: Sessi
 
 @router.get("/student/quizzes/{quiz_id}")
 @router.get("/quiz/student/quizzes/{quiz_id}")
-def get_student_quiz_info(quiz_id: str, student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    st = None
+    if student_code:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
@@ -299,8 +303,10 @@ def get_student_quiz_info(quiz_id: str, student_code: str = Query("308637"), db:
 @router.post("/student/quizzes/{quiz_id}/start")
 @router.post("/quiz/student/quizzes/{quiz_id}/start")
 def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
-    st_id = payload.get("student_id") or payload.get("student_code") or "308637"
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
+    st_id = payload.get("student_id") or payload.get("student_code")
+    st = None
+    if st_id:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
