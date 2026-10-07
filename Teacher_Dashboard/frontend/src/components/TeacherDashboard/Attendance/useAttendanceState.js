@@ -1,104 +1,23 @@
 import { useState, useCallback, useMemo } from 'react';
+import { mockTeacherData, getStudentsByClass } from '../../../data/mockTeacherData';
 
 /**
- * Prototype College ERP Data Model:
- * Department -> Classes -> Students -> Subjects -> Timetable
+ * Dynamic ERP Data Adapter
+ * Derived dynamically from centralized mockTeacherData
  */
 export const PROTOTYPE_ERP_DATA = {
   departments: [
     {
-      code: 'CSE',
-      name: 'Computer Science & Engineering',
-      classes: [
-        {
-          code: '2R1',
-          name: 'Second Year CSE Div 1',
-          subjects: [
-            { code: 'CS201', name: 'Data Structures', isLab: false, room: 'Room 201' },
-            { code: 'CS201L', name: 'Data Structures Lab', isLab: true, room: 'Lab 01' },
-            { code: 'CS203', name: 'Discrete Mathematics', isLab: false, room: 'Room 201' }
-          ],
-          students: Array.from({ length: 60 }, (_, i) => {
-            const roll = i + 1;
-            const names = [
-              'Aarav Sharma', 'Aditi Patel', 'Aditya Verma', 'Akash Kulkarni', 'Ananya Deshmukh',
-              'Aniket Joshi', 'Anushka Raut', 'Aryan Patil', 'Atharva Kale', 'Bhavika Shah',
-              'Chetan Shinde', 'Darshan Gaikwad', 'Deepika Mane', 'Devendra More', 'Divya Chauhan',
-              'Gaurav Rathod', 'Harshada Wagh', 'Isha Kulkarni', 'Karan Mehta', 'Kavita Jadhav',
-              'Shivam Aghao', 'Manish Sawant', 'Mayur Gawande', 'Neha Badokar', 'Nikhil Shelke',
-              'Omkar Bhise', 'Pooja Tiwari', 'Pranav Kadam', 'Pranita Ingle', 'Prasad Muley',
-              'Prathamesh Dhole', 'Priya Deshpande', 'Rahul Sangle', 'Rani Shinde', 'Riddhi Thakare',
-              'Ritesh Kharat', 'Rohit Solanke', 'Ruchita Tayade', 'Rushikesh Borse', 'Sakshi Wankhade',
-              'Samarth Wagh', 'Sanket Dhumal', 'Sanika Joshi', 'Sarang Gite', 'Saurabh Tayade',
-              'Sayali Choudhary', 'Shantanu Gore', 'Shreya Pande', 'Shrikant Mohite', 'Shubham Dhoke',
-              'Siddhesh Pawar', 'Snehal Ingle', 'Soham Kulkarni', 'Sumit Tayade', 'Suraj Nemade',
-              'Tanmay Wankhede', 'Tejas Solanke', 'Vaibhav Shinde', 'Vedant Deshmukh', 'Yash Pachpor'
-            ];
-            return {
-              id: `std-2r1-${String(roll).padStart(3, '0')}`,
-              rollNo: roll,
-              rollFormatted: `2R1-${String(roll).padStart(2, '0')}`,
-              name: names[i] || `Student ${roll}`,
-              enrollmentNo: `EN24CSE${String(roll).padStart(3, '0')}`,
-              classCode: '2R1',
-              department: 'CSE',
-              isCR: roll === 21
-            };
-          })
-        },
-        {
-          code: '2R2',
-          name: 'Second Year CSE Div 2',
-          subjects: [
-            { code: 'CS202', name: 'Java Programming', isLab: false, room: 'Room 305' },
-            { code: 'CS204', name: 'Digital Logic', isLab: false, room: 'Room 305' }
-          ],
-          students: Array.from({ length: 58 }, (_, i) => ({
-            id: `std-2r2-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `2R2-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 2R2-${i + 1}`,
-            enrollmentNo: `EN24CSE1${String(i + 1).padStart(2, '0')}`,
-            classCode: '2R2',
-            department: 'CSE'
-          }))
-        },
-        {
-          code: '3R',
-          name: 'Third Year CSE',
-          subjects: [
-            { code: 'CS301', name: 'Database Systems', isLab: false, room: 'Room 304' },
-            { code: 'CS302', name: 'Operating Systems', isLab: false, room: 'Room 201' },
-            { code: 'CS301L', name: 'Database Systems Lab', isLab: true, room: 'Lab 03' }
-          ],
-          students: Array.from({ length: 62 }, (_, i) => ({
-            id: `std-3r-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `3R-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 3R-${i + 1}`,
-            enrollmentNo: `EN23CSE${String(i + 1).padStart(3, '0')}`,
-            classCode: '3R',
-            department: 'CSE'
-          }))
-        },
-        {
-          code: '4R',
-          name: 'Final Year CSE',
-          subjects: [
-            { code: 'CS401', name: 'Algorithms', isLab: false, room: 'Room 304' },
-            { code: 'CS402', name: 'Project Guidance', isLab: false, room: 'Seminar Hall' }
-          ],
-          students: Array.from({ length: 60 }, (_, i) => ({
-            id: `std-4r-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `4R-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 4R-${i + 1}`,
-            enrollmentNo: `EN22CSE${String(i + 1).padStart(3, '0')}`,
-            classCode: '4R',
-            department: 'CSE'
-          }))
-        }
-      ]
+      code: mockTeacherData.teacher?.departmentCode || 'CSE',
+      name: mockTeacherData.teacher?.department || 'Computer Science & Engineering',
+      classes: (mockTeacherData.classes || []).map((cls) => ({
+        code: cls.code,
+        name: cls.name,
+        subjects: [
+          { code: 'CS201', name: cls.subject, isLab: false, room: cls.room }
+        ],
+        students: (mockTeacherData.students || []).filter((s) => s.classId === cls.code)
+      }))
     }
   ]
 };
@@ -115,12 +34,12 @@ export function useAttendanceState(initialSession = null) {
   // Session context: Department, Class, Date, Subject, Timeslot, Room
   const [session, setSession] = useState(
     initialSession || {
-      department: 'CSE',
+      department: mockTeacherData.teacher?.departmentCode || 'CSE',
       classCode: '2R1',
       date: new Date().toISOString().split('T')[0],
-      subject: 'Data Structures',
-      timeslot: '09:00 - 10:30 AM',
-      room: 'Room 201',
+      subject: mockTeacherData.classes[0]?.subject || 'Data Structures',
+      timeslot: mockTeacherData.timetable[0]?.slots[0]?.time || '09:00 - 10:30 AM',
+      room: mockTeacherData.classes[0]?.room || 'Room 201',
       isLab: false
     }
   );
@@ -128,14 +47,10 @@ export function useAttendanceState(initialSession = null) {
   // Tab mode: 'swipe' | 'roster' | 'summary'
   const [activeTab, setActiveTab] = useState('swipe');
 
-  // Enrolled students for current class
+  // Enrolled students for current class dynamically retrieved
   const students = useMemo(() => {
-    const dept = PROTOTYPE_ERP_DATA.departments.find(
-      (d) => d.code === (session.department || 'CSE')
-    );
-    const cls = dept?.classes.find((c) => c.code === (session.classCode || '2R1'));
-    return cls?.students || [];
-  }, [session.department, session.classCode]);
+    return getStudentsByClass(session.classCode || '2R1');
+  }, [session.classCode]);
 
   // UNIFIED ATTENDANCE STATE: Map of student rollNo -> record
   // Initially neutral/unmarked map

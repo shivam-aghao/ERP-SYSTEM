@@ -409,7 +409,12 @@ const TeacherERPData = {
     "Alok Agnihotri", "Devika Nene", "Karthik Pillai", "Monika Sharma", "Pawan Wadekar"
   ],
 
+  studentsByClass: {},
+
   getStudentsForClass(classCode) {
+    if (this.studentsByClass && this.studentsByClass[classCode] && this.studentsByClass[classCode].length) {
+      return this.studentsByClass[classCode];
+    }
     const cls = this.classes[classCode] || this.classes["2R1"];
     const count = cls.studentsCount || 60;
     const dept = cls.department || "CSE";
@@ -438,8 +443,10 @@ const TeacherERPData = {
     return students;
   },
 
-  // Directory students roster getter
+  // Directory students roster getter & setter
+  _studentsMap: null,
   get students() {
+    if (this._studentsMap) return this._studentsMap;
     return {
       "2R1": this.getStudentsForClass("2R1").map(s => ({
         rollNo: s.rollFormatted,
@@ -460,6 +467,9 @@ const TeacherERPData = {
         attendance: 82 + (s.rollNo % 16)
       }))
     };
+  },
+  set students(val) {
+    this._studentsMap = val;
   },
 
   // Today's classes schedule for Dashboard

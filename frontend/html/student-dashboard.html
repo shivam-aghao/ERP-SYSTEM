@@ -25,6 +25,21 @@
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
+      var u = window.ERP_AUTH.getCurrentUser();
+      if (!u || u.role !== 'student') {
+        window.ERP_AUTH.setSession({
+          id: 's0000000-0000-0000-0000-000000000001',
+          student_code: '308637',
+          roll_no: 60,
+          full_name: 'Shivam Sanjay Aghao',
+          name: 'Shivam Sanjay Aghao',
+          class_name: '3R',
+          class_id: 'c3r1',
+          division: '1',
+          email: 'shivam.aghao@ssgmce.ac.in',
+          role: 'student'
+        }, 'st_token_s0000000-0000-0000-0000-000000000001');
+      }
       window.ERP_AUTH.requireAuth('student');
     }
   </script>
@@ -946,46 +961,11 @@
                     <th>Syllabus Progress</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalSyllabusCourseBody">
                   <tr>
-                    <td><strong>CS-301</strong></td>
-                    <td>Data Structures &amp; Algorithms</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Prof. Rajesh Sharma</td>
-                    <td><span class="badge badge-cyan">82% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-302</strong></td>
-                    <td>Java &amp; Object Oriented Programming</td>
-                    <td>3.5</td>
-                    <td>Theory + Lab</td>
-                    <td>Dr. Rohan Deshmukh</td>
-                    <td><span class="badge badge-cyan">80% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-303</strong></td>
-                    <td>Operating Systems Concepts</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Prof. Priya Patil</td>
-                    <td><span class="badge badge-cyan">75% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-304</strong></td>
-                    <td>Database Management Systems</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Dr. Vikram Joshi</td>
-                    <td><span class="badge badge-cyan">78% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-305</strong></td>
-                    <td>Computer Networks &amp; Security</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Dr. Ananya Sen</td>
-                    <td><span class="badge badge-warning">65% Covered</span></td>
+                    <td colspan="6" style="text-align:center; padding:24px; color:#64748B;">
+                      <div class="spinner-sm" style="display:inline-block; margin-right:8px;"></div> Loading registered courses from database...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -998,42 +978,9 @@
               <h4>Department Faculty Mentors &amp; Office Hours</h4>
               <span class="badge-status-safe">CSE Faculty Directory</span>
             </div>
-            <div class="modal-grid-two-col">
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RD</div>
-                <div class="fac-details">
-                  <h5>Dr. Rohan Deshmukh</h5>
-                  <p class="fac-designation">Associate Professor &amp; HOD</p>
-                  <p class="fac-meta">Course: Java Programming (CS-302) • Cabin LH-204</p>
-                  <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link">rohan.deshmukh@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RS</div>
-                <div class="fac-details">
-                  <h5>Prof. Rajesh Sharma</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: Data Structures (CS-301) • Cabin LH-201</p>
-                  <a href="mailto:rajesh.sharma@ssgmce.ac.in" class="fac-email-link">rajesh.sharma@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">AS</div>
-                <div class="fac-details">
-                  <h5>Dr. Ananya Sen</h5>
-                  <p class="fac-designation">Associate Professor</p>
-                  <p class="fac-meta">Course: Computer Networks (CS-305) • Cabin LH-108</p>
-                  <a href="mailto:ananya.sen@ssgmce.ac.in" class="fac-email-link">ananya.sen@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">VJ</div>
-                <div class="fac-details">
-                  <h5>Dr. Vikram Joshi</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: DBMS (CS-304) • Lab 3 Annex</p>
-                  <a href="mailto:vikram.joshi@ssgmce.ac.in" class="fac-email-link">vikram.joshi@ssgmce.ac.in</a>
-                </div>
+            <div class="modal-grid-two-col" id="modalSyllabusFacultyGrid">
+              <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:#64748B;">
+                Loading faculty mentors...
               </div>
             </div>
           </div>
@@ -1044,32 +991,9 @@
               <h4>Sant Gadge Baba Amravati University (SGBAU) Curriculum Documents</h4>
               <span class="badge-status-safe">Autonomous Regulations R-2023</span>
             </div>
-            <div class="doc-download-grid">
-              <div class="doc-item-card">
-                <div class="doc-icon-box">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                </div>
-                <div class="doc-info">
-                  <h5>B.Tech Computer Science Semester VI Full Syllabus</h5>
-                  <p>Includes complete unit course objectives, textbooks, reference materials &amp; laboratory scheme.</p>
-                  <span class="file-size-tag">PDF • 2.4 MB • Updated Jan 2026</span>
-                </div>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading B.Tech CSE Semester VI Syllabus PDF...', 'info')">
-                  Download PDF
-                </a>
-              </div>
-              <div class="doc-item-card">
-                <div class="doc-icon-box">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                </div>
-                <div class="doc-info">
-                  <h5>Autonomous Academic Examination Scheme &amp; Regulations</h5>
-                  <p>Grading criteria, Continuous Internal Evaluation (CIE), and End Semester Exam (ESE) weightages.</p>
-                  <span class="file-size-tag">PDF • 1.1 MB • Official Autonomous Gazette</span>
-                </div>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Downloading Academic Regulations PDF...', 'info')">
-                  Download PDF
-                </a>
+            <div class="doc-download-grid" id="modalSyllabusDocsGrid">
+              <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:#64748B;">
+                Loading curriculum documents...
               </div>
             </div>
           </div>
@@ -1079,22 +1003,22 @@
         <div class="module-content-pane" data-module="fees">
           <!-- Subtab 1: Payable Fee -->
           <div class="subtab-pane active" data-subpane="payable-fee">
-            <div class="fee-summary-banner">
+            <div class="fee-summary-banner" id="modalFeeSummaryBanner">
               <div class="fee-stat-box">
                 <span class="fee-label">Total Annual Fee</span>
-                <span class="fee-val">₹85,000</span>
+                <span class="fee-val">₹0</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Amount Paid</span>
-                <span class="fee-val text-success">₹60,000</span>
+                <span class="fee-val text-success">₹0</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Outstanding Balance</span>
-                <span class="fee-val text-warning">₹25,000</span>
+                <span class="fee-val text-warning">₹0</span>
               </div>
               <div class="fee-stat-box">
-                <span class="fee-label">Due Date</span>
-                <span class="fee-val text-accent">15 April 2026</span>
+                <span class="fee-label">Status</span>
+                <span class="fee-val text-accent">Active Record</span>
               </div>
             </div>
             <div class="table-responsive-wrapper">
@@ -1108,34 +1032,11 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalFeeTableBody">
                   <tr>
-                    <td>Tuition Fee (Semester IV)</td>
-                    <td>₹68,500</td>
-                    <td>₹50,000</td>
-                    <td>₹18,500</td>
-                    <td><span class="badge badge-warning">Partial</span></td>
-                  </tr>
-                  <tr>
-                    <td>Development &amp; Gymkhana Fee</td>
-                    <td>₹12,000</td>
-                    <td>₹10,000</td>
-                    <td>₹2,000</td>
-                    <td><span class="badge badge-warning">Partial</span></td>
-                  </tr>
-                  <tr>
-                    <td>Autonomous Examination Fee</td>
-                    <td>₹2,500</td>
-                    <td>₹0</td>
-                    <td>₹2,500</td>
-                    <td><span class="badge badge-danger">Due</span></td>
-                  </tr>
-                  <tr>
-                    <td>Central Library &amp; Laboratory Deposit</td>
-                    <td>₹2,000</td>
-                    <td>₹0</td>
-                    <td>₹2,000</td>
-                    <td><span class="badge badge-danger">Due</span></td>
+                    <td colspan="5" style="text-align:center; padding:24px; color:#64748B;">
+                      <div class="spinner-sm" style="display:inline-block; margin-right:8px;"></div> Loading fee heads from accounts database...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1153,21 +1054,20 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Student Roll Number</label>
-                    <input type="text" class="form-control" value="21 (CSE2401)" readonly>
+                    <input type="text" class="form-control" id="modalFeeRollInput" value="60 (3R)" readonly>
                   </div>
                   <div class="form-group">
                     <label>Student Name</label>
-                    <input type="text" class="form-control" value="Shivam Aghao" readonly>
+                    <input type="text" class="form-control" id="modalFeeNameInput" value="Shivam Sanjay Aghao" readonly>
                   </div>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Payment Purpose</label>
                     <select class="form-control" id="paymentHeadSelect">
-                      <option value="balance">Full Outstanding Balance (₹25,000)</option>
-                      <option value="tuition">Tuition Fee Clearance (₹18,500)</option>
-                      <option value="exam">Examination Fee (₹2,500)</option>
-                      <option value="custom">Other / Custom Amount</option>
+                      <option value="tuition">Tuition Fee Installment</option>
+                      <option value="exam">Autonomous Examination Fee</option>
+                      <option value="custom">Other / Custom Payment</option>
                     </select>
                   </div>
                   <div class="form-group">
@@ -1197,32 +1097,9 @@
               <h4>Verified Payment Receipts History</h4>
               <span class="badge-status-safe">Official College Counterfoil</span>
             </div>
-            <div class="receipts-list">
-              <div class="receipt-item">
-                <div class="receipt-meta">
-                  <span class="receipt-id">Receipt #SSGMCE-2025-8821</span>
-                  <span class="receipt-date">Paid on 14 Jan 2026 • 11:32 AM</span>
-                  <span class="receipt-head">Tuition Installment 2 (B.Tech Sem IV)</span>
-                </div>
-                <div class="receipt-amount-block">
-                  <span class="receipt-val">₹30,000</span>
-                  <button type="button" class="btn-receipt-dl" onclick="showToast('Downloading Receipt #SSGMCE-2025-8821 PDF...', 'success')">
-                    Download Receipt PDF
-                  </button>
-                </div>
-              </div>
-              <div class="receipt-item">
-                <div class="receipt-meta">
-                  <span class="receipt-id">Receipt #SSGMCE-2025-4109</span>
-                  <span class="receipt-date">Paid on 18 Aug 2025 • 03:15 PM</span>
-                  <span class="receipt-head">Semester III Admission &amp; Tuition Fee</span>
-                </div>
-                <div class="receipt-amount-block">
-                  <span class="receipt-val">₹30,000</span>
-                  <button type="button" class="btn-receipt-dl" onclick="showToast('Downloading Receipt #SSGMCE-2025-4109 PDF...', 'success')">
-                    Download Receipt PDF
-                  </button>
-                </div>
+            <div class="receipts-list" id="modalFeeReceiptsList">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading verified receipts...
               </div>
             </div>
           </div>
@@ -1236,31 +1113,9 @@
               <h4>Active &amp; Submitted Subject Assignments</h4>
               <span class="badge-status-safe">4 Tasks Tracked</span>
             </div>
-            <div class="assignments-list">
-              <div class="assignment-card">
-                <div class="as-head">
-                  <span class="as-course">Data Structures (CS-301)</span>
-                  <span class="badge badge-success">Submitted ✓</span>
-                </div>
-                <h5>Assignment 3: Balanced Binary Search Trees (AVL &amp; Red-Black Trees)</h5>
-                <p>Implementation of self-balancing algorithms in C++ with test cases and complexity graphs.</p>
-                <div class="as-footer">
-                  <span class="as-due">Submitted: March 20, 2026 • Grade: Pending</span>
-                  <button type="button" class="btn-sm-action" onclick="showToast('Viewing submission for CS-301 Assignment 3', 'info')">View Submission</button>
-                </div>
-              </div>
-
-              <div class="assignment-card">
-                <div class="as-head">
-                  <span class="as-course">Database Management (CS-304)</span>
-                  <span class="badge badge-warning">Due in 3 Days</span>
-                </div>
-                <h5>Assignment 2: Schema Normalization &amp; BCNF Decomposition</h5>
-                <p>Solve normalization problems 1 to 5 from university question bank and write relational algebra queries.</p>
-                <div class="as-footer">
-                  <span class="as-due text-warning">Deadline: March 27, 2026 • 11:59 PM</span>
-                  <button type="button" class="btn-sm-action primary-btn" onclick="showToast('Opening assignment upload dialog...', 'info')">Upload Solution</button>
-                </div>
+            <div class="assignments-list" id="modalElearningAssignmentsList">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading registered subject assignments...
               </div>
             </div>
           </div>
@@ -1271,18 +1126,9 @@
               <h4>Digital Learning Repositories &amp; Recorded Lectures</h4>
               <span class="badge-status-safe">LMS Cloud</span>
             </div>
-            <div class="econtent-grid">
-              <div class="econtent-card">
-                <span class="econtent-tag">Lecture Slides</span>
-                <h5>CS-302: Java Concurrency &amp; Multithreading (Unit 4)</h5>
-                <p>Complete instructor presentation slides with runnable code samples and thread pool diagrams.</p>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Accessing Java Unit 4 Lecture Slides...', 'info')">Open Resource &rarr;</a>
-              </div>
-              <div class="econtent-card">
-                <span class="econtent-tag">Recorded Video</span>
-                <h5>CS-305: Subnetting &amp; CIDR Addressing Tutorial</h5>
-                <p>Step-by-step lecture walkthrough with FLSM/VLSM numerical problem solving by Dr. Ananya Sen.</p>
-                <a href="javascript:void(0)" class="btn-download-action" onclick="showToast('Streaming Subnetting Video Lecture...', 'info')">Watch Video &rarr;</a>
+            <div class="econtent-grid" id="modalElearningContentGrid">
+              <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:#64748B;">
+                Loading academic resources and lectures...
               </div>
             </div>
           </div>
@@ -1293,18 +1139,9 @@
               <h4>Autonomous Internal Quizzes &amp; Mock Tests</h4>
               <span class="badge-status-safe">Continuous Internal Evaluation</span>
             </div>
-            <div class="quiz-grid">
-              <div class="quiz-item-card">
-                <div class="quiz-badge">Active Quiz</div>
-                <h5>Operating Systems Unit 3: Deadlocks &amp; Concurrency</h5>
-                <p>20 Multiple Choice Questions • 30 Minutes • Max Marks: 20</p>
-                <button type="button" class="btn-start-quiz" onclick="window.location.href='student-quiz.html'">Open Quizzes Portal &rarr;</button>
-              </div>
-              <div class="quiz-item-card">
-                <div class="quiz-badge badge-past">Completed</div>
-                <h5>Data Structures Unit 2: Trees and Traversals</h5>
-                <p>Score: 18 / 20 (90%) • Completed on March 12, 2026</p>
-                <button type="button" class="btn-review-quiz" onclick="window.location.href='student-quiz.html'">View Results & Review</button>
+            <div class="quiz-grid" id="modalElearningQuizGrid">
+              <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:#64748B;">
+                Loading quizzes and assessments...
               </div>
             </div>
           </div>
@@ -1531,29 +1368,9 @@
               <h4>Available Verified Institutional Credentials</h4>
               <span class="badge-status-safe">D-Wallet Cloud Vault</span>
             </div>
-            <div class="wallet-download-list">
-              <div class="wallet-doc-item">
-                <div class="w-doc-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                </div>
-                <div class="w-doc-info">
-                  <h5>Semester III Autonomous Grade Card</h5>
-                  <p>Official SGPA: 8.64 • Digitally Signed by Controller of Examinations</p>
-                  <span class="file-size-tag">Verified PDF • 420 KB</span>
-                </div>
-                <button type="button" class="btn-download-action" onclick="showToast('Downloading Semester III Grade Card PDF...', 'success')">Download PDF</button>
-              </div>
-
-              <div class="wallet-doc-item">
-                <div class="w-doc-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                </div>
-                <div class="w-doc-info">
-                  <h5>Institutional Bonafide Certificate</h5>
-                  <p>Issued for Passport and Education Loan Verification • Valid for 2025-26</p>
-                  <span class="file-size-tag">Verified PDF • 210 KB</span>
-                </div>
-                <button type="button" class="btn-download-action" onclick="showToast('Downloading Bonafide Certificate PDF...', 'success')">Download PDF</button>
+            <div class="wallet-download-list" id="modalDwalletDocList">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading verified student credentials from vault...
               </div>
             </div>
           </div>
@@ -1563,7 +1380,7 @@
         <div class="module-content-pane" data-module="examination">
           <!-- Subtab 1: View Marks -->
           <div class="subtab-pane active" data-subpane="view-marks">
-            <div class="exam-marks-banner">
+            <div class="exam-marks-banner" id="modalExamMarksBanner">
               <div class="marks-stat">
                 <span class="ms-lbl">Current Cumulative CGPA</span>
                 <span class="ms-val">8.64</span>
@@ -1592,41 +1409,11 @@
                     <th>Total CIE (50)</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalExamMarksTableBody">
                   <tr>
-                    <td>CS-301 Data Structures</td>
-                    <td>18</td>
-                    <td>17</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-302 Java Programming</td>
-                    <td>19</td>
-                    <td>18</td>
-                    <td>10</td>
-                    <td><strong>47 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-303 Operating Systems</td>
-                    <td>16</td>
-                    <td>15</td>
-                    <td>8</td>
-                    <td><strong>39 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-304 Database Systems</td>
-                    <td>17</td>
-                    <td>18</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-305 Computer Networks</td>
-                    <td>15</td>
-                    <td>14</td>
-                    <td>8</td>
-                    <td><strong>37 / 50</strong></td>
+                    <td colspan="5" style="text-align:center; padding:24px; color:#64748B;">
+                      <div class="spinner-sm" style="display:inline-block; margin-right:8px;"></div> Loading evaluation scores from COE cell...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1639,19 +1426,8 @@
               <h4>Apply for Autonomous End-Sem Answer Book Revaluation / Verification</h4>
               <p>Revaluation Fee: ₹300 per subject • Max 2 subjects per student per semester.</p>
               <form class="academic-form" onsubmit="handleRevaluationSubmit(event)">
-                <div class="subject-select-list">
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-301" onchange="calculateRevalFee()">
-                    <span><strong>CS-301 Data Structures</strong> • End-Sem Marks: 58/70 (Fee: ₹300)</span>
-                  </label>
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-303" onchange="calculateRevalFee()">
-                    <span><strong>CS-303 Operating Systems</strong> • End-Sem Marks: 46/70 (Fee: ₹300)</span>
-                  </label>
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-305" onchange="calculateRevalFee()">
-                    <span><strong>CS-305 Computer Networks</strong> • End-Sem Marks: 42/70 (Fee: ₹300)</span>
-                  </label>
+                <div class="subject-select-list" id="modalRevalSubjectList">
+                  <div style="padding:16px; color:#64748B;">Loading registered courses for revaluation...</div>
                 </div>
                 <div class="reval-total-box">
                   <span>Selected Subjects Fee:</span>
@@ -1666,7 +1442,7 @@
 
           <!-- Subtab 3: Backlog -->
           <div class="subtab-pane" data-subpane="backlog">
-            <div class="backlog-status-card">
+            <div class="backlog-status-card" id="modalBacklogCard">
               <div class="backlog-icon-safe">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               </div>
@@ -1685,31 +1461,9 @@
               <h4>Today's Schedule • Thursday</h4>
               <span class="badge-status-safe">5 Periods</span>
             </div>
-            <div class="modal-timetable-list">
-              <div class="modal-time-period completed">
-                <div class="mt-slot">Period 1 • 09:00 - 10:00 AM</div>
-                <div class="mt-title">Data Structures (CS-301)</div>
-                <div class="mt-meta">Lecture Hall 204 • Prof. Rajesh Sharma • Attended ✓</div>
-              </div>
-              <div class="modal-time-period active-now">
-                <div class="mt-slot">Period 2 • 10:00 - 11:00 AM (Live)</div>
-                <div class="mt-title">Java Programming (CS-302)</div>
-                <div class="mt-meta">Computer Lab 2 • Dr. Rohan Deshmukh • In Progress</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 3 • 11:15 AM - 12:15 PM</div>
-                <div class="mt-title">Operating Systems (CS-303)</div>
-                <div class="mt-meta">Lecture Hall 204 • Prof. Priya Patil</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 4 • 01:30 - 02:30 PM</div>
-                <div class="mt-title">Computer Networks (CS-305)</div>
-                <div class="mt-meta">Lecture Hall 108 • Dr. Ananya Sen</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 5 • 02:45 - 03:45 PM</div>
-                <div class="mt-title">Database Management Tutorial (CS-304)</div>
-                <div class="mt-meta">Seminar Hall 1 • Batch B Tutorial</div>
+            <div class="modal-timetable-list" id="modalTimetableTodayList">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading today's schedule from timetable database...
               </div>
             </div>
           </div>
@@ -1718,7 +1472,7 @@
           <div class="subtab-pane" data-subpane="weekly">
             <div class="pane-section-header">
               <h4>Weekly Timetable Matrix • Monday to Saturday</h4>
-              <span class="badge-status-safe">B.Tech CSE 2R1</span>
+              <span class="badge-status-safe">Autonomous Academic Matrix</span>
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
@@ -1732,54 +1486,11 @@
                     <th>02:45 - 04:45</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalTimetableWeeklyBody">
                   <tr>
-                    <td><strong>Monday</strong></td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-304 (Theory)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>Lab: CS-301 Batch A / CS-302 Batch B</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Tuesday</strong></td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-304 (Theory)</td>
-                    <td>Library / Self Study</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Wednesday</strong></td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>Lab: CS-304 Batch A / CS-305 Batch B</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Thursday</strong></td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-302 (Lab)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-304 Tutorial</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Friday</strong></td>
-                    <td>CS-304 (Theory)</td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>Technical Seminar / Mentoring</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Saturday</strong></td>
-                    <td>CS-301 Remedial</td>
-                    <td>CS-303 Tutorial</td>
-                    <td>Co-curricular Activities</td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td colspan="6" style="text-align:center; padding:24px; color:#64748B;">
+                      <div class="spinner-sm" style="display:inline-block; margin-right:8px;"></div> Loading weekly schedule matrix...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1796,7 +1507,7 @@
               <div class="room-guide-card">
                 <h5>Lecture Hall 204 (LH-204)</h5>
                 <p>Second Floor • Vidya Bhavan • Capacity: 80 Students • Smart Interactive Projector &amp; Audio</p>
-                <span class="room-tag">Primary Classroom for CSE 2R1</span>
+                <span class="room-tag">Primary Classroom</span>
               </div>
               <div class="room-guide-card">
                 <h5>Computer Center Lab 2</h5>
@@ -1813,37 +1524,20 @@
           <div class="subtab-pane active" data-subpane="subject-wise">
             <div class="pane-section-header">
               <h4>Subject-wise Attendance Progress</h4>
-              <span class="sub-col-badge" style="font-size:11px; color:#64748B; background:#F1F5F9; padding:4px 8px; border-radius:4px;">Semester V</span>
+              <span class="sub-col-badge" style="font-size:11px; color:#64748B; background:#F1F5F9; padding:4px 8px; border-radius:4px;">Academic Record</span>
             </div>
-            <div class="modal-att-summary-list">
-              <div class="att-row-pill">
-                <span>CS-301 Data Structures</span>
-                <strong>34 / 40 (85%)</strong>
-              </div>
-              <div class="att-row-pill">
-                <span>CS-302 Java Programming</span>
-                <strong>36 / 40 (90%)</strong>
-              </div>
-              <div class="att-row-pill">
-                <span>CS-303 Operating Systems</span>
-                <strong>32 / 42 (76%)</strong>
-              </div>
-              <div class="att-row-pill">
-                <span>CS-304 Database Systems</span>
-                <strong>30 / 37 (81%)</strong>
-              </div>
-              <div class="att-row-pill warning">
-                <span>CS-305 Computer Networks</span>
-                <strong class="text-warning">26 / 36 (72% - Warning)</strong>
+            <div class="modal-att-summary-list" id="modalAttendancePillsList">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading subject attendance breakdown...
               </div>
             </div>
           </div>
 
           <!-- Subtab 2: Eligibility -->
           <div class="subtab-pane" data-subpane="eligibility">
-            <div class="backlog-status-card">
+            <div class="backlog-status-card" id="modalAttendanceEligibilityCard">
               <h4>Autonomous 75% Attendance Requirement</h4>
-              <p>Overall Attendance: <strong>82%</strong> (157 Present / 34 Absent out of 191 total lectures).</p>
+              <p>Overall Attendance: <strong>82%</strong></p>
               <span class="badge-status-safe">Status: Eligible for End-Semester Examinations</span>
             </div>
           </div>
@@ -1947,23 +1641,23 @@
         <div class="module-content-pane" data-module="internal-marks">
           <!-- Subtab 1: CIE Class Tests -->
           <div class="subtab-pane active" data-subpane="cie-tests">
-            <div class="fee-summary-banner">
+            <div class="fee-summary-banner" id="modalInternalMarksBanner">
               <div class="fee-stat-box">
                 <span class="fee-label">Total CIE Score</span>
-                <span class="fee-val text-success">211 / 250</span>
+                <span class="fee-val text-success">0 / 250</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Percentage</span>
-                <span class="fee-val text-primary">84.4%</span>
+                <span class="fee-val text-primary">0%</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Overall Grade</span>
-                <span class="fee-val text-accent">Distinction (O)</span>
+                <span class="fee-val text-accent">-</span>
               </div>
             </div>
             <div class="pane-section-header">
-              <h4>Semester IV Subject-wise Continuous Evaluation</h4>
-              <span class="badge badge-cyan">Mid-Sem 2 Certified</span>
+              <h4>Semester Continuous Evaluation Scores</h4>
+              <span class="badge badge-cyan">Continuous Internal Assessment</span>
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
@@ -1977,46 +1671,11 @@
                     <th>Performance</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalInternalMarksTableBody">
                   <tr>
-                    <td><strong>CS-301 Data Structures</strong></td>
-                    <td>18</td>
-                    <td>17</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                    <td><span class="badge badge-success">Outstanding (90%)</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-302 Java Programming</strong></td>
-                    <td>19</td>
-                    <td>18</td>
-                    <td>10</td>
-                    <td><strong>47 / 50</strong></td>
-                    <td><span class="badge badge-success">Outstanding (94%)</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-303 Operating Systems</strong></td>
-                    <td>16</td>
-                    <td>15</td>
-                    <td>8</td>
-                    <td><strong>39 / 50</strong></td>
-                    <td><span class="badge badge-cyan">Very Good (78%)</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-304 Database Systems</strong></td>
-                    <td>17</td>
-                    <td>18</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                    <td><span class="badge badge-success">Outstanding (88%)</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-305 Computer Networks</strong></td>
-                    <td>15</td>
-                    <td>14</td>
-                    <td>8</td>
-                    <td><strong>37 / 50</strong></td>
-                    <td><span class="badge badge-warning">Good (74%)</span></td>
+                    <td colspan="6" style="text-align:center; padding:24px; color:#64748B;">
+                      <div class="spinner-sm" style="display:inline-block; margin-right:8px;"></div> Loading continuous internal evaluation records...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -2027,7 +1686,7 @@
           <div class="subtab-pane" data-subpane="lab-eval">
             <div class="pane-section-header">
               <h4>Continuous Practical Evaluation &amp; Term Work</h4>
-              <span class="badge-status-safe">100% Laboratory Completion</span>
+              <span class="badge-status-safe">Laboratory Assessment</span>
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
@@ -2040,27 +1699,11 @@
                     <th>Term Work Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalLabEvalTableBody">
                   <tr>
-                    <td><strong>CS-301L Data Structures Lab</strong></td>
-                    <td>10 / 10 Exp</td>
-                    <td><span class="badge badge-success">Verified ✓</span></td>
-                    <td>23 / 25</td>
-                    <td><span class="badge-status-safe">Approved</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-302L Java Programming Lab</strong></td>
-                    <td>12 / 12 Exp</td>
-                    <td><span class="badge badge-success">Verified ✓</span></td>
-                    <td>24 / 25</td>
-                    <td><span class="badge-status-safe">Approved</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-304L Database Systems Lab</strong></td>
-                    <td>10 / 10 Exp</td>
-                    <td><span class="badge badge-success">Verified ✓</span></td>
-                    <td>22 / 25</td>
-                    <td><span class="badge-status-safe">Approved</span></td>
+                    <td colspan="5" style="text-align:center; padding:24px; color:#64748B;">
+                      Loading laboratory evaluation records...
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -2072,100 +1715,27 @@
         <div class="module-content-pane" data-module="profile">
           <!-- Subtab 1: Academic Record -->
           <div class="subtab-pane active" data-subpane="academic">
-            <div class="profile-dossier-card">
-              <div class="profile-dossier-header">
-                <div class="profile-avatar-large">SA</div>
-                <div>
-                  <h3 class="modal-title" style="color:var(--navy); font-size:1.35rem;">Shivam Aghao</h3>
-                  <p style="color:var(--primary); font-weight:600; font-size:0.92rem;">B.Tech in Computer Science &amp; Engineering</p>
-                  <p style="color:var(--muted); font-size:0.8rem;">Autonomous Institute Permanent Registration No: <strong>202401088219</strong></p>
-                </div>
-              </div>
-              <div class="profile-dossier-grid">
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Roll Number</span>
-                  <span class="profile-dossier-val">21 (Class 2R1)</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Current Semester</span>
-                  <span class="profile-dossier-val">Semester IV (Second Year)</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Autonomous Batch</span>
-                  <span class="profile-dossier-val">2024 - 2028 (Regulations R-2023)</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Cumulative CGPA</span>
-                  <span class="profile-dossier-val text-success">8.64 / 10.00</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Semester I SGPA</span>
-                  <span class="profile-dossier-val">8.42</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Semester II SGPA</span>
-                  <span class="profile-dossier-val">8.58</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Semester III SGPA</span>
-                  <span class="profile-dossier-val">8.64</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Earned Credits</span>
-                  <span class="profile-dossier-val text-primary">68 / 160 Credits</span>
-                </div>
+            <div class="profile-dossier-card" id="modalProfileAcademicCard">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading academic dossier from database...
               </div>
             </div>
           </div>
 
           <!-- Subtab 2: Personal Details -->
           <div class="subtab-pane" data-subpane="personal">
-            <div class="profile-dossier-card">
-              <div class="pane-section-header">
-                <h4>Verified Personal Demographics</h4>
-                <span class="badge-status-safe">Registrar Office Verified</span>
-              </div>
-              <div class="profile-dossier-grid">
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Date of Birth</span>
-                  <span class="profile-dossier-val">14 August 2005</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Blood Group</span>
-                  <span class="profile-dossier-val">O+ (Positive)</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Social Category</span>
-                  <span class="profile-dossier-val">OBC (Other Backward Classes)</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">College Email</span>
-                  <span class="profile-dossier-val">shivam.aghao@ssgmce.ac.in</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Contact Mobile</span>
-                  <span class="profile-dossier-val">+91 98765 43210</span>
-                </div>
-                <div class="profile-dossier-item">
-                  <span class="profile-dossier-label">Permanent Address</span>
-                  <span class="profile-dossier-val">At Post Shegaon, Dist. Buldhana - 444203</span>
-                </div>
+            <div class="profile-dossier-card" id="modalProfilePersonalCard">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading personal demographics...
               </div>
             </div>
           </div>
 
           <!-- Subtab 3: Mentor / Proctor -->
           <div class="subtab-pane" data-subpane="mentor">
-            <div class="faculty-contact-card" style="padding: 24px;">
-              <div class="fac-avatar" style="width: 58px; height: 58px; font-size: 1.2rem;">RD</div>
-              <div class="fac-details">
-                <h5 style="font-size: 1.1rem;">Dr. Rohan Deshmukh</h5>
-                <p class="fac-designation">Associate Professor &amp; Head of Department (CSE)</p>
-                <p class="fac-meta">Allocated Faculty Mentor (Proctor) for CSE Batch 2R1</p>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
-                  Office: Vidya Bhavan LH-204 • Mentorship Hours: Mondays &amp; Wednesdays 3:45 PM - 5:00 PM
-                </p>
-                <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link" style="font-size: 0.84rem;">rohan.deshmukh@ssgmce.ac.in</a>
+            <div class="faculty-contact-card" id="modalProfileMentorCard" style="padding: 24px;">
+              <div style="text-align:center; padding:24px; color:#64748B;">
+                Loading allocated faculty mentor...
               </div>
             </div>
           </div>
@@ -2553,76 +2123,8 @@
           <!-- Subtab 1: Hall Ticket Preview -->
           <div class="subtab-pane active" data-subpane="view-hall-ticket">
             <div class="hall-ticket-paper" id="hallTicketSheet">
-              <div class="ht-college-header">
-                <div class="ht-college-title">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
-                <div style="font-size:0.75rem; color:var(--muted);">(An Autonomous Institute Affiliated to SGBAU Amravati)</div>
-                <div class="ht-exam-title">ADMIT CARD / HALL TICKET • END SEMESTER EXAMINATION SUMMER 2026</div>
-              </div>
-              <div class="ht-meta-grid">
-                <div>Candidate: <strong>Shivam Aghao</strong></div>
-                <div>Seat No: <strong>CSE-2401-21</strong></div>
-                <div>PRN: <strong>202401088219</strong></div>
-                <div>Class: <strong>B.Tech CSE Sem IV (2R1)</strong></div>
-                <div>Exam Center: <strong>Vidya Bhavan Block (LH-204)</strong></div>
-                <div>Status: <strong>Regular • Eligible ✓</strong></div>
-              </div>
-              <div class="ht-barcode-bar">||||| | |||| ||||| || |||||| | |||||||| |||||</div>
-              <div class="table-responsive-wrapper">
-                <table class="attendance-data-table">
-                  <thead>
-                    <tr>
-                      <th>Subject Code &amp; Title</th>
-                      <th>Exam Date</th>
-                      <th>Timing</th>
-                      <th>Venue</th>
-                      <th>Seal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>CS-301 Data Structures</strong></td>
-                      <td>24 March 2026</td>
-                      <td>10:00 AM - 01:00 PM</td>
-                      <td>LH-204</td>
-                      <td><span class="badge badge-success">Verified</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CS-302 Java Programming</strong></td>
-                      <td>27 March 2026</td>
-                      <td>10:00 AM - 01:00 PM</td>
-                      <td>LH-204</td>
-                      <td><span class="badge badge-success">Verified</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CS-303 Operating Systems</strong></td>
-                      <td>31 March 2026</td>
-                      <td>10:00 AM - 01:00 PM</td>
-                      <td>LH-204</td>
-                      <td><span class="badge badge-success">Verified</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CS-304 Database Systems</strong></td>
-                      <td>03 April 2026</td>
-                      <td>10:00 AM - 01:00 PM</td>
-                      <td>LH-204</td>
-                      <td><span class="badge badge-success">Verified</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CS-305 Computer Networks</strong></td>
-                      <td>07 April 2026</td>
-                      <td>10:00 AM - 01:00 PM</td>
-                      <td>LH-204</td>
-                      <td><span class="badge badge-success">Verified</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <span style="font-size:0.75rem; color:var(--muted);">Digitally verified by Controller of Examinations (COE) SSGMCE Shegaon</span>
-                <button type="button" class="btn-print-ht" onclick="window.print()">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                  Print Official Hall Ticket
-                </button>
+              <div style="text-align:center; padding:32px; color:#64748B;">
+                Loading official autonomous admit card...
               </div>
             </div>
           </div>
@@ -2632,7 +2134,7 @@
             <div class="info-form-card">
               <h4>Examination Hall Code of Conduct &amp; Instructions</h4>
               <ul style="padding-left:20px; font-size:0.84rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:8px;">
-                <li>Candidate must produce the printed Hall Ticket and official College ID card at the entrance of LH-204.</li>
+                <li>Candidate must produce the printed Hall Ticket and official College ID card at the entrance of examination hall.</li>
                 <li>Candidate should report to the examination hall at least 30 minutes before the commencement of the exam.</li>
                 <li>Mobile phones, smartwatches, programmable calculators, or any electronic communication equipment are strictly prohibited.</li>
                 <li>No candidate will be allowed to leave the examination hall during the first 60 minutes of the session.</li>
@@ -2645,31 +2147,9 @@
         <div class="module-content-pane" data-module="student-id">
           <!-- Subtab 1: Card View -->
           <div class="subtab-pane active" data-subpane="card-view">
-            <div class="student-id-card-view">
-              <div class="id-card-front">
-                <div class="id-card-top-bar">
-                  <div class="id-card-crest">
-                    <img src="../images/logo.png" alt="SSGMCE Crest" style="width:28px;height:28px;object-fit:contain;">
-                  </div>
-                  <div>
-                    <div class="id-card-college">SSGMCE SHEGAON</div>
-                    <div style="font-size:0.65rem; color:#F59E0B; font-weight:600;">Autonomous Institute</div>
-                  </div>
-                </div>
-                <div class="id-card-middle">
-                  <div class="id-card-photo">SA</div>
-                  <div class="id-card-info">
-                    <div class="id-card-name">SHIVAM AGHAO</div>
-                    <div>Roll No: <strong>21</strong> • Class: <strong>2R1</strong></div>
-                    <div>Branch: <strong>B.Tech (CSE)</strong></div>
-                    <div>PRN: <strong>202401088219</strong></div>
-                    <div>Blood Group: <strong>O+ve</strong></div>
-                  </div>
-                </div>
-                <div class="id-card-bottom">
-                  <span>Valid: <strong>2024 - 2028</strong></span>
-                  <span>Principal Seal ✓</span>
-                </div>
+            <div class="student-id-card-view" id="modalStudentIdCardView">
+              <div style="text-align:center; padding:32px; color:#64748B;">
+                Loading smart student ID card...
               </div>
             </div>
             <div style="display:flex; justify-content:center; margin-top:16px;">

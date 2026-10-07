@@ -17,6 +17,7 @@ import io
 import json
 import uuid
 import random
+import sys
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
@@ -41,6 +42,9 @@ logger = logging.getLogger("ssgmce_erp_backend")
 # ==============================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
+for p in [ERP_ROOT, BASE_DIR]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 DB_PATH = os.path.join(BASE_DIR, "erp.db").replace("\\", "/")
 
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
@@ -73,8 +77,10 @@ try:
             )
         """))
         _con.commit()
+    from backend.seed.seed_database import seed
+    seed()
 except Exception as _e:
-    logger.warning("Could not auto-create timetable_assessments table: %s", _e)
+    logger.warning("Could not auto-seed database: %s", _e)
 
 def get_db():
     db = SessionLocal()
@@ -427,15 +433,13 @@ def get_subjects(db: Session = Depends(get_db)):
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/students", tags=["Master Data"])
-def get_all_students(class_name: Optional[str] = None, class_id: Optional[str] = None, db: Session = Depends(get_db)):
+def get_all_students(class_name: Optional[str] = None, class_id: Optional[str] = None, classCode: Optional[str] = None, class_code: Optional[str] = None, db: Session = Depends(get_db)):
     clause = ""
     params = {}
-    if class_id:
-        clause = "WHERE s.class_id = :cid"
-        params["cid"] = class_id
-    elif class_name:
-        clause = "WHERE c.class_name = :cname"
-        params["cname"] = class_name
+    target = classCode or class_code or class_name or class_id
+    if target:
+        clause = "WHERE s.class_id = :target OR c.class_name = :target OR s.class_id = (SELECT id FROM classes WHERE class_name = :target LIMIT 1)"
+        params["target"] = target
 
     rows = db.execute(text(f"""
         SELECT s.*, c.class_name, c.division
@@ -444,7 +448,23 @@ def get_all_students(class_name: Optional[str] = None, class_id: Optional[str] =
         {clause}
         ORDER BY s.roll_no ASC, s.full_name ASC
     """), params).fetchall()
-    return success_response([dict(r._mapping) for r in rows])
+
+    result = []
+    for r in rows:
+        m = dict(r._mapping)
+        roll = m.get("roll_no") or 1
+        name = m.get("full_name") or "Student"
+        formatted_roll = f"{roll:02d}" if isinstance(roll, int) else str(roll)
+        result.append({
+            **m,
+            "rollNo": formatted_roll,
+            "rollFormatted": formatted_roll,
+            "name": name,
+            "attendance": 75 + (roll % 22) if isinstance(roll, int) else 85,
+            "enrollmentNo": f"EN2024CSE{formatted_roll}",
+            "defaultAttendance": "absent" if (isinstance(roll, int) and roll % 7 == 0) else "present"
+        })
+    return success_response(result)
 
 @api.get("/students/class/{class_id}", tags=["Master Data"])
 def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
@@ -541,10 +561,76 @@ def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
 def get_teacher_timetable(db: Session = Depends(get_db)):
     rows = []
     try:
-        rows = db.execute(text("SELECT * FROM timetable_entries LIMIT 10")).fetchall()
+        rows = db.execute(text("SELECT * FROM timetable_entries ORDER BY day_of_week, period_number")).fetchall()
     except Exception:
         pass
-    return success_response([dict(r._mapping) for r in rows] if rows else [])
+    days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    matrix = []
+    for d in days_order:
+        d_rows = [r for r in rows if ((r.day_of_week and r.day_of_week.lower() == d.lower()) or (r.day and r.day.lower() == d.lower()))]
+        slots = []
+        for r in d_rows:
+            slots.append(f"{r.course_name} ({r.venue})")
+        while len(slots) < 4:
+            slots.append("Free Slot")
+        matrix.append({"day": d, "slots": slots[:4]})
+    return success_response({
+        "entries": [dict(r._mapping) for r in rows] if rows else [],
+        "timetable": matrix
+    })
+
+@api.get("/teacher/upcoming-classes", tags=["Faculty Portal"])
+@api.get("/timetable/upcoming", tags=["Faculty Portal"])
+def get_upcoming_classes(window_minutes: int = 15, db: Session = Depends(get_db)):
+    """Returns scheduled classes starting within window_minutes (default 15 mins) for faculty."""
+    import datetime
+    import re
+    now = datetime.datetime.now()
+    weekday = now.strftime("%A")
+    
+    rows = db.execute(text("""
+        SELECT * FROM timetable_entries 
+        WHERE LOWER(day_of_week) = LOWER(:day) OR LOWER(day) = LOWER(:day)
+        ORDER BY period_number ASC
+    """), {"day": weekday}).fetchall()
+    
+    upcoming = []
+    for r in rows:
+        m = dict(r._mapping)
+        t_str = m.get("period_time") or ""
+        match = re.search(r'(\d{1,2}):(\d{2})', t_str)
+        if match:
+            h, mins = int(match.group(1)), int(match.group(2))
+            mer = re.search(r'(AM|PM)', t_str, re.IGNORECASE)
+            if mer and mer.group(1).upper() == 'PM' and h != 12:
+                h += 12
+            elif mer and mer.group(1).upper() == 'AM' and h == 12:
+                h = 0
+            elif not mer and h < 8:
+                h += 12
+                
+            class_dt = now.replace(hour=h, minute=mins, second=0, microsecond=0)
+            diff_mins = (class_dt - now).total_seconds() / 60.0
+            
+            if 0 < diff_mins <= window_minutes:
+                upcoming.append({
+                    "id": m.get("id"),
+                    "subject": m.get("course_name") or m.get("subject_name") or "Data Structures",
+                    "subject_code": m.get("course_code") or "CS-301",
+                    "class_code": m.get("class_id") or "2R1",
+                    "department": "CSE",
+                    "room": m.get("venue") or m.get("room") or "Room 201",
+                    "time": t_str,
+                    "minutes_remaining": round(diff_mins, 1),
+                    "is_five_minute_alert": (diff_mins <= 5.5 and diff_mins >= 0.0)
+                })
+                
+    return success_response({
+        "has_upcoming": len(upcoming) > 0,
+        "upcoming_classes": upcoming,
+        "current_server_time": now.strftime("%I:%M %p"),
+        "current_day": weekday
+    })
 
 # ==============================================================================
 # TIMETABLE ASSESSMENTS / TESTS MODULE (Shared DB between Faculty & Student)
@@ -970,15 +1056,15 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
         **st_dict,
         "fullName": st_dict.get("full_name") or "Shivam Sanjay Aghao",
         "full_name": st_dict.get("full_name") or "Shivam Sanjay Aghao",
-        "rollNo": st_dict.get("roll_no") or 21,
-        "roll_no": st_dict.get("roll_no") or 21,
+        "rollNo": st_dict.get("roll_no") or 60,
+        "roll_no": st_dict.get("roll_no") or 60,
         "studentCode": st_dict.get("student_code") or "308637",
         "student_code": st_dict.get("student_code") or "308637",
         "department": "Computer Science & Engineering",
-        "className": st_dict.get("class_name") or "2R1",
-        "class_name": st_dict.get("class_name") or "2R1",
-        "division": st_dict.get("division") or "2R1",
-        "semester": 4,
+        "className": st_dict.get("class_name") or "3R",
+        "class_name": st_dict.get("class_name") or "3R",
+        "division": st_dict.get("division") or "1",
+        "semester": 5,
         "academicYear": "2026-2027"
     }
 
@@ -1213,16 +1299,31 @@ def get_student_syllabus(subject_id: Optional[str] = None, db: Session = Depends
 
 @api.get("/student/documents", tags=["Student Portal"])
 @api.get("/documents", tags=["Student Portal"])
+@api.get("/student/dwallet", tags=["Student Portal"])
 @api.get("/dwallet", tags=["Student Portal"])
 def get_student_documents(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT * FROM student_documents LIMIT 10")).fetchall()
+    rows = db.execute(text("SELECT * FROM student_documents WHERE student_code = :c OR :c = '308637' ORDER BY created_at DESC LIMIT 15"), {"c": student_code}).fetchall()
+    if not rows:
+        rows = db.execute(text("SELECT * FROM student_documents LIMIT 15")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.post("/student/documents/upload", tags=["Student Portal"])
 @api.post("/documents/upload", tags=["Student Portal"])
-def upload_student_document(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+@api.post("/student/dwallet/upload", tags=["Student Portal"])
+@api.post("/dwallet/upload", tags=["Student Portal"])
+def upload_student_document(payload: Dict[str, Any] = Body(...), student_code: str = Query("308637"), db: Session = Depends(get_db)):
     doc_id = str(uuid.uuid4())
-    return success_response({"document_id": doc_id}, "Document uploaded successfully", code=201)
+    doc_type = payload.get("document_type") or payload.get("type") or "Verified Document"
+    title = payload.get("title") or payload.get("name") or doc_type
+    try:
+        db.execute(text("""
+            INSERT INTO student_documents (id, student_code, document_type, title, status, issue_date, issuing_authority, download_url)
+            VALUES (:id, :sc, :dt, :tit, 'Verified', date('now'), 'Dean (Academics), SSGMCE', '#')
+        """), {"id": doc_id, "sc": student_code, "dt": doc_type, "tit": title})
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Error persisting uploaded document: {e}")
+    return success_response({"document_id": doc_id, "title": title, "document_type": doc_type}, "Document uploaded successfully", code=201)
 
 @api.get("/student/notifications", tags=["Student Portal"])
 @api.get("/notifications", tags=["Student Portal"])
@@ -1256,8 +1357,8 @@ def mark_notification_read(id: str, db: Session = Depends(get_db)):
 @api.get("/student/fees", tags=["Student Portal"])
 @api.get("/fees", tags=["Student Portal"])
 def get_student_fees(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    records = db.execute(text("SELECT * FROM fee_records LIMIT 5")).fetchall()
-    receipts = db.execute(text("SELECT * FROM fee_receipts LIMIT 5")).fetchall()
+    records = db.execute(text("SELECT * FROM fee_records LIMIT 10")).fetchall()
+    receipts = db.execute(text("SELECT * FROM fee_receipts LIMIT 10")).fetchall()
     return success_response({
         "records": [dict(r._mapping) for r in records],
         "receipts": [dict(r._mapping) for r in receipts]
@@ -1265,14 +1366,33 @@ def get_student_fees(student_code: str = Query("308637"), db: Session = Depends(
 
 @api.post("/student/fees/pay", tags=["Student Portal"])
 @api.post("/fees/pay", tags=["Student Portal"])
-def pay_student_fees(payload: Dict[str, Any] = Body(...)):
-    return success_response({"transaction_id": f"TXN_{uuid.uuid4().hex[:10].upper()}", "status": "SUCCESS"}, "Payment processed")
+def pay_student_fees(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+    txn_id = f"TXN_{uuid.uuid4().hex[:10].upper()}"
+    receipt_no = f"REC-SSGMCE-2026-{random.randint(1000, 9999)}"
+    amount = float(payload.get("amount", 25000))
+    student_code = str(payload.get("student_code", "308637"))
+    try:
+        db.execute(text("""
+            INSERT INTO fee_receipts (id, student_code, receipt_no, transaction_id, payment_date, amount, payment_mode, bank_name, status, download_url)
+            VALUES (:id, :sc, :rec, :txn, date('now'), :amt, 'Online UPI', 'State Bank of India', 'Success', '#')
+        """), {
+            "id": str(uuid.uuid4()), "sc": student_code, "rec": receipt_no, "txn": txn_id, "amt": amount
+        })
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Error persisting payment receipt: {e}")
+    return success_response({
+        "transaction_id": txn_id,
+        "receipt_no": receipt_no,
+        "amount": amount,
+        "status": "SUCCESS"
+    }, "Payment processed successfully")
 
 @api.get("/student/elearning", tags=["Student Portal"])
 @api.get("/elearning", tags=["Student Portal"])
 def get_student_elearning(db: Session = Depends(get_db)):
-    assignments = db.execute(text("SELECT * FROM elearning_assignments LIMIT 5")).fetchall()
-    content = db.execute(text("SELECT * FROM elearning_content LIMIT 5")).fetchall()
+    assignments = db.execute(text("SELECT * FROM elearning_assignments LIMIT 10")).fetchall()
+    content = db.execute(text("SELECT * FROM elearning_content LIMIT 10")).fetchall()
     return success_response({
         "assignments": [dict(a._mapping) for a in assignments],
         "content": [dict(c._mapping) for c in content]
@@ -1281,20 +1401,54 @@ def get_student_elearning(db: Session = Depends(get_db)):
 @api.get("/student/change-info", tags=["Student Portal"])
 @api.get("/change-info", tags=["Student Portal"])
 def get_change_info_requests(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT * FROM change_info_requests LIMIT 5")).fetchall()
+    rows = db.execute(text("SELECT * FROM change_info_requests LIMIT 10")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.post("/student/change-info", tags=["Student Portal"])
 @api.post("/change-info", tags=["Student Portal"])
 def submit_change_info_request(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
     req_id = str(uuid.uuid4())
+    student_code = payload.get("student_code", "308637")
+    field_name = payload.get("field_name", "Official Record")
+    curr_val = payload.get("current_value", "")
+    req_val = payload.get("requested_value", "")
+    reason = payload.get("reason", "Student self-service update")
+    try:
+        db.execute(text("""
+            INSERT INTO change_info_requests (id, student_code, field_name, current_value, requested_value, reason, status)
+            VALUES (:id, :sc, :fn, :cv, :rv, :reas, 'Pending')
+        """), {"id": req_id, "sc": student_code, "fn": field_name, "cv": curr_val, "rv": req_val, "reas": reason})
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Error persisting change-info request: {e}")
     return success_response({"request_id": req_id}, "Change info request submitted", code=201)
+
+@api.get("/student/update-info", tags=["Student Portal"])
+@api.get("/update-info", tags=["Student Portal"])
+def get_update_info_records(db: Session = Depends(get_db)):
+    return success_response([
+        {"id": "ACT-1", "type": "industrial-visit", "title": "Industrial Visit to Tata Consultancy Services, MIHAN Nagpur", "date": "14 Jan 2026", "points": 20, "status": "Approved", "category": "Industrial Exposure"},
+        {"id": "ACT-2", "type": "seminar", "title": "National Seminar on Cloud Computing & Distributed Systems", "date": "02 Feb 2026", "points": 15, "status": "Approved", "category": "Technical Seminar"},
+        {"id": "ACT-3", "type": "workshop", "title": "Hands-on Workshop on Full Stack Engineering & DevOps CI/CD", "date": "18 Feb 2026", "points": 25, "status": "Approved", "category": "Skill Workshop"},
+        {"id": "ACT-4", "type": "activities", "title": "Smart India Hackathon Institutional Finalist & Coding Lead", "date": "05 Mar 2026", "points": 30, "status": "Verified", "category": "Innovation & Hackathon"}
+    ])
+
+@api.post("/student/update-info", tags=["Student Portal"])
+@api.post("/update-info", tags=["Student Portal"])
+def submit_update_info_record(payload: Dict[str, Any] = Body(...)):
+    return success_response({"record_id": str(uuid.uuid4()), "status": "Submitted for Proctor Verification"}, "Portfolio activity submitted successfully", code=201)
 
 @api.get("/student/examination", tags=["Student Portal"])
 @api.get("/examination", tags=["Student Portal"])
 def get_student_examination(db: Session = Depends(get_db)):
-    marks = db.execute(text("SELECT * FROM exam_marks LIMIT 10")).fetchall()
+    marks = db.execute(text("SELECT * FROM exam_marks LIMIT 15")).fetchall()
     return success_response({"marks": [dict(m._mapping) for m in marks]})
+
+@api.post("/student/examination/revaluation", tags=["Student Portal"])
+@api.post("/examination/revaluation", tags=["Student Portal"])
+def submit_exam_revaluation(payload: Dict[str, Any] = Body(...)):
+    ref_no = f"REV-2026-{random.randint(10000, 99999)}"
+    return success_response({"reference_number": ref_no, "status": "Submitted to Controller of Examinations"}, "Revaluation request registered successfully")
 
 # ==============================================================================
 # 9. QUIZ & EXAMINATION ASSESSMENT MODULE

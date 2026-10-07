@@ -1595,6 +1595,33 @@ const AttendanceWorkflow = {
     AttendanceState.isSubmitted = true;
     this.closeModals();
 
+    // Persist to Live Backend SQLite Database
+    try {
+      const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+      const presentIds = [];
+      const absentIds = [];
+      AttendanceState.students.forEach(st => {
+        const stStatus = AttendanceState.attendanceMap[st.rollNo] || "present";
+        if (stStatus === "present") presentIds.push(String(st.rollNo));
+        else absentIds.push(String(st.rollNo));
+      });
+      fetch(`${apiBase}/attendance/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          class_id: classCode,
+          subject_id: subCode,
+          session_date: date,
+          period_number: 1,
+          session_type: "theory",
+          present_student_ids: presentIds,
+          absent_student_ids: absentIds
+        })
+      }).catch(err => console.warn('Attendance live backend sync:', err));
+    } catch (e) {
+      console.warn('Backend submit error:', e);
+    }
+
     // Update portal statistics
     TeacherERPData.stats.attendancePending = "01";
     TeacherERPData.stats.attendanceCompletedCount = 7;

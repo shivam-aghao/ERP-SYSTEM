@@ -62,7 +62,7 @@ const TeacherApp = {
             console.log('📊 Live Dashboard KPI metrics:', data.metrics);
             console.log('📅 Today schedule slots:', data.todaySchedule);
 
-            // Seamlessly bind live Supabase data to UI cards
+            // Seamlessly bind live database data to UI cards
             if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
               TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
               TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
@@ -74,8 +74,58 @@ const TeacherApp = {
                 TeacherERPData.faculty.employeeId = data.faculty.employeeId;
                 TeacherERPData.faculty.title = data.faculty.title;
               }
+              if (data.todaySchedule && Array.isArray(data.todaySchedule) && data.todaySchedule.length > 0) {
+                TeacherERPData.todayClasses = data.todaySchedule;
+              }
               this.renderHeaderProfile();
               this.renderDashboardData();
+            }
+
+            // Fetch live Timetable, Students Roster, Classes & Notifications from Database
+            const [ttRes, stRes, clsRes, notRes] = await Promise.allSettled([
+              window.TeacherAPI.getMyTimetable(),
+              window.TeacherAPI.getStudents('2R1'),
+              window.TeacherAPI.getClasses(),
+              window.TeacherAPI.getNotifications()
+            ]);
+
+            if (ttRes.status === 'fulfilled' && ttRes.value) {
+              const ttData = ttRes.value.timetable || ttRes.value;
+              if (Array.isArray(ttData) && ttData.length > 0) {
+                TeacherERPData.timetable = ttData;
+                this.renderTimetableView();
+              }
+            }
+
+            if (stRes.status === 'fulfilled' && stRes.value) {
+              const studentsList = Array.isArray(stRes.value) ? stRes.value : (stRes.value.data || []);
+              if (studentsList.length > 0) {
+                TeacherERPData.students['2R1'] = studentsList;
+                this.renderStudentsView();
+              }
+            }
+
+            if (clsRes.status === 'fulfilled' && clsRes.value) {
+              const classList = Array.isArray(clsRes.value) ? clsRes.value : (clsRes.value.data || []);
+              if (classList.length > 0) {
+                TeacherERPData.assignedClasses = classList.map(c => ({
+                  id: c.id || `cls-${c.class_name || c.code}`,
+                  department: c.department || 'CSE',
+                  classCode: c.class_name || c.classCode || c.code || '2R1',
+                  subject: c.subject || c.subject_name || 'Data Structures',
+                  studentsCount: c.studentsCount || c.student_count || 60,
+                  attendanceStatus: c.attendanceStatus || 'Completed'
+                }));
+                this.renderDashboardData();
+              }
+            }
+
+            if (notRes.status === 'fulfilled' && notRes.value) {
+              const notifList = Array.isArray(notRes.value) ? notRes.value : (notRes.value.data || []);
+              if (notifList.length > 0) {
+                TeacherERPData.notifications = notifList;
+                this.renderNotificationsList();
+              }
             }
           } catch (kpiErr) {
             console.warn('Dashboard summary:', kpiErr.message);
@@ -418,6 +468,7 @@ const TeacherApp = {
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance");
+        if (window.NotificationManager) window.NotificationManager.clearSidebarBadge();
         const attFrame = document.getElementById("attendance-embedded-frame");
         if (attFrame && (!attFrame.src || !attFrame.src.includes('teacher-attendance.html'))) {
           attFrame.src = 'teacher-attendance.html?embedded=1';
@@ -550,16 +601,20 @@ const TeacherApp = {
     if (timelineContainer) {
       timelineContainer.innerHTML = `
         <div class="classes-timeline">
-          ${TeacherERPData.todayClasses.map(cls => `
-            <div class="timeline-item ${cls.isCurrent ? 'active' : ''}">
+          ${TeacherERPData.todayClasses.map(cls => {
+            const isStartingSoon = Boolean(cls.isStartingSoon);
+            return `
+            <div class="timeline-item ${isStartingSoon ? 'starting-soon active' : (cls.isCurrent ? 'active' : '')}">
               <div class="timeline-time">${cls.time}</div>
               <div class="timeline-dot-container">
-                <div class="timeline-dot"></div>
+                <div class="timeline-dot ${isStartingSoon ? 'pulse-amber' : ''}"></div>
               </div>
-              <div class="timeline-details">
+              <div class="timeline-details ${isStartingSoon ? 'starting-soon-card' : ''}">
                 <div class="timeline-header">
                   <div class="timeline-subject">${cls.subject}</div>
-                  ${cls.isCurrent ? '<span class="current-badge"><span class="pulse-dot"></span> Next Up</span>' : ''}
+                  ${isStartingSoon
+                    ? '<span class="current-badge starting-soon-badge"><span class="pulse-dot pulse-amber"></span> Starting in 5 Mins</span>'
+                    : (cls.isCurrent ? '<span class="current-badge"><span class="pulse-dot"></span> Next Up</span>' : '')}
                 </div>
                 <div class="timeline-meta">
                   <span><strong>${cls.department}</strong> • ${cls.classCode}</span>
@@ -568,7 +623,8 @@ const TeacherApp = {
                 </div>
               </div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       `;
     }
@@ -933,8 +989,19 @@ const TeacherApp = {
     });
   },
 
-  changeRosterClass(classCode) {
-    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"];
+  async changeRosterClass(classCode) {
+    if (window.TeacherAPI && typeof window.TeacherAPI.getStudents === 'function') {
+      try {
+        const res = await window.TeacherAPI.getStudents(classCode);
+        const stList = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+        if (stList.length > 0) {
+          TeacherERPData.students[classCode] = stList;
+        }
+      } catch (e) {
+        console.warn('Could not fetch students for class', classCode, e);
+      }
+    }
+    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"] || [];
     const tbody = document.getElementById("roster-table-body");
     if (tbody) {
       tbody.innerHTML = this.generateRosterRows(list);

@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/attendance.css">
   <link rel="stylesheet" href="css/modules.css">
   <link rel="stylesheet" href="css/timetable.css">
+  <link rel="stylesheet" href="css/toast.css">
 </head>
 <body>
 
@@ -65,6 +66,15 @@
         <input type="text" id="header-search-input">
       </div>
 
+      <!-- Pre-Class 5-Minute Notification Test Simulator Button -->
+      <button type="button" class="btn-test-alert-trigger" onclick="if(window.NotificationManager) window.NotificationManager.triggerTestPreClassNotification(5)" title="Simulate 5-minute pre-class alert notification">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span>Test 5m Alert</span>
+      </button>
+
       <!-- Live Backend & Database Connection Indicator Pill -->
       <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" onclick="TeacherApp.checkBackendConnection(true)" title="Click to test live backend connection">
         <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
@@ -73,12 +83,12 @@
 
       <!-- Notification Bell -->
       <div class="notif-wrapper" id="notifWrapper">
-        <button type="button" class="header-icon-btn" id="notifBtn" onclick="TeacherApp.switchView('notifications')" aria-label="Notifications, 4 unread">
+        <button type="button" class="header-icon-btn" id="notifBtn" onclick="TeacherApp.switchView('notifications')" aria-label="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span class="notif-badge">4</span>
+          <span class="notif-badge" id="header-notif-count">0</span>
         </button>
       </div>
 
@@ -86,11 +96,11 @@
       <div class="profile-wrapper header-profile-container">
         <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
           <div class="avatar-circle profile-avatar" id="header-profile-avatar">
-            <span>RD</span>
+            <span id="header-avatar-initials">--</span>
           </div>
           <div class="profile-details profile-info">
-            <span class="student-name profile-name" id="header-profile-name">Dr. Rohan Deshmukh</span>
-            <span class="student-meta profile-dept" id="header-profile-dept">Associate Professor • CSE</span>
+            <span class="student-name profile-name" id="header-profile-name">Loading...</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">SSGMCE Faculty</span>
           </div>
           <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -100,9 +110,9 @@
         <!-- Profile Dropdown Menu -->
         <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
           <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
-            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Dr. Rohan Deshmukh</div>
-            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Associate Professor • CSE</div>
-            <div style="font-size:11px; color:var(--muted); margin-top:2px;">Faculty ID: FAC-CSE-1048</div>
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Faculty Member</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Faculty Portal</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">Faculty ID: --</div>
           </div>
           <div class="p-links">
             <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('profile')">
@@ -173,7 +183,7 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <span class="nav-badge" id="sidebar-attendance-badge">02 Pending</span>
+                <span class="nav-badge" id="sidebar-attendance-badge" style="display:none;"></span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
             </li>
@@ -367,18 +377,18 @@
                 <div class="hero-faculty-meta">
                   <span class="hero-badge-pill">
                     <span class="pulse-indicator"></span>
-                    <span id="hero-faculty-department">Computer Science & Engineering</span>
+                    <span id="hero-faculty-department">Faculty Department</span>
                   </span>
                   <span class="hero-meta-divider">•</span>
                   <span class="hero-faculty-sub" id="hero-faculty-role">Faculty Portal</span>
                 </div>
-                <h2 class="welcome-title" id="welcome-greeting-text">Good Morning, Professor 👋</h2>
+                <h2 class="welcome-title" id="welcome-greeting-text">Welcome, Professor 👋</h2>
                 <div class="hero-teacher-meta-row">
-                  <span class="hero-teacher-name" id="hero-teacher-name">Dr. Rohan Deshmukh</span>
+                  <span class="hero-teacher-name" id="hero-teacher-name">Faculty Member</span>
                   <span class="hero-meta-dot">•</span>
-                  <span class="hero-teacher-designation" id="hero-teacher-designation">Associate Professor</span>
+                  <span class="hero-teacher-designation" id="hero-teacher-designation">Department Faculty</span>
                   <span class="hero-meta-dot">•</span>
-                  <span class="hero-teacher-id" id="hero-teacher-id">FAC-CSE-1048</span>
+                  <span class="hero-teacher-id" id="hero-teacher-id">Faculty ID: --</span>
                 </div>
                 <div class="hero-accent-bar" aria-hidden="true"></div>
                 <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
@@ -414,7 +424,7 @@
             <div class="date-strip-heading-wrap">
               <span class="date-strip-badge">
                 <span class="pulse-indicator"></span>
-                <span>Active Semester • B.Tech 2025-26</span>
+                <span id="dashboard-active-term-badge">Active Semester</span>
               </span>
               <h3 class="date-strip-title">
                 <i data-lucide="calendar-check-2" style="width:20px;height:20px;color:var(--primary-blue);"></i>
@@ -589,7 +599,7 @@
                 </p>
               </div>
               <div id="manual-pending-indicator">
-                <span class="badge badge-pending" id="manual-pending-badge">02 Pending Today</span>
+                <span class="badge badge-pending" id="manual-pending-badge" style="display:none;"></span>
               </div>
             </div>
 
@@ -864,7 +874,7 @@
               <div class="swipe-peek-card" id="swipe-peek-card" style="display:none;">
                 <div class="mark-badge-pill cls" id="swipe-peek-roll">NEXT: ROLL 2</div>
                 <h4 style="font-size:22px; font-weight:900; color:#475569; margin-top:8px;" id="swipe-peek-name">STUDENT NAME</h4>
-                <span style="font-size:12px; color:#94A3B8; font-family:monospace;" id="swipe-peek-enroll">EN24CSE002</span>
+                <span style="font-size:12px; color:#94A3B8; font-family:monospace;" id="swipe-peek-enroll">--</span>
               </div>
 
               <!-- Active Swipe Card (Clean Design - No Main Photo) -->
@@ -872,8 +882,8 @@
                 <!-- Top Row -->
                 <div class="swipe-card-top-row">
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="swipe-card-cls-badge" id="card-class-badge">CLASS 2R1</span>
-                    <span class="swipe-card-sub-name" id="card-subject-name">Data Structures</span>
+                    <span class="swipe-card-cls-badge" id="card-class-badge">CLASS --</span>
+                    <span class="swipe-card-sub-name" id="card-subject-name">Subject</span>
                   </div>
                   <span style="font-size:12px; font-weight:800; color:#94A3B8; font-family:monospace;" id="card-index-indicator">#1</span>
                 </div>
@@ -885,12 +895,12 @@
                 <!-- High-Contrast Body Center -->
                 <div class="swipe-card-body-center">
                   <!-- Large Roll Number Badge -->
-                  <div class="swipe-card-roll-badge" id="card-roll-number">ROLL 1</div>
+                  <div class="swipe-card-roll-badge" id="card-roll-number">ROLL --</div>
 
                   <!-- High-Contrast Bold Name -->
-                  <h3 class="swipe-card-name" id="card-student-name">SHIVAM AGHAO</h3>
+                  <h3 class="swipe-card-name" id="card-student-name">Loading Roster...</h3>
 
-                  <div class="swipe-card-enroll" id="card-enrollment-id">EN24CSE001</div>
+                  <div class="swipe-card-enroll" id="card-enrollment-id">--</div>
                 </div>
 
                 <!-- Bottom Instruction -->
@@ -1220,23 +1230,8 @@
         <section id="classes-view" class="view-section-pane app-module-view">
           <div class="card" style="padding:24px;">
             <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Assigned Classes & Batches</h3>
-            <div class="class-overview-grid">
-              <!-- Re-use class overview cards -->
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R1', 'Data Structures')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">2R1</div><div class="class-subject-name">Data Structures</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 60 Students</div><span class="badge badge-completed">Completed</span></div>
-              </div>
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R2', 'Java Programming')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">2R2</div><div class="class-subject-name">Java Programming</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 58 Students</div><span class="badge badge-pending">Pending</span></div>
-              </div>
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('3R', 'Database Management')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">3R</div><div class="class-subject-name">Database Management</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 62 Students</div><span class="badge badge-pending">Pending</span></div>
-              </div>
+            <div class="class-overview-grid" id="assigned-classes-full-grid">
+              <!-- Dynamically populated from live backend API -->
             </div>
           </div>
         </section>
@@ -1275,35 +1270,7 @@
           <div class="card" style="padding:24px;">
             <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Academic Notifications & Circulars</h3>
             <div class="activity-list" id="notifications-full-list">
-              <!-- Re-use notification content -->
-              <div class="activity-item">
-                <div class="activity-icon-box blue"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">New attendance reminder</span><span class="activity-time">15 mins ago</span></div>
-                  <span class="activity-desc">Please submit pending attendance for CSE 2R2 before 4:00 PM.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box cyan"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Department meeting</span><span class="activity-time">1 hour ago</span></div>
-                  <span class="activity-desc">Department academic progress review scheduled at 4:30 PM in Seminar Hall A.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box green"><i data-lucide="file-text" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Result submission deadline</span><span class="activity-time">3 hours ago</span></div>
-                  <span class="activity-desc">Internal Assessment 1 marks portal will close on Friday 5:00 PM.</span>
-                </div>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon-box navy"><i data-lucide="book-open" style="width:18px;height:18px;"></i></div>
-                <div class="activity-content">
-                  <div class="activity-title-row"><span class="activity-title">Syllabus update notification</span><span class="activity-time">1 day ago</span></div>
-                  <span class="activity-desc">NBA accreditation module mappings revised by Academic Council.</span>
-                </div>
-              </div>
+              <!-- Dynamically populated from live backend API -->
             </div>
           </div>
         </section>
@@ -1314,26 +1281,26 @@
         <section id="profile-view" class="view-section-pane app-module-view">
           <div class="card" style="padding:28px;">
             <div style="display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;">
-              <div class="profile-avatar" style="width:80px; height:80px; font-size:26px;">RD</div>
+              <div class="profile-avatar" id="profile-view-avatar" style="width:80px; height:80px; font-size:26px;">--</div>
               <div>
-                <h2 style="font-size:22px; color:var(--dark-navy);">Dr. Rohan Deshmukh</h2>
-                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;">Associate Professor • Department of Computer Science & Engineering</p>
-                <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;">Employee ID: FAC-CSE-1048 | Ph.D. in Distributed Systems</p>
+                <h2 style="font-size:22px; color:var(--dark-navy);" id="profile-view-name">Faculty Member</h2>
+                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;" id="profile-view-dept">Department of Computer Science & Engineering</p>
+                <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;" id="profile-view-id">Faculty Profile</p>
               </div>
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:20px;">
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Official Email</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">rohan.deshmukh@college.edu</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-view-email">--</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cabin Location</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Cabin 304, CS Department Wing</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-view-cabin">Cabin 304, CS Department Wing</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Office Hours</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Mon - Thu, 02:00 PM - 03:30 PM</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-view-hours">Mon - Thu, 02:00 PM - 03:30 PM</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
@@ -1341,6 +1308,7 @@
               </div>
             </div>
           </div>
+        </section>
         <!-- ========================================================
              PANE 10: ACADEMICS HUB VIEW
              ======================================================== -->
@@ -1696,6 +1664,7 @@
   <script src="js/timetable.js"></script>
   <script src="js/attendance.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/notification-manager.js"></script>
   <script src="js/app.js"></script>
 
   <!-- Fallback icon renderer -->
