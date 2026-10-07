@@ -42,12 +42,6 @@ class StudentService:
 
     @staticmethod
     def get_academic_metrics(student_code: str, db: Session) -> List[Dict[str, Any]]:
-        rows = db.execute(text("SELECT * FROM academic_metrics LIMIT 10")).fetchall()
-        if rows:
-            return [dict(r._mapping) for r in rows]
-        return [
-            {"semester": 1, "sgpa": 8.45, "credits": 20},
-            {"semester": 2, "sgpa": 8.62, "credits": 22},
-            {"semester": 3, "sgpa": 8.80, "credits": 24},
-            {"semester": 4, "sgpa": 8.91, "credits": 24}
-        ]
+        rows = db.execute(text("SELECT * FROM academic_metrics WHERE student_code = :code OR student_code IS NULL LIMIT 10"), {"code": student_code}).fetchall()
+        return [dict(r._mapping) for r in rows] if rows else []
+
