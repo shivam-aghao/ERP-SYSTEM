@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Timetable — Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE)</title>
+  
+  <!-- Academic Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Shared ERP Stylesheets (Reused without duplication) -->
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/attendance.css">
+  <link rel="stylesheet" href="../css/modules.css">
+
+  <!-- Timetable-Specific Isolated Stylesheet -->
+  <link rel="stylesheet" href="../css/teacher_timetable.css">
+</head>
+<body>
+
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Official SSGMCE Logo & College Title -->
+      <a href="teacher_dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Dashboard">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
+        </div>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
+        </div>
+      </a>
+
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Status Pill, Notifications & Teacher Profile -->
+    <div class="header-right header-right-controls">
+      <!-- Live Backend & Database Connection Indicator Pill -->
+      <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" onclick="TeacherTimetableApp.checkBackendConnection(true)" title="Backend connection status">
+        <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
+        <span id="backend-status-text">Backend: Connected</span>
+      </div>
+
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <a href="teacher_dashboard.html" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 4 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge">4</span>
+        </a>
+      </div>
+
+      <!-- Teacher Profile Pill Trigger & Menu -->
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="avatar-circle profile-avatar" id="header-profile-avatar">
+            <span>RD</span>
+          </div>
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="header-profile-name">Dr. Rohan Deshmukh</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">Associate Professor • CSE</span>
+          </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Profile Dropdown Menu -->
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Dr. Rohan Deshmukh</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Associate Professor • CSE</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">Faculty ID: FAC-CSE-1048</div>
+          </div>
+          <div class="p-links">
+            <a href="teacher_dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Faculty Dashboard</span>
+            </a>
+            <a href="teacher_dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span>Information</span>
+            </a>
+            <a href="teacher_dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </a>
+            <div class="p-divider"></div>
+            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="alert('Faculty logged out successfully.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-wrapper">
+    <!-- Off-canvas Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ========================================================
+         2. LEFT SIDEBAR (Dark Navy #0B1F3A)
+         ======================================================== -->
+    <aside class="app-sidebar dashboard-sidebar" id="app-sidebar" aria-label="Faculty Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard - Back to Dashboard link -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="dashboard">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- TEACHER MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">TEACHER MODULE</span>
+              </div>
+            </li>
+
+            <!-- 2. Attendance -->
+            <li class="sidebar-item">
+              <a href="teacher-attendance.html" class="nav-item sidebar-link" data-view="attendance">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+                <span class="nav-badge">02 Pending</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 3. Timetable (ACTIVE PAGE) -->
+            <li class="sidebar-item">
+              <a href="teacher_timetable.html" class="nav-item sidebar-link active" data-view="timetable">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Timetable</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 4. Classes -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="classes">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h20"></path>
+                  <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+                  <path d="m7 21 5-5 5 5"></path>
+                </svg>
+                <span class="nav-label">Classes</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 5. Students -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="students">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="nav-label">Students</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 6. Syllabus -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="syllabus">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 7. Results -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="results">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="nav-label">Results</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- Preferences & Info Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Preferences &amp; Info</span>
+            </li>
+
+            <!-- 8. Profile -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="profile">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
+
+            <!-- 9. Information -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="information">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="nav-label">Information</span>
+              </a>
+            </li>
+
+            <!-- 10. Notifications -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="notifications">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="nav-label">Notifications</span>
+                <span class="nav-badge" style="background:#00A6D6;color:#fff;">4</span>
+              </a>
+            </li>
+
+            <!-- 11. Settings -->
+            <li class="sidebar-item">
+              <a href="teacher_dashboard.html" class="nav-item sidebar-link" data-view="settings">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+        <div class="sidebar-footer-artwork">
+          <div class="ssgmce-dome-illustration" aria-hidden="true">
+            <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
+              <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
+              <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
+              <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
+              <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
+              <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
+              <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
+              <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="sidebar-motto-text">
+            <span>Discipline</span>
+            <span class="dot">•</span>
+            <span>Development</span>
+            <span class="dot">•</span>
+            <span>Dedication</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================================
+         MAIN CONTENT WRAPPER
+         ======================================================== -->
+    <div class="app-main">
+
+      <main class="content-container">
+
+        <!-- Top Header Action Bar with Back to Dashboard Button -->
+        <div class="timetable-page-topbar">
+          <div class="timetable-breadcrumb-block">
+            <span class="timetable-portal-tag">Teacher Portal</span>
+            <span class="timetable-crumb-sep">/</span>
+            <span class="timetable-active-crumb">Timetable</span>
+          </div>
+
+          <!-- Subtle Professional Back to Dashboard Action Button -->
+          <a href="teacher_dashboard.html" class="btn-back-dashboard" id="btnBackToDashboard" aria-label="Return to Teacher Dashboard">
+            <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
+            <span>Back to Dashboard</span>
+          </a>
+        </div>
+
+        <!-- ========================================================
+             ISOLATED TIMETABLE MODULE SECTION
+             ======================================================== -->
+        <section id="timetable-view" class="view-section-pane app-module-view" style="display:block;">
+          <div id="timetable-content">
+            <!-- Timetable generated by teacher_timetable.js -->
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ========================================================
+           FOOTER (Dark Navy #0B1F3A)
+           ======================================================== -->
+      <footer class="app-footer">
+        <div class="footer-top">
+          <!-- College Branding Column -->
+          <div class="footer-brand">
+            <div class="footer-logo-row">
+              <div class="college-logo-container" style="width:38px;height:38px;">
+                <i data-lucide="graduation-cap" style="width:20px;height:20px;"></i>
+              </div>
+              <div>
+                <div class="footer-college-name">SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING</div>
+                <div class="footer-portal-subtitle">SSGMCE — Teacher Portal</div>
+              </div>
+            </div>
+            <p class="footer-desc">
+              Centralized Academic & Faculty Management Portal. Streamlining class timetables, attendance tracking, internal assessments, and student progress reporting.
+            </p>
+          </div>
+
+          <!-- Quick Links Column -->
+          <div class="footer-links-col">
+            <span class="footer-heading">Quick Links</span>
+            <a href="teacher_dashboard.html">Dashboard</a>
+            <a href="teacher_dashboard.html">Profile</a>
+            <a href="teacher-attendance.html">Attendance</a>
+            <a href="teacher_timetable.html">Timetable</a>
+            <a href="teacher_dashboard.html">Classes</a>
+            <a href="teacher_dashboard.html">Students</a>
+          </div>
+
+          <!-- Support Column -->
+          <div class="footer-links-col">
+            <span class="footer-heading">Support & Help</span>
+            <a href="javascript:void(0)" onclick="alert('Connecting to Faculty Help Center...')">Help Center</a>
+            <a href="javascript:void(0)" onclick="alert('Administration desk: admin@college.edu | Ext: 4102')">Contact Administration</a>
+            <a href="javascript:void(0)" onclick="alert('Opening Institutional Privacy Policy')">Privacy Policy</a>
+            <a href="javascript:void(0)" onclick="alert('Opening Faculty Terms & Conduct')">Terms</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span id="footer-copyright-text">&copy; 2026 SHRI SANT GANJANA MAHARAJ COLLEGE OF ENGINEERING (SSGMCE). All Rights Reserved.</span>
+          <span>Designed with <span style="color:var(--accent-cyan);">&hearts;</span> for College Faculty</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       TEST / ASSESSMENT MODALS & DIALOGS
+       ======================================================== -->
+
+  <!-- 1. Schedule / Edit Test Modal -->
+  <div class="test-modal-overlay" id="testFormModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="testModalTitle">
+    <div class="test-modal-container">
+      <div class="test-modal-header">
+        <div class="modal-header-info">
+          <span class="modal-badge-tag" id="testModalBadge">Assessment Module</span>
+          <h3 class="test-modal-title" id="testModalTitle">Schedule New Test</h3>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="TeacherTimetableApp.closeTestFormModal()" aria-label="Close dialog">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <form class="test-form" id="testScheduleForm" onsubmit="TeacherTimetableApp.handleSaveTest(event)" novalidate>
+        <input type="hidden" id="testFormId" value="">
+
+        <div class="form-row-grid two-cols">
+          <!-- 1. Test Type -->
+          <div class="form-field-group">
+            <label for="testTypeSelect" class="form-label">
+              <span>Test Type</span>
+              <span class="required-star">*</span>
+            </label>
+            <div class="select-wrapper">
+              <select id="testTypeSelect" class="form-select" required>
+                <option value="Quiz">Quiz</option>
+                <option value="Assignment">Assignment</option>
+                <option value="TEC">TEC (Term End / Mid-Term)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 2. Subject -->
+          <div class="form-field-group">
+            <label for="testSubjectSelect" class="form-label">
+              <span>Subject</span>
+              <span class="required-star">*</span>
+            </label>
+            <div class="select-wrapper">
+              <select id="testSubjectSelect" class="form-select" required>
+                <option value="" disabled selected>Select Subject...</option>
+                <option value="Data Structures">Data Structures</option>
+                <option value="Java Programming">Java Programming</option>
+                <option value="Database Systems">Database Systems</option>
+                <option value="Operating Systems">Operating Systems</option>
+                <option value="Algorithms">Algorithms</option>
+                <option value="Software Engg">Software Engg</option>
+                <option value="Data Structures Lab">Data Structures Lab</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Title -->
+        <div class="form-field-group">
+          <label for="testTitleInput" class="form-label">
+            <span>Test Title / Topic</span>
+            <span class="required-star">*</span>
+          </label>
+          <input type="text"
+                 id="testTitleInput"
+                 class="form-input"
+                 placeholder="e.g. Unit 2 Quiz, Mid-Term Assessment, Coding Assignment 1"
+                 maxlength="100"
+                 required>
+        </div>
+
+        <div class="form-row-grid three-cols">
+          <!-- 4. Date -->
+          <div class="form-field-group">
+            <label for="testDateInput" class="form-label">
+              <span>Date</span>
+              <span class="required-star">*</span>
+            </label>
+            <input type="date"
+                   id="testDateInput"
+                   class="form-input"
+                   required>
+          </div>
+
+          <!-- 5. Start Time -->
+          <div class="form-field-group">
+            <label for="testStartTimeInput" class="form-label">
+              <span>Start Time</span>
+              <span class="required-star">*</span>
+            </label>
+            <input type="time"
+                   id="testStartTimeInput"
+                   class="form-input"
+                   required>
+          </div>
+
+          <!-- 6. End Time -->
+          <div class="form-field-group">
+            <label for="testEndTimeInput" class="form-label">
+              <span>End Time</span>
+              <span class="required-star">*</span>
+            </label>
+            <input type="time"
+                   id="testEndTimeInput"
+                   class="form-input"
+                   required>
+          </div>
+        </div>
+
+        <!-- 7. Test Link -->
+        <div class="form-field-group">
+          <label for="testLinkInput" class="form-label">
+            <span>Test / Submission Link (URL)</span>
+            <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i data-lucide="link" style="width:15px;height:15px;" class="field-icon"></i>
+            <input type="url"
+                   id="testLinkInput"
+                   class="form-input with-icon"
+                   placeholder="https://ssgmce.edu/quiz/test-01 or Google Form link"
+                   required>
+          </div>
+          <span class="field-help-text">Direct portal or external form link for students to take the assessment.</span>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="modal-form-actions">
+          <button type="button" class="btn-cancel" onclick="TeacherTimetableApp.closeTestFormModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn-save-test" id="btnSubmitTestForm">
+            <i data-lucide="check" style="width:16px;height:16px;"></i>
+            <span id="btnSubmitTestText">Save Test</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Test Details Modal (View, Launch, Edit, Delete) -->
+  <div class="test-modal-overlay" id="testDetailsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle">
+    <div class="test-modal-container test-details-container">
+      <div class="test-modal-header">
+        <div class="modal-header-info">
+          <span class="modal-badge-tag" id="detailsModalTypeBadge">TEST DETAILS</span>
+          <h3 class="test-modal-title" id="detailsModalTitle">Assessment Overview</h3>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="TeacherTimetableApp.closeTestDetailsModal()" aria-label="Close dialog">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <div class="test-details-body" id="testDetailsBody">
+        <!-- Rendered dynamically by TeacherTimetableApp.openTestDetails() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Delete Confirmation Dialog Modal -->
+  <div class="test-modal-overlay" id="testDeleteConfirmModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="test-modal-container test-delete-container">
+      <div class="delete-icon-wrap">
+        <i data-lucide="alert-triangle" style="width:28px;height:28px;"></i>
+      </div>
+      <h3 class="delete-modal-title" id="deleteModalTitle">Delete Assessment?</h3>
+      <p class="delete-modal-desc">
+        Are you sure you want to delete <strong id="deleteTestTitleName">this assessment</strong>? This action will remove it from the faculty and student timetables.
+      </p>
+
+      <div class="modal-form-actions center-actions">
+        <button type="button" class="btn-cancel" onclick="TeacherTimetableApp.closeDeleteConfirmModal()">
+          Cancel
+        </button>
+        <button type="button" class="btn-confirm-delete" id="btnConfirmDeleteAction" onclick="TeacherTimetableApp.confirmExecuteDelete()">
+          <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
+          <span>Delete Assessment</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-stack" aria-live="polite"></div>
+
+  <!-- Shared Data & Utilities -->
+  <script src="../js/data.js"></script>
+  <script src="../js/teacher-api.js"></script>
+
+  <!-- Timetable-Specific JavaScript Module -->
+  <script src="../js/teacher_timetable.js"></script>
+
+  <!-- Fallback icon renderer -->
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
+

@@ -18,6 +18,16 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/toast.css">
+  <script src="../js/toast.js"></script>
+  <!-- Authentication Guard -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (window.ERP_AUTH) {
+      window.ERP_AUTH.requireAuth('student');
+    }
+  </script>
 </head>
 <body class="dashboard-body">
 
@@ -129,7 +139,7 @@
               Account Settings
             </a>
             <div class="p-divider"></div>
-            <button type="button" class="p-link-item text-danger" id="logoutBtn">
+            <button type="button" class="p-link-item text-danger" id="logoutBtn" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               Sign Out
             </button>
@@ -1289,13 +1299,13 @@
                 <div class="quiz-badge">Active Quiz</div>
                 <h5>Operating Systems Unit 3: Deadlocks &amp; Concurrency</h5>
                 <p>20 Multiple Choice Questions • 30 Minutes • Max Marks: 20</p>
-                <button type="button" class="btn-start-quiz" onclick="showToast('Starting OS Unit 3 Online Quiz... Good Luck!', 'success')">Start Quiz Now &rarr;</button>
+                <button type="button" class="btn-start-quiz" onclick="window.location.href='student-quiz.html'">Open Quizzes Portal &rarr;</button>
               </div>
               <div class="quiz-item-card">
                 <div class="quiz-badge badge-past">Completed</div>
                 <h5>Data Structures Unit 2: Trees and Traversals</h5>
                 <p>Score: 18 / 20 (90%) • Completed on March 12, 2026</p>
-                <button type="button" class="btn-review-quiz" onclick="showToast('Opening quiz score review sheet...', 'info')">Review Responses</button>
+                <button type="button" class="btn-review-quiz" onclick="window.location.href='student-quiz.html'">View Results & Review</button>
               </div>
             </div>
           </div>

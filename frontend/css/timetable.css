@@ -1,0 +1,528 @@
+/* ==========================================================================
+   SSGMCE TEACHER ERP — TIMETABLE MODULE STYLESHEET
+   File: Teacher_Dashboard/frontend/css/timetable.css
+   Dedicated stylesheet for weekly lecture & lab schedule grid, date picker,
+   active day highlighting, interactive click-to-mark states, and print media.
+   ========================================================================== */
+
+:root {
+  --tt-primary: var(--primary-blue, #0B5CAD);
+  --tt-primary-hover: var(--primary-hover, #08498b);
+  --tt-navy: var(--dark-navy, #0B1F3A);
+  --tt-white: var(--white, #FFFFFF);
+  --tt-bg-subtle: #F8FAFD;
+  --tt-border: var(--border-color, #E2E8F0);
+  --tt-border-light: var(--border-light, #EDF2F7);
+  --tt-text-main: var(--text-main, #1E293B);
+  --tt-text-muted: var(--text-muted, #64748B);
+  --tt-accent-cyan: var(--accent-cyan, #00A6D6);
+  --tt-accent-cyan-light: var(--accent-cyan-light, rgba(0, 166, 214, 0.12));
+  --tt-success: #10B981;
+  --tt-success-bg: #ECFDF5;
+  --tt-success-border: #A7F3D0;
+  --tt-radius-sm: var(--radius-sm, 8px);
+  --tt-radius-md: var(--radius-md, 12px);
+  --tt-radius-lg: var(--radius-lg, 16px);
+  --tt-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --tt-shadow-md: 0 4px 12px rgba(11, 92, 173, 0.08);
+  --tt-shadow-hover: 0 6px 18px rgba(11, 92, 173, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   1. Timetable Main Wrapper & Grid Card
+   -------------------------------------------------------------------------- */
+.timetable-module-container {
+  width: 100%;
+}
+
+.timetable-grid-card {
+  background: var(--tt-white);
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius-lg);
+  padding: 24px;
+  box-shadow: var(--tt-shadow-sm);
+  overflow-x: auto;
+  transition: box-shadow 0.2s ease;
+}
+
+.timetable-grid-card:hover {
+  box-shadow: var(--tt-shadow-md);
+}
+
+/* --------------------------------------------------------------------------
+   2. Header Toolbar & Date Filter Bar
+   -------------------------------------------------------------------------- */
+.timetable-header-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.timetable-header-toolbar h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--tt-navy);
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.timetable-header-toolbar p {
+  font-size: 12.5px;
+  color: var(--tt-text-muted);
+  margin: 3px 0 0 0;
+}
+
+.timetable-date-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.timetable-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tt-bg-subtle);
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius-sm);
+  padding: 5px 12px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.timetable-picker-group:focus-within {
+  border-color: var(--tt-primary);
+  background: var(--tt-white);
+  box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.1);
+}
+
+.timetable-date-input {
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tt-navy);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-timetable-today {
+  padding: 6px 14px;
+  border-radius: var(--tt-radius-sm);
+  background: var(--tt-white);
+  border: 1px solid var(--tt-border);
+  color: var(--tt-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-timetable-today:hover {
+  border-color: var(--tt-primary);
+  color: var(--tt-primary);
+  background: #F0F7FF;
+}
+
+.btn-timetable-today.active {
+  background: var(--tt-primary);
+  color: var(--tt-white);
+  border-color: var(--tt-primary);
+  box-shadow: 0 2px 6px rgba(11, 92, 173, 0.25);
+}
+
+.btn-timetable-print {
+  padding: 6px 14px;
+  border-radius: var(--tt-radius-sm);
+  background: var(--tt-white);
+  border: 1px solid var(--tt-border);
+  color: var(--tt-text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-timetable-print:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: var(--tt-navy);
+}
+
+/* --------------------------------------------------------------------------
+   3. Schedule Status Banner
+   -------------------------------------------------------------------------- */
+.timetable-schedule-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0F7FF;
+  border: 1px solid rgba(11, 92, 173, 0.18);
+  border-radius: var(--tt-radius-sm);
+  padding: 9px 16px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: var(--tt-navy);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timetable-schedule-status-banner .status-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.status-pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tt-success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.timetable-schedule-status-banner .status-hint {
+  font-size: 11.5px;
+  color: var(--tt-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   4. Timetable Table Grid Layout
+   -------------------------------------------------------------------------- */
+.timetable-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 760px;
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius-md);
+  overflow: hidden;
+}
+
+.timetable-table th, 
+.timetable-table td {
+  border: 1px solid var(--tt-border-light);
+  padding: 14px 16px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.timetable-table th {
+  background-color: var(--tt-bg-subtle);
+  color: var(--tt-navy);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* Active Day Row Highlighting */
+.timetable-table tr.active-day-row {
+  background: #F4F9FF;
+}
+
+.timetable-day-cell {
+  background: #FAFBFD;
+  font-weight: 700;
+  width: 110px;
+}
+
+.timetable-day-cell.active-day-cell {
+  background: #EBF4FE !important;
+  border-left: 4px solid var(--tt-primary) !important;
+}
+
+.day-cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.day-name {
+  font-weight: 700;
+  color: var(--tt-navy);
+  font-size: 13px;
+}
+
+.active-day-pill {
+  display: inline-block;
+  background: var(--tt-primary);
+  color: var(--tt-white);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+/* --------------------------------------------------------------------------
+   5. Interactive Class & Lab Slots (Click-to-Mark)
+   -------------------------------------------------------------------------- */
+.timetable-slot {
+  background-color: #F0F7FF;
+  border: 1px solid rgba(11, 92, 173, 0.12);
+  border-left: 3.5px solid var(--tt-primary);
+  border-radius: var(--tt-radius-sm);
+  padding: 10px 12px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.timetable-slot:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--tt-shadow-md);
+}
+
+/* Lab Session Styling */
+.timetable-slot.lab {
+  background-color: var(--tt-accent-cyan-light);
+  border-color: rgba(0, 166, 214, 0.2);
+  border-left-color: var(--tt-accent-cyan);
+}
+
+/* Active slot on current day */
+.timetable-slot.active-slot {
+  border-color: rgba(11, 92, 173, 0.4);
+  box-shadow: 0 2px 8px rgba(11, 92, 173, 0.12);
+  background: var(--tt-white);
+}
+
+.slot-sub {
+  font-weight: 750;
+  color: var(--tt-navy);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.slot-room {
+  font-size: 11.5px;
+  color: var(--tt-text-muted);
+  font-weight: 500;
+}
+
+.slot-class {
+  font-size: 11px;
+  color: var(--tt-text-muted);
+  font-weight: 600;
+}
+
+/* Clickable Slots */
+.timetable-slot.slot-clickable {
+  cursor: pointer;
+}
+
+.timetable-slot.slot-clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--tt-shadow-hover);
+  border-left-width: 5px;
+}
+
+.timetable-slot.slot-clickable:active {
+  transform: translateY(-1px);
+}
+
+/* Hover "Mark" Badge */
+.slot-hover-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  background: #EBF3FC;
+  color: var(--tt-primary);
+  opacity: 0.85;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.timetable-slot.slot-clickable:hover .slot-hover-badge {
+  opacity: 1;
+  background: var(--tt-primary);
+  color: #FFFFFF;
+}
+
+/* Marked Slot (Attendance officially or in-session marked) */
+.timetable-slot.slot-marked {
+  background: var(--tt-success-bg) !important;
+  border-left-color: var(--tt-success) !important;
+  border-color: var(--tt-success-border);
+}
+
+.slot-marked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--tt-success);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+}
+
+.slot-view-edit-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Future Slot (Cannot be marked ahead of time) */
+.timetable-slot.slot-future {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: grayscale(15%);
+}
+
+.slot-future-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 600;
+  background: #E2E8F0;
+  color: #64748B;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Timetable Legend Bar
+   -------------------------------------------------------------------------- */
+.timetable-legend-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tt-border-light);
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--tt-text-muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.legend-swatch.lecture {
+  background: #F0F7FF;
+  border: 1px solid rgba(11, 92, 173, 0.2);
+  border-left: 3px solid var(--tt-primary);
+}
+
+.legend-swatch.lab {
+  background: var(--tt-accent-cyan-light);
+  border: 1px solid rgba(0, 166, 214, 0.2);
+  border-left: 3px solid var(--tt-accent-cyan);
+}
+
+.legend-swatch.marked {
+  background: var(--tt-success-bg);
+  border: 1px solid var(--tt-success-border);
+  border-left: 3px solid var(--tt-success);
+}
+
+.legend-swatch.future {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   7. Print Media Stylesheet
+   -------------------------------------------------------------------------- */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .app-sidebar,
+  .app-header,
+  .app-footer,
+  .timetable-date-filter-bar,
+  .btn-timetable-print,
+  .btn-timetable-today,
+  .slot-hover-badge,
+  .slot-view-edit-link {
+    display: none !important;
+  }
+
+  .timetable-grid-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .timetable-table {
+    border: 1px solid #333333 !important;
+    width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  .timetable-table th,
+  .timetable-table td {
+    border: 1px solid #666666 !important;
+    padding: 8px !important;
+    color: #000000 !important;
+  }
+
+  .timetable-slot {
+    box-shadow: none !important;
+    border: 1px solid #999999 !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Responsive Adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .timetable-grid-card {
+    padding: 16px;
+  }
+
+  .timetable-header-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .timetable-date-filter-bar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

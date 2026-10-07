@@ -1,166 +1,166 @@
 /**
- * SSGMCE Student ERP Dashboard - FastAPI & Supabase Client Adapter
- * Connects frontend to Student Backend (http://localhost:8000/api/v1/student)
+ * Teacher Dashboard ERP - Frontend API Client
+ * Connects the frontend to the Node.js/Express Backend (http://localhost:5001/api/v1)
  */
 
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
-  } else {
-    root.StudentApi = factory();
-  }
-})(typeof self !== 'undefined' ? self : this, function () {
-  'use strict';
+(function () {
+  var API_BASE_URL = window.__API_BASE__ || 'http://localhost:5001/api/v1';
 
-  const DEFAULT_BASE_URL = 'http://localhost:8000/api/v1/student';
+  var TeacherAPI = {
+    token: localStorage.getItem('ssgmce_teacher_token') || null,
 
-  const StudentApi = {
-    baseUrl: (typeof window !== 'undefined' && window.__STUDENT_API_BASE__) || DEFAULT_BASE_URL,
-
-    async request(endpoint, options = {}) {
-      const url = `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      };
-
-      const config = {
-        ...options,
-        headers
-      };
-
-      if (options.body && typeof options.body === 'object') {
-        config.body = JSON.stringify(options.body);
+    setToken: function (token) {
+      this.token = token;
+      if (token) {
+        localStorage.setItem('ssgmce_teacher_token', token);
+      } else {
+        localStorage.removeItem('ssgmce_teacher_token');
       }
+    },
+
+    getHeaders: function () {
+      var headers = {
+        'Content-Type': 'application/json',
+      };
+      if (this.token) {
+        headers['Authorization'] = 'Bearer ' + this.token;
+      }
+      return headers;
+    },
+
+    request: async function (endpoint, options) {
+      options = options || {};
+      var url = API_BASE_URL + endpoint;
+      var config = Object.assign(
+        {
+          headers: this.getHeaders(),
+        },
+        options
+      );
 
       try {
-        const res = await fetch(url, config);
-        const data = await res.json();
+        var response = await fetch(url, config);
+        var data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Request failed with status ' + response.status);
+        }
         return data;
       } catch (err) {
-        console.warn(`[StudentApi] Request failed for ${url}:`, err.message);
+        console.warn('[TeacherAPI] ' + endpoint + ':', err.message);
         throw err;
       }
     },
 
-    // 0. Health & Overview
-    async getHealth() {
-      return await this.request('/health');
+    // 1. Healthcheck
+    checkHealth: async function () {
+      try {
+        var baseRoot = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+        var res = await fetch(baseRoot + '/health');
+        return await res.json();
+      } catch (err) {
+        return { status: 'OFFLINE', error: err.message };
+      }
     },
 
-    async getOverview() {
-      return await this.request('/overview');
-    },
-
-    // 1. Profile
-    async getProfile(studentCode = '308637') {
-      return await this.request(`/profile?student_code=${encodeURIComponent(studentCode)}`);
-    },
-
-    async updateProfile(updates, studentCode = '308637') {
-      return await this.request(`/profile?student_code=${encodeURIComponent(studentCode)}`, {
-        method: 'PUT',
-        body: updates
-      });
-    },
-
-    // 2. Academic Metrics
-    async getMetrics(studentCode = '308637') {
-      return await this.request(`/metrics?student_code=${encodeURIComponent(studentCode)}`);
-    },
-
-    // 3. Timetable
-    async getTimetable(day = null) {
-      const qs = day ? `?day=${encodeURIComponent(day)}` : '';
-      return await this.request(`/timetable${qs}`);
-    },
-
-    // 4. Attendance
-    async getAttendance(studentCode = '308637') {
-      return await this.request(`/attendance?student_code=${encodeURIComponent(studentCode)}`);
-    },
-
-    // 5. Syllabus
-    async getSyllabus() {
-      return await this.request('/syllabus');
-    },
-
-    // 6. Fees
-    async getFees() {
-      return await this.request('/fees');
-    },
-
-    async initiatePayment(amount) {
-      return await this.request('/fees/pay', {
+    // 2. Authentication
+    login: async function (email, password) {
+      email = email || 'rohan.deshmukh@ssgmce.ac.in';
+      password = password || 'Faculty@123';
+      var res = await this.request('/auth/login', {
         method: 'POST',
-        body: { amount }
+        body: JSON.stringify({ email: email, password: password }),
       });
+      if (res && res.data && res.data.token) {
+        this.setToken(res.data.token);
+      }
+      return res.data;
     },
 
-    // 7. E-Learning
-    async getElearning() {
-      return await this.request('/elearning');
+    getProfile: async function () {
+      var res = await this.request('/auth/profile');
+      return res.data;
     },
 
-    // 8. Change Info
-    async getChangeInfoRequests() {
-      return await this.request('/change-info');
+    // 3. Dashboard KPI metrics & timetable
+    getDashboardSummary: async function () {
+      var res = await this.request('/dashboard/summary');
+      return res.data;
     },
 
-    async submitChangeInfo(payload) {
-      return await this.request('/change-info', {
+    // 4. Attendance Sessions
+    getSessions: async function (filters) {
+      filters = filters || {};
+      var params = new URLSearchParams(filters).toString();
+      var res = await this.request('/attendance/sessions?' + params);
+      return res.data;
+    },
+
+    createSession: async function (sessionData) {
+      var res = await this.request('/attendance/sessions', {
         method: 'POST',
-        body: payload
+        body: JSON.stringify(sessionData),
       });
+      return res.data;
     },
 
-    // 9. Updation Info
-    async getUpdationRecords() {
-      return await this.request('/update-info');
-    },
-
-    async submitUpdationRecord(payload) {
-      return await this.request('/update-info', {
+    markAttendanceRecord: async function (sessionId, recordData) {
+      var res = await this.request('/attendance/sessions/' + sessionId + '/mark', {
         method: 'POST',
-        body: payload
+        body: JSON.stringify(recordData),
       });
+      return res.data;
     },
 
-    // 10. D-Wallet
-    async getDwallet(studentCode = '308637') {
-      return await this.request(`/dwallet?student_code=${encodeURIComponent(studentCode)}`);
-    },
-
-    async uploadDocument(payload, studentCode = '308637') {
-      return await this.request(`/dwallet/upload?student_code=${encodeURIComponent(studentCode)}`, {
+    submitSession: async function (sessionId, records) {
+      var res = await this.request('/attendance/sessions/' + sessionId + '/submit', {
         method: 'POST',
-        body: payload
+        body: JSON.stringify({ records: records }),
       });
+      return res.data;
     },
 
-    // 11. Examination
-    async getExamination() {
-      return await this.request('/examination');
+    // 5. Academic Data (Departments, Classes, Subjects, Students)
+    getDepartments: async function () {
+      var res = await this.request('/departments');
+      return res.data;
     },
 
-    async submitRevaluation(payload) {
-      return await this.request('/examination/revaluation', {
-        method: 'POST',
-        body: payload
-      });
+    getClasses: async function (departmentCode) {
+      var query = departmentCode ? '?departmentCode=' + encodeURIComponent(departmentCode) : '';
+      var res = await this.request('/classes' + query);
+      return res.data;
     },
 
-    // 12. Notifications
-    async getNotifications(studentCode = '308637') {
-      return await this.request(`/notifications?student_code=${encodeURIComponent(studentCode)}`);
+    getSubjects: async function (classCode) {
+      var query = classCode ? '?classCode=' + encodeURIComponent(classCode) : '';
+      var res = await this.request('/subjects' + query);
+      return res.data;
     },
 
-    async markNotificationRead(id) {
-      return await this.request(`/notifications/${encodeURIComponent(id)}/read`, {
-        method: 'PATCH'
-      });
-    }
+    getStudents: async function (classCode) {
+      var query = classCode ? '?classCode=' + encodeURIComponent(classCode) : '';
+      var res = await this.request('/students' + query);
+      return res.data;
+    },
+
+    // 6. Timetable & Syllabus
+    getMyTimetable: async function () {
+      var res = await this.request('/timetable/my');
+      return res.data;
+    },
+
+    getSyllabusProgress: async function (subjectCode, classCode) {
+      var res = await this.request('/syllabus/' + subjectCode + '/' + classCode);
+      return res.data;
+    },
+
+    // 7. Notifications
+    getNotifications: async function () {
+      var res = await this.request('/notifications');
+      return res.data;
+    },
   };
 
-  return StudentApi;
-});
+  // Expose safely to window
+  window.TeacherAPI = TeacherAPI;
+})();

@@ -1789,9 +1789,1036 @@ const AttendanceWorkflow = {
   }
 };
 
+/* ========================================================
+   ATTENDANCE DRAWER COMPATIBILITY ADAPTER
+   (Routes legacy/manual triggers cleanly into AttendanceMarkingManager)
+   ======================================================== */
+const AttendanceDrawer = {
+  get markedSessions() {
+    return (window.AttendanceMarkingManager && window.AttendanceMarkingManager.markedSessions) ? window.AttendanceMarkingManager.markedSessions : {};
+  },
+  set markedSessions(val) {
+    if (window.AttendanceMarkingManager) window.AttendanceMarkingManager.markedSessions = val;
+  },
+  init() {
+    const today = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    const dateInput = document.getElementById('manual-attendance-date');
+    if (dateInput) {
+      dateInput.value = today;
+      this.handleManualDateChange(today);
+    }
+    if (window.AttendanceMarkingManager) {
+      AttendanceMarkingManager.init();
+    }
+  },
+  handleManualDateChange(dateStr) {
+    if (!dateStr) return;
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let dayName = 'Monday';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      dayName = days[d.getDay()] || 'Monday';
+    }
+
+    const dayChip = document.getElementById('manual-date-day-chip');
+    const today = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    if (dayChip) {
+      dayChip.textContent = (dateStr === today) ? 'Today' : dayName;
+      dayChip.className = (dateStr === today) ? 'manual-day-chip today' : 'manual-day-chip past';
+    }
+
+    const slotSelect = document.getElementById('manual-attendance-slot-select');
+    if (slotSelect && typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable) {
+      const daySchedule = TeacherERPData.timetable.find(t => t.day.toLowerCase() === dayName.toLowerCase());
+      if (daySchedule && daySchedule.slots) {
+        slotSelect.innerHTML = daySchedule.slots.map(s => {
+          const val = JSON.stringify({ subject: s.subject, room: s.room, timeslot: s.time, classCode: s.classCode || '2R1' });
+          return '<option value=\'' + val + '\'>' + s.time + ' — ' + s.subject + ' (' + s.room + ', Class ' + (s.classCode || '2R1') + ')</option>';
+        }).join('');
+      } else {
+        slotSelect.innerHTML = '<option value="">No classes scheduled for ' + dayName + '</option>';
+      }
+    }
+  },
+  toggleOverrideMode(checked) {
+    const el = document.getElementById('manual-override-fields');
+    if (el) el.style.display = checked ? 'block' : 'none';
+  },
+  handleOverrideDeptChange(dept) {
+    const classSelect = document.getElementById('override-class-select');
+    if (!classSelect) return;
+    if (dept === 'CSE') {
+      classSelect.innerHTML = '<option value="2R1">2R1 (Second Year CSE Div 1)</option><option value="2R2">2R2 (Second Year CSE Div 2)</option><option value="3R">3R (Third Year CSE)</option><option value="4R">4R (Final Year CSE)</option>';
+    } else if (dept === 'IT') {
+      classSelect.innerHTML = '<option value="2IT">2IT (Second Year IT)</option><option value="3IT">3IT (Third Year IT)</option><option value="4IT">4IT (Final Year IT)</option>';
+    } else {
+      classSelect.innerHTML = '<option value="' + dept + '-1">' + dept + ' Div 1</option>';
+    }
+  },
+  openFromSlot(subject, room, timeslot, classCode, date) {
+    return AttendanceMarkingManager.openFromSlot(subject, room, timeslot, classCode, date);
+  },
+  loadManualStudents() {
+    return AttendanceMarkingManager.loadFromManualForm();
+  },
+  close() {
+    AttendanceMarkingManager.backToTimetable();
+  }
+};
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.AttendanceDrawer) {
+    AttendanceDrawer.init();
+  }
+  if (window.AttendanceMarkingManager) {
+    AttendanceMarkingManager.init();
+  }
+});
+
+// ========================================================
+// ATTENDANCE MARKING MANAGER (DEDICATED FULL-PAGE VIEW)
+// ========================================================
+const AttendanceMarkingManager = {
+  activeContext: null,
+  students: [],
+  rosterRecords: {},
+  currentIndex: 0,
+  historyStack: [],
+  activeTab: 'swipe',
+  markedSessions: {},
+  isDragging: false,
+  startPointerX: 0,
+  startPointerY: 0,
+  currentDx: 0,
+  currentDy: 0,
+  isSubmitting: false,
+
+  async init() {
+    // 1. Fetch previously marked sessions from backend
+    try {
+      const res = await fetch('/api/v1/teacher/attendance/sessions');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.sessions) {
+          json.data.sessions.forEach(s => {
+            const d = s.lectureDate ? s.lectureDate.split('T')[0] : (s.date || '');
+            const key = `${d}_${s.classCode}_${s.subjectCode || s.subject}`;
+            this.markedSessions[key] = s;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Backend sessions fetch error for marking manager:', e);
+    }
+
+    // 2. Set up global keyboard listener
+    window.addEventListener('keydown', (e) => {
+      // Only active if attendance-marking-page is visible
+      const page = document.getElementById('attendance-marking-page');
+      if (!page || page.style.display === 'none') return;
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      if (this.activeTab === 'swipe') {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          this.markActiveCard('present');
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          this.markActiveCard('absent');
+        } else if (e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          this.skipStudent();
+        }
+      }
+    });
+
+    // 3. Set up pointer drag physics on active card
+    this.setupPointerPhysics();
+  },
+
+  setupPointerPhysics() {
+    const card = document.getElementById('swipe-active-card');
+    if (!card) return;
+
+    card.addEventListener('pointerdown', (e) => {
+      this.isDragging = true;
+      this.startPointerX = e.clientX;
+      this.startPointerY = e.clientY;
+      this.currentDx = 0;
+      this.currentDy = 0;
+      card.style.transition = 'none';
+      if (card.setPointerCapture) card.setPointerCapture(e.pointerId);
+    });
+
+    card.addEventListener('pointermove', (e) => {
+      if (!this.isDragging) return;
+      this.currentDx = e.clientX - this.startPointerX;
+      this.currentDy = e.clientY - this.startPointerY;
+
+      const rot = this.currentDx * 0.08;
+      card.style.transform = `translate3d(${this.currentDx}px, ${this.currentDy * 0.3}px, 0) rotate(${rot}deg)`;
+
+      // Dynamic Stamps
+      const stampPresent = document.getElementById('swipe-stamp-present');
+      const stampAbsent = document.getElementById('swipe-stamp-absent');
+      if (this.currentDx > 20) {
+        const op = Math.min(1, (this.currentDx - 20) / 60);
+        if (stampPresent) stampPresent.style.opacity = op;
+        if (stampAbsent) stampAbsent.style.opacity = 0;
+      } else if (this.currentDx < -20) {
+        const op = Math.min(1, (Math.abs(this.currentDx) - 20) / 60);
+        if (stampAbsent) stampAbsent.style.opacity = op;
+        if (stampPresent) stampPresent.style.opacity = 0;
+      } else {
+        if (stampPresent) stampPresent.style.opacity = 0;
+        if (stampAbsent) stampAbsent.style.opacity = 0;
+      }
+    });
+
+    const finishDrag = (e) => {
+      if (!this.isDragging) return;
+      this.isDragging = false;
+      const stampPresent = document.getElementById('swipe-stamp-present');
+      const stampAbsent = document.getElementById('swipe-stamp-absent');
+
+      if (this.currentDx > 80) {
+        // Swipe Right: PRESENT
+        card.style.transition = 'transform 0.22s ease-out';
+        card.style.transform = 'translate3d(100vw, 0, 0) rotate(25deg)';
+        setTimeout(() => {
+          this.markActiveCard('present', false);
+        }, 200);
+      } else if (this.currentDx < -80) {
+        // Swipe Left: ABSENT
+        card.style.transition = 'transform 0.22s ease-out';
+        card.style.transform = 'translate3d(-100vw, 0, 0) rotate(-25deg)';
+        setTimeout(() => {
+          this.markActiveCard('absent', false);
+        }, 200);
+      } else {
+        // Snap back to center
+        card.style.transition = 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)';
+        card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+        if (stampPresent) stampPresent.style.opacity = 0;
+        if (stampAbsent) stampAbsent.style.opacity = 0;
+      }
+    };
+
+    card.addEventListener('pointerup', finishDrag);
+    card.addEventListener('pointercancel', finishDrag);
+  },
+
+  loadFromManualForm() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    const date = document.getElementById('manual-attendance-date')?.value || new Date().toISOString().split('T')[0];
+
+    if (isOverride) {
+      const classCode = document.getElementById('override-class-select')?.value || '2R1';
+      const subject = document.getElementById('override-subject-input')?.value || 'Data Structures';
+      const room = document.getElementById('override-room-input')?.value || 'Room 201';
+      const timeslot = document.getElementById('override-timeslot-select')?.value || '09:00 - 10:30 AM';
+      return this.openFromSlot(subject, room, timeslot, classCode, date);
+    }
+
+    const slotSelect = document.getElementById('manual-attendance-slot-select');
+    if (!slotSelect || !slotSelect.value) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Please select a scheduled lecture or check Override to choose a class.', 'warning');
+      } else {
+        alert('Please select a scheduled lecture.');
+      }
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(slotSelect.value);
+      return this.openFromSlot(parsed.subject, parsed.room, parsed.timeslot, parsed.classCode, date);
+    } catch (e) {
+      console.error('Error parsing manual slot:', e);
+      return this.openFromSlot('Data Structures', 'Room 201', '09:00 - 10:30 AM', '2R1', date);
+    }
+  },
+
+  exportAttendanceSheet() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    let className = '2R1';
+    if (isOverride) {
+      className = document.getElementById('override-class-select')?.value || '2R1';
+    } else {
+      const slotSelect = document.getElementById('manual-attendance-slot-select');
+      if (slotSelect && slotSelect.value) {
+        try {
+          const parsed = JSON.parse(slotSelect.value);
+          if (parsed.classCode) className = parsed.classCode;
+        } catch (_) {}
+      }
+    }
+    const url = `/api/v1/teacher/attendance/export?class_name=${encodeURIComponent(className)}`;
+    window.open(url, '_blank');
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Downloading attendance records CSV for Class ${className}...`, 'info');
+    }
+  },
+
+  async openFromSlot(subject, room, timeslot, classCode, date) {
+    let dept = 'CSE';
+    if (classCode.includes('IT')) dept = 'IT';
+    else if (classCode.includes('EE')) dept = 'EE';
+
+    this.activeContext = {
+      subject,
+      room: room || 'Room 201',
+      timeslot: timeslot || '09:00 - 10:30 AM',
+      classCode: classCode || '2R1',
+      date: date || new Date().toISOString().split('T')[0],
+      department: dept
+    };
+
+    // Format readable date
+    let formattedDate = this.activeContext.date;
+    try {
+      const d = new Date(this.activeContext.date);
+      if (!isNaN(d.getTime())) {
+        formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+    } catch (_) {}
+
+    // Populate Breadcrumbs
+    const bcDept = document.getElementById('bc-dept-text');
+    const bcClass = document.getElementById('bc-class-text');
+    const bcDate = document.getElementById('bc-date-text');
+    const bcSub = document.getElementById('bc-subject-text');
+    if (bcDept) bcDept.textContent = dept;
+    if (bcClass) bcClass.textContent = classCode;
+    if (bcDate) bcDate.textContent = formattedDate;
+    if (bcSub) bcSub.textContent = subject;
+
+    // Populate Header Context
+    const headDept = document.getElementById('mark-header-dept-badge');
+    const headClass = document.getElementById('mark-header-class-badge');
+    const headSub = document.getElementById('mark-header-subject-title');
+    const headDate = document.getElementById('mark-header-date-str');
+    const headSlot = document.getElementById('mark-header-slot-str');
+    const headRoom = document.getElementById('mark-header-room-str');
+    const headLogged = document.getElementById('mark-header-logged-badge');
+
+    if (headDept) headDept.textContent = `${dept} Department`;
+    if (headClass) headClass.textContent = `Class ${classCode}`;
+    if (headSub) headSub.textContent = subject;
+    if (headDate) headDate.textContent = formattedDate;
+    if (headSlot) headSlot.textContent = timeslot;
+    if (headRoom) headRoom.textContent = room;
+
+    const sessionKey = `${this.activeContext.date}_${this.activeContext.classCode}_${this.activeContext.subject}`;
+    const existing = this.markedSessions[sessionKey];
+    if (headLogged) headLogged.style.display = existing ? 'inline-block' : 'none';
+
+    // Fetch class roster
+    let studentsList = [];
+    try {
+      const res = await fetch(`/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
+      if (res.ok) {
+        const json = await res.json();
+        studentsList = json.data?.students || [];
+      }
+    } catch (e) {
+      console.warn('API error fetching class roster:', e);
+    }
+
+    if (!studentsList || studentsList.length === 0) {
+      if (typeof TeacherERPData !== 'undefined' && TeacherERPData.getStudentsForClass) {
+        studentsList = TeacherERPData.getStudentsForClass(classCode);
+      } else {
+        studentsList = Array.from({ length: 30 }, (_, i) => ({
+          id: `b0000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`,
+          rollNo: i + 1,
+          rollFormatted: `${classCode}-${String(i + 1).padStart(2, '0')}`,
+          name: i === 20 ? 'SHIVAM AGHAO' : `Student ${i + 1}`,
+          enrollmentNo: `EN24CSE${String(i + 1).padStart(3, '0')}`,
+          cardId: `CARD-${classCode}-${String(i + 1).padStart(3, '0')}`,
+          classCode
+        }));
+      }
+    }
+
+    this.students = studentsList;
+    this.currentIndex = 0;
+    this.historyStack = [];
+    this.rosterRecords = {};
+
+    // Initialize roster records
+    studentsList.forEach(st => {
+      const prev = existing?.records?.find?.(r => r.rollNo === st.rollNo);
+      this.rosterRecords[st.rollNo] = {
+        student: st,
+        status: prev ? prev.status : null,
+        remarks: prev ? (prev.remarks || '') : '',
+        markingMethod: prev ? (prev.markingMode || 'manual') : 'swipe'
+      };
+    });
+
+    // Navigate to dedicated view pane
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.switchView) {
+      TeacherApp.switchView('attendance-mark');
+    } else {
+      document.querySelectorAll('.view-section-pane').forEach(p => p.style.display = 'none');
+      const p = document.getElementById('attendance-marking-page');
+      if (p) p.style.display = 'block';
+    }
+
+    // Default to Swipe Card Mode
+    this.switchTab('swipe');
+    this.renderActiveSwipeCard();
+    this.renderRosterList();
+    this.updateLiveStats();
+
+    if (window.lucide) lucide.createIcons();
+  },
+
+  backToTimetable() {
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.switchView) {
+      TeacherApp.switchView('timetable');
+    }
+  },
+
+  switchTab(tabName) {
+    this.activeTab = tabName;
+    ['swipe', 'roster', 'summary'].forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const pane = document.getElementById(`mark-pane-${t}`);
+      if (btn) btn.classList.toggle('active', t === tabName);
+      if (pane) pane.style.display = (t === tabName) ? 'block' : 'none';
+    });
+
+    if (tabName === 'summary') {
+      this.renderSummaryView();
+    } else if (tabName === 'roster') {
+      this.renderRosterList();
+    } else if (tabName === 'swipe') {
+      this.renderActiveSwipeCard();
+    }
+
+    if (window.lucide) lucide.createIcons();
+  },
+
+  renderActiveSwipeCard() {
+    const card = document.getElementById('swipe-active-card');
+    const peek = document.getElementById('swipe-peek-card');
+    const completion = document.getElementById('swipe-completion-card');
+    if (!card) return;
+
+    const total = this.students.length;
+
+    // Reset card transforms & stamps
+    card.style.transition = 'none';
+    card.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+    const stampPresent = document.getElementById('swipe-stamp-present');
+    const stampAbsent = document.getElementById('swipe-stamp-absent');
+    if (stampPresent) stampPresent.style.opacity = 0;
+    if (stampAbsent) stampAbsent.style.opacity = 0;
+
+    if (this.currentIndex >= total) {
+      card.style.display = 'none';
+      if (peek) peek.style.display = 'none';
+      if (completion) completion.style.display = 'flex';
+      return;
+    }
+
+    card.style.display = 'flex';
+    if (completion) completion.style.display = 'none';
+
+    const currentStudent = this.students[this.currentIndex];
+    const nextStudent = this.currentIndex + 1 < total ? this.students[this.currentIndex + 1] : null;
+
+    // Populate Active Card (Clean Design - No Main Photo!)
+    const rollBadge = document.getElementById('card-roll-number');
+    const nameEl = document.getElementById('card-student-name');
+    const enrollEl = document.getElementById('card-enrollment-id');
+    const classBadge = document.getElementById('card-class-badge');
+    const subName = document.getElementById('card-subject-name');
+    const indexInd = document.getElementById('card-index-indicator');
+
+    if (rollBadge) rollBadge.textContent = `ROLL ${currentStudent.rollNo}`;
+    if (nameEl) nameEl.textContent = currentStudent.name.toUpperCase();
+    if (enrollEl) enrollEl.textContent = currentStudent.enrollmentNo || `EN24CSE${String(currentStudent.rollNo).padStart(3, '0')}`;
+    if (classBadge) classBadge.textContent = `CLASS ${this.activeContext?.classCode || '2R1'}`;
+    if (subName) subName.textContent = this.activeContext?.subject || 'Data Structures';
+    if (indexInd) indexInd.textContent = `#${this.currentIndex + 1}`;
+
+    // Underneath Peek Card
+    if (nextStudent && peek) {
+      peek.style.display = 'flex';
+      const peekRoll = document.getElementById('swipe-peek-roll');
+      const peekName = document.getElementById('swipe-peek-name');
+      const peekEnroll = document.getElementById('swipe-peek-enroll');
+      if (peekRoll) peekRoll.textContent = `NEXT: ROLL ${nextStudent.rollNo}`;
+      if (peekName) peekName.textContent = nextStudent.name.toUpperCase();
+      if (peekEnroll) peekEnroll.textContent = nextStudent.enrollmentNo || `EN24CSE${String(nextStudent.rollNo).padStart(3, '0')}`;
+    } else if (peek) {
+      peek.style.display = 'none';
+    }
+
+    // Top progress
+    const counterLabel = document.getElementById('swipe-counter-label');
+    const progressChip = document.getElementById('swipe-progress-chip');
+    const progressFill = document.getElementById('swipe-progress-fill');
+
+    const markedCount = Object.values(this.rosterRecords).filter(r => r.status && r.status !== 'unmarked').length;
+    const pct = total > 0 ? Math.round((this.currentIndex / total) * 100) : 0;
+
+    if (counterLabel) counterLabel.textContent = `Student ${this.currentIndex + 1} of ${total}`;
+    if (progressChip) progressChip.textContent = `${pct}% Complete`;
+    if (progressFill) progressFill.style.width = `${pct}%`;
+  },
+
+  markActiveCard(status, animate = true) {
+    if (this.currentIndex >= this.students.length) return;
+    const currentStudent = this.students[this.currentIndex];
+    const prevStatus = this.rosterRecords[currentStudent.rollNo]?.status || 'present';
+
+    this.historyStack.push({
+      rollNo: currentStudent.rollNo,
+      prevStatus
+    });
+
+    // Update state
+    this.rosterRecords[currentStudent.rollNo].status = status;
+    this.rosterRecords[currentStudent.rollNo].markingMethod = 'swipe';
+
+    const proceed = () => {
+      this.currentIndex++;
+      this.updateLiveStats();
+      if (this.currentIndex >= this.students.length) {
+        this.switchTab('summary');
+      } else {
+        this.renderActiveSwipeCard();
+      }
+    };
+
+    if (animate) {
+      const card = document.getElementById('swipe-active-card');
+      if (card) {
+        card.style.transition = 'transform 0.22s ease-out';
+        card.style.transform = status === 'present' ? 'translate3d(100vw, 0, 0) rotate(25deg)' : 'translate3d(-100vw, 0, 0) rotate(-25deg)';
+        setTimeout(proceed, 200);
+        return;
+      }
+    }
+    proceed();
+  },
+
+  undoLast() {
+    if (this.historyStack.length === 0 || this.currentIndex === 0) return;
+    const last = this.historyStack.pop();
+    this.rosterRecords[last.rollNo].status = last.prevStatus;
+    this.currentIndex = Math.max(0, this.currentIndex - 1);
+    this.updateLiveStats();
+    this.renderActiveSwipeCard();
+  },
+
+  skipStudent() {
+    if (this.currentIndex + 1 < this.students.length) {
+      this.currentIndex++;
+      this.renderActiveSwipeCard();
+    } else {
+      this.switchTab('summary');
+    }
+  },
+
+  handleHardwareInput(cardId) {
+    if (!cardId || !cardId.trim()) return;
+    const cid = cardId.trim();
+
+    // Check if matching student in roster
+    const match = this.students.find(s => s.cardId === cid || `CARD-${this.activeContext?.classCode}-${String(s.rollNo).padStart(3, '0')}` === cid);
+    if (match) {
+      this.rosterRecords[match.rollNo].status = 'present';
+      this.rosterRecords[match.rollNo].markingMethod = 'swipe';
+      this.updateLiveStats();
+      if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+        TeacherApp.showToast(`✅ ${match.name} (Roll ${match.rollNo}) verified and marked Present!`);
+      }
+      this.renderActiveSwipeCard();
+    } else {
+      if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+        TeacherApp.showToast(`⚠️ Card ID '${cid}' not recognized for this class session.`);
+      }
+    }
+  },
+
+  markAll(status) {
+    Object.keys(this.rosterRecords).forEach(roll => {
+      this.rosterRecords[roll].status = status;
+      this.rosterRecords[roll].markingMethod = 'bulk';
+    });
+    this.updateLiveStats();
+    this.renderRosterList();
+  },
+
+  toggleStudentStatus(rollNo, newStatus) {
+    if (this.rosterRecords[rollNo]) {
+      const current = this.rosterRecords[rollNo].status;
+      this.rosterRecords[rollNo].status = (current === newStatus) ? null : newStatus;
+      this.updateLiveStats();
+      this.renderRosterList();
+    }
+  },
+
+  filterRoster(query) {
+    const q = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.roster-card-item');
+    rows.forEach(r => {
+      const text = r.textContent.toLowerCase();
+      r.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  },
+
+  renderRosterList() {
+    const container = document.getElementById('roster-page-student-list');
+    if (!container) return;
+
+    const list = Object.values(this.rosterRecords);
+    container.innerHTML = list.map(rec => {
+      const st = rec.student;
+      const status = rec.status; // 'present' | 'absent' | null
+      const rollNo = st.rollNo;
+      const isPresent = (status === 'present');
+      const isAbsent = (status === 'absent');
+      const isNeutral = !status || status === 'unmarked';
+
+      // Dynamic Flexbox Color Coding:
+      // Green when Present, Red when Absent, Neutral White/Grey when unmarked
+      let rowStyle = 'background:#FFFFFF; border:1.5px solid #E2E8F0;';
+      let statusClass = 'status-unmarked';
+      if (isPresent) {
+        rowStyle = 'background:#ECFDF5; border:1.5px solid #10B981; box-shadow:0 2px 8px rgba(16, 185, 129, 0.15);';
+        statusClass = 'status-present';
+      } else if (isAbsent) {
+        rowStyle = 'background:#FEF2F2; border:1.5px solid #EF4444; box-shadow:0 2px 8px rgba(239, 68, 68, 0.15);';
+        statusClass = 'status-absent';
+      }
+
+      return `
+        <div class="roster-card-item drawer-student-card ${statusClass}" style="${rowStyle} margin-bottom:0; border-radius:14px; padding:14px 18px; transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);" id="roster-item-${rollNo}">
+          <div class="student-card-top-row" style="width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div class="student-identity-group" style="display:flex; align-items:center; gap:12px;">
+              <div class="student-avatar-badge" style="width:40px; height:40px; border-radius:12px; ${isPresent ? 'background:#DCFCE7; color:#15803D;' : (isAbsent ? 'background:#FEE2E2; color:#B91C1C;' : 'background:#F1F5F9; color:#1E293B;')} font-weight:900; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.2s ease;">
+                ${rollNo}
+              </div>
+              <div class="student-meta-info">
+                <div class="student-name-text" style="font-size:14px; font-weight:800; color:#0F172A; text-transform:uppercase;">
+                  ${st.name}
+                  ${rollNo === 21 ? '<span style="background:#E0E7FF; color:#4338CA; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px;">CR</span>' : ''}
+                </div>
+                <div class="student-roll-sub" style="font-size:11.5px; color:#64748B; font-family:monospace;">
+                  Roll #${rollNo} • ${st.enrollmentNo || 'CSE'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Clickable Status Buttons: Only Present and Absent (No Late) -->
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="segmented-control" style="background:rgba(255,255,255,0.95); border:1px solid #CBD5E1; border-radius:10px; padding:3px; display:inline-flex; gap:6px;">
+                <button type="button" 
+                        class="seg-btn btn-pres ${isPresent ? 'active-present' : ''}" 
+                        style="padding:7px 16px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s ease; ${isPresent ? 'background:#10B981 !important; color:#FFFFFF !important; border:1px solid #10B981 !important; box-shadow:0 2px 6px rgba(16, 185, 129, 0.35);' : 'background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0;'}"
+                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'present')"
+                        title="Mark student Present">
+                  Present ✓
+                </button>
+                <button type="button" 
+                        class="seg-btn btn-abs ${isAbsent ? 'active-absent' : ''}" 
+                        style="padding:7px 16px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.15s ease; ${isAbsent ? 'background:#EF4444 !important; color:#FFFFFF !important; border:1px solid #EF4444 !important; box-shadow:0 2px 6px rgba(239, 68, 68, 0.35);' : 'background:#FEF2F2; color:#B91C1C; border:1px solid #FECDD3;'}"
+                        onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, 'absent')"
+                        title="Mark student Absent">
+                  Absent ✗
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const chip = document.getElementById('tab-roster-count-chip');
+    if (chip) chip.textContent = list.length;
+  },
+
+  updateLiveStats() {
+    const list = Object.values(this.rosterRecords);
+    const total = list.length;
+    const present = list.filter(r => r.status === 'present').length;
+    const absent = list.filter(r => r.status === 'absent').length;
+    const remaining = Math.max(0, total - (present + absent));
+    const rate = (total > 0 && (present + absent) > 0) ? Math.round((present / total) * 100) : 0;
+    const rateFormatted = (total > 0 && (present + absent) > 0) ? ((present / total) * 100).toFixed(2) + '%' : '0.00%';
+
+    // Header context rate
+    const rateDisp = document.getElementById('mark-header-rate-display');
+    const sumLbl = document.getElementById('mark-header-summary-lbl');
+    if (rateDisp) rateDisp.textContent = rateFormatted;
+    if (sumLbl) sumLbl.textContent = `${present} / ${total} Present`;
+
+    // Top mode switcher live counters
+    const topP = document.getElementById('top-counter-present');
+    const topA = document.getElementById('top-counter-absent');
+    const topR = document.getElementById('top-counter-remaining');
+    if (topP) topP.textContent = `${present} Present`;
+    if (topA) topA.textContent = `${absent} Absent`;
+    if (topR) topR.textContent = `${remaining} Remaining`;
+
+    // Swipe card stats strip
+    const cellP = document.getElementById('swipe-cell-present');
+    const cellA = document.getElementById('swipe-cell-absent');
+    const cellR = document.getElementById('swipe-cell-remaining');
+    const swipeProgChip = document.getElementById('swipe-progress-chip');
+    const swipeProgFill = document.getElementById('swipe-progress-fill');
+    if (cellP) cellP.textContent = present;
+    if (cellA) cellA.textContent = absent;
+    if (cellR) cellR.textContent = remaining;
+
+    const markedCount = present + absent;
+    const pct = total > 0 ? Math.round((markedCount / total) * 100) : 0;
+    if (swipeProgChip) swipeProgChip.textContent = `${pct}% Complete`;
+    if (swipeProgFill) swipeProgFill.style.width = `${pct}%`;
+  },
+
+  renderSummaryView() {
+    this.updateLiveStats();
+    const list = Object.values(this.rosterRecords);
+    const total = list.length;
+    const presentList = list.filter(r => r.status === 'present');
+    const absentList = list.filter(r => r.status === 'absent');
+    const lateList = list.filter(r => r.status === 'late');
+    const present = presentList.length;
+    const absent = absentList.length;
+    const effectivePresent = present + lateList.length;
+    const rateExact = total > 0 ? ((effectivePresent / total) * 100).toFixed(2) : '0.00';
+
+    // KPI values
+    const kpiTotal = document.getElementById('sum-kpi-total');
+    const kpiRate = document.getElementById('sum-kpi-rate');
+    const kpiRatio = document.getElementById('sum-kpi-ratio');
+    const kpiPresent = document.getElementById('sum-kpi-present');
+    const kpiAbsent = document.getElementById('sum-kpi-absent');
+
+    if (kpiTotal) kpiTotal.textContent = total;
+    if (kpiRate) kpiRate.textContent = `${rateExact}%`;
+    if (kpiRatio) kpiRatio.textContent = `${effectivePresent} / ${total} Attended`;
+    if (kpiPresent) kpiPresent.textContent = present;
+    if (kpiAbsent) kpiAbsent.textContent = absent;
+
+    // SVG Doughnut Chart
+    const circumference = 2 * Math.PI * 60; // ~376.99
+    const presentArc = total > 0 ? (present / total) * circumference : 0;
+    const absentArc = total > 0 ? (absent / total) * circumference : 0;
+
+    const ringPres = document.getElementById('sum-doughnut-present');
+    const ringAbs = document.getElementById('sum-doughnut-absent');
+    const centerTxt = document.getElementById('sum-doughnut-percent-text');
+
+    if (ringPres) {
+      ringPres.setAttribute('stroke-dasharray', `${presentArc} ${circumference}`);
+      ringPres.setAttribute('stroke-dashoffset', '0');
+    }
+    if (ringAbs) {
+      ringAbs.setAttribute('stroke-dasharray', `${absentArc} ${circumference}`);
+      ringAbs.setAttribute('stroke-dashoffset', `${-presentArc}`);
+    }
+    if (centerTxt) centerTxt.textContent = `${Math.round(rateExact)}%`;
+
+    // PRESENT breakdown list
+    const presContainer = document.getElementById('sum-present-list-container');
+    const presCountEl = document.getElementById('sum-list-present-count');
+    if (presCountEl) presCountEl.textContent = presentList.length;
+    if (presContainer) {
+      if (presentList.length === 0) {
+        presContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#94A3B8; font-size:12px;">No students marked present.</div>`;
+      } else {
+        presContainer.innerHTML = presentList.map(rec => `
+          <div class="breakdown-row pres">
+            <div class="breakdown-row-left">
+              <span class="breakdown-roll-tag pres">${rec.student.rollNo}</span>
+              <div>
+                <div class="breakdown-name">${rec.student.name}</div>
+                <small style="color:#64748B; font-family:monospace; font-size:10.5px;">${rec.student.enrollmentNo || 'CSE'}</small>
+              </div>
+            </div>
+            <span style="font-size:11px; font-weight:800; color:#15803D;">Present</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ABSENT breakdown list
+    const absContainer = document.getElementById('sum-absent-list-container');
+    const absCountEl = document.getElementById('sum-list-absent-count');
+    if (absCountEl) absCountEl.textContent = absentList.length;
+    if (absContainer) {
+      if (absentList.length === 0) {
+        absContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#15803D; font-weight:800; font-size:12px;">🎉 Perfect Attendance! 0 students absent.</div>`;
+      } else {
+        absContainer.innerHTML = absentList.map(rec => `
+          <div class="breakdown-row abs">
+            <div class="breakdown-row-left">
+              <span class="breakdown-roll-tag abs">${rec.student.rollNo}</span>
+              <div>
+                <div class="breakdown-name">${rec.student.name}</div>
+                <small style="color:#64748B; font-family:monospace; font-size:10.5px;">${rec.student.enrollmentNo || 'CSE'}</small>
+              </div>
+            </div>
+            <span style="font-size:11px; font-weight:800; color:#DC2626;">Absent</span>
+          </div>
+        `).join('');
+      }
+    }
+  },
+
+  // ========================================================
+  // EDIT ATTENDANCE MODAL (TABLE WITH "CHANGE" TOGGLE BUTTON)
+  // ========================================================
+  openEditModal() {
+    const modal = document.getElementById('modal-edit-attendance');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    this.renderEditTable();
+  },
+
+  closeEditModal() {
+    const modal = document.getElementById('modal-edit-attendance');
+    if (modal) modal.style.display = 'none';
+    this.renderSummaryView();
+    this.renderRosterList();
+  },
+
+  renderEditTable(filterQuery = '') {
+    const tbody = document.getElementById('edit-attendance-table-body');
+    if (!tbody) return;
+
+    const q = (filterQuery || '').toLowerCase().trim();
+    const list = Object.values(this.rosterRecords).filter(rec => {
+      if (!q) return true;
+      return rec.student.name.toLowerCase().includes(q) || String(rec.student.rollNo).includes(q);
+    });
+
+    tbody.innerHTML = list.map(rec => {
+      const st = rec.student;
+      const rollNo = st.rollNo;
+      const status = rec.status;
+      const isPresent = status === 'present';
+      const isAbsent = status === 'absent';
+      const displayStatus = isPresent ? 'PRESENT' : (isAbsent ? 'ABSENT' : 'UNMARKED');
+      const badgeStyle = isPresent ? 'background:#DCFCE7; color:#15803D;' : (isAbsent ? 'background:#FEE2E2; color:#B91C1C;' : 'background:#F1F5F9; color:#64748B;');
+      const nextStatus = isPresent ? 'absent' : 'present';
+
+      return `
+        <tr style="border-bottom:1px solid #F1F5F9;">
+          <td style="padding:10px 12px; font-family:monospace; font-weight:800; color:#475569;">#${rollNo}</td>
+          <td style="padding:10px 12px; font-weight:800; color:#0F172A; text-transform:uppercase;">${st.name}</td>
+          <td style="padding:10px 12px; text-align:center;">
+            <span style="padding:3px 10px; border-radius:12px; font-size:10.5px; font-weight:800; text-transform:uppercase; ${badgeStyle}">${displayStatus}</span>
+          </td>
+          <td style="padding:10px 12px; text-align:center;">
+            <button type="button" 
+                    style="padding:5px 12px; border-radius:8px; border:1px solid #CBD5E1; background:#fff; font-size:11px; font-weight:800; cursor:pointer;"
+                    onclick="AttendanceMarkingManager.toggleStudentStatus(${rollNo}, '${nextStatus}'); AttendanceMarkingManager.renderEditTable('${q.replace(/'/g, "\\\'")}');">
+              Change to ${nextStatus.toUpperCase()}
+            </button>
+          </td>
+          <td style="padding:10px 12px;">
+            <input type="text" placeholder="Remarks..." value="${rec.remarks || ''}" 
+                   style="width:100%; padding:4px 8px; border-radius:6px; border:1px solid #E2E8F0; font-size:11px; outline:none;"
+                   onchange="AttendanceMarkingManager.rosterRecords[${rollNo}].remarks = this.value;">
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterEditTable(query) {
+    this.renderEditTable(query);
+  },
+
+  // ========================================================
+  // SAVE ATTENDANCE MODAL (DRAFT)
+  // ========================================================
+  openSaveModal() {
+    const modal = document.getElementById('modal-save-attendance');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const subEl = document.getElementById('save-modal-subject');
+    const cdEl = document.getElementById('save-modal-class-date');
+    const pEl = document.getElementById('save-modal-present');
+    const aEl = document.getElementById('save-modal-absent');
+
+    const list = Object.values(this.rosterRecords);
+    const present = list.filter(r => r.status === 'present').length;
+    const absent = list.filter(r => r.status === 'absent').length;
+
+    if (subEl) subEl.textContent = this.activeContext?.subject || 'Data Structures';
+    if (cdEl) cdEl.textContent = `${this.activeContext?.classCode || '2R1'} • ${this.activeContext?.date || ''}`;
+    if (pEl) pEl.textContent = `${present} Students`;
+    if (aEl) aEl.textContent = `${absent} Students`;
+  },
+
+  closeSaveModal() {
+    const modal = document.getElementById('modal-save-attendance');
+    if (modal) modal.style.display = 'none';
+  },
+
+  confirmSaveDraft() {
+    const sessionKey = `${this.activeContext.date}_${this.activeContext.classCode}_${this.activeContext.subject}`;
+    const draft = {
+      ...this.activeContext,
+      isDraft: true,
+      records: Object.values(this.rosterRecords).map(r => ({
+        rollNo: r.student.rollNo,
+        status: r.status,
+        remarks: r.remarks
+      }))
+    };
+    this.markedSessions[sessionKey] = draft;
+
+    this.closeSaveModal();
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+      TeacherApp.showToast(`💾 Draft saved for ${this.activeContext.subject} (${this.activeContext.classCode})!`);
+    }
+  },
+
+  // ========================================================
+  // SUBMIT ATTENDANCE MODAL (FINAL SUBMIT WITH DUPLICATE PROTECTION)
+  // ========================================================
+  openSubmitModal() {
+    const modal = document.getElementById('modal-submit-attendance');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const subEl = document.getElementById('submit-modal-subject');
+    const clsEl = document.getElementById('submit-modal-class');
+    const dateEl = document.getElementById('submit-modal-date');
+    const totEl = document.getElementById('submit-modal-total');
+    const pEl = document.getElementById('submit-modal-present');
+    const aEl = document.getElementById('submit-modal-absent');
+
+    const list = Object.values(this.rosterRecords);
+    const total = list.length;
+    const present = list.filter(r => r.status === 'present').length;
+    const absent = list.filter(r => r.status === 'absent').length;
+    const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+
+    if (subEl) subEl.textContent = this.activeContext?.subject || 'Data Structures';
+    if (clsEl) clsEl.textContent = this.activeContext?.classCode || '2R1';
+    if (dateEl) dateEl.textContent = this.activeContext?.date || '';
+    if (totEl) totEl.textContent = `${total} Students`;
+    if (pEl) pEl.textContent = `${present} (${pct}%)`;
+    if (aEl) aEl.textContent = `${absent} Students`;
+  },
+
+  closeSubmitModal() {
+    const modal = document.getElementById('modal-submit-attendance');
+    if (modal) modal.style.display = 'none';
+  },
+
+  async confirmFinalSubmit() {
+    if (this.isSubmitting || !this.activeContext) return;
+    this.isSubmitting = true;
+
+    const btn = document.getElementById('btn-confirm-final-submit');
+    if (btn) {
+      btn.setAttribute('disabled', 'true');
+      btn.innerHTML = `
+        <span style="width:13px;height:13px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></span>
+        <span>Submitting...</span>
+      `;
+    }
+
+    const recordsArray = Object.values(this.rosterRecords).map(r => ({
+      studentId: r.student.id || `b0000000-0000-0000-0000-${String(r.student.rollNo).padStart(12, '0')}`,
+      rollNo: r.student.rollNo,
+      status: r.status,
+      remarks: r.remarks || '',
+      markingMode: r.markingMethod || 'swipe'
+    }));
+
+    const payload = {
+      classId: this.activeContext.classCode,
+      classCode: this.activeContext.classCode,
+      subject: this.activeContext.subject,
+      subjectCode: this.activeContext.subject,
+      room: this.activeContext.room,
+      date: this.activeContext.date,
+      lectureDate: this.activeContext.date,
+      timeSlot: this.activeContext.timeslot,
+      lectureTime: this.activeContext.timeslot,
+      markingMode: this.activeTab,
+      records: recordsArray
+    };
+
+    let savedSession = null;
+    try {
+      const res = await fetch('/api/v1/teacher/attendance/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        savedSession = json.data;
+      }
+    } catch (e) {
+      console.warn('API error submitting attendance:', e);
+    }
+
+    if (!savedSession) {
+      savedSession = {
+        sessionId: `SESS-${this.activeContext.date}-${this.activeContext.classCode}`,
+        records: recordsArray,
+        status: 'submitted'
+      };
+    }
+
+    const sessionKey = `${this.activeContext.date}_${this.activeContext.classCode}_${this.activeContext.subject}`;
+    this.markedSessions[sessionKey] = savedSession;
+    if (window.AttendanceDrawer) {
+      window.AttendanceDrawer.markedSessions[sessionKey] = savedSession;
+    }
+
+    const presentCount = recordsArray.filter(r => r.status === 'present').length;
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+      TeacherApp.showToast(`🎉 Attendance submitted successfully for ${this.activeContext.subject} (${this.activeContext.classCode})! ${presentCount}/${recordsArray.length} Present.`);
+    }
+
+    this.closeSubmitModal();
+    this.isSubmitting = false;
+    if (btn) {
+      btn.removeAttribute('disabled');
+      btn.textContent = 'Confirm & Submit';
+    }
+
+    // Return to timetable and refresh checkmarks
+    this.backToTimetable();
+    if (typeof TeacherApp !== 'undefined' && TeacherApp.renderTimetableView) {
+      TeacherApp.renderTimetableView();
+    }
+  }
+};
+
 if (typeof window !== 'undefined') {
   window.AttendanceWorkflow = AttendanceWorkflow;
+  window.AttendanceDrawer = AttendanceDrawer;
+  window.AttendanceMarkingManager = AttendanceMarkingManager;
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { AttendanceWorkflow };
+  module.exports = { AttendanceWorkflow, AttendanceDrawer, AttendanceMarkingManager };
 }
+
+

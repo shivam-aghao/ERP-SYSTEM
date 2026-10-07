@@ -456,8 +456,7 @@ const TeacherApp = {
         setHeaderBadge("Settings");
         break;
       case 'timetable':
-        document.getElementById("timetable-view").style.display = "block";
-        setHeaderBadge("Faculty Timetable");
+        window.location.href = "teacher_timetable.html";
         break;
       case 'classes':
         document.getElementById("classes-view").style.display = "block";

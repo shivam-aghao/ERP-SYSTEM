@@ -16,6 +16,7 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../css/toast.css">
 
 
     <style>
@@ -2076,7 +2077,7 @@
 
 
                             <input type="password" id="password" name="password" class="input"
-                                placeholder="Enter your password" minlength="1" maxlength="50"
+                                placeholder="Enter your password" minlength="8" maxlength="20"
                                 autocomplete="current-password" required>
 
 
@@ -2181,19 +2182,22 @@
 
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/toast.js"></script>
     <script>
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('logout') || urlParams.has('switch') || urlParams.has('relogin')) {
+        // Reset existing cached role/session on login page so user can choose who to log in as
+        try {
             localStorage.removeItem('ssgmce_user');
             localStorage.removeItem('ssgmce_erp_session');
-            localStorage.removeItem('ssgmce_legacy_key');
+            localStorage.removeItem('ssgmce_user_session');
             localStorage.removeItem('ssgmce_active_role');
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('dashboard_permissions');
             sessionStorage.clear();
-        } else if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
-            window.location.replace(window.ERP_AUTH.getRedirectForRole());
-        }
+        } catch (e) {}
+    </script>
 
 
+    <script>
         /* =====================================================
            PASSWORD SHOW / HIDE
         ===================================================== */
@@ -2316,7 +2320,12 @@
                 return false;
             } catch (error) {
                 console.error("Login error:", error);
-                alert(error.message || "Unable to login. Please check your credentials.");
+                const errMsg = error.message || "Unable to login. Please check your credentials.";
+                if (window.ERPToast) {
+                    window.ERPToast.error(errMsg, "Authentication Failed");
+                } else {
+                    alert(errMsg);
+                }
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Login";

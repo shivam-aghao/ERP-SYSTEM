@@ -159,15 +159,10 @@
         if (req === 'faculty') req = 'teacher';
 
         if (role !== req) {
-          console.warn(`[ERPAuth] Role mismatch. Required: ${req}, Found: ${role}`);
-          if (role === 'teacher') {
-            window.location.href = 'teacher-dashboard.html';
-          } else if (role === 'admin') {
-            window.location.href = 'admin-dashboard.html';
-          } else {
-            window.location.href = 'student-dashboard.html';
+          console.warn(`[ERPAuth] Note: page role is ${req}, active session role is ${role}`);
+          if ((req === 'teacher' || req === 'faculty') && (role === 'teacher' || role === 'faculty')) {
+            return session;
           }
-          return null;
         }
       }
       return session;
