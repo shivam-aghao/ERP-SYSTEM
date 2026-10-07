@@ -1,4 +1,4 @@
-﻿/**
+/**
  * College ERP - Teacher Attendance Management Application Controller
  * Orchestrates navigation, calendar logic, swipe engine, summary review,
  * edit mode, confirmation modals, and persistence.
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#22C55E";
             dot.style.boxShadow = "0 0 8px #22C55E";
           }
-          if (text) text.textContent = "≡ƒƒó Live Connected (Backend & Supabase)";
+          if (text) text.textContent = "Live Connected (Backend & Supabase)";
         } else if (supabaseOnline) {
           badge.style.background = "#DCFCE7";
           badge.style.color = "#15803D";
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#22C55E";
             dot.style.boxShadow = "0 0 8px #22C55E";
           }
-          if (text) text.textContent = "≡ƒƒó Live Connected (Supabase Cloud)";
+          if (text) text.textContent = "Live Connected (Supabase Cloud)";
         } else if (backendOnline) {
           badge.style.background = "#FEF3C7";
           badge.style.color = "#B45309";
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#F59E0B";
             dot.style.boxShadow = "0 0 6px #F59E0B";
           }
-          if (text) text.textContent = "≡ƒƒí Backend Live";
+          if (text) text.textContent = "Backend Live";
         } else {
           badge.style.background = "#FEE2E2";
           badge.style.color = "#991B1B";
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
             dot.style.background = "#EF4444";
             dot.style.boxShadow = "none";
           }
-          if (text) text.textContent = "≡ƒö┤ Offline Mode";
+          if (text) text.textContent = "Offline Mode";
         }
       };
 
@@ -421,8 +421,21 @@ document.addEventListener("DOMContentLoaded", () => {
           this.openStudentSearchModal();
         });
       }
+      const tileStudent = document.getElementById("tileStudentReport");
+      if (tileStudent) {
+        tileStudent.addEventListener("click", () => {
+          if (this.modalPdfCenter) this.modalPdfCenter.classList.add("hidden");
+          this.openStudentSearchModal();
+        });
+      }
       if (this.btnPdfCenterDownloadTeacher) {
         this.btnPdfCenterDownloadTeacher.addEventListener("click", () => {
+          this.downloadTeacherReportPdf();
+        });
+      }
+      const tileTeacher = document.getElementById("tileTeacherReport");
+      if (tileTeacher) {
+        tileTeacher.addEventListener("click", () => {
           this.downloadTeacherReportPdf();
         });
       }
@@ -602,6 +615,12 @@ document.addEventListener("DOMContentLoaded", () => {
           link.closest(".nav-item").classList.add("active");
           if (nav === "attendance") {
             this.goToStep(1);
+          } else if (nav === "dashboard") {
+            if (window.parent && window.parent.TeacherApp && window.self !== window.top) {
+              window.parent.TeacherApp.switchView("dashboard");
+            } else {
+              window.location.href = "teacher-dashboard.html";
+            }
           } else {
             this.showToast(`Navigated to ${link.innerText.trim()} module`, "info");
           }
@@ -750,7 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
         node.classList.remove("active", "completed");
         if (nodeNum < activeNodeIdx) {
           node.classList.add("completed");
-          node.querySelector(".step-circle").innerHTML = "Γ£ô";
+          node.querySelector(".step-circle").innerHTML = "✓";
         } else if (nodeNum === activeNodeIdx) {
           node.classList.add("active");
           node.querySelector(".step-circle").innerHTML = nodeNum;
@@ -862,14 +881,14 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td>
             <span class="${record.status === 'Submitted' ? 'badge-submitted' : 'badge-draft'}">
-              ${record.status === 'Submitted' ? 'ΓùÅ Submitted' : 'Γùï Draft'}
+              ${record.status === 'Submitted' ? 'Submitted' : 'Draft'}
             </span>
           </td>
           <td style="color: var(--text-muted); font-size: 12px;">${record.savedAt || 'Recently'}</td>
           <td>
             <div style="display: flex; gap: 4px;">
               <button class="btn-table-action btn-view-record" data-id="${record.id}">View</button>
-              <button class="btn-table-action btn-download-record-pdf" style="background: #0B5CAD; color: #fff; font-weight: 700; border: none; cursor: pointer;" data-id="${record.id}">≡ƒôÑ PDF</button>
+              <button class="btn-table-action btn-download-record-pdf" style="background: #0B5CAD; color: #fff; font-weight: 700; border: none; cursor: pointer;" data-id="${record.id}">PDF</button>
             </div>
           </td>
         `;
@@ -1021,8 +1040,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const deptColor = deptObj ? deptObj.color : "#0B5CAD";
           const isScheduled = card.card_type === "scheduled";
           const typeBadgeHtml = isScheduled
-            ? `<span class="card-badge-pill" style="border-color: #22C55E40; color: #15803D; background-color: #DCFCE7; font-weight: 700;">≡ƒôà Timetable Scheduled</span>`
-            : `<span class="card-badge-pill" style="border-color: #F59E0B40; color: #B45309; background-color: #FEF3C7; font-weight: 700;">ΓÜí Extra / Replacement</span>`;
+            ? `<span class="card-badge-pill" style="border-color: #22C55E40; color: #15803D; background-color: #DCFCE7; font-weight: 700;">Timetable Scheduled</span>`
+            : `<span class="card-badge-pill" style="border-color: #F59E0B40; color: #B45309; background-color: #FEF3C7; font-weight: 700;">Extra / Replacement</span>`;
 
           const cardEl = document.createElement("div");
           cardEl.className = "my-class-card";
@@ -1038,13 +1057,13 @@ document.addEventListener("DOMContentLoaded", () => {
                   ${typeBadgeHtml}
                 </div>
                 <div class="card-menu-container">
-                  <button class="card-menu-btn" title="Options" aria-label="Card Options">Γï«</button>
+                  <button class="card-menu-btn" title="Options" aria-label="Card Options">⋮</button>
                   <div class="card-menu-dropdown">
                     <button class="card-menu-item btn-card-edit" type="button">
-                      <span>Γ£Å∩╕Å</span> Edit Card
+                      Edit Card
                     </button>
                     <button class="card-menu-item danger btn-card-delete" type="button">
-                      <span>≡ƒùæ∩╕Å</span> Delete Card
+                      Delete Card
                     </button>
                   </div>
                 </div>
@@ -1054,12 +1073,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="card-class-heading">Class ${card.class}</div>
                 <div class="card-subject-name">${card.subject_name}</div>
                 <div class="card-subject-code">${card.subject_code}</div>
-                ${card.time_slot ? `<div style="font-size: 11.5px; color: #475569; margin-top: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;">≡ƒòÆ ${card.time_slot}</div>` : ''}
+                ${card.time_slot ? `<div style="font-size: 11.5px; color: #475569; margin-top: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;">${card.time_slot}</div>` : ''}
               </div>
             </div>
 
             <div class="card-footer-meta" style="margin-top: 12px;">
-              <span class="card-action-hint">Mark Attendance ΓåÆ</span>
+              <span class="card-action-hint">Mark Attendance →</span>
             </div>
           `;
 
@@ -1751,7 +1770,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Subtitle
       const dateStr = this.formatDateLong(this.state.selectedDate);
-      this.summarySubtitleText.innerText = `${this.state.selectedDept.code} ΓÇó ${this.state.selectedClass.name} ΓÇó ${this.state.selectedSubject.name} (${dateStr})`;
+      this.summarySubtitleText.innerText = `${this.state.selectedDept.code} • ${this.state.selectedClass.name} • ${this.state.selectedSubject.name} (${dateStr})`;
 
       // Summary Metric Cards
       this.sumValTotal.innerText = total;
@@ -1783,7 +1802,7 @@ document.addEventListener("DOMContentLoaded", () => {
           row.innerHTML = `
             <span class="row-roll-badge">${student.rollFormatted}</span>
             <span class="row-student-name">${student.name}</span>
-            <span style="color: var(--success-dark); font-weight: 700; font-size: 13px;">Γ£ô Present</span>
+            <span style="color: var(--success-dark); font-weight: 700; font-size: 13px;">✓ Present</span>
           `;
           this.sumPresentList.appendChild(row);
         });
@@ -1800,7 +1819,7 @@ document.addEventListener("DOMContentLoaded", () => {
           row.innerHTML = `
             <span class="row-roll-badge" style="color: var(--danger);">${student.rollFormatted}</span>
             <span class="row-student-name">${student.name}</span>
-            <span style="color: var(--danger-dark); font-weight: 700; font-size: 13px;">Γ£ò Absent</span>
+            <span style="color: var(--danger-dark); font-weight: 700; font-size: 13px;">✕ Absent</span>
           `;
           this.sumAbsentList.appendChild(row);
         });
@@ -2044,10 +2063,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const toast = document.createElement("div");
       toast.className = `toast toast-${type}`;
 
-      let icon = "Γä╣∩╕Å";
-      if (type === "success") icon = "Γ£ô";
-      if (type === "danger") icon = "Γ£ò";
-      if (type === "warning") icon = "ΓÜá∩╕Å";
+      let icon = "i";
+      if (type === "success") icon = "✓";
+      if (type === "danger") icon = "✕";
+      if (type === "warning") icon = "!";
 
       toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
       this.toastContainer.appendChild(toast);
@@ -2108,7 +2127,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const chip = document.createElement("button");
           chip.className = "btn-table-action";
           chip.style.cssText = "font-size: 12px; padding: 4px 10px; background: #fff; border: 1px solid #CBD5E1; border-radius: 6px; cursor: pointer;";
-          chip.innerHTML = `<strong>${s.name}</strong> (Roll: ${s.rollNo} ΓÇó SIS: ${s.sisId})`;
+          chip.innerHTML = `<strong>${s.name}</strong> (Roll: ${s.rollNo} • SIS: ${s.sisId})`;
           chip.addEventListener("click", () => {
             this.loadStudentReport(s.sisId || s.rollNo || s.id);
           });
@@ -2120,7 +2139,7 @@ document.addEventListener("DOMContentLoaded", () => {
         this.showToast("Failed to search students.", "danger");
       } finally {
         this.btnExecuteStudentSearch.disabled = false;
-        this.btnExecuteStudentSearch.innerText = "≡ƒöì Search";
+        this.btnExecuteStudentSearch.innerText = "Search";
       }
     },
 
@@ -2187,16 +2206,16 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
-                  <span style="font-size: 10px; font-weight: 700; background: #ECFDF5; color: #059669; padding: 2px 6px; border-radius: 4px; border: 1px solid #A7F3D0;">Γ£ô ${cert.type || 'Certification'}</span>
+                  <span style="font-size: 10px; font-weight: 700; background: #ECFDF5; color: #059669; padding: 2px 6px; border-radius: 4px; border: 1px solid #A7F3D0;">${cert.type || 'Certification'}</span>
                   <span style="font-size: 11px; color: #64748B;">${cert.issue_date || ''}</span>
                 </div>
                 <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${cert.title}</div>
-                <div style="font-size: 11.5px; color: #475569;">≡ƒÅ¢∩╕Å ${cert.issuing_authority || 'Accredited Authority'}</div>
+                <div style="font-size: 11.5px; color: #475569;">${cert.issuing_authority || 'Accredited Authority'}</div>
                 ${cert.score ? `<div style="font-size: 11px; color: #0284C7; margin-top: 4px; font-weight: 600;">Score/Grade: ${cert.score}</div>` : ''}
               </div>
               <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 10.5px; color: #64748B; font-family: monospace;">${cert.credential_id || 'ID Verified'}</span>
-                ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify Γåù</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified</span>'}
+                ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified</span>'}
               </div>
             `;
             certsGrid.appendChild(card);
@@ -2220,7 +2239,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <td style="color: #475569;">${h.teacherName}</td>
               <td>
                 <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
-                  ${isP ? 'ΓùÅ PRESENT' : 'Γ£ò ABSENT'}
+                  ${isP ? 'PRESENT' : 'ABSENT'}
                 </span>
               </td>
               <td style="color: #475569; font-size: 11.5px;">${h.remarks || '-'}</td>
@@ -2340,11 +2359,11 @@ document.addEventListener("DOMContentLoaded", () => {
           certsHtml += `
             <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-size: 10px; font-weight: 700; background: #DCFCE7; color: #15803D; padding: 2px 6px; border-radius: 4px;">Γ£ô ${crt.type || 'Verified'}</span>
+                <span style="font-size: 10px; font-weight: 700; background: #DCFCE7; color: #15803D; padding: 2px 6px; border-radius: 4px;">${crt.type || 'Verified'}</span>
                 <span style="font-size: 10.5px; color: #64748B;">${crt.issue_date || ''}</span>
               </div>
               <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-bottom: 2px;">${crt.title}</div>
-              <div style="font-size: 11px; color: #475569;">≡ƒÅ¢∩╕Å ${crt.issuing_authority || 'Accredited Authority'}</div>
+              <div style="font-size: 11px; color: #475569;">${crt.issuing_authority || 'Accredited Authority'}</div>
               ${crt.score ? `<div style="font-size: 10.5px; color: #0284C7; font-weight: 600; margin-top: 2px;">Grade/Score: ${crt.score}</div>` : ''}
               <div style="font-size: 10px; color: #64748B; font-family: monospace; margin-top: 4px;">ID: ${crt.credential_id || 'VERIFIED'}</div>
             </div>
@@ -2371,7 +2390,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <td style="padding: 6px 8px; color: #475569;">${h.teacherName}</td>
               <td style="padding: 6px 8px; text-align: center;">
                 <span style="display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; ${badgeStyle}">
-                  ${isP ? 'ΓùÅ PRESENT' : 'Γ£ò ABSENT'}
+                  ${isP ? 'PRESENT' : 'ABSENT'}
                 </span>
               </td>
               <td style="padding: 6px 8px; color: #475569;">${h.remarks || '-'}</td>
@@ -2394,16 +2413,16 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div>
                 <h1 style="font-size: 16px; font-weight: 800; color: #0B1F3A; margin: 0; line-height: 1.2;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
-                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA ΓÇó (An Autonomous Institute)</div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA • (An Autonomous Institute)</div>
                 <div style="font-size: 10.5px; font-weight: 700; color: #0B5CAD; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">
-                  EMPLOYEE ATTENDANCE ERP ΓÇó INDIVIDUAL STUDENT RECORD
+                  EMPLOYEE ATTENDANCE ERP • INDIVIDUAL STUDENT RECORD
                 </div>
               </div>
             </div>
             <div style="text-align: right; font-size: 10.5px; color: #64748B;">
               <div><strong>Generated:</strong> ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               <div><strong>Academic Session:</strong> 2024-2025</div>
-              <div style="color: #10B981; font-weight: 700;">ΓùÅ Official Record</div>
+              <div style="color: #10B981; font-weight: 700;">Official Record</div>
             </div>
           </div>
 
@@ -2414,11 +2433,11 @@ document.addEventListener("DOMContentLoaded", () => {
               <h2 style="font-size: 17px; font-weight: 800; color: #0F172A; margin: 2px 0 6px 0;">${st.name}</h2>
               <div style="display: flex; gap: 14px; font-size: 11.5px; color: #334155;">
                 <span><strong>Roll No:</strong> ${st.rollNo}</span>
-                <span>ΓÇó</span>
+                <span>•</span>
                 <span><strong>SIS / Enrollment No:</strong> ${st.sisId || st.enrollmentNo || '-'}</span>
-                <span>ΓÇó</span>
+                <span>•</span>
                 <span><strong>Class:</strong> ${st.classCode || '2R1'}</span>
-                <span>ΓÇó</span>
+                <span>•</span>
                 <span><strong>Program:</strong> ${st.program || 'CSE'}</span>
               </div>
             </div>
@@ -2454,7 +2473,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <!-- Section 2: Student Data Corner (Certificates) -->
           <div style="margin-bottom: 16px;">
             <div style="font-size: 12.5px; font-weight: 700; color: #0B1F3A; margin-bottom: 6px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
-              2. Student Data Corner ΓÇö Industry Certifications & Completed Courses
+              2. Student Data Corner — Industry Certifications & Completed Courses
             </div>
             ${certsHtml}
           </div>
@@ -2554,7 +2573,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div>
                 <h1 style="font-size: 16px; font-weight: 800; color: #0B1F3A; margin: 0; line-height: 1.2;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
-                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA ΓÇó (An Autonomous Institute)</div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA • (An Autonomous Institute)</div>
                 <div style="font-size: 10.5px; font-weight: 700; color: #0B5CAD; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">
                   EMPLOYEE CONDUCTED CLASSES & ATTENDANCE LOG REPORT
                 </div>
@@ -2563,7 +2582,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="text-align: right; font-size: 10.5px; color: #64748B;">
               <div><strong>Generated:</strong> ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               <div><strong>Academic Session:</strong> 2024-2025</div>
-              <div style="color: #10B981; font-weight: 700;">ΓùÅ Verified Official</div>
+              <div style="color: #10B981; font-weight: 700;">Verified Official</div>
             </div>
           </div>
 
@@ -2573,8 +2592,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #64748B;">Employee Profile</div>
               <h2 style="font-size: 17px; font-weight: 800; color: #0F172A; margin: 2px 0 4px 0;">${tr.name}</h2>
               <div style="font-size: 11.5px; color: #334155;">
-                <span><strong>Employee ID:</strong> ${tr.employeeId}</span> ΓÇó 
-                <span><strong>Designation:</strong> ${tr.title}</span> ΓÇó 
+                <span><strong>Employee ID:</strong> ${tr.employeeId}</span> • 
+                <span><strong>Designation:</strong> ${tr.title}</span> • 
                 <span><strong>Program:</strong> CSE</span>
               </div>
               <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
@@ -2648,16 +2667,16 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div>
                 <h1 style="font-size: 16px; font-weight: 800; color: #0B1F3A; margin: 0; line-height: 1.2;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
-                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA ΓÇó (An Autonomous Institute)</div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA • (An Autonomous Institute)</div>
                 <div style="font-size: 10.5px; font-weight: 700; color: #0B5CAD; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">
-                  CLASSROOM ATTENDANCE SESSION REPORT ΓÇó RECORD #${record.id}
+                  CLASSROOM ATTENDANCE SESSION REPORT • RECORD #${record.id}
                 </div>
               </div>
             </div>
             <div style="text-align: right; font-size: 10.5px; color: #64748B;">
               <div><strong>Date:</strong> ${record.dateFormatted || record.date}</div>
               <div><strong>Status:</strong> ${record.status || 'Submitted'}</div>
-              <div style="color: #10B981; font-weight: 700;">ΓùÅ Official Record</div>
+              <div style="color: #10B981; font-weight: 700;">Official Record</div>
             </div>
           </div>
 
@@ -2666,8 +2685,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #64748B;">Conducted Lecture Details</div>
               <h2 style="font-size: 17px; font-weight: 800; color: #0F172A; margin: 2px 0 4px 0;">${record.subjectName} (${record.subjectCode})</h2>
               <div style="font-size: 12px; color: #334155;">
-                <span><strong>Program:</strong> ${record.department || 'CSE'}</span> ΓÇó 
-                <span><strong>Class:</strong> ${record.classId}</span> ΓÇó 
+                <span><strong>Program:</strong> ${record.department || 'CSE'}</span> • 
+                <span><strong>Class:</strong> ${record.classId}</span> • 
                 <span><strong>Teacher:</strong> Dr. J.M.Patil</span>
               </div>
             </div>
@@ -2721,7 +2740,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td style="padding: 5px 8px; color: #475569;">${s.studentCode || '-'}</td>
             <td style="padding: 5px 8px; text-align: center;">
               <span style="display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
-                ${isP ? 'ΓùÅ PRESENT' : 'Γ£ò ABSENT'}
+                ${isP ? 'PRESENT' : 'ABSENT'}
               </span>
             </td>
           </tr>
@@ -2740,7 +2759,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div>
                 <h1 style="font-size: 16px; font-weight: 800; color: #0B1F3A; margin: 0; line-height: 1.2;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
-                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA ΓÇó (An Autonomous Institute)</div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 2px;">SHEGAON, MAHARASHTRA • (An Autonomous Institute)</div>
                 <div style="font-size: 10.5px; font-weight: 700; color: #0B5CAD; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">
                   DAILY CLASSROOM ATTENDANCE SUBMISSION SHEET
                 </div>
@@ -2749,7 +2768,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="text-align: right; font-size: 10.5px; color: #64748B;">
               <div><strong>Session Date:</strong> ${dateStr}</div>
               <div><strong>Academic Year:</strong> 2024-2025</div>
-              <div style="color: #10B981; font-weight: 700;">ΓùÅ Verified Official</div>
+              <div style="color: #10B981; font-weight: 700;">Verified Official</div>
             </div>
           </div>
 
@@ -2758,8 +2777,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #64748B;">Conducted Lecture</div>
               <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 2px 0 4px 0;">${subjName} (${subjCode})</h2>
               <div style="font-size: 11.5px; color: #334155;">
-                <span><strong>Class:</strong> ${clsName}</span> ΓÇó 
-                <span><strong>Program:</strong> CSE</span> ΓÇó 
+                <span><strong>Class:</strong> ${clsName}</span> • 
+                <span><strong>Program:</strong> CSE</span> • 
                 <span><strong>Employee:</strong> Dr. J.M.Patil</span>
               </div>
             </div>
@@ -2831,7 +2850,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         window.html2pdf().set(opt).from(container).save().then(() => {
           if (document.body.contains(container)) document.body.removeChild(container);
-          this.showToast(`Γ£ô Downloaded ${fileName}`, "success");
+          this.showToast(`Downloaded ${fileName}`, "success");
         }).catch((err) => {
           console.warn("html2pdf conversion error, falling back to print window:", err);
           if (document.body.contains(container)) document.body.removeChild(container);
@@ -2871,7 +2890,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <body>
           <div class="no-print" style="padding: 10px 20px; background: #0B1F3A; color: #fff; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 13px; font-weight: 600;">SSGMCE ERP Print & Save as PDF</span>
-            <button onclick="window.print()" style="padding: 6px 14px; background: #0B5CAD; color: #fff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer;">≡ƒû¿∩╕Å Print / Save as PDF</button>
+            <button onclick="window.print()" style="padding: 6px 14px; background: #0B5CAD; color: #fff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer;">Print / Save as PDF</button>
           </div>
           ${htmlContent}
           <script>

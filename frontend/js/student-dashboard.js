@@ -351,8 +351,24 @@ function initSidebarLinks() {
         return;
       }
 
+<<<<<<< HEAD
       // Timetable page
       if (navKey === 'timetable' && href && href.includes('student_timetable.html')) {
+=======
+      // Timetable page navigation
+      if (navKey === 'timetable') {
+        if (href && !href.startsWith('#') && href !== 'javascript:void(0)') {
+          return;
+        }
+        e.preventDefault();
+        const timetableCard = document.getElementById('timetableCard');
+        if (timetableCard) {
+          timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          timetableCard.classList.add('card-highlight-pulse');
+          setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
+        }
+>>>>>>> 4497a8fe247df5d9fde5fdc8f6cddc7c312ac309
         return;
       }
 

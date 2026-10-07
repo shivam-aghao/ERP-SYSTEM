@@ -8,19 +8,54 @@
 const StudentTimetableApp = {
   selectedTimetableDate: null,
   tests: [],
+  timetableEntries: [],
   studentSession: null,
 
   async init() {
     this.loadStudentSession();
     this.bindEvents();
     this.renderHeaderProfile();
-    await this.loadTests();
+    await Promise.all([
+      this.loadTimetable(),
+      this.loadTests()
+    ]);
     this.renderTimetableView();
     this.initLucideIcons();
   },
 
   getApiBase() {
-    return (typeof window !== 'undefined' && window.__API_BASE__) || '/api/v1';
+    return (typeof window !== 'undefined' && (window.__API_BASE__ || window.__STUDENT_API_BASE__)) || '/api/v1';
+  },
+
+  // ----------------------------------------------------
+  // LOAD REAL STUDENT TIMETABLE FROM BACKEND API
+  // ----------------------------------------------------
+  async loadTimetable() {
+    try {
+      let res = await fetch(`${this.getApiBase()}/student/timetable`);
+      if (!res.ok) {
+        res = await fetch(`${this.getApiBase()}/timetable`);
+      }
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          this.timetableEntries = json.data;
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch timetable from backend API, checking fallback adapter:", e);
+    }
+
+    try {
+      if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
+        const res = await StudentApi.getTimetable();
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          this.timetableEntries = res.data;
+          return;
+        }
+      }
+    } catch (_) {}
   },
 
   // ----------------------------------------------------
@@ -90,33 +125,6 @@ const StudentTimetableApp = {
   },
 
   bindEvents() {
-    // Mobile hamburger menu toggle
-    const hamburgerBtn = document.getElementById("hamburger-btn");
-    const sidebar = document.getElementById("app-sidebar");
-    const overlay = document.getElementById("sidebar-overlay");
-    const closeBtn = document.getElementById("sidebar-close-btn");
-
-    if (hamburgerBtn && sidebar) {
-      hamburgerBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        if (overlay) overlay.classList.toggle("active");
-      });
-    }
-
-    if (closeBtn && sidebar) {
-      closeBtn.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        if (overlay) overlay.classList.remove("active");
-      });
-    }
-
-    if (overlay && sidebar) {
-      overlay.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        overlay.classList.remove("active");
-      });
-    }
-
     // Profile Dropdown Trigger
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
     const profileMenu = document.getElementById("profile-dropdown-menu");
@@ -443,56 +451,81 @@ const StudentTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Regular schedule data preserved
-    const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable)
-      ? TeacherERPData.timetable
-      : [
+    // Regular schedule data (from real backend database if available)
+    const daysList = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    let timetableData = [];
+
+    if (this.timetableEntries && this.timetableEntries.length > 0) {
+      timetableData = daysList.map(dayName => {
+        const dayRows = this.timetableEntries.filter(
+          e => e.day && e.day.toLowerCase() === dayName.toLowerCase()
+        ).sort((a, b) => {
+          const numA = parseInt((a.period_num || '').replace(/\D/g, ''), 10) || 0;
+          const numB = parseInt((b.period_num || '').replace(/\D/g, ''), 10) || 0;
+          return numA - numB;
+        });
+
+        const slots = [];
+        for (let sIdx = 0; sIdx < 4; sIdx++) {
+          const entry = dayRows[sIdx];
+          if (entry && entry.course_name) {
+            const loc = entry.venue ? ` (${entry.venue})` : '';
+            slots.push(`${entry.course_name}${loc}`);
+          } else {
+            slots.push("Free Slot");
+          }
+        }
+        return { day: dayName, slots };
+      });
+    } else {
+      timetableData = [
         {
           day: "Monday",
           slots: [
-            "Data Structures (Room 201)",
-            "Java Programming (Room 305)",
-            "Free Slot",
-            "Data Structures Lab (Lab 02)"
+            "Operating Systems (LH-301)",
+            "Data Structures & Algorithms (LH-204)",
+            "Database Management Systems (LH-112)",
+            "DSA Lab (Software Lab 2)"
           ]
         },
         {
           day: "Tuesday",
           slots: [
-            "Free Slot",
-            "Data Structures (Room 201)",
-            "Database Systems (Room 304)",
-            "Operating Systems (Lab 04)"
+            "Java Programming & OOP (LH-201)",
+            "Computer Networks (LH-108)",
+            "Data Structures (LH-204)",
+            "Java Lab (Adv Systems Lab 3)"
           ]
         },
         {
           day: "Wednesday",
           slots: [
-            "Operating Systems (Room 201)",
-            "Free Slot",
-            "Data Structures Lab (Lab 01)",
-            "Data Structures Lab (Lab 01)"
+            "Database Management Systems (LH-112)",
+            "Operating Systems (LH-301)",
+            "Java Programming (LH-201)",
+            "DBMS Lab (Database Lab 1)"
           ]
         },
         {
           day: "Thursday",
           slots: [
-            "Data Structures (Room 201)",
-            "Algorithms (Room 304)",
-            "Free Slot",
-            "Project Guidance (Seminar Hall)"
+            "Data Structures (LH-204)",
+            "Java Programming Lab (Adv Systems Lab 3)",
+            "Operating Systems (LH-301)",
+            "Database Management Tutorial (Seminar Hall 1)"
           ]
         },
         {
           day: "Friday",
           slots: [
-            "Software Engg (Room 105)",
-            "Operating Systems (Room 201)",
-            "Free Slot",
-            "Faculty Meeting (Dept Library)"
+            "Computer Networks (LH-108)",
+            "Data Structures (LH-204)",
+            "Java Programming (LH-201)",
+            "OS Linux Kernel Lab (Systems Lab 1)"
           ]
         }
       ];
+    }
 
     // Helper: Parse slot text into lecture/lab details
     const parseSlotInfo = (slotText) => {
