@@ -10,14 +10,14 @@ describe('Auth & Dashboard E2E Flow', () => {
     const res = await request(app)
       .post('/api/v1/auth/login')
       .send({
-        email: 'rohan.deshmukh@ssgmce.ac.in',
+        email: 'faculty@ssgmce.ac.in',
         password: 'Faculty@123',
       });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty('token');
-    expect(res.body.data.user.email).toBe('rohan.deshmukh@ssgmce.ac.in');
+    expect(res.body.data.user.email).toBe('faculty@ssgmce.ac.in');
     authToken = res.body.data.token;
   });
 
@@ -28,7 +28,7 @@ describe('Auth & Dashboard E2E Flow', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.name).toBe('Dr. Rohan Deshmukh');
+    expect(res.body.data.name).toBe('Faculty Member');
   });
 
   test('GET /api/v1/dashboard/summary returns metrics for faculty', async () => {

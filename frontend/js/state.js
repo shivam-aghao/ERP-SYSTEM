@@ -21,10 +21,10 @@ const AttendanceState = {
   },
   selectedDate: (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0],
   selectedSubject: {
-    code: "CS302",
-    name: "Data Structures",
-    faculty: "Dr. Rohan Deshmukh",
-    time: "10:00 AM – 11:00 AM",
+    code: "",
+    name: "",
+    faculty: "",
+    time: "",
     icon: "book-open"
   },
 
@@ -47,19 +47,7 @@ const AttendanceState = {
   isSubmitted: false,
 
   // Submitted Sessions Log for Duplicate Prevention
-  submittedSessions: [
-    {
-      sessionId: `ATT-${(typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO().replace(/-/g, '') : 'REC'}-2R1-CS302-PREV`,
-      date: (typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0],
-      classCode: "2R1",
-      departmentCode: "CSE",
-      subjectCode: "CS302",
-      subjectName: "Data Structures",
-      lectureTime: "08:00 AM – 09:00 AM",
-      teacher: "Dr. Rohan Deshmukh",
-      submittedAt: new Date().toISOString()
-    }
-  ],
+  submittedSessions: [],
 
   // Initializer - automatically selects today unless user manually chose another date
   init() {

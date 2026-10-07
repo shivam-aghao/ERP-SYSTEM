@@ -34,14 +34,61 @@ const AttendanceService = {
     }
   },
 
-  getAllRecords() {
+  async getAllRecords() {
     this.init();
+    // 1. Try live Supabase / Backend API records
+    try {
+      if (typeof window !== 'undefined' && window.ErpApi && typeof window.ErpApi.getRecords === 'function') {
+        const live = await window.ErpApi.getRecords();
+        if (live && live.length > 0) {
+          return live.map(r => ({
+            id: r.idDisplay || r.id_display || r.session_code || r.id,
+            department: r.departmentCode || r.department_code || "CSE",
+            departmentName: "Computer Science & Engineering",
+            classId: r.className || r.class_name || "3R",
+            subjectCode: r.subjectCode || r.subject_code,
+            subjectName: r.subjectName || r.subject_name,
+            date: r.sessionDate || r.session_date,
+            dateFormatted: r.dateFormatted || r.date_formatted || r.sessionDate || r.session_date,
+            totalStudents: r.totalStudents !== undefined ? r.totalStudents : (r.total_students || 0),
+            presentCount: r.presentCount !== undefined ? r.presentCount : (r.present_count || 0),
+            absentCount: (r.absentCount !== undefined) ? r.absentCount : (r.absent_count !== undefined ? r.absent_count : ((r.totalStudents || r.total_students || 0) - (r.presentCount || r.present_count || 0))),
+            percentage: `${r.attendanceRate !== undefined ? r.attendanceRate : (r.attendance_rate || 0)}%`,
+            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
+            savedAt: (r.createdAt || r.created_at) ? new Date(r.createdAt || r.created_at).toLocaleDateString() : "Recently"
+          }));
+        }
+      }
+      const res = await fetch("http://localhost:8000/api/v1/attendance/records?limit=50");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.length > 0) {
+          return json.data.map(r => ({
+            id: r.id_display || r.session_code || r.id,
+            department: r.department_code || "CSE",
+            departmentName: "Computer Science & Engineering",
+            classId: r.class_name || "3R",
+            subjectCode: r.subject_code,
+            subjectName: r.subject_name,
+            date: r.session_date,
+            dateFormatted: r.date_formatted || r.session_date,
+            totalStudents: r.total_students,
+            presentCount: r.present_count,
+            absentCount: r.absent_count,
+            percentage: `${r.attendance_rate}%`,
+            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
+            savedAt: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recently"
+          }));
+        }
+      }
+    } catch (e) {}
+
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_ATTENDANCE);
       return JSON.parse(data) || [];
     } catch (e) {
       console.error("Failed to parse attendance records from storage:", e);
-      return ERP_DATA.recentAttendance;
+      return (typeof ERP_DATA !== 'undefined' ? ERP_DATA.recentAttendance : []);
     }
   },
 

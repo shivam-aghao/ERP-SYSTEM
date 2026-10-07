@@ -52,12 +52,13 @@ const TeacherApp = {
           const loginData = await window.TeacherAPI.login();
           setStatus(true, latency);
 
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
-            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${loginData.user.name}`, 'success');
+            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
-            this.showToast('🟢 Connected to Backend API (Dr. Rohan Deshmukh)', 'success');
+            this.showToast(`🟢 Connected to Backend API (${teacherName})`, 'success');
           }
-          console.log('✅ Logged in successfully as:', loginData.user.name);
+          console.log('✅ Logged in successfully as:', teacherName);
           try {
             const data = await window.TeacherAPI.getDashboardSummary();
             console.log('📊 Live Dashboard KPI metrics:', data.metrics);
@@ -65,10 +66,10 @@ const TeacherApp = {
 
             // Seamlessly bind live Supabase data to UI cards
             if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
-              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
-              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
-              if (data.metrics.averageAttendance) {
-                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 87;
+              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses || 0).padStart(2, '0');
+              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents || 0);
+              if (data.metrics.averageAttendance !== undefined) {
+                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 0;
               }
               if (data.faculty) {
                 TeacherERPData.faculty.name = data.faculty.name;
@@ -218,19 +219,45 @@ const TeacherApp = {
   // Dynamic Teacher Profile Management
   getLoggedInTeacher() {
     try {
-      const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
+      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_active_teacher") || sessionStorage.getItem("ssgmce_user");
       if (stored) {
-        return JSON.parse(stored);
+        const u = typeof stored === 'string' ? JSON.parse(stored) : stored;
+        const empCode = u.emp_code || u.employeeId;
+        const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+          ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
+          : null;
+        return {
+          name: u.full_name || u.name || (facObj && facObj.name) || "Dr. J. M. Patil",
+          department: "Computer Science & Engineering",
+          departmentCode: "CSE",
+          title: u.designation || (facObj && facObj.title) || "Professor & Head",
+          employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1001",
+          avatarInitials: (u.name || (facObj && facObj.name) || "JP").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+        };
       }
     } catch (e) {
       console.warn("Could not read teacher session from storage", e);
     }
-    return (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty) ? TeacherERPData.faculty : {
-      name: "Faculty Member",
+    const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+      ? TeacherERPData.getActiveTeacherEmpCode()
+      : 'EMP-CSE-1001';
+    const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+      ? TeacherERPData.facultyList.find(f => f.empCode === activeCode)
+      : null;
+    return facObj ? {
+      name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      title: "Faculty",
-      avatarInitials: "FM"
+      title: facObj.title,
+      employeeId: facObj.empCode,
+      avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+    } : {
+      name: "Dr. J. M. Patil",
+      department: "Computer Science & Engineering",
+      departmentCode: "CSE",
+      title: "Professor & Head",
+      employeeId: "EMP-CSE-1001",
+      avatarInitials: "JP"
     };
   },
 
@@ -277,12 +304,12 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");

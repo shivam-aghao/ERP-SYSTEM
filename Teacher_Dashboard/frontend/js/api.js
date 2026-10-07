@@ -31,6 +31,11 @@
       if (this.token) {
         headers['Authorization'] = 'Bearer ' + this.token;
       }
+      try {
+        var stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+        if (stored && stored.id) headers['X-Teacher-Id'] = stored.id;
+        if (stored && stored.emp_code) headers['X-Emp-Code'] = stored.emp_code;
+      } catch (e) {}
       return headers;
     },
 
@@ -92,10 +97,21 @@
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
-    // 2. Authentication
     login: async function (email, password) {
-      email = email || 'rohan.deshmukh@ssgmce.ac.in';
+<<<<<<< HEAD
+      var storedUser = null;
+      try {
+        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+      } catch (e) {}
+
+      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
+      email = email || defaultIdentifier;
       password = password || 'Faculty@123';
+=======
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
@@ -106,29 +122,40 @@
         if (token) {
           this.setToken(token);
         }
+        if (data && data.user) {
+          localStorage.setItem('ssgmce_user', JSON.stringify(data.user));
+          localStorage.setItem('ssgmce_active_teacher', JSON.stringify(data.user));
+        }
         return data;
       } catch (err) {
+<<<<<<< HEAD
         console.warn('[TeacherAPI] login attempt:', err.message);
         return {
-          user: {
-            id: 'a0000000-0000-0000-0000-000000000001',
-            name: 'Dr. Rohan Deshmukh',
+          user: storedUser && storedUser.name ? storedUser : {
+            id: '5bc85d0f-ea04-406e-a319-1e5c0f1c81b0',
+            name: 'Prof. R. V. Deshmukh',
             role: 'faculty',
-            employeeId: 'FAC-CSE-1048'
+            employeeId: 'EMP-CSE-1009'
           },
           token: this.token || 'teach_token_default'
         };
+=======
+        console.warn('[TeacherAPI] login failed:', err.message);
+        throw err;
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       }
     },
 
-    getProfile: async function () {
-      var res = await this.request('/auth/profile');
+    getProfile: async function (teacherId) {
+      var query = teacherId ? '?teacher_id=' + encodeURIComponent(teacherId) : '';
+      var res = await this.request('/auth/profile' + query);
       return res.data;
     },
 
     // 3. Dashboard KPI metrics & timetable
-    getDashboardSummary: async function () {
-      var res = await this.request('/dashboard/summary');
+    getDashboardSummary: async function (teacherId) {
+      var query = teacherId ? '?teacher_id=' + encodeURIComponent(teacherId) : '';
+      var res = await this.request('/dashboard/summary' + query);
       return res.data;
     },
 
@@ -192,8 +219,48 @@
     },
 
     // 6. Timetable & Syllabus
-    getMyTimetable: async function () {
-      var res = await this.request('/timetable/my');
+    getMyTimetable: async function (teacherId) {
+      try {
+        var query = teacherId ? '?teacher_id=' + encodeURIComponent(teacherId) : '';
+        var res = await this.request('/timetable/my' + query);
+        return res.data;
+      } catch (err) {
+        // Direct Supabase Fallback
+        if (typeof window !== 'undefined' && window.ERP_CONFIG && window.ERP_CONFIG.SUPABASE_URL) {
+          try {
+            var sUrl = window.ERP_CONFIG.SUPABASE_URL;
+            var sKey = window.ERP_CONFIG.SUPABASE_ANON_KEY;
+            var code = teacherId;
+            if (!code) {
+              var stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+              code = stored.emp_code || 'EMP-CSE-1001';
+            }
+            var resp = await fetch(sUrl + '/rest/v1/timetable_entries?emp_code=eq.' + encodeURIComponent(code) + '&order=slot_index.asc', {
+              headers: { 'apikey': sKey, 'Authorization': 'Bearer ' + sKey }
+            });
+            if (resp.ok) {
+              var sEntries = await resp.json();
+              if (sEntries && sEntries.length > 0) {
+                return {
+                  teacher: { emp_code: code, name: sEntries[0].teacher_name, total_load_hours: sEntries.length },
+                  entries: sEntries,
+                  total_load: sEntries.length
+                };
+              }
+            }
+          } catch (se) {}
+        }
+        throw err;
+      }
+    },
+
+    getAllTeachers: async function () {
+      var res = await this.request('/teachers');
+      return res.data;
+    },
+
+    getTeacherTimetable: async function (teacherId) {
+      var res = await this.request('/timetable/teacher/' + encodeURIComponent(teacherId));
       return res.data;
     },
 

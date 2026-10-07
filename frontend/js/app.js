@@ -60,7 +60,7 @@ const TeacherApp = {
           }
           setStatus(true, latency);
 
-          const teacherName = (loginData && loginData.user && loginData.user.name) || 'Dr. Rohan Deshmukh';
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
             this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
@@ -70,6 +70,26 @@ const TeacherApp = {
           try {
             const data = await window.TeacherAPI.getDashboardSummary();
             console.log('📊 Live Dashboard KPI metrics:', data ? (data.metrics || data) : null);
+
+            // Fetch live profile from backend if available
+            try {
+              const prof = await window.TeacherAPI.getProfile();
+              if (prof) {
+                if (window.ERP_AUTH && typeof window.ERP_AUTH.setSession === 'function') {
+                  const currUser = window.ERP_AUTH.getCurrentUser() || {};
+                  window.ERP_AUTH.setSession({
+                    ...currUser,
+                    ...prof,
+                    name: prof.full_name || prof.name || currUser.name,
+                    full_name: prof.full_name || prof.name || currUser.full_name,
+                    emp_code: prof.emp_code || prof.empCode || currUser.emp_code,
+                    role: 'teacher'
+                  });
+                }
+              }
+            } catch (pErr) {
+              console.warn('Teacher profile fetch note:', pErr.message);
+            }
 
             // Seamlessly bind live data to UI cards
             if (data && typeof TeacherERPData !== 'undefined') {
@@ -239,28 +259,77 @@ const TeacherApp = {
         const u = window.ERP_AUTH.getCurrentUser();
         if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
           const fn = u.full_name || u.name || u.fullName || 'Faculty Member';
+          const empCode = u.emp_code || u.employeeId;
+          const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+            ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
+            : null;
           return {
             name: fn,
+<<<<<<< HEAD
             department: u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || 'CSE',
-            title: u.designation || 'Faculty Member',
+            title: u.designation || (facObj && facObj.title) || 'Faculty Member',
+            employeeId: empCode || (facObj && facObj.empCode) || 'EMP-CSE-1001',
             avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+=======
+            department: u.department_name || u.department || 'Computer Science & Engineering',
+            departmentCode: u.department_code || u.departmentCode || 'CSE',
+            title: u.designation || 'Faculty Member',
+            employeeId: u.emp_code || u.empCode || u.id || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            avatarInitials: u.avatar || u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
           };
         }
       }
-      const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
+      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_active_teacher") || sessionStorage.getItem("ssgmce_user");
       if (stored) {
-        return JSON.parse(stored);
+        const u = typeof stored === 'string' ? JSON.parse(stored) : stored;
+        const empCode = u.emp_code || u.employeeId;
+        const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+          ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
+          : null;
+        return {
+          name: u.full_name || u.name || (facObj && facObj.name) || "Dr. J. M. Patil",
+          department: "Computer Science & Engineering",
+          departmentCode: "CSE",
+          title: u.designation || (facObj && facObj.title) || "Professor & Head",
+          employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1001",
+          avatarInitials: (u.name || (facObj && facObj.name) || "JP").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+        };
       }
     } catch (e) {
       console.warn("Could not read teacher session from storage", e);
     }
-    return (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty) ? TeacherERPData.faculty : {
-      name: "Faculty Member",
+    const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+      ? TeacherERPData.getActiveTeacherEmpCode()
+      : 'EMP-CSE-1001';
+    const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
+      ? TeacherERPData.facultyList.find(f => f.empCode === activeCode)
+      : null;
+    return facObj ? {
+      name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
+<<<<<<< HEAD
+      title: facObj.title,
+      employeeId: facObj.empCode,
+      avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+    } : {
+      name: "Dr. J. M. Patil",
+      department: "Computer Science & Engineering",
+      departmentCode: "CSE",
+      title: "Professor & Head",
+      employeeId: "EMP-CSE-1001",
+      avatarInitials: "JP"
+=======
       title: "Faculty",
+      employeeId: "",
+      email: "",
+      phone: "",
       avatarInitials: "FM"
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     };
   },
 
@@ -300,6 +369,11 @@ const TeacherApp = {
       menuTitleElem.textContent = `${teacher.title || "Faculty"} • ${teacher.departmentCode || teacher.department || ""}`;
     }
 
+    const menuEmpIdElem = document.getElementById("profile-menu-empid");
+    if (menuEmpIdElem) {
+      menuEmpIdElem.textContent = teacher.employeeId ? `Employee Code: ${teacher.employeeId}` : "SSGMCE Faculty Record";
+    }
+
     const heroDeptElem = document.getElementById("hero-faculty-department");
     if (heroDeptElem) {
       heroDeptElem.textContent = teacher.department || teacher.departmentCode || "Computer Science & Engineering";
@@ -307,17 +381,53 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");
     if (heroIdElem) {
       heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: --";
+    }
+
+    // Dynamic Binding for Dedicated Profile Pane
+    const profAvatarLarge = document.getElementById("teacher-profile-avatar-large");
+    if (profAvatarLarge) {
+      profAvatarLarge.textContent = initials || "FM";
+    }
+
+    const profFullName = document.getElementById("teacher-profile-fullname");
+    if (profFullName) {
+      profFullName.textContent = teacher.name || "Faculty Member";
+    }
+
+    const profDeptText = document.getElementById("teacher-profile-dept-text");
+    if (profDeptText) {
+      profDeptText.textContent = teacher.department ? `Department of ${teacher.department}` : "Department Faculty";
+    }
+
+    const profEmpId = document.getElementById("teacher-profile-empid");
+    if (profEmpId) {
+      profEmpId.textContent = teacher.employeeId ? `Employee Code: ${teacher.employeeId}` : "SSGMCE Faculty Record";
+    }
+
+    const profEmail = document.getElementById("teacher-profile-email-text");
+    if (profEmail) {
+      profEmail.textContent = teacher.email || (teacher.employeeId ? `${teacher.employeeId.toLowerCase()}@ssgmce.ac.in` : "faculty@ssgmce.ac.in");
+    }
+
+    const profDesig = document.getElementById("teacher-profile-designation-text");
+    if (profDesig) {
+      profDesig.textContent = teacher.title || "Faculty Member";
+    }
+
+    const profPhone = document.getElementById("teacher-profile-phone-text");
+    if (profPhone) {
+      profPhone.textContent = teacher.phone || "--";
     }
   },
 

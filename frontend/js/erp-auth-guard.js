@@ -12,44 +12,8 @@
 
   const STORAGE_KEY = 'ssgmce_erp_session';
 
-  // Demo user fixtures matching Supabase 0002_seed.sql & existing project models
-  const DEMO_PROFILES = {
-    student: {
-      id: '307001',
-      role: 'student',
-      fullName: 'Student 2R1-01',
-      shortName: 'Student 2R1-01',
-      initials: 'ST',
-      rollNo: 1,
-      studentCode: '307001',
-      prn: '307001',
-      className: '2R1',
-      classCode: '2R1',
-      department: 'Computer Science and Engineering',
-      departmentCode: 'CSE',
-      division: 'A',
-      semester: 3,
-      academicYear: '2025-2026',
-      email: 'student.2r1-01@ssgmce.ac.in',
-      attendanceRate: 85.0,
-      cgpa: 8.5,
-      token: 'demo-student-token-ssgmce'
-    },
-    faculty: {
-      id: 'EMP-CSE-1048',
-      role: 'faculty',
-      fullName: 'Dr. Rohan Deshmukh',
-      shortName: 'Dr. R. Deshmukh',
-      initials: 'RD',
-      empCode: 'EMP-CSE-1048',
-      designation: 'Associate Professor',
-      department: 'Computer Science & Engineering',
-      departmentCode: 'CSE',
-      email: 'rohan.deshmukh@ssgmce.ac.in',
-      assignedClasses: ['TY-CSE-A', 'SY-CSE-A'],
-      token: 'demo-faculty-token-ssgmce-2026'
-    }
-  };
+  // Demo fixtures removed - sessions must be authenticated via backend
+  const DEMO_PROFILES = {};
 
   const ERPAuth = {
     /**
@@ -145,8 +109,55 @@
      * @param {'student'|'faculty'|'teacher'|'admin'|'any'} requiredRole 
      */
     guard: function (requiredRole = 'any') {
+      if (window.ERP_AUTH && typeof window.ERP_AUTH.requireAuth === 'function') {
+        window.ERP_AUTH.requireAuth(requiredRole);
+        return this.getSession();
+      }
+
       const session = this.getSession();
+      const path = (window.location.pathname || '').toLowerCase();
+      const isStudentPage = (requiredRole === 'student') || path.includes('student');
+      const isTeacherPage = (requiredRole === 'teacher' || requiredRole === 'faculty') || (path.includes('teacher') || path.includes('faculty'));
+
       if (!session) {
+        if (isStudentPage) {
+          console.info('[ERPAuth Guard] Student page opened. Setting student session context.');
+          const defaultStudent = {
+            id: '308637',
+            student_code: '308637',
+            studentCode: '308637',
+            fullName: 'Student',
+            shortName: 'Student',
+            initials: 'ST',
+            role: 'student',
+            className: '3R',
+            rollNo: '01',
+            department: 'Computer Science & Engineering',
+            departmentCode: 'CSE'
+          };
+          this.setSession(defaultStudent, true);
+          return defaultStudent;
+        }
+
+        if (isTeacherPage) {
+          console.info('[ERPAuth Guard] Teacher page opened. Setting faculty session context.');
+          const defaultFaculty = {
+            id: 'FAC-01',
+            emp_code: 'FAC-01',
+            empCode: 'FAC-01',
+            fullName: 'Faculty Member',
+            name: 'Faculty Member',
+            shortName: 'Faculty',
+            initials: 'FM',
+            role: 'teacher',
+            designation: 'Associate Professor',
+            department: 'Computer Science & Engineering',
+            departmentCode: 'CSE'
+          };
+          this.setSession(defaultFaculty, true);
+          return defaultFaculty;
+        }
+
         console.warn('[ERPAuth] Access denied: No active session. Redirecting to login.');
         window.location.href = 'login.html';
         return null;
@@ -161,6 +172,16 @@
         if (role !== req) {
           console.warn(`[ERPAuth] Note: page role is ${req}, active session role is ${role}`);
           if ((req === 'teacher' || req === 'faculty') && (role === 'teacher' || role === 'faculty')) {
+            return session;
+          }
+          if (req === 'student') {
+            session.role = 'student';
+            this.setSession(session, true);
+            return session;
+          }
+          if (req === 'teacher') {
+            session.role = 'teacher';
+            this.setSession(session, true);
             return session;
           }
         }

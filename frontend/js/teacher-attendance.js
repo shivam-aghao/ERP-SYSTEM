@@ -360,12 +360,8 @@ const AttendanceWorkflow = {
   // STEP 4: SUBJECT SELECTION
   // ------------------------------------------------------
   renderStep4Subjects(container) {
-    const classCode = AttendanceState.selectedClass.code;
-    const subjects = TeacherERPData.subjects[classCode] || [
-      { code: "CS302", name: "Data Structures", faculty: "Dr. Rohan Deshmukh", time: "10:00 AM – 11:00 AM", icon: "book-open", credits: "4 Credits" },
-      { code: "CS304", name: "Java Programming", faculty: "Prof. Priya Sharma", time: "11:15 AM – 12:15 PM", icon: "code", credits: "4 Credits" },
-      { code: "CS301", name: "Operating Systems", faculty: "Dr. Rohan Deshmukh", time: "01:30 PM – 02:30 PM", icon: "terminal", credits: "4 Credits" }
-    ];
+    const classCode = (AttendanceState.selectedClass && AttendanceState.selectedClass.code) ? AttendanceState.selectedClass.code : '';
+    const subjects = (typeof TeacherERPData !== 'undefined' && TeacherERPData.subjects && TeacherERPData.subjects[classCode]) || [];
 
     const currentSubCode = AttendanceState.selectedSubject.code;
 
@@ -1433,7 +1429,7 @@ const AttendanceWorkflow = {
   // ------------------------------------------------------
   openSaveDraftModal() {
     const summary = AttendanceState.getSummary();
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
 
     const modalHTML = `
@@ -1506,7 +1502,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Enforce duplicate attendance prevention
     if (AttendanceState.isSessionAlreadySubmitted(date, classCode, subCode, lectureTime)) {
@@ -1568,7 +1564,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Record submitted session with full metadata for persistence and duplicate prevention
     const sessionRecord = {

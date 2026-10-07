@@ -1,23 +1,54 @@
 import { useState, useCallback, useMemo } from 'react';
-import { mockTeacherData, getStudentsByClass } from '../../../data/mockTeacherData';
 
 /**
- * Dynamic ERP Data Adapter
- * Derived dynamically from centralized mockTeacherData
+ * Prototype College ERP Data Model:
+ * Department -> Classes -> Students -> Subjects -> Timetable
  */
 export const PROTOTYPE_ERP_DATA = {
   departments: [
     {
-      code: mockTeacherData.teacher?.departmentCode || 'CSE',
-      name: mockTeacherData.teacher?.department || 'Computer Science & Engineering',
-      classes: (mockTeacherData.classes || []).map((cls) => ({
-        code: cls.code,
-        name: cls.name,
-        subjects: [
-          { code: 'CS201', name: cls.subject, isLab: false, room: cls.room }
-        ],
-        students: (mockTeacherData.students || []).filter((s) => s.classId === cls.code)
-      }))
+      code: 'CSE',
+      name: 'Computer Science & Engineering',
+      classes: [
+        {
+          code: '2R1',
+          name: 'Second Year CSE Div 1',
+          subjects: [
+            { code: 'CS201', name: 'Data Structures', isLab: false, room: 'Room 201' },
+            { code: 'CS201L', name: 'Data Structures Lab', isLab: true, room: 'Lab 01' },
+            { code: 'CS203', name: 'Discrete Mathematics', isLab: false, room: 'Room 201' }
+          ],
+          students: []
+        },
+        {
+          code: '2R2',
+          name: 'Second Year CSE Div 2',
+          subjects: [
+            { code: 'CS202', name: 'Java Programming', isLab: false, room: 'Room 305' },
+            { code: 'CS204', name: 'Digital Logic', isLab: false, room: 'Room 305' }
+          ],
+          students: []
+        },
+        {
+          code: '3R',
+          name: 'Third Year CSE',
+          subjects: [
+            { code: 'CS301', name: 'Database Systems', isLab: false, room: 'Room 304' },
+            { code: 'CS302', name: 'Operating Systems', isLab: false, room: 'Room 201' },
+            { code: 'CS301L', name: 'Database Systems Lab', isLab: true, room: 'Lab 03' }
+          ],
+          students: []
+        },
+        {
+          code: '4R',
+          name: 'Final Year CSE',
+          subjects: [
+            { code: 'CS401', name: 'Algorithms', isLab: false, room: 'Room 304' },
+            { code: 'CS402', name: 'Project Guidance', isLab: false, room: 'Seminar Hall' }
+          ],
+          students: []
+        }
+      ]
     }
   ]
 };
@@ -34,12 +65,12 @@ export function useAttendanceState(initialSession = null) {
   // Session context: Department, Class, Date, Subject, Timeslot, Room
   const [session, setSession] = useState(
     initialSession || {
-      department: mockTeacherData.teacher?.departmentCode || 'CSE',
+      department: 'CSE',
       classCode: '2R1',
       date: new Date().toISOString().split('T')[0],
-      subject: mockTeacherData.classes[0]?.subject || 'Data Structures',
-      timeslot: mockTeacherData.timetable[0]?.slots[0]?.time || '09:00 - 10:30 AM',
-      room: mockTeacherData.classes[0]?.room || 'Room 201',
+      subject: 'Data Structures',
+      timeslot: '09:00 - 10:30 AM',
+      room: 'Room 201',
       isLab: false
     }
   );
@@ -47,10 +78,14 @@ export function useAttendanceState(initialSession = null) {
   // Tab mode: 'swipe' | 'roster' | 'summary'
   const [activeTab, setActiveTab] = useState('swipe');
 
-  // Enrolled students for current class dynamically retrieved
+  // Enrolled students for current class
   const students = useMemo(() => {
-    return getStudentsByClass(session.classCode || '2R1');
-  }, [session.classCode]);
+    const dept = PROTOTYPE_ERP_DATA.departments.find(
+      (d) => d.code === (session.department || 'CSE')
+    );
+    const cls = dept?.classes.find((c) => c.code === (session.classCode || '2R1'));
+    return cls?.students || [];
+  }, [session.department, session.classCode]);
 
   // UNIFIED ATTENDANCE STATE: Map of student rollNo -> record
   // Initially neutral/unmarked map

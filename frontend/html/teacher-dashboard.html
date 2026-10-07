@@ -106,16 +106,19 @@
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
+<<<<<<< HEAD
       if (!window.ERP_AUTH.isAuthenticated()) {
         window.ERP_AUTH.setSession({
-          id: 'a0000000-0000-0000-0000-000000000001',
-          name: 'Dr. Rohan Deshmukh',
+          id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
+          name: 'Dr. J. M. Patil',
           role: 'teacher',
-          email: 'rohan.deshmukh@ssgmce.ac.in',
-          emp_code: 'FAC-CSE-1048',
+          email: 'emp-cse-1001@ssgmce.ac.in',
+          emp_code: 'EMP-CSE-1001',
           department_id: 'CSE'
-        }, 'teach_token_default');
+        }, 'teach_token_1f33bd6c-cab3-4205-8daa-1ac23b4d3552');
       }
+=======
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       window.ERP_AUTH.requireAuth('teacher');
     }
   </script>
@@ -184,11 +187,11 @@
       <div class="profile-wrapper header-profile-container">
         <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
           <div class="avatar-circle profile-avatar" id="header-profile-avatar">
-            <span>RD</span>
+            <span>--</span>
           </div>
           <div class="profile-details profile-info">
-            <span class="student-name profile-name" id="header-profile-name">Dr. Rohan Deshmukh</span>
-            <span class="student-meta profile-dept" id="header-profile-dept">Associate Professor • CSE</span>
+            <span class="student-name profile-name" id="header-profile-name">Faculty</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">Department Faculty</span>
           </div>
           <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -198,9 +201,9 @@
         <!-- Profile Dropdown Menu -->
         <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
           <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
-            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Dr. Rohan Deshmukh</div>
-            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Faculty • CSE</div>
-            <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">Department of Computer Science &amp; Engineering</div>
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Faculty</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Faculty Portal</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">SSGMCE Faculty Record</div>
           </div>
           <div class="p-links">
             <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('profile')">
@@ -485,11 +488,11 @@
                   <span class="hero-meta-divider">•</span>
                   <span class="hero-faculty-sub" id="hero-faculty-role">Faculty Portal</span>
                 </div>
-                <h2 class="welcome-title" id="welcome-greeting-text">Good Morning, Professor 👋</h2>
+                <h2 class="welcome-title" id="welcome-greeting-text">Welcome, Professor 👋</h2>
                 <div class="hero-teacher-meta-row">
-                  <span class="hero-teacher-name" id="hero-teacher-name">Dr. Rohan Deshmukh</span>
+                  <span class="hero-teacher-name" id="hero-teacher-name">Faculty</span>
                   <span class="hero-meta-dot">•</span>
-                  <span class="hero-teacher-designation" id="hero-teacher-designation">Associate Professor</span>
+                  <span class="hero-teacher-designation" id="hero-teacher-designation">Department Faculty</span>
                   <span class="hero-meta-dot">•</span>
                   <span class="hero-teacher-id" id="hero-teacher-id">--</span>
                 </div>
@@ -1345,10 +1348,10 @@
         <section id="profile-view" class="view-section-pane app-module-view">
           <div class="card" style="padding:28px;">
             <div style="display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;">
-              <div class="profile-avatar" style="width:80px; height:80px; font-size:26px;">RD</div>
+              <div class="profile-avatar" id="teacher-profile-avatar-large" style="width:80px; height:80px; font-size:26px;">--</div>
               <div>
-                <h2 style="font-size:22px; color:var(--dark-navy);">Dr. Rohan Deshmukh</h2>
-                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;">Department of Computer Science &amp; Engineering</p>
+                <h2 style="font-size:22px; color:var(--dark-navy);" id="teacher-profile-fullname">Faculty Member</h2>
+                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;" id="teacher-profile-dept-text">Department Faculty</p>
                 <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;" id="teacher-profile-empid">SSGMCE Faculty Record</p>
               </div>
             </div>
@@ -1356,22 +1359,31 @@
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:20px;">
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Official Email</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">rohan.deshmukh@college.edu</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-email-text">--</div>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Designation</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-designation-text">Faculty Member</div>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Phone / Contact</label>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-phone-text">--</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cabin Location</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Cabin 304, CS Department Wing</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-cabin-text">Main Academic Block</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Office Hours</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;">Mon - Thu, 02:00 PM - 03:30 PM</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-office-hours-text">Mon - Fri, 10:00 AM - 04:00 PM</div>
               </div>
               <div>
                 <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">2026-2027 (Odd Semester)</div>
+                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">Active Academic Term</div>
               </div>
             </div>
           </div>
+        </section>
         <!-- ========================================================
              PANE 10: ACADEMICS HUB VIEW
              ======================================================== -->

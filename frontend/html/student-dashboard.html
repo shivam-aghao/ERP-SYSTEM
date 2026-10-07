@@ -25,19 +25,6 @@
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
-      if (!window.ERP_AUTH.isAuthenticated() || window.ERP_AUTH.getRole() !== 'student') {
-        window.ERP_AUTH.setSession({
-          id: 's0000000-0000-0000-0000-000000000001',
-          name: 'Shivam Sanjay Aghao',
-          full_name: 'Shivam Sanjay Aghao',
-          role: 'student',
-          student_code: '308979',
-          roll_no: 1,
-          class_name: '3R',
-          class_code: '3R',
-          department: 'CSE'
-        }, 'student_token_default');
-      }
       window.ERP_AUTH.requireAuth('student');
     }
   </script>
@@ -959,46 +946,9 @@
                     <th>Syllabus Progress</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="registeredCoursesTbody">
                   <tr>
-                    <td><strong>CS-301</strong></td>
-                    <td>Data Structures &amp; Algorithms</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Prof. Rajesh Sharma</td>
-                    <td><span class="badge badge-cyan">82% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-302</strong></td>
-                    <td>Java &amp; Object Oriented Programming</td>
-                    <td>3.5</td>
-                    <td>Theory + Lab</td>
-                    <td>Dr. Rohan Deshmukh</td>
-                    <td><span class="badge badge-cyan">80% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-303</strong></td>
-                    <td>Operating Systems Concepts</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Prof. Priya Patil</td>
-                    <td><span class="badge badge-cyan">75% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-304</strong></td>
-                    <td>Database Management Systems</td>
-                    <td>4.0</td>
-                    <td>Core Theory + Lab</td>
-                    <td>Dr. Vikram Joshi</td>
-                    <td><span class="badge badge-cyan">78% Covered</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CS-305</strong></td>
-                    <td>Computer Networks &amp; Security</td>
-                    <td>3.0</td>
-                    <td>Core Theory</td>
-                    <td>Dr. Ananya Sen</td>
-                    <td><span class="badge badge-warning">65% Covered</span></td>
+                    <td colspan="6" class="text-center text-muted py-4">No static courses. Loaded dynamically from university syllabus records.</td>
                   </tr>
                 </tbody>
               </table>
@@ -1011,43 +961,8 @@
               <h4>Department Faculty Mentors &amp; Office Hours</h4>
               <span class="badge-status-safe">CSE Faculty Directory</span>
             </div>
-            <div class="modal-grid-two-col">
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RD</div>
-                <div class="fac-details">
-                  <h5>Dr. Rohan Deshmukh</h5>
-                  <p class="fac-designation">Associate Professor &amp; HOD</p>
-                  <p class="fac-meta">Course: Java Programming (CS-302) • Cabin LH-204</p>
-                  <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link">rohan.deshmukh@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">RS</div>
-                <div class="fac-details">
-                  <h5>Prof. Rajesh Sharma</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: Data Structures (CS-301) • Cabin LH-201</p>
-                  <a href="mailto:rajesh.sharma@ssgmce.ac.in" class="fac-email-link">rajesh.sharma@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">AS</div>
-                <div class="fac-details">
-                  <h5>Dr. Ananya Sen</h5>
-                  <p class="fac-designation">Associate Professor</p>
-                  <p class="fac-meta">Course: Computer Networks (CS-305) • Cabin LH-108</p>
-                  <a href="mailto:ananya.sen@ssgmce.ac.in" class="fac-email-link">ananya.sen@ssgmce.ac.in</a>
-                </div>
-              </div>
-              <div class="faculty-contact-card">
-                <div class="fac-avatar">VJ</div>
-                <div class="fac-details">
-                  <h5>Dr. Vikram Joshi</h5>
-                  <p class="fac-designation">Assistant Professor</p>
-                  <p class="fac-meta">Course: DBMS (CS-304) • Lab 3 Annex</p>
-                  <a href="mailto:vikram.joshi@ssgmce.ac.in" class="fac-email-link">vikram.joshi@ssgmce.ac.in</a>
-                </div>
-              </div>
+            <div class="modal-grid-two-col" id="facultyMentorsDirectory">
+              <div class="empty-state-notice" style="grid-column: span 2; text-align: center; color: var(--text-secondary); padding: 2rem;">Faculty mentors directory is loaded dynamically from department records.</div>
             </div>
           </div>
 
@@ -1443,19 +1358,19 @@
             <div class="info-form-card">
               <h4>Technical Seminar Presentation Submission</h4>
               <p>Third Year B.Tech Technical Seminar Topic Registration &amp; Mentor Allocation.</p>
-              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Technical seminar topic registered successfully with Mentor Dr. Rohan Deshmukh.', 'success')">
+              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Technical seminar topic registered successfully.', 'success')">
                 <div class="form-group">
                   <label>Seminar Topic Title</label>
-                  <input type="text" class="form-control" value="Federated Learning in Edge AI for Autonomous Vehicular Networks" required>
+                  <input type="text" class="form-control" placeholder="Enter seminar topic title" required>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Allocated Guide / Faculty</label>
-                    <input type="text" class="form-control" value="Dr. Rohan Deshmukh (CSE)" readonly>
+                    <input type="text" class="form-control" placeholder="Allocated Faculty Guide" readonly>
                   </div>
                   <div class="form-group">
                     <label>Seminar Stage</label>
-                    <input type="text" class="form-control" value="Stage 1 - Synopsis Approved" readonly>
+                    <input type="text" class="form-control" placeholder="Seminar Stage" readonly>
                   </div>
                 </div>
                 <button type="submit" class="btn-submit-form">Update Seminar Details</button>
@@ -1698,32 +1613,8 @@
               <h4>Today's Schedule • Thursday</h4>
               <span class="badge-status-safe">5 Periods</span>
             </div>
-            <div class="modal-timetable-list">
-              <div class="modal-time-period completed">
-                <div class="mt-slot">Period 1 • 09:00 - 10:00 AM</div>
-                <div class="mt-title">Data Structures (CS-301)</div>
-                <div class="mt-meta">Lecture Hall 204 • Prof. Rajesh Sharma • Attended ✓</div>
-              </div>
-              <div class="modal-time-period active-now">
-                <div class="mt-slot">Period 2 • 10:00 - 11:00 AM (Live)</div>
-                <div class="mt-title">Java Programming (CS-302)</div>
-                <div class="mt-meta">Computer Lab 2 • Dr. Rohan Deshmukh • In Progress</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 3 • 11:15 AM - 12:15 PM</div>
-                <div class="mt-title">Operating Systems (CS-303)</div>
-                <div class="mt-meta">Lecture Hall 204 • Prof. Priya Patil</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 4 • 01:30 - 02:30 PM</div>
-                <div class="mt-title">Computer Networks (CS-305)</div>
-                <div class="mt-meta">Lecture Hall 108 • Dr. Ananya Sen</div>
-              </div>
-              <div class="modal-time-period upcoming">
-                <div class="mt-slot">Period 5 • 02:45 - 03:45 PM</div>
-                <div class="mt-title">Database Management Tutorial (CS-304)</div>
-                <div class="mt-meta">Seminar Hall 1 • Batch B Tutorial</div>
-              </div>
+            <div class="modal-timetable-list" id="modalTodayTimetableList">
+              <div class="empty-state-notice" style="text-align: center; color: var(--text-secondary); padding: 2rem;">No periods scheduled for today. Loaded dynamically from timetable service.</div>
             </div>
           </div>
 
@@ -1731,7 +1622,7 @@
           <div class="subtab-pane" data-subpane="weekly">
             <div class="pane-section-header">
               <h4>Weekly Timetable Matrix • Monday to Saturday</h4>
-              <span class="badge-status-safe">B.Tech CSE 2R1</span>
+              <span class="badge-status-safe">Class Timetable</span>
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
@@ -1745,54 +1636,9 @@
                     <th>02:45 - 04:45</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalWeeklyTimetableTbody">
                   <tr>
-                    <td><strong>Monday</strong></td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-304 (Theory)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>Lab: CS-301 Batch A / CS-302 Batch B</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Tuesday</strong></td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-304 (Theory)</td>
-                    <td>Library / Self Study</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Wednesday</strong></td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>Lab: CS-304 Batch A / CS-305 Batch B</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Thursday</strong></td>
-                    <td>CS-301 (Theory)</td>
-                    <td>CS-302 (Lab)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-304 Tutorial</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Friday</strong></td>
-                    <td>CS-304 (Theory)</td>
-                    <td>CS-302 (Theory)</td>
-                    <td>CS-305 (Theory)</td>
-                    <td>CS-303 (Theory)</td>
-                    <td>Technical Seminar / Mentoring</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Saturday</strong></td>
-                    <td>CS-301 Remedial</td>
-                    <td>CS-303 Tutorial</td>
-                    <td>Co-curricular Activities</td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td colspan="6" class="text-center text-muted py-4">Weekly timetable matrix is loaded dynamically from database.</td>
                   </tr>
                 </tbody>
               </table>
@@ -1877,7 +1723,7 @@
                 </div>
                 <h5>Advanced Data Structures &amp; Graph Algorithms</h5>
                 <p>Advanced algorithmic patterns, amortized analysis, Fibonacci heaps, network flow, and persistent tree structures.</p>
-                <div class="fac-meta">Faculty: Prof. Rajesh Sharma • LH-204</div>
+                <div class="fac-meta">Faculty: Course Faculty • LH-204</div>
                 <button type="button" class="btn-course-select" onclick="selectCourseChoice(this, 'CS-PE-01: Advanced Data Structures')">Select Elective</button>
               </div>
 
@@ -1888,7 +1734,7 @@
                 </div>
                 <h5>Cloud Architecture &amp; Enterprise DevOps</h5>
                 <p>Containerization with Docker, Kubernetes cluster orchestration, Terraform IaC, AWS microservices, and CI/CD pipelines.</p>
-                <div class="fac-meta">Faculty: Dr. Rohan Deshmukh • Lab 2</div>
+                <div class="fac-meta">Faculty: Faculty Advisor • Lab 2</div>
                 <button type="button" class="btn-course-select" onclick="selectCourseChoice(this, 'CS-PE-02: Cloud Architecture')">Select Elective</button>
               </div>
 
@@ -2170,15 +2016,15 @@
           <!-- Subtab 3: Mentor / Proctor -->
           <div class="subtab-pane" data-subpane="mentor">
             <div class="faculty-contact-card" style="padding: 24px;">
-              <div class="fac-avatar" style="width: 58px; height: 58px; font-size: 1.2rem;">RD</div>
+              <div class="fac-avatar" id="mentorAvatarInitials" style="width: 58px; height: 58px; font-size: 1.2rem;">FA</div>
               <div class="fac-details">
-                <h5 style="font-size: 1.1rem;">Dr. Rohan Deshmukh</h5>
-                <p class="fac-designation">Associate Professor &amp; Head of Department (CSE)</p>
-                <p class="fac-meta">Allocated Faculty Mentor (Proctor) for CSE Batch 2R1</p>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
-                  Office: Vidya Bhavan LH-204 • Mentorship Hours: Mondays &amp; Wednesdays 3:45 PM - 5:00 PM
+                <h5 id="mentorFullName" style="font-size: 1.1rem;">Faculty Mentor</h5>
+                <p id="mentorDesignation" class="fac-designation">Department Faculty Mentor</p>
+                <p id="mentorMeta" class="fac-meta">Allocated Faculty Mentor (Proctor)</p>
+                <p id="mentorOfficeHours" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
+                  Office Hours: Available during designated mentorship slots
                 </p>
-                <a href="mailto:rohan.deshmukh@ssgmce.ac.in" class="fac-email-link" style="font-size: 0.84rem;">rohan.deshmukh@ssgmce.ac.in</a>
+                <a id="mentorEmailLink" href="#" class="fac-email-link" style="font-size: 0.84rem;">mentor@ssgmce.ac.in</a>
               </div>
             </div>
           </div>

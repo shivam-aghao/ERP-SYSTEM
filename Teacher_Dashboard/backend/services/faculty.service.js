@@ -1,23 +1,7 @@
 import { prisma } from '../config/db.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const MOCK_FACULTY_LIST = [
-  {
-    id: 'a0000000-0000-0000-0000-000000000001',
-    employeeId: 'FAC-CSE-1048',
-    name: 'Dr. Rohan Deshmukh',
-    prefix: 'Prof.',
-    title: 'Associate Professor',
-    departmentCode: 'CSE',
-    email: 'rohan.deshmukh@ssgmce.ac.in',
-    phone: '+91 98765 43210',
-    avatarInitials: 'RD',
-    cabinLocation: 'Academic Block B, Room 204',
-    officeHours: 'Mon-Thu: 3:00 PM - 5:00 PM',
-    qualification: 'Ph.D. in Computer Science & Engineering',
-    isActive: true,
-  },
-];
+const MOCK_FACULTY_LIST = [];
 
 export const facultyService = {
   async getAllFaculty(filters = {}) {

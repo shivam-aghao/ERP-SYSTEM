@@ -30,6 +30,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from backend.services.attendance_service import AttendanceService
 from backend.services.syllabus_service import SyllabusService
+from backend.services.faculty_service import FacultyService
 
 # Configure Logging
 logging.basicConfig(
@@ -462,91 +463,182 @@ def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
 # ==============================================================================
 # 7. TEACHER PORTAL & ATTENDANCE MANAGEMENT
 # ==============================================================================
+def extract_teacher_identifier_unified(request: Request, teacher_id: Optional[str] = None, emp_code: Optional[str] = None) -> Optional[str]:
+    if teacher_id:
+        return teacher_id.strip()
+    if emp_code:
+        return emp_code.strip()
+    if request:
+        auth_hdr = request.headers.get("authorization", "")
+        if auth_hdr.startswith("Bearer "):
+            token = auth_hdr.split(" ", 1)[1].strip()
+            if token.startswith("teach_token_"):
+                return token.replace("teach_token_", "").strip()
+        if request.headers.get("x-teacher-id"):
+            return request.headers.get("x-teacher-id").strip()
+        if request.headers.get("x-emp-code"):
+            return request.headers.get("x-emp-code").strip()
+    return None
+
+@api.get("/teachers", tags=["Faculty Portal"])
+@app.get("/api/v1/teachers", tags=["Faculty Portal"])
+def get_all_faculty_members(db: Session = Depends(get_db)):
+    """List all 15 faculty members with designation, department, and teaching load from official PDF."""
+    data = FacultyService.get_all_teachers(db)
+    return success_response(data)
+
 @api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
-def get_teacher_profile(db: Session = Depends(get_db)):
-    row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
+<<<<<<< HEAD
+def get_teacher_profile(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
+    data = FacultyService.get_profile(db, tid)
+    if not data:
+        return error_response("Teacher record not found", 404)
+=======
+@api.get("/profile", tags=["Faculty Portal"])
+def get_teacher_profile(
+    empCode: Optional[str] = Query(None, alias="empCode"),
+    emp_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    code = empCode or emp_code or teacher_id
+    if code:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            WHERE LOWER(t.emp_code) = LOWER(:code) 
+               OR t.id = :code 
+               OR LOWER(t.email) = LOWER(:code)
+            LIMIT 1
+        """), {"code": code}).fetchone()
+    else:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            LIMIT 1
+        """)).fetchone()
+
     if not row:
         return error_response("Teacher record not found", 404)
     data = dict(row._mapping)
     data["fullName"] = data.get("full_name")
     data["empCode"] = data.get("emp_code")
-    data["department"] = data.get("department_name") or "CSE"
+    data["department"] = data.get("department_name") or data.get("department_code") or "Computer Science & Engineering"
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     return success_response(data)
 
 @api.put("/teacher/profile", tags=["Faculty Portal"])
-def update_teacher_profile(payload: TeacherProfileUpdate, db: Session = Depends(get_db)):
-    row = db.execute(text("SELECT id FROM teachers LIMIT 1")).fetchone()
-    if not row:
-        return error_response("Teacher record not found", 404)
-    tid = row[0]
-    updates = payload.model_dump(exclude_unset=True)
-    for k, v in updates.items():
-        if v is not None:
-            db.execute(text(f"UPDATE teachers SET {k} = :val WHERE id = :id"), {"val": v, "id": tid})
-    db.commit()
-    upd = db.execute(text("SELECT * FROM teachers WHERE id = :id"), {"id": tid}).fetchone()
-    return success_response(dict(upd._mapping), "Teacher profile updated")
+def update_teacher_profile(payload: TeacherProfileUpdate, request: Request, teacher_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier_unified(request, teacher_id)
+    data = FacultyService.update_profile(payload.model_dump(exclude_unset=True), db, tid)
+    return success_response(data or {}, "Teacher profile updated")
 
 @api.get("/dashboard/summary", tags=["Faculty Portal"])
+<<<<<<< HEAD
+def get_teacher_dashboard_summary(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
+    data = FacultyService.get_summary(db, tid)
+    return success_response(data)
+=======
 def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
-    classes_cnt, students_cnt, quizzes_cnt, sessions_cnt = 3, 195, 6, 42
+    classes_cnt = 0
+    students_cnt = 0
+    quizzes_cnt = 0
+    sessions_cnt = 0
+    avg_att_pct = 0.0
     try:
-        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 3
-        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 195
-        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 6
-        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 42
+        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 0
+        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 0
+        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 0
+        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 0
+        avg_att = db.execute(text("SELECT AVG(attendance_rate) FROM attendance_sessions")).scalar()
+        avg_att_pct = round(float(avg_att), 1) if avg_att is not None else 0.0
     except Exception:
         pass
+
+    # Dynamic Teacher Profile
+    faculty_dict = {
+        "id": "",
+        "name": "Faculty Member",
+        "employeeId": "",
+        "prefix": "Prof.",
+        "title": "Faculty Member",
+        "departmentCode": "",
+        "cabinLocation": ""
+    }
+    try:
+        t_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+        if t_row:
+            tm = dict(t_row._mapping)
+            faculty_dict = {
+                "id": str(tm.get("id") or ""),
+                "name": tm.get("full_name") or f"{tm.get('first_name', '')} {tm.get('last_name', '')}".strip() or "Faculty Member",
+                "employeeId": tm.get("emp_code") or "",
+                "prefix": "Prof.",
+                "title": tm.get("designation") or "Faculty Member",
+                "departmentCode": tm.get("department_id") or "CSE",
+                "cabinLocation": tm.get("cabin_location") or ""
+            }
+    except Exception:
+        pass
+
+    # Dynamic Today's Timetable Schedule
+    today_schedule = []
+    try:
+        from datetime import datetime
+        day_name = datetime.now().strftime("%A")
+        t_entries = db.execute(
+            text("SELECT * FROM timetable_entries WHERE LOWER(day_of_week) = LOWER(:d) ORDER BY period_number ASC"),
+            {"d": day_name}
+        ).fetchall()
+        for te in t_entries:
+            m = dict(te._mapping)
+            today_schedule.append({
+                "time": f"{m.get('start_time', '09:00')} - {m.get('end_time', '10:00')}",
+                "subject": m.get("subject_name") or m.get("course_name") or "Course",
+                "class": m.get("class_name") or "",
+                "room": m.get("room") or m.get("venue") or "",
+                "type": m.get("session_type") or "Lecture"
+            })
+    except Exception:
+        pass
+
     return success_response({
-        "faculty": {
-            "id": "a0000000-0000-0000-0000-000000000001",
-            "name": "Dr. Rohan Deshmukh",
-            "employeeId": "FAC-CSE-1048",
-            "prefix": "Prof.",
-            "title": "Associate Professor",
-            "departmentCode": "CSE",
-            "cabinLocation": "Academic Block B, Room 204"
-        },
+        "faculty": faculty_dict,
         "metrics": {
             "totalClasses": classes_cnt,
             "totalStudents": students_cnt,
-            "averageAttendance": "87.4%",
-            "syllabusCompleted": "68%",
-            "unreadNotifications": 2,
+            "averageAttendance": f"{avg_att_pct}%",
+            "syllabusCompleted": "0%",
+            "unreadNotifications": 0,
             "totalLecturesDelivered": sessions_cnt
         },
-        "todaySchedule": [
-            {
-                "time": "10:00 AM - 11:00 AM",
-                "subject": "Data Structures & Algorithms (CS302)",
-                "class": "2R1 (CSE Div A)",
-                "room": "Room 201",
-                "type": "Lecture"
-            },
-            {
-                "time": "11:15 AM - 12:15 PM",
-                "subject": "Database Management Systems (CS501)",
-                "class": "3R (CSE)",
-                "room": "Room 301",
-                "type": "Lecture"
-            }
-        ],
+        "todaySchedule": today_schedule,
         "total_classes": classes_cnt,
         "total_students": students_cnt,
         "total_quizzes": quizzes_cnt,
         "total_attendance_sessions": sessions_cnt,
-        "attendance_average_pct": 87.4
+        "attendance_average_pct": avg_att_pct
     })
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 
 @api.get("/timetable/my", tags=["Faculty Portal"])
-def get_teacher_timetable(db: Session = Depends(get_db)):
-    rows = []
-    try:
-        rows = db.execute(text("SELECT * FROM timetable_entries LIMIT 10")).fetchall()
-    except Exception:
-        pass
-    return success_response([dict(r._mapping) for r in rows] if rows else [])
+@api.get("/teacher/timetable", tags=["Faculty Portal"])
+def get_teacher_timetable(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    """Fetch strict personal weekly timetable from PDF schedule for the authenticated teacher."""
+    tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
+    data = FacultyService.get_personal_timetable(tid, db)
+    return success_response(data)
+
+@api.get("/timetable/teacher/{teacher_id}", tags=["Faculty Portal"])
+def get_specific_teacher_timetable(teacher_id: str, db: Session = Depends(get_db)):
+    """Fetch strict personal weekly timetable for any specific teacher ID or emp_code."""
+    data = FacultyService.get_personal_timetable(teacher_id, db)
+    return success_response(data)
 
 # ==============================================================================
 # TIMETABLE ASSESSMENTS / TESTS MODULE (Shared DB between Faculty & Student)
@@ -772,19 +864,41 @@ def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(ge
     return success_response(data, "Attendance recorded successfully")
 
 @api.get("/attendance/records", tags=["Attendance Marking"])
-def get_attendance_records(class_id: Optional[str] = None, subject_id: Optional[str] = None, db: Session = Depends(get_db)):
+@api.get("/attendance/recent", tags=["Attendance Marking"])
+def get_attendance_records(class_id: Optional[str] = None, class_name: Optional[str] = None, teacher_id: Optional[str] = None, subject_id: Optional[str] = None, db: Session = Depends(get_db)):
+    target_class = class_name or class_id
+    # 1. Query Supabase Cloud v_recent_attendance
+    try:
+        import urllib.request, urllib.parse, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            url = f"{settings.SUPABASE_URL}/rest/v1/v_recent_attendance?select=*&order=session_date.desc,created_at.desc&limit=50"
+            if target_class:
+                url += f"&class_name=eq.{urllib.parse.quote(target_class)}"
+            if teacher_id:
+                url += f"&teacher_id=eq.{urllib.parse.quote(teacher_id)}"
+            req = urllib.request.Request(
+                url,
+                headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data:
+                    return success_response(data)
+    except Exception:
+        pass
+
+    # 2. SQLite fallback
     clause = ""
     params = {}
-    if class_id:
-        clause = "WHERE ass.class_id = :cid"
-        params["cid"] = class_id
+    if target_class:
+        clause = "WHERE ass.class_id = :cid OR ass.class_name = :cid"
+        params["cid"] = target_class
     rows = db.execute(text(f"""
-        SELECT ass.*, c.class_name, s.name as subject_name
+        SELECT ass.*, ass.class_name, ass.subject_name
         FROM attendance_sessions ass
-        LEFT JOIN classes c ON ass.class_id = c.id
-        LEFT JOIN subjects s ON ass.subject_id = s.id
         {clause}
-        ORDER BY ass.created_at DESC
+        ORDER BY ass.session_date DESC, ass.created_at DESC
         LIMIT 50
     """), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])
@@ -792,12 +906,43 @@ def get_attendance_records(class_id: Optional[str] = None, subject_id: Optional[
 @api.get("/teacher/class-roster", tags=["Attendance Marking"])
 @app.get("/api/teacher/class-roster", tags=["Attendance Marking"])
 def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    cid = classId or class_id or "2R1"
+    cid = classId or class_id or "3R"
+    # 1. Query Supabase Cloud students table
+    try:
+        import urllib.request, urllib.parse, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            url = f"{settings.SUPABASE_URL}/rest/v1/students?class_name=eq.{urllib.parse.quote(cid)}&select=id,roll_no,full_name,student_code,email,class_name&order=roll_no"
+            req = urllib.request.Request(
+                url,
+                headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data and len(data) > 0:
+                    students = []
+                    for m in data:
+                        roll = m.get("roll_no") or "1"
+                        roll_fmt = f"{m.get('class_name') or cid}-{str(roll)}"
+                        students.append({
+                            "id": m.get("id"),
+                            "rollNo": roll,
+                            "rollFormatted": roll_fmt,
+                            "name": m.get("full_name"),
+                            "enrollmentNo": m.get("student_code"),
+                            "cardId": f"CARD-{roll_fmt}",
+                            "classCode": m.get("class_name") or cid
+                        })
+                    return success_response({"students": students})
+    except Exception:
+        pass
+
+    # 2. SQLite fallback
     rows = db.execute(text("""
-        SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, c.class_name
+        SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, s.class_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE c.class_name = :cid OR s.class_id = :cid OR c.id = :cid
+        WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id = :cid OR c.id = :cid
         ORDER BY s.roll_no ASC
     """), {"cid": cid}).fetchall()
 
@@ -805,7 +950,7 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
     for r in rows:
         m = dict(r._mapping)
         roll = m.get("roll_no") or 1
-        roll_fmt = f"{m.get('class_name') or cid}-{str(roll).zfill(2)}"
+        roll_fmt = f"{m.get('class_name') or cid}-{str(roll)}"
         students.append({
             "id": m.get("id"),
             "rollNo": roll,
@@ -821,7 +966,8 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
 @app.post("/api/teacher/attendance/bulk", tags=["Attendance Marking"])
 def submit_teacher_attendance_bulk(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
     class_code = payload.get("classCode") or payload.get("classId") or "2R1"
-    sub_title = payload.get("subject") or "General"
+    sub_title = payload.get("subject") or payload.get("subjectName") or "General"
+    sub_code = payload.get("subjectCode") or sub_title
     date_str = payload.get("date") or payload.get("lectureDate") or datetime.now().strftime("%Y-%m-%d")
     slot = payload.get("timeSlot") or payload.get("lectureTime") or "09:00 - 10:00"
     records = payload.get("records", [])
@@ -829,31 +975,124 @@ def submit_teacher_attendance_bulk(payload: Dict[str, Any] = Body(...), db: Sess
     c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR id = :c LIMIT 1"), {"c": class_code}).fetchone()
     cid = c_row[0] if c_row else "0a7372d4-db33-4908-9f85-896c7009fd76"
 
-    s_row = db.execute(text("SELECT id FROM subjects WHERE name LIKE :s OR id = :s LIMIT 1"), {"s": f"%{sub_title}%"}).fetchone()
-    sid = s_row[0] if s_row else "s0000000-0000-0000-0000-000000000001"
+    s_row = db.execute(text("SELECT id, code, name FROM subjects WHERE code = :s OR LOWER(name) LIKE LOWER(:sn) LIMIT 1"), {"s": sub_code, "sn": f"%{sub_title}%"}).fetchone()
+    if s_row:
+        sid = s_row[0]
+        sub_code = s_row[1]
+        sub_title = s_row[2]
+    else:
+        sid = "s0000000-0000-0000-0000-000000000001"
 
     sess_id = str(uuid.uuid4())
-    present_count = len([r for r in records if r.get("status") == "present"])
-    absent_count = len([r for r in records if r.get("status") == "absent"])
+    present_count = len([r for r in records if str(r.get("status", "")).strip().lower() in ("present", "p")])
+    absent_count = len([r for r in records if str(r.get("status", "")).strip().lower() in ("absent", "a")])
     total_count = len(records)
+    rate = round((present_count / total_count * 100), 2) if total_count > 0 else 0.0
 
+    # 1. Sync directly to Supabase Cloud
+    try:
+        import urllib.request, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            sb_headers = {
+                "apikey": settings.SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+            }
+            sb_session = {
+                "id": sess_id,
+                "session_code": f"REC-{date_str.replace('-', '')}-{class_code}-{sess_id[:4].upper()}",
+                "class_name": class_code,
+                "subject_code": sub_code,
+                "subject_name": sub_title,
+                "session_date": date_str,
+                "attendance_date": date_str,
+                "period": str(payload.get("period") or payload.get("periodNumber") or "1"),
+                "period_number": str(payload.get("periodNumber") or payload.get("period") or "1"),
+                "time_slot": slot,
+                "session_type": payload.get("sessionType") or "Theory",
+                "status": "SUBMITTED",
+                "total_students": total_count,
+                "present_count": present_count,
+                "absent_count": absent_count,
+                "attendance_rate": float(rate),
+                "topic_taught": payload.get("topic") or payload.get("topicTaught"),
+                "remark": payload.get("remark")
+            }
+            req_sess = urllib.request.Request(
+                f"{settings.SUPABASE_URL}/rest/v1/attendance_sessions",
+                data=json.dumps(sb_session).encode('utf-8'),
+                headers=sb_headers
+            )
+            try:
+                urllib.request.urlopen(req_sess, timeout=4)
+            except Exception as se:
+                logger.warning("Supabase session insert notice: %s", se)
+
+            sb_records = []
+            for r in records:
+                st_id = r.get("studentId") or r.get("id")
+                st_code = r.get("enrollmentNo") or r.get("studentCode")
+                st_roll = r.get("rollNo")
+                st_name = r.get("name") or r.get("studentName")
+                st_status = "PRESENT" if str(r.get("status", "")).strip().lower() in ("present", "p") else "ABSENT"
+
+                if not st_code or not st_name:
+                    st_row = db.execute(text("SELECT id, student_code, full_name, roll_no FROM students WHERE id = :id OR roll_no = :r OR student_code = :c LIMIT 1"), {"id": st_id, "r": str(st_roll), "c": str(st_code or st_id)}).fetchone()
+                    if st_row:
+                        st_id = st_row[0]
+                        st_code = st_code or st_row[1]
+                        st_name = st_name or st_row[2]
+                        st_roll = st_roll or st_row[3]
+
+                sb_records.append({
+                    "id": str(uuid.uuid4()),
+                    "session_id": sess_id,
+                    "student_id": st_id if (st_id and len(str(st_id)) > 20) else None,
+                    "student_code": str(st_code) if st_code else None,
+                    "roll_no": str(st_roll) if st_roll else None,
+                    "student_name": st_name,
+                    "is_present": (st_status == "PRESENT"),
+                    "status": st_status,
+                    "remarks": r.get("remarks")
+                })
+            if sb_records:
+                req_recs = urllib.request.Request(
+                    f"{settings.SUPABASE_URL}/rest/v1/attendance_records",
+                    data=json.dumps(sb_records).encode('utf-8'),
+                    headers=sb_headers
+                )
+                try:
+                    urllib.request.urlopen(req_recs, timeout=5)
+                except Exception as re_err:
+                    logger.warning("Supabase records insert notice: %s", re_err)
+    except Exception as ex:
+        logger.warning("Supabase sync attendance notice: %s", ex)
+
+    # 2. Persist to local SQLite
     db.execute(text("""
         INSERT INTO attendance_sessions
-        (id, teacher_id, class_id, subject_id, attendance_date, period, status, total_students, present_count, absent_count, submitted_at, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, 1, 'submitted', :tot, :pres, :abs, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        (id, teacher_id, class_id, class_name, subject_id, subject_name, session_date, period_number, session_type, status, total_students, present_count, absent_count, attendance_rate, created_at, updated_at)
+        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :cname, :sid, :sname, :sdate, '1', 'Theory', 'SUBMITTED', :tot, :pres, :abs, :rate, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
-        "id": sess_id, "cid": cid, "sid": sid, "sdate": date_str,
-        "tot": total_count, "pres": present_count, "abs": absent_count
+        "id": sess_id, "cid": cid, "cname": class_code, "sid": sid, "sname": sub_title,
+        "sdate": date_str, "tot": total_count, "pres": present_count, "abs": absent_count, "rate": rate
     })
 
     for r in records:
         st_id = r.get("studentId") or r.get("id")
-        status = r.get("status", "present")
+        st_status = "PRESENT" if r.get("status") == "present" else "ABSENT"
+        st_roll = r.get("rollNo")
+        st_name = r.get("name")
         if st_id:
             db.execute(text("""
-                INSERT INTO attendance_records (id, session_id, student_id, status, created_at)
-                VALUES (:id, :sess_id, :sid, :st, CURRENT_TIMESTAMP)
-            """), {"id": str(uuid.uuid4()), "sess_id": sess_id, "sid": st_id, "st": status})
+                INSERT INTO attendance_records (id, session_id, student_id, roll_no, student_name, is_present, status, created_at)
+                VALUES (:id, :sess_id, :sid, :rno, :sname, :is_p, :st, CURRENT_TIMESTAMP)
+            """), {
+                "id": str(uuid.uuid4()), "sess_id": sess_id, "sid": st_id,
+                "rno": str(st_roll), "sname": st_name, "is_p": 1 if st_status == "PRESENT" else 0, "st": st_status
+            })
 
     db.commit()
 
@@ -872,14 +1111,48 @@ def submit_teacher_attendance_bulk(payload: Dict[str, Any] = Body(...), db: Sess
 
 @api.get("/teacher/attendance/sessions", tags=["Attendance Marking"])
 @app.get("/api/teacher/attendance/sessions", tags=["Attendance Marking"])
-def get_teacher_attendance_sessions(db: Session = Depends(get_db)):
+def get_teacher_attendance_sessions(teacher_id: Optional[str] = None, db: Session = Depends(get_db)):
+    # 1. Try Supabase Cloud v_recent_attendance
+    try:
+        import urllib.request, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            url = f"{settings.SUPABASE_URL}/rest/v1/v_recent_attendance?select=*&order=session_date.desc,created_at.desc&limit=100"
+            if teacher_id:
+                url += f"&teacher_id=eq.{teacher_id}"
+            req = urllib.request.Request(
+                url,
+                headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data and len(data) > 0:
+                    sessions = []
+                    for m in data:
+                        sessions.append({
+                            "sessionId": m.get("id"),
+                            "date": m.get("session_date"),
+                            "lectureDate": m.get("session_date"),
+                            "dateFormatted": m.get("date_formatted"),
+                            "classCode": m.get("class_name") or "3R",
+                            "subject": m.get("subject_name") or m.get("subject_code"),
+                            "subjectCode": m.get("subject_code"),
+                            "presentCount": m.get("present_count"),
+                            "absentCount": m.get("absent_count"),
+                            "totalStudents": m.get("total_students"),
+                            "attendanceRate": m.get("attendance_rate"),
+                            "status": m.get("status")
+                        })
+                    return success_response({"sessions": sessions})
+    except Exception:
+        pass
+
+    # 2. SQLite Fallback
     rows = db.execute(text("""
-        SELECT ass.id, ass.attendance_date, ass.total_students, ass.present_count, ass.absent_count,
-               ass.status, ass.submitted_at, c.class_name, s.name as subject_name
+        SELECT ass.id, ass.session_date as attendance_date, ass.total_students, ass.present_count, ass.absent_count,
+               ass.status, ass.class_name, ass.subject_name, ass.subject_code, ass.attendance_rate
         FROM attendance_sessions ass
-        LEFT JOIN classes c ON ass.class_id = c.id
-        LEFT JOIN subjects s ON ass.subject_id = s.id
-        ORDER BY ass.attendance_date DESC, ass.created_at DESC
+        ORDER BY ass.session_date DESC, ass.created_at DESC
         LIMIT 100
     """)).fetchall()
     sessions = []
@@ -889,12 +1162,13 @@ def get_teacher_attendance_sessions(db: Session = Depends(get_db)):
             "sessionId": m.get("id"),
             "date": m.get("attendance_date"),
             "lectureDate": m.get("attendance_date"),
-            "classCode": m.get("class_name") or "2R1",
+            "classCode": m.get("class_name") or "3R",
             "subject": m.get("subject_name") or "Lecture",
-            "subjectCode": m.get("subject_name"),
+            "subjectCode": m.get("subject_code") or m.get("subject_name"),
             "presentCount": m.get("present_count"),
             "absentCount": m.get("absent_count"),
             "totalStudents": m.get("total_students"),
+            "attendanceRate": m.get("attendance_rate"),
             "status": m.get("status")
         })
     return success_response({"sessions": sessions})
@@ -1015,46 +1289,23 @@ def get_student_overview(student_code: Optional[str] = Query(None), db: Session 
         "academicYear": "2026-2027"
     }
 
-    sub_rows = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
-    subject_wise = []
-    tot_pres = 0
-    tot_lecs = 0
-    for r in sub_rows:
-        m = dict(r._mapping)
-        p = m.get("present_periods", 0)
-        t = m.get("total_periods", 0)
-        tot_pres += p
-        tot_lecs += t
-        pct = round((p / t * 100), 1) if t > 0 else 85.0
-        subject_wise.append({
-            "code": m.get("subject_code") or "CS-301",
-            "subjectCode": m.get("subject_code") or "CS-301",
-            "subject_code": m.get("subject_code") or "CS-301",
-            "name": m.get("subject_name") or "Course",
-            "subjectName": m.get("subject_name") or "Course",
-            "subject_name": m.get("subject_name") or "Course",
-            "attended": p,
-            "attendedLectures": p,
-            "present_periods": p,
-            "total": t,
-            "totalLectures": t,
-            "total_periods": t,
-            "percentage": pct,
-            "faculty": m.get("faculty_name") or "Prof. R. Sharma",
-            "faculty_name": m.get("faculty_name") or "Prof. R. Sharma",
-            "classroom": m.get("classroom") or "LH-204"
-        })
-
-    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
-    absent_count = max(0, tot_lecs - tot_pres)
-
+    # Query live attendance summary from Supabase Cloud
+    att_res = get_student_attendance_summary(student_code=student_obj.get("student_code") or "308637", db=db)
+    att_data = att_res.get("data", {}) if isinstance(att_res, dict) else {}
+    overall_pct = att_data.get("overall_percentage", 84.81)
+    tot_conducted = att_data.get("total_conducted", 79)
+    tot_attended = att_data.get("total_attended", 73)
+    absent_count = max(0, tot_conducted - tot_attended)
 
     attendance_summary = {
         "overallPercentage": overall_pct,
-        "attendedLectures": tot_pres,
+        "overall_percentage": overall_pct,
+        "attendedLectures": tot_attended,
+        "total_attended": tot_attended,
         "absentLectures": absent_count,
-        "totalLectures": tot_lecs,
-        "subjectWise": subject_wise
+        "totalLectures": tot_conducted,
+        "total_conducted": tot_conducted,
+        "subjectWise": att_data.get("subjectWise", [])
     }
 
     from datetime import datetime
@@ -1178,16 +1429,79 @@ def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_d
 @api.get("/student/attendance", tags=["Student Portal"])
 @api.get("/attendance", tags=["Student Portal"])
 def get_student_attendance_summary(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(
-        text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
-        {"sc": student_code}
-    ).fetchall()
-    if not subjects:
-        subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
-    sub_dicts = [dict(s._mapping) for s in subjects]
+    sub_dicts = []
+    recent_records = []
+    
+    # 1. Query Supabase Cloud student_attendance_subjects directly
+    try:
+        import urllib.request, urllib.parse, json
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            headers = {"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            url = f"{settings.SUPABASE_URL}/rest/v1/student_attendance_subjects?student_code=eq.{urllib.parse.quote(student_code)}&order=subject_code"
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                sub_data = json.loads(resp.read().decode('utf-8'))
+                if sub_data and len(sub_data) > 0:
+                    sub_dicts = sub_data
+
+            rec_url = f"{settings.SUPABASE_URL}/rest/v1/attendance_records?student_code=eq.{urllib.parse.quote(student_code)}&select=id,is_present,status,remarks,created_at,attendance_sessions(session_date,subject_code,subject_name,period_number,session_type)&order=created_at.desc&limit=50"
+            rec_req = urllib.request.Request(rec_url, headers=headers)
+            with urllib.request.urlopen(rec_req, timeout=3) as resp:
+                raw_recs = json.loads(resp.read().decode('utf-8'))
+                for r in raw_recs:
+                    sess = r.get("attendance_sessions") or {}
+                    recent_records.append({
+                        "id": r.get("id"),
+                        "date": sess.get("session_date") or "",
+                        "subject_code": sess.get("subject_code") or "",
+                        "subject_name": sess.get("subject_name") or "Course",
+                        "period": sess.get("period_number") or "1",
+                        "session_type": sess.get("session_type") or "Theory",
+                        "status": r.get("status") or ("PRESENT" if r.get("is_present") else "ABSENT"),
+                        "remarks": r.get("remarks") or ""
+                    })
+    except Exception:
+        pass
+
+    # 2. Fallback to SQLite if Supabase was empty
+    if not sub_dicts:
+        subjects = db.execute(
+            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+            {"sc": student_code}
+        ).fetchall()
+        if not subjects:
+            subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
+        sub_dicts = [dict(s._mapping) for s in subjects]
+
+    if not recent_records:
+        rec_rows = db.execute(
+            text("""
+                SELECT ar.*, s.session_date, s.subject_name, s.period_number, s.session_type
+                FROM attendance_records ar
+                JOIN attendance_sessions s ON ar.session_id = s.id
+                WHERE ar.student_id = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
+                ORDER BY s.session_date DESC
+                LIMIT 30
+            """), {"sc": student_code}
+        ).fetchall()
+        for r in rec_rows:
+            m = dict(r._mapping)
+            recent_records.append({
+                "id": m.get("id"),
+                "date": m.get("session_date") or "",
+                "subject_code": m.get("subject_code") or "",
+                "subject_name": m.get("subject_name") or "Course",
+                "period": str(m.get("period_number") or "1"),
+                "session_type": m.get("session_type") or "Theory",
+                "status": m.get("status") or "PRESENT",
+                "remarks": m.get("remarks") or ""
+            })
+
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
-    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
+    overall_pct = round((tot_pres / tot_lecs * 100), 2) if tot_lecs > 0 else 0.0
+
     subject_wise = []
     for s in sub_dicts:
         p = s.get("present_periods", 0)
@@ -1200,14 +1514,24 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
             "name": s.get("subject_name"),
             "subjectName": s.get("subject_name"),
             "type": s.get("subject_type"),
-            "typeName": s.get("type_name"),
+            "typeName": s.get("type_name") or ("Practical" if s.get("subject_type") == "PR" else "Theory"),
             "present": p,
             "attended": p,
             "total": t,
             "percentage": pct,
+            "status": "Safe Zone" if pct >= 75 else "Critical (<75%)",
             "faculty": s.get("faculty_name"),
             "classroom": s.get("classroom")
         })
+
+    margin = 0
+    needed = 0
+    if tot_lecs > 0:
+        if overall_pct >= 75:
+            margin = max(0, int((tot_pres - 0.75 * tot_lecs) / 0.75))
+        else:
+            needed = max(1, int((0.75 * tot_lecs - tot_pres) / 0.25))
+
     return success_response({
         "student_code": student_code,
         "overall_percentage": overall_pct,
@@ -1217,8 +1541,13 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
         "total_attended": tot_pres,
         "attendedLectures": tot_pres,
         "absentLectures": max(0, tot_lecs - tot_pres),
+        "eligibility_status": "ELIGIBLE" if overall_pct >= 75 else "DEFAULTER",
+        "eligibilityStatus": "ELIGIBLE" if overall_pct >= 75 else "DEFAULTER",
+        "safe_margin_lectures": margin,
+        "lectures_needed_for_75": needed,
         "subjects": sub_dicts,
-        "subjectWise": subject_wise
+        "subjectWise": subject_wise,
+        "history": recent_records
     })
 
 @api.get("/student/syllabus", tags=["Student Portal"])
@@ -2297,6 +2626,12 @@ if os.path.isdir(STUDENT_DIR):
     app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
     logger.info("Mounted student static assets from %s", STUDENT_DIR)
 
+<<<<<<< HEAD
+TEACHER_DIR = os.path.join(ERP_ROOT, "Teacher_Dashboard", "frontend")
+if os.path.isdir(TEACHER_DIR):
+    app.mount("/teacher", StaticFiles(directory=TEACHER_DIR, html=True), name="teacher")
+    logger.info("Mounted teacher dashboard static assets from %s", TEACHER_DIR)
+=======
 # Dedicated Attendance routes mapped to Teacher Dashboard Hub
 @app.get("/attendance", include_in_schema=False)
 def attendance_route():
@@ -2305,6 +2640,7 @@ def attendance_route():
 @app.get("/attendance/roster", include_in_schema=False)
 def attendance_roster_route():
     return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")

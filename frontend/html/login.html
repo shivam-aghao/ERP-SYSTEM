@@ -2340,6 +2340,25 @@
                     faculty_dashboard: role === "teacher" || role === "faculty",
                     admin_dashboard: role === "admin"
                 }));
+                if (result.user) {
+                    storage.setItem("ssgmce_user", JSON.stringify(result.user));
+                    localStorage.setItem("ssgmce_user", JSON.stringify(result.user));
+                    if (role === "teacher" || role === "faculty" || role === "employee") {
+                        storage.setItem("ssgmce_active_teacher", JSON.stringify(result.user));
+                        localStorage.setItem("ssgmce_active_teacher", JSON.stringify(result.user));
+                        storage.setItem("ssgmce_teacher_token", result.token || `teach_token_${result.user.id}`);
+                        localStorage.setItem("ssgmce_teacher_token", result.token || `teach_token_${result.user.id}`);
+                        if (result.user.emp_code) {
+                            storage.setItem("ssgmce_selected_faculty", result.user.emp_code);
+                            localStorage.setItem("ssgmce_selected_faculty", result.user.emp_code);
+                        }
+                    }
+                }
+                if (result.token) {
+                    storage.setItem("ssgmce_erp_session", result.token);
+                    storage.setItem("ssgmce_token", result.token);
+                    localStorage.setItem("ssgmce_token", result.token);
+                }
 
                 window.location.href = redirectUrl;
                 return false;

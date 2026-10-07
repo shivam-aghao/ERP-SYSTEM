@@ -31,14 +31,14 @@ const ERP_DATA = {
       }
       if (authUser) {
         this.teacher = {
-          name: authUser.fullName || authUser.name || "Dr. Rohan Deshmukh",
-          id: authUser.empCode || authUser.emp_code || authUser.id || "FAC-CSE-1048",
-          designation: authUser.designation || "Associate Professor",
+          name: authUser.fullName || authUser.name || "Faculty",
+          id: authUser.empCode || authUser.emp_code || authUser.id || "",
+          designation: authUser.designation || "Faculty",
           department: authUser.department || authUser.departmentName || "CSE",
           program: authUser.department || authUser.departmentName || "CSE",
-          email: authUser.email || "rohan.deshmukh@ssgmce.ac.in",
-          avatar: authUser.initials || "RD",
-          unreadNotifications: 3
+          email: authUser.email || "",
+          avatar: authUser.initials || (authUser.name ? authUser.name.substring(0, 2).toUpperCase() : "FA"),
+          unreadNotifications: 0
         };
         this.employee = this.teacher;
       }
