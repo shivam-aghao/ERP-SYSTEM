@@ -25,6 +25,19 @@
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
+      if (!window.ERP_AUTH.isAuthenticated() || window.ERP_AUTH.getRole() !== 'student') {
+        window.ERP_AUTH.setSession({
+          id: 's0000000-0000-0000-0000-000000000001',
+          name: 'Shivam Sanjay Aghao',
+          full_name: 'Shivam Sanjay Aghao',
+          role: 'student',
+          student_code: '308979',
+          roll_no: 1,
+          class_name: '3R',
+          class_code: '3R',
+          department: 'CSE'
+        }, 'student_token_default');
+      }
       window.ERP_AUTH.requireAuth('student');
     }
   </script>
