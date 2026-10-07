@@ -118,13 +118,26 @@ const ErpApi = {
   /**
    * Master Data: Classes
    */
+  /**
+   * Master Data: Classes
+   */
   async getClasses(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/classes?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/classes`;
+      const url = dept ? `${this.baseUrl}/classes?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/classes`;
       const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) return json.data;
+        const list = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+        if (list.length > 0) {
+          return list.map(c => ({
+            id: c.id,
+            name: c.class_name || c.name,
+            departmentCode: c.departmentCode || dept || "CSE",
+            semester: c.semester,
+            division: c.division,
+            year: c.year
+          }));
+        }
       }
     } catch (e) {}
 
@@ -140,11 +153,10 @@ const ErpApi = {
     }
 
     return [
-      { name: "SY-CSE-A", departmentCode: "CSE", semester: 3 },
-      { name: "2R1", departmentCode: "CSE", semester: 3 },
-      { name: "2R2", departmentCode: "CSE", semester: 3 },
-      { name: "3R", departmentCode: "CSE", semester: 5 },
-      { name: "4R", departmentCode: "CSE", semester: 7 }
+      { name: "2R1", departmentCode: "CSE", semester: 3, year: 2 },
+      { name: "2R2", departmentCode: "CSE", semester: 3, year: 2 },
+      { name: "3R", departmentCode: "CSE", semester: 5, year: 3 },
+      { name: "4R", departmentCode: "CSE", semester: 7, year: 4 }
     ];
   },
 
@@ -153,11 +165,20 @@ const ErpApi = {
    */
   async getSubjects(dept = "") {
     try {
-      const url = dept ? `${this.baseUrl}/master/subjects?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/master/subjects`;
+      const url = dept ? `${this.baseUrl}/subjects?department=${encodeURIComponent(dept)}` : `${this.baseUrl}/subjects`;
       const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) return json.data;
+        const list = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+        if (list.length > 0) {
+          return list.map(s => ({
+            id: s.id,
+            code: s.code || s.subject_code,
+            name: s.name || s.subject_name,
+            type: s.type || "THEORY",
+            semester: s.semester
+          }));
+        }
       }
     } catch (e) {}
 
@@ -171,11 +192,9 @@ const ErpApi = {
     }
 
     return [
-      { code: "3CS205MD", name: "Database Management", type: "THEORY", credits: 3 },
-      { code: "3CS201DS", name: "Data Structures", type: "THEORY", credits: 4 },
-      { code: "3CS202OS", name: "Operating Systems", type: "THEORY", credits: 3 },
-      { code: "3CS203CN", name: "Computer Networks", type: "THEORY", credits: 3 },
-      { code: "3CS204SE", name: "Software Engineering", type: "THEORY", credits: 3 }
+      { code: "CS302", name: "Data Structures", type: "THEORY", credits: 4 },
+      { code: "CS303", name: "Java Programming", type: "THEORY", credits: 4 },
+      { code: "CS305", name: "Database Management", type: "THEORY", credits: 3 }
     ];
   },
 
@@ -188,11 +207,26 @@ const ErpApi = {
    */
   async getClassCards(teacherCode = null) {
     try {
-      const url = teacherCode ? `${this.baseUrl}/cards?teacherCode=${encodeURIComponent(teacherCode)}` : `${this.baseUrl}/cards`;
+      const url = `${this.baseUrl}/class-cards`;
       const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
       if (res.ok) {
         const json = await res.json();
-        if (Array.isArray(json.data)) return json.data;
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          return json.data.map(c => ({
+            id: c.id,
+            teacher_id: c.teacher_id,
+            teacherId: c.teacher_id,
+            department: c.department || c.department_code || "CSE",
+            department_name: c.department_name || "Computer Science & Engineering",
+            class: c.class_name || c.className || c.class || "2R1",
+            subject_code: c.subject_code || c.subjectCode || "CS302",
+            subject_name: c.subject_name || c.subjectName || "Data Structures",
+            card_type: c.card_type || "scheduled",
+            time_slot: c.time_slot || c.timeSlot || "10:30 AM - 11:30 AM",
+            room_number: c.room_number || "Hall A",
+            color_gradient: c.color_gradient || "from-blue-600 to-indigo-700"
+          }));
+        }
       }
     } catch (e) {}
 
@@ -202,16 +236,17 @@ const ErpApi = {
         if (!error && data) {
           return data.map(c => ({
             id: c.id,
+            teacher_id: c.teacher_id,
             teacherId: c.teacher_id,
-            departmentCode: c.department_code,
-            departmentName: c.department_name,
-            className: c.class_name,
-            subjectCode: c.subject_code,
-            subjectName: c.subject_name,
-            cardType: c.card_type,
-            timeSlot: c.time_slot,
-            roomNumber: c.room_number,
-            colorGradient: c.color_gradient,
+            department: c.department_code || "CSE",
+            department_name: c.department_name || "Computer Science & Engineering",
+            class: c.class_name || "2R1",
+            subject_code: c.subject_code,
+            subject_name: c.subject_name,
+            card_type: c.card_type || "scheduled",
+            time_slot: c.time_slot || "10:30 AM - 11:30 AM",
+            room_number: c.room_number,
+            color_gradient: c.color_gradient,
           }));
         }
       } catch (e) {}
@@ -222,49 +257,27 @@ const ErpApi = {
 
   async createClassCard(cardData) {
     try {
-      const res = await fetch(`${this.baseUrl}/cards`, {
+      const res = await fetch(`${this.baseUrl}/class-cards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          departmentCode: cardData.department || cardData.departmentCode,
-          className: cardData.class || cardData.className,
-          subjectCode: cardData.subject_code || cardData.subjectCode,
-          cardType: cardData.cardType || "scheduled",
-          timeSlot: cardData.time_slot || cardData.timeSlot || "02:15 PM - 03:15 PM",
+          class_id: cardData.classId || cardData.class_id || cardData.class || "0a7372d4-db33-4908-9f85-896c7009fd76",
+          subject_id: cardData.subjectId || cardData.subject_id || cardData.subject_code || "f21ea0bc-9e23-458a-8aa5-dfee925def22",
+          academic_year: cardData.academic_year || "2025-26",
+          semester: cardData.semester ? parseInt(cardData.semester, 10) : 3
         }),
       });
       if (res.ok) return await res.json();
     } catch (e) {}
-
-    if (window.supabaseClient) {
-      try {
-        const { data, error } = await window.supabaseClient.from("class_cards").insert([{
-          department_code: cardData.department || cardData.departmentCode,
-          class_name: cardData.class || cardData.className,
-          subject_code: cardData.subject_code || cardData.subjectCode,
-          subject_name: cardData.subject_name || cardData.subjectName || "Subject",
-          card_type: cardData.cardType || "scheduled",
-          time_slot: cardData.time_slot || cardData.timeSlot || "02:15 PM - 03:15 PM",
-        }]).select();
-        if (!error && data) return { success: true, data: data[0] };
-      } catch (e) {}
-    }
 
     return null;
   },
 
   async deleteClassCard(cardId) {
     try {
-      const res = await fetch(`${this.baseUrl}/cards/${cardId}`, { method: "DELETE" });
+      const res = await fetch(`${this.baseUrl}/class-cards/${cardId}`, { method: "DELETE" });
       if (res.ok) return await res.json();
     } catch (e) {}
-
-    if (window.supabaseClient) {
-      try {
-        const { error } = await window.supabaseClient.from("class_cards").delete().eq("id", cardId);
-        if (!error) return { success: true };
-      } catch (e) {}
-    }
 
     return null;
   },

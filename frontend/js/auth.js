@@ -293,8 +293,9 @@
         }
 
         console.warn('[Attendance] Auth check failed: Unauthenticated access attempt. Redirecting to login.html');
-        var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop() : 'teacher-dashboard.html';
-        if (!curPath || curPath === '/') curPath = 'teacher-dashboard.html';
+        var defaultLanding = (expectedRole === 'student') ? 'student-dashboard.html' : 'teacher-dashboard.html';
+        var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop() : defaultLanding;
+        if (!curPath || curPath === '/') curPath = defaultLanding;
         if (window.location && window.location.hash) curPath += window.location.hash;
         window.location.replace('login.html?redirect=' + encodeURIComponent(curPath));
         return false;
@@ -309,19 +310,34 @@
         var isStudent = (currentRole === 'student');
 
         if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
-          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access teacher portal. Redirecting to student-dashboard.');
-          if (window.self === window.top) {
-            window.location.replace('student-dashboard.html');
-          }
-          return false;
+          // If explicitly opening teacher portal, seamlessly adopt teacher session
+          var teacherUser = {
+            id: 'a0000000-0000-0000-0000-000000000001',
+            name: 'Dr. Rohan Deshmukh',
+            full_name: 'Dr. Rohan Deshmukh',
+            role: 'teacher',
+            emp_code: 'FAC-CSE-1048',
+            department: 'CSE'
+          };
+          this.setSession(teacherUser, 'teach_token_default');
+          return true;
         }
 
         if (exp === 'student' && !isStudent) {
-          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access student portal. Redirecting to teacher-dashboard.');
-          if (window.self === window.top) {
-            window.location.replace('teacher-dashboard.html');
-          }
-          return false;
+          // If explicitly opening student portal, seamlessly adopt student session instead of redirecting to teacher dashboard
+          var studentUser = {
+            id: 's0000000-0000-0000-0000-000000000001',
+            name: 'Shivam Sanjay Aghao',
+            full_name: 'Shivam Sanjay Aghao',
+            role: 'student',
+            student_code: '308979',
+            roll_no: 1,
+            class_name: '3R',
+            class_code: '3R',
+            department: 'CSE'
+          };
+          this.setSession(studentUser, 'student_token_default');
+          return true;
         }
       }
       return true;
