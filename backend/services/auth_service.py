@@ -85,11 +85,15 @@ class AuthService:
                     SELECT s.*, c.class_name, c.division as class_div
                     FROM students s
                     LEFT JOIN classes c ON s.class_id = c.id
-                    WHERE LOWER(s.student_code) = LOWER(:uid) OR LOWER(s.sis_id) = LOWER(:uid) OR LOWER(s.email) = LOWER(:uid) OR s.id = :uid OR s.roll_no = :uid
+                    WHERE LOWER(s.student_code) = LOWER(:uid) 
+                       OR LOWER(s.email) = LOWER(:uid) 
+                       OR s.id = :uid 
+                       OR LOWER(s.roll_no) = LOWER(:uid)
                     LIMIT 1
                 """),
                 {"uid": uid}
             ).fetchone()
+
 
         if student_row:
             m = student_row._mapping
