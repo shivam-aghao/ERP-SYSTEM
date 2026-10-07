@@ -59,7 +59,9 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   async loadTests() {
     try {
-      const res = await fetch(`${this.getApiBase()}/timetable/tests`);
+      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '';
+      const url = classCode ? `${this.getApiBase()}/timetable/tests?class_code=${encodeURIComponent(classCode)}` : `${this.getApiBase()}/timetable/tests`;
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {

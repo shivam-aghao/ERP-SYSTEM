@@ -506,9 +506,12 @@ def get_teacher_timetable(db: Session = Depends(get_db)):
 @api.get("/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/student/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/teacher/timetable/tests", tags=["Timetable Assessments"])
-def get_timetable_tests(db: Session = Depends(get_db)):
+def get_timetable_tests(class_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     """Fetch all scheduled tests & assessments from database (accessible to both faculty and students)."""
-    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
+    if class_code:
+        rows = db.execute(text("SELECT * FROM timetable_assessments WHERE LOWER(class_code) = LOWER(:cc) OR class_code IS NULL ORDER BY date ASC, start_time ASC"), {"cc": class_code}).fetchall()
+    else:
+        rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
     tests = []
     for r in rows:
         m = dict(r._mapping)
@@ -987,6 +990,7 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
 
     from datetime import datetime
     today_name = datetime.now().strftime("%A")
+    today_iso = datetime.now().strftime("%Y-%m-%d")
     tt_rows = db.execute(text("SELECT * FROM timetable_entries WHERE LOWER(day) = LOWER(:d) ORDER BY period_num ASC"), {"d": today_name}).fetchall()
     if not tt_rows:
         tt_rows = db.execute(text("SELECT * FROM timetable_entries ORDER BY period_num ASC LIMIT 5")).fetchall()
@@ -1012,10 +1016,52 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
             "isCompleted": bool(tm.get("is_completed", 0)),
             "isActiveNow": bool(tm.get("is_active_now", 0)),
             "isCritical": bool(tm.get("is_critical", 0)),
-            "att": tm.get("att_label") or "Scheduled"
+            "att": tm.get("att_label") or "Scheduled",
+            "type": "lecture"
         })
 
-    notif_rows = db.execute(text("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 5")).fetchall()
+    # Include scheduled quizzes/assessments for today for this student's class
+    std_class_id = st_dict.get("class_id")
+    std_class_name = st_dict.get("class_name") or "3R"
+    sched_quizzes = db.execute(text("""
+        SELECT * FROM timetable_assessments 
+        WHERE (LOWER(class_code) = LOWER(:cname) OR class_code = :cid OR class_code IS NULL)
+        ORDER BY start_time ASC
+    """), {"cname": std_class_name, "cid": std_class_id}).fetchall()
+
+    for sq in sched_quizzes:
+        sqm = dict(sq._mapping)
+        is_today = (sqm.get("date") == today_iso)
+        today_timetable.append({
+            "num": f"QUIZ • {sqm.get('subject', 'ASSESSMENT')}",
+            "periodNumber": len(today_timetable) + 1,
+            "period_num": len(today_timetable) + 1,
+            "time": f"{sqm.get('start_time', '10:00')} - {sqm.get('end_time', '11:00')}",
+            "period_time": f"{sqm.get('start_time', '10:00')} - {sqm.get('end_time', '11:00')}",
+            "name": f"📝 {sqm.get('title', 'Scheduled Quiz')}",
+            "course_name": sqm.get("title", "Scheduled Quiz"),
+            "code": sqm.get("subject", "QUIZ"),
+            "course_code": sqm.get("subject", "QUIZ"),
+            "venue": f"Online Examination Portal • {sqm.get('class_code', std_class_name)}",
+            "teacher_name": "Faculty Evaluation",
+            "status": "Scheduled Assessment" if not is_today else "Active Today",
+            "statusClass": "status-live" if is_today else "status-upcoming",
+            "isCompleted": False,
+            "isActiveNow": is_today,
+            "isCritical": True,
+            "att": f"Assessment: {sqm.get('type', 'Quiz')}",
+            "link": sqm.get("link", "student-quiz.html"),
+            "is_assessment": True,
+            "type": "quiz"
+        })
+
+    # Class-aware student notifications
+    notif_rows = db.execute(text("""
+        SELECT * FROM notifications 
+        WHERE (class_id = :cid OR LOWER(class_name) = LOWER(:cname) OR class_id IS NULL)
+        ORDER BY created_at DESC 
+        LIMIT 10
+    """), {"cid": std_class_id, "cname": std_class_name}).fetchall()
     recent_notifs = []
     for n in notif_rows:
         nm = dict(n._mapping)
@@ -1115,8 +1161,23 @@ def upload_student_document(payload: Dict[str, Any] = Body(...), db: Session = D
 
 @api.get("/student/notifications", tags=["Student Portal"])
 @api.get("/notifications", tags=["Student Portal"])
-def get_student_notifications(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 20")).fetchall()
+def get_student_notifications(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+    st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id = :c LIMIT 1"), {"c": student_code}).fetchone()
+    if not st:
+        st = db.execute(text("SELECT id, class_id FROM students LIMIT 1")).fetchone()
+    
+    cid = st._mapping.get("class_id") if st else None
+    cname = None
+    if cid:
+        c_row = db.execute(text("SELECT class_name FROM classes WHERE id = :cid"), {"cid": cid}).fetchone()
+        cname = c_row[0] if c_row else None
+
+    rows = db.execute(text("""
+        SELECT * FROM notifications 
+        WHERE (class_id = :cid OR LOWER(class_name) = LOWER(:cname) OR class_id IS NULL)
+        ORDER BY created_at DESC 
+        LIMIT 25
+    """), {"cid": cid, "cname": cname or ""}).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.patch("/student/notifications/{id}/read", tags=["Student Portal"])
@@ -1332,15 +1393,64 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
     # Add notification for targeted class
     c_info = db.execute(text("SELECT class_name FROM classes WHERE id = :cid"), {"cid": q._mapping["class_id"]}).fetchone()
     c_name = c_info[0] if c_info else "Target Class"
+    target_class_id = q._mapping.get("class_id")
+    notif_id = str(uuid.uuid4())
     db.execute(text("""
-        INSERT INTO notifications (id, title, message, class_name, type, created_at)
-        VALUES (:id, :title, :msg, :cname, 'quiz', CURRENT_TIMESTAMP)
+        INSERT INTO notifications (id, teacher_id, title, message, class_id, class_name, type, is_read, created_at)
+        VALUES (:id, :tid, :title, :msg, :cid, :cname, 'quiz', 0, CURRENT_TIMESTAMP)
     """), {
-        "id": str(uuid.uuid4()),
+        "id": notif_id,
+        "tid": q._mapping.get("teacher_id") or "FAC-CSE-1048",
         "title": f"New Quiz Published: {q._mapping['title']}",
-        "msg": f"A new quiz has been published for {c_name}. Duration: {q._mapping['duration_minutes']} mins.",
+        "msg": f"A new quiz has been published for {c_name} ({q._mapping.get('subject_name', 'Computer Science')}). Duration: {q._mapping['duration_minutes']} mins.",
+        "cid": target_class_id,
         "cname": c_name
     })
+
+    # Sync into timetable_assessments so the scheduled quiz appears on the student timetable
+    tt_test_id = f"quiz-tt-{quiz_id}"
+    start_raw = q._mapping.get("start_at")
+    end_raw = q._mapping.get("end_at")
+    date_val = datetime.now().strftime("%Y-%m-%d")
+    start_time_val = "10:00"
+    end_time_val = "11:00"
+    try:
+        if start_raw:
+            s_str = str(start_raw)
+            if " " in s_str:
+                parts = s_str.split(" ")
+                date_val = parts[0]
+                start_time_val = parts[1][:5]
+            elif "T" in s_str:
+                parts = s_str.split("T")
+                date_val = parts[0]
+                start_time_val = parts[1][:5]
+        if end_raw:
+            e_str = str(end_raw)
+            if " " in e_str:
+                end_time_val = e_str.split(" ")[1][:5]
+            elif "T" in e_str:
+                end_time_val = e_str.split("T")[1][:5]
+    except Exception as ex:
+        logger.warning("Could not parse quiz start/end dates: %s", ex)
+
+    # Upsert into timetable_assessments
+    db.execute(text("DELETE FROM timetable_assessments WHERE id = :id"), {"id": tt_test_id})
+    db.execute(text("""
+        INSERT INTO timetable_assessments (id, teacher_id, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
+        VALUES (:id, :tid, 'Quiz', :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """), {
+        "id": tt_test_id,
+        "tid": q._mapping.get("teacher_id") or "FAC-CSE-1048",
+        "subject": q._mapping.get("subject_name") or "Computer Science",
+        "title": q._mapping.get("title") or "Quiz Assessment",
+        "date": date_val,
+        "start": start_time_val,
+        "end": end_time_val,
+        "link": f"student-quiz.html?quiz_id={quiz_id}",
+        "class_code": c_name
+    })
+
     db.commit()
     return success_response({"id": quiz_id, "is_published": True, "status": "active"}, "Quiz published successfully")
 
@@ -1391,6 +1501,7 @@ def toggle_quiz_release_results(quiz_id: str, payload: Dict[str, Any] = Body(def
 def delete_quiz(quiz_id: str, db: Session = Depends(get_db)):
     db.execute(text("DELETE FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id})
     db.execute(text("DELETE FROM quiz_attempts WHERE quiz_id = :id"), {"id": quiz_id})
+    db.execute(text("DELETE FROM timetable_assessments WHERE id = :tid"), {"tid": f"quiz-tt-{quiz_id}"})
     db.execute(text("DELETE FROM quizzes WHERE id = :id"), {"id": quiz_id})
     db.commit()
     return success_response({"id": quiz_id}, "Quiz deleted")

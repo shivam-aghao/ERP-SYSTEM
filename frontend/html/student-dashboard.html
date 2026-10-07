@@ -179,7 +179,7 @@
 
             <!-- Timetable Tab (Dedicated Item) -->
             <li class="sidebar-item" data-module="timetable">
-              <a href="#timetableCard" class="sidebar-link" data-nav="timetable">
+              <a href="student_timetable.html" class="sidebar-link" data-nav="timetable">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -302,7 +302,7 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 <span class="nav-label">Quiz &amp; Examination</span>
-                <span class="nav-badge-pill" style="background:#00A6D6; color:#fff;">Live</span>
+                <span class="nav-badge-pill" id="sidebarQuizBadge" style="background:#00A6D6; color:#fff;">Live</span>
               </a>
             </li>
 
@@ -513,6 +513,10 @@
             </div>
 
             <div class="timetable-header-tags">
+              <a href="student_timetable.html" class="btn btn-outline" style="font-size:0.78rem; padding:4px 10px; text-decoration:none; display:inline-flex; align-items:center; gap:5px; border-radius:6px;" title="Open complete weekly student timetable">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Full Timetable ↗</span>
+              </a>
               <span class="schedule-day-badge" id="scheduleDayBadge">Loading Today's Schedule...</span>
               <span class="schedule-live-pill"><span class="pulse-ring"></span> Live Class in Session</span>
             </div>
