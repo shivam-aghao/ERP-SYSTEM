@@ -20,9 +20,13 @@
     if (window.__API_BASE__) {
       return window.__API_BASE__;
     }
-    var origin = (window.location && window.location.origin && window.location.origin.startsWith('http')) 
+    var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
+      ? window.location.hostname 
+      : '127.0.0.1';
+    var currentPort = (window.location && window.location.port) ? window.location.port : '';
+    var origin = (currentPort === '8000') 
       ? window.location.origin 
-      : 'http://localhost:8000';
+      : 'http://' + currentHost + ':8000';
     return origin + '/api/v1';
   }
 
@@ -36,12 +40,24 @@
      */
     login: async function (userId, password, roleHint) {
       var apiBase = getApiBase();
-      var endpoints = [
+      var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
+        ? window.location.hostname 
+        : '127.0.0.1';
+      var rawEndpoints = [
         apiBase + '/auth/login',
+        'http://' + currentHost + ':8000/api/v1/auth/login',
+        'http://127.0.0.1:8000/api/v1/auth/login',
+        'http://localhost:8000/api/v1/auth/login',
         '/api/v1/auth/login',
         '/auth/login',
         '/api/auth/login'
       ];
+      var endpoints = [];
+      for (var e = 0; e < rawEndpoints.length; e++) {
+        if (endpoints.indexOf(rawEndpoints[e]) === -1) {
+          endpoints.push(rawEndpoints[e]);
+        }
+      }
 
       var payload = {
         user_id: String(userId || '').trim(),

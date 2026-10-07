@@ -1,6 +1,9 @@
 import os
 from typing import List
-from pydantic_settings import BaseSettings if False else object
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    BaseSettings = object
 
 class Settings:
     PROJECT_NAME: str = "SSGMCE College ERP Unified System"
@@ -11,8 +14,7 @@ class Settings:
     # Path configuration
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ERP_ROOT: str = os.path.dirname(BASE_DIR)
-    FRONTEND_DIR: str = os.path.join(ERP_ROOT, "frontend")
-    DB_PATH: str = os.path.join(BASE_DIR, "erp.db").replace("\\\\", "/")
+    DB_PATH: str = os.path.join(BASE_DIR, "erp.db").replace("\\", "/")
     DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
     
     # Supabase Configuration

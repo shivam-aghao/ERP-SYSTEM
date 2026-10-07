@@ -2076,7 +2076,7 @@
 
 
                             <input type="password" id="password" name="password" class="input"
-                                placeholder="Enter your password" minlength="8" maxlength="20"
+                                placeholder="Enter your password" minlength="1" maxlength="50"
                                 autocomplete="current-password" required>
 
 
@@ -2182,7 +2182,14 @@
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('logout') || urlParams.has('switch') || urlParams.has('relogin')) {
+            localStorage.removeItem('ssgmce_user');
+            localStorage.removeItem('ssgmce_erp_session');
+            localStorage.removeItem('ssgmce_legacy_key');
+            localStorage.removeItem('ssgmce_active_role');
+            sessionStorage.clear();
+        } else if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
             window.location.replace(window.ERP_AUTH.getRedirectForRole());
         }
 

@@ -418,7 +418,10 @@ const TeacherApp = {
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance");
-        AttendanceWorkflow.init();
+        const attFrame = document.getElementById("attendance-embedded-frame");
+        if (attFrame && (!attFrame.src || !attFrame.src.includes('teacher-attendance.html'))) {
+          attFrame.src = 'teacher-attendance.html?embedded=1';
+        }
         break;
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
@@ -678,18 +681,22 @@ const TeacherApp = {
 
   openAttendanceModule() {
     this.switchView('attendance');
-    AttendanceWorkflow.goToStep(1);
+    const iframe = document.getElementById('attendance-embedded-frame');
+    if (iframe && iframe.contentWindow) {
+      try {
+        if (iframe.contentWindow.TeacherAttendanceApp && typeof iframe.contentWindow.TeacherAttendanceApp.goToStep === 'function') {
+          iframe.contentWindow.TeacherAttendanceApp.goToStep(1);
+        }
+      } catch (e) {}
+    }
   },
 
   openAttendanceForClass(classCode, subject) {
     this.switchView('attendance');
-    AttendanceState.setClass(classCode);
-    if (subject) {
-      const subs = TeacherERPData.subjects[classCode] || [];
-      const match = subs.find(s => s.name.toLowerCase().includes(subject.toLowerCase()));
-      if (match) AttendanceState.setSubject(match.code);
+    const iframe = document.getElementById('attendance-embedded-frame');
+    if (iframe) {
+      iframe.src = `teacher-attendance.html?embedded=1&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
     }
-    AttendanceWorkflow.goToStep(3);
   },
 
   // ----------------------------------------------------
