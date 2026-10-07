@@ -14,10 +14,10 @@ class StudentService:
         if not row:
             return None
         m = dict(row._mapping)
-        m["studentCode"] = m.get("student_code", student_code)
-        m["fullName"] = m.get("full_name", "Shivam Sanjay Aghao")
-        m["rollNo"] = m.get("roll_no", 21)
-        m["className"] = m.get("class_name", "3R")
+        m["studentCode"] = m.get("student_code") or ""
+        m["fullName"] = m.get("full_name") or ""
+        m["rollNo"] = m.get("roll_no") or 0
+        m["className"] = m.get("class_name") or ""
         return m
 
     @staticmethod
@@ -33,11 +33,11 @@ class StudentService:
         st = StudentService.get_profile(student_code, db)
         return {
             "student": st or {},
-            "current_semester": 5,
-            "cgpa": 8.76,
-            "attendance_pct": 82.4,
-            "credits_earned": 112,
-            "alerts_count": 2
+            "current_semester": 4,
+            "cgpa": 0.0,
+            "attendance_pct": 0.0,
+            "credits_earned": 0,
+            "alerts_count": 0
         }
 
     @staticmethod
@@ -45,9 +45,4 @@ class StudentService:
         rows = db.execute(text("SELECT * FROM academic_metrics LIMIT 10")).fetchall()
         if rows:
             return [dict(r._mapping) for r in rows]
-        return [
-            {"semester": 1, "sgpa": 8.45, "credits": 20},
-            {"semester": 2, "sgpa": 8.62, "credits": 22},
-            {"semester": 3, "sgpa": 8.80, "credits": 24},
-            {"semester": 4, "sgpa": 8.91, "credits": 24}
-        ]
+        return []

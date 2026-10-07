@@ -29,7 +29,7 @@
         return user.student_code || user.studentCode || user.id;
       }
     }
-    return '308637';
+    return '';
   }
 
   const StudentApi = {
@@ -106,8 +106,9 @@
     },
 
     // 4. Attendance
-    async getAttendance(studentCode = '308637') {
-      return await this.request(`/attendance?student_code=${encodeURIComponent(studentCode)}`);
+    async getAttendance(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/attendance?student_code=${encodeURIComponent(code)}`);
     },
 
     // 5. Syllabus
@@ -157,12 +158,14 @@
     },
 
     // 10. D-Wallet
-    async getDwallet(studentCode = '308637') {
-      return await this.request(`/dwallet?student_code=${encodeURIComponent(studentCode)}`);
+    async getDwallet(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/dwallet?student_code=${encodeURIComponent(code)}`);
     },
 
-    async uploadDocument(payload, studentCode = '308637') {
-      return await this.request(`/dwallet/upload?student_code=${encodeURIComponent(studentCode)}`, {
+    async uploadDocument(payload, studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/dwallet/upload?student_code=${encodeURIComponent(code)}`, {
         method: 'POST',
         body: payload
       });
@@ -181,8 +184,9 @@
     },
 
     // 12. Notifications
-    async getNotifications(studentCode = '308637') {
-      return await this.request(`/notifications?student_code=${encodeURIComponent(studentCode)}`);
+    async getNotifications(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/notifications?student_code=${encodeURIComponent(code)}`);
     },
 
     async markNotificationRead(id) {

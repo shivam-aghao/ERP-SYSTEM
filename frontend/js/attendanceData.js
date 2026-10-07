@@ -2,7 +2,7 @@
  * SSGMCE AUTONOMOUS COLLEGE ERP - STUDENT ATTENDANCE PORTAL
  * Independent Attendance Mock Data Layer
  * 
- * Student: Shivam Sanjay Aghao
+ * Student: Student Profile (Dynamic)
  * Class: TY B.E. Computer Science and Engineering-A
  * Academic Year: 2026–2027
  * Semester: V
@@ -15,19 +15,35 @@
 (function (global) {
   'use strict';
 
+  const getSessionStudent = () => {
+    try {
+      if (global.ERPAuth && typeof global.ERPAuth.getSession === 'function') {
+        const s = global.ERPAuth.getSession();
+        if (s && s.role === 'student') return s;
+      }
+      if (typeof localStorage !== 'undefined') {
+        const s = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+        if (s && (s.fullName || s.name)) return s;
+      }
+    } catch (_) {}
+    return null;
+  };
+
+  const activeStudent = getSessionStudent();
+
   const studentProfile = {
-    name: "Shivam Sanjay Aghao",
-    rollNo: "21",
-    studentCode: "CSE2401",
-    prn: "202401088219",
-    class: "TY B.E. Computer Science and Engineering-A",
-    department: "Computer Science & Engineering",
-    academicYear: "2026–2027",
-    semester: "V",
-    division: "A",
-    batch: "2024-2028",
-    avatarText: "SA",
-    mentorName: "Dr. Rohan Deshmukh"
+    name: activeStudent ? (activeStudent.fullName || activeStudent.name) : "Student",
+    rollNo: activeStudent ? (activeStudent.rollNo || activeStudent.roll_no || "--") : "--",
+    studentCode: activeStudent ? (activeStudent.studentCode || activeStudent.student_code || "--") : "--",
+    prn: activeStudent ? (activeStudent.prn || "--") : "--",
+    class: activeStudent ? (activeStudent.className || activeStudent.class_name || "--") : "--",
+    department: activeStudent ? (activeStudent.department || activeStudent.department_name || "Computer Science & Engineering") : "Computer Science & Engineering",
+    academicYear: activeStudent ? (activeStudent.academicYear || "2025-2026") : "2025-2026",
+    semester: activeStudent ? (activeStudent.semester || "--") : "--",
+    division: activeStudent ? (activeStudent.division || "A") : "A",
+    batch: activeStudent ? (activeStudent.batch || "--") : "--",
+    avatarText: activeStudent ? (activeStudent.initials || "ST") : "ST",
+    mentorName: activeStudent ? (activeStudent.mentorName || "--") : "--"
   };
 
   const attendanceData = [

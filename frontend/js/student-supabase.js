@@ -25,87 +25,69 @@
     };
   };
 
-  // Structured Fallback Seed Data (Shivam Sanjay Aghao - CSE2401-21)
+  // Dynamic Empty Profile Defaults
   const SEED_DATA = {
     profile: {
-      student_code: "308637",
-      prn: "202401088219",
-      roll_no: 21,
-      full_name: "Shivam Sanjay Aghao",
-      gender: "Male",
-      date_of_birth: "2004-08-15",
-      blood_group: "O+ve",
+      student_code: "",
+      prn: "",
+      roll_no: "",
+      full_name: "",
+      gender: "",
+      date_of_birth: "",
+      blood_group: "",
       nationality: "Indian",
-      category: "OBC",
-      caste: "Kunbi",
-      primary_mobile: "+91 94221 88219",
-      institutional_email: "shivam.aghao@ssgmce.ac.in",
-      emergency_contact: "+91 98230 41092",
-      permanent_address: "Plot 14, Gajanan Colony, Buldhana Road, Shegaon",
-      district: "Buldhana",
+      category: "",
+      caste: "",
+      primary_mobile: "",
+      institutional_email: "",
+      emergency_contact: "",
+      permanent_address: "",
+      district: "",
       state: "Maharashtra",
-      pincode: "444203",
-      father_name: "Mr. Sanjay Aghao",
-      mother_name: "Mrs. Sunita Aghao",
-      faculty_mentor: "Dr. Rohan Deshmukh (HOD, CSE)",
-      admission_quota: "MHT-CET State Merit (Autonomous CAP)",
-      hostel_status: "Day Scholar",
+      pincode: "",
+      father_name: "",
+      mother_name: "",
+      faculty_mentor: "",
+      admission_quota: "",
+      hostel_status: "",
       department_name: "Computer Science & Engineering",
       department_code: "CSE",
-      class_name: "SY-CSE-A",
-      division: "A",
-      academic_year: "2025-26",
-      current_semester: 4,
-      academic_standing: "Active Student (Autonomous)"
+      class_name: "",
+      division: "",
+      academic_year: "",
+      current_semester: 1,
+      academic_standing: ""
     },
     metrics: {
-      cgpa: 8.64,
-      latest_sgpa: 8.84,
-      sem1_sgpa: 8.42,
-      sem2_sgpa: 8.58,
-      sem3_sgpa: 8.64,
-      overall_attendance_pct: 82.00,
-      earned_credits: 86,
-      total_credits: 160,
-      academic_standing: "Active Student (Autonomous)"
+      cgpa: 0.0,
+      latest_sgpa: 0.0,
+      sem1_sgpa: 0.0,
+      sem2_sgpa: 0.0,
+      sem3_sgpa: 0.0,
+      overall_attendance_pct: 0.0,
+      earned_credits: 0,
+      total_credits: 0,
+      academic_standing: ""
     },
-    attendance: [
-      { id: 1, subject: "Database Management Systems", code: "5CS220PC", type: "TH", present: 28, total: 32, faculty: "Dr. Rohan Deshmukh", credits: 3.0, room: "LH-112" },
-      { id: 2, subject: "Compiler Design", code: "5CS221PC", type: "TH", present: 22, total: 28, faculty: "Prof. Priya Patil", credits: 4.0, room: "LH-301" },
-      { id: 3, subject: "Data Science & Statistics", code: "5CS223PE", type: "TH", present: 19, total: 24, faculty: "Prof. Rajesh Sharma", credits: 3.0, room: "LH-204" },
-      { id: 4, subject: "Computer Networks", code: "5CS227MD", type: "TH", present: 18, total: 25, faculty: "Prof. A. S. Manekar", credits: 3.0, room: "LH-206" },
-      { id: 5, subject: "Advanced Java Programming Lab", code: "5CS228LB", type: "PR", present: 14, total: 16, faculty: "Prof. K. N. Somwanshi", credits: 2.0, room: "Lab-3" }
-    ],
-    timetable: [
-      { period_no: 1, day: "Monday", time: "10:00 - 11:00", subject: "Database Management Systems", code: "5CS220PC", room: "LH-112", faculty: "Dr. Rohan Deshmukh", type: "Theory" },
-      { period_no: 2, day: "Monday", time: "11:00 - 12:00", subject: "Compiler Design", code: "5CS221PC", room: "LH-301", faculty: "Prof. Priya Patil", type: "Theory" },
-      { period_no: 3, day: "Monday", time: "12:30 - 01:30", subject: "Data Science & Statistics", code: "5CS223PE", room: "LH-204", faculty: "Prof. Rajesh Sharma", type: "Theory" },
-      { period_no: 4, day: "Monday", time: "02:00 - 04:00", subject: "Advanced Java Programming Lab", code: "5CS228LB", room: "Lab-3", faculty: "Prof. K. N. Somwanshi", type: "Practical" },
-      { period_no: 1, day: "Tuesday", time: "10:00 - 11:00", subject: "Compiler Design", code: "5CS221PC", room: "LH-301", faculty: "Prof. Priya Patil", type: "Theory" },
-      { period_no: 2, day: "Tuesday", time: "11:00 - 12:00", subject: "Database Management Systems", code: "5CS220PC", room: "LH-112", faculty: "Dr. Rohan Deshmukh", type: "Theory" },
-      { period_no: 3, day: "Tuesday", time: "12:30 - 01:30", subject: "Computer Networks", code: "5CS227MD", room: "LH-206", faculty: "Prof. A. S. Manekar", type: "Theory" },
-      { period_no: 1, day: "Wednesday", time: "10:00 - 11:00", subject: "Data Science & Statistics", code: "5CS223PE", room: "LH-204", faculty: "Prof. Rajesh Sharma", type: "Theory" },
-      { period_no: 2, day: "Wednesday", time: "11:00 - 12:00", subject: "Computer Networks", code: "5CS227MD", room: "LH-206", faculty: "Prof. A. S. Manekar", type: "Theory" },
-      { period_no: 3, day: "Wednesday", time: "12:30 - 01:30", subject: "Database Management Systems", code: "5CS220PC", room: "LH-112", faculty: "Dr. Rohan Deshmukh", type: "Theory" },
-      { period_no: 1, day: "Thursday", time: "10:00 - 11:00", subject: "Compiler Design", code: "5CS221PC", room: "LH-301", faculty: "Prof. Priya Patil", type: "Theory" },
-      { period_no: 2, day: "Thursday", time: "11:00 - 12:00", subject: "Database Management Systems", code: "5CS220PC", room: "LH-112", faculty: "Dr. Rohan Deshmukh", type: "Theory" },
-      { period_no: 1, day: "Friday", time: "10:00 - 11:00", subject: "Computer Networks", code: "5CS227MD", room: "LH-206", faculty: "Prof. A. S. Manekar", type: "Theory" },
-      { period_no: 2, day: "Friday", time: "11:00 - 12:00", subject: "Data Science & Statistics", code: "5CS223PE", room: "LH-204", faculty: "Prof. Rajesh Sharma", type: "Theory" },
-      { period_no: 1, day: "Saturday", time: "10:00 - 12:00", subject: "Open Elective Seminar", code: "5CS230OE", room: "Auditorium-2", faculty: "Dr. S. B. Patil", type: "Seminar" }
-    ],
-    syllabus: [
-      { name: "Database Management Systems", code: "5CS220PC", type: "Core", credits: 3, faculty: "Dr. Rohan Deshmukh", short: "DBMS" },
-      { name: "Compiler Design", code: "5CS221PC", type: "Core", credits: 4, faculty: "Prof. Priya Patil", short: "CD" },
-      { name: "Data Science & Statistics", code: "5CS223PE", type: "PE1", credits: 3, faculty: "Prof. Rajesh Sharma", short: "Data Science" },
-      { name: "Computer Networks", code: "5CS227MD", type: "MD", credits: 3, faculty: "Prof. A. S. Manekar", short: "Networks" },
-      { name: "Advanced Java Programming Lab", code: "5CS228LB", type: "Lab", credits: 2, faculty: "Prof. K. N. Somwanshi", short: "Java Lab" },
-      { name: "Fundamentals of Cyber Security", code: "5CS230OE", type: "OE", credits: 3, faculty: "Dr. S. B. Patil", short: "Cyber Sec" }
-    ],
-    notifications: [
-      { id: 1, title: "Mid-Semester Exam Schedule", message: "Mid-Semester Exam Schedule released for CSE Sem IV.", type: "error", source: "Examination Cell", time: "10 mins ago" },
-      { id: 2, title: "Attendance Threshold Warning", message: "Computer Networks attendance is at 72% (< 75% threshold).", type: "warning", source: "Academic Cell", time: "2 hours ago" },
-      { id: 3, title: "Assignment Uploaded", message: "Assignment 2 for Data Structures uploaded to portal.", type: "success", source: "CSE Dept", time: "Yesterday" }
-    ]
+    attendance: [],
+    timetable: [],
+    syllabus: [],
+    notifications: []
+  };
+
+  const resolveCurrentStudentCode = (explicitCode) => {
+    if (explicitCode) return explicitCode;
+    try {
+      if (global.ERPAuth && typeof global.ERPAuth.getSession === 'function') {
+        const sess = global.ERPAuth.getSession();
+        if (sess && (sess.studentCode || sess.id)) return sess.studentCode || sess.id;
+      }
+      if (typeof localStorage !== 'undefined') {
+        const u = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+        if (u.studentCode || u.student_code || u.id) return u.studentCode || u.student_code || u.id;
+      }
+    } catch (_) {}
+    return null;
   };
 
   const StudentSupabase = {
@@ -123,21 +105,24 @@
 
     /**
      * 1. Get Complete Student Profile
-     * @param {string} studentCode e.g. '308637'
+     * @param {string|null} studentCode
      */
-    getStudentProfile: async function (studentCode = '308637') {
+    getStudentProfile: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-      try {
-        const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            return { success: true, data: rows[0], source: 'supabase' };
+      if (studentCode) {
+        try {
+          const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
+          const res = await fetch(endpoint, { headers: this._getHeaders() });
+          if (res.ok) {
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              return { success: true, data: rows[0], source: 'supabase' };
+            }
           }
+        } catch (err) {
+          console.info('[StudentSupabase] Offline mode: using local cache for profile:', err.message);
         }
-      } catch (err) {
-        console.info('[StudentSupabase] Offline mode: using local cache for profile:', err.message);
       }
 
       // Check localStorage for user edits
@@ -161,19 +146,22 @@
     /**
      * 2. Get Academic Metrics (CGPA, SGPA, Credits, Standing)
      */
-    getAcademicMetrics: async function (studentCode = '308637') {
+    getAcademicMetrics: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-      try {
-        const endpoint = `${cfg.url}/rest/v1/student_academic_metrics?select=*&limit=1`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            return { success: true, data: rows[0], source: 'supabase' };
+      if (studentCode) {
+        try {
+          const endpoint = `${cfg.url}/rest/v1/student_academic_metrics?student_code=eq.${encodeURIComponent(studentCode)}&limit=1`;
+          const res = await fetch(endpoint, { headers: this._getHeaders() });
+          if (res.ok) {
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              return { success: true, data: rows[0], source: 'supabase' };
+            }
           }
+        } catch (err) {
+          console.info('[StudentSupabase] Offline mode: using local cache for metrics');
         }
-      } catch (err) {
-        console.info('[StudentSupabase] Offline mode: using local cache for metrics');
       }
 
       return { success: true, data: SEED_DATA.metrics, source: 'local-cache' };
@@ -182,19 +170,22 @@
     /**
      * 3. Get Student Attendance Breakdown
      */
-    getAttendanceSummary: async function (studentCode = '308637') {
+    getAttendanceSummary: async function (studentCode = null) {
+      studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-      try {
-        const endpoint = `${cfg.url}/rest/v1/student_attendance_summary?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            return { success: true, data: rows, source: 'supabase' };
+      if (studentCode) {
+        try {
+          const endpoint = `${cfg.url}/rest/v1/student_attendance_summary?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
+          const res = await fetch(endpoint, { headers: this._getHeaders() });
+          if (res.ok) {
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              return { success: true, data: rows, source: 'supabase' };
+            }
           }
+        } catch (err) {
+          console.info('[StudentSupabase] Offline mode: using local cache for attendance');
         }
-      } catch (err) {
-        console.info('[StudentSupabase] Offline mode: using local cache for attendance');
       }
 
       return { success: true, data: SEED_DATA.attendance, source: 'local-cache' };
@@ -302,7 +293,7 @@
     /**
      * 8. Unified Dashboard Overview (Fetches full state in single call)
      */
-    getDashboardOverview: async function (studentCode = '308637') {
+    getDashboardOverview: async function (studentCode = null) {
       const [profileRes, metricsRes, attendanceRes, timetableRes, notifRes] = await Promise.all([
         this.getStudentProfile(studentCode),
         this.getAcademicMetrics(studentCode),

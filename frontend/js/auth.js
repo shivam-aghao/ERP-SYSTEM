@@ -230,10 +230,10 @@
         if (window.location && window.location.protocol === 'file:') {
           var defaultRole = (expectedRole === 'teacher') ? 'teacher' : 'student';
           var defaultUser = {
-            id: 'cdfaccff-7925-44f3-a0e0-de81ac811e86',
-            student_code: '308637',
-            roll_no: 21,
-            full_name: 'Shivam Sanjay Aghao',
+            id: '4609c17e-8d60-4cab-af65-b686552fc9fc',
+            student_code: '307001',
+            roll_no: 1,
+            full_name: 'Student 2R1-01',
             role: defaultRole
           };
           this.setSession(defaultUser, 'preview-token');

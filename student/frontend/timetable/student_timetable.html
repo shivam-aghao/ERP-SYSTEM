@@ -14,14 +14,14 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Shared ERP Stylesheets -->
-  <link rel="stylesheet" href="../../../frontend/css/variables.css">
-  <link rel="stylesheet" href="../../../frontend/css/base.css">
-  <link rel="stylesheet" href="../../../frontend/css/layout.css">
-  <link rel="stylesheet" href="../../../frontend/css/components.css">
-  <link rel="stylesheet" href="../../../frontend/css/modules.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/modules.css">
 
   <!-- Student Timetable Isolated Stylesheet -->
-  <link rel="stylesheet" href="student_timetable.css">
+  <link rel="stylesheet" href="../css/student_timetable.css">
 </head>
 <body>
 
@@ -73,11 +73,11 @@
       <div class="profile-wrapper header-profile-container">
         <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Student Account">
           <div class="avatar-circle profile-avatar" id="header-profile-avatar">
-            <span>SA</span>
+            <span>--</span>
           </div>
           <div class="profile-details profile-info">
-            <span class="student-name profile-name" id="header-profile-name">Shivam Aghao</span>
-            <span class="student-meta profile-dept" id="header-profile-dept">B.Tech CSE 2R1 • Roll 21</span>
+            <span class="student-name profile-name" id="header-profile-name">Loading Profile...</span>
+            <span class="student-meta profile-dept" id="header-profile-dept">--</span>
           </div>
           <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -87,9 +87,9 @@
         <!-- Profile Dropdown Menu -->
         <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
           <div style="padding:14px 18px; border-bottom:1px solid var(--border-light, #E2E8F0); background:#F8FAFC;">
-            <div style="font-weight:700; font-size:14px; color:var(--tt-navy);" id="profile-menu-name">Shivam Sanjay Aghao</div>
-            <div style="font-size:12px; color:var(--tt-blue); font-weight:500;" id="profile-menu-title">B.Tech CSE 2R1 • Roll 21</div>
-            <div style="font-size:11px; color:var(--tt-gray-text); margin-top:2px;">PRN: 308637 • Computer Science &amp; Engg</div>
+            <div style="font-weight:700; font-size:14px; color:var(--tt-navy);" id="profile-menu-name">Loading Profile...</div>
+            <div style="font-size:12px; color:var(--tt-blue); font-weight:500;" id="profile-menu-title">--</div>
+            <div style="font-size:11px; color:var(--tt-gray-text); margin-top:2px;">Computer Science &amp; Engineering</div>
           </div>
           <div class="p-links">
             <a href="student-dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
@@ -205,13 +205,13 @@
   <div id="toast-container" class="toast-stack" aria-live="polite"></div>
 
   <!-- Shared Data & Configurations -->
-  <script src="../../../frontend/js/data.js"></script>
-  <script src="../../../frontend/js/config.js"></script>
-  <script src="../../../frontend/js/erp-auth-guard.js"></script>
-  <script src="../../../frontend/js/student-api.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/erp-auth-guard.js"></script>
+  <script src="../js/student-api.js"></script>
 
   <!-- Student Timetable JavaScript Module -->
-  <script src="student_timetable.js"></script>
+  <script src="../js/student_timetable.js"></script>
 
   <!-- Lucide Icon Renderer -->
   <script>

@@ -33,9 +33,22 @@
 
     /**
      * Fetch attendance summary for a student from student_attendance_summary view
-     * @param {string} studentCode e.g. '308637'
+     * @param {string|null} studentCode
      */
-    getStudentAttendanceSummary: async function (studentCode = '308637') {
+    getStudentAttendanceSummary: async function (studentCode = null) {
+      if (!studentCode) {
+        try {
+          if (global.ERPAuth && typeof global.ERPAuth.getSession === 'function') {
+            const sess = global.ERPAuth.getSession();
+            if (sess && (sess.studentCode || sess.id)) studentCode = sess.studentCode || sess.id;
+          }
+          if (!studentCode && typeof localStorage !== 'undefined') {
+            const u = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+            studentCode = u.studentCode || u.student_code || u.id || null;
+          }
+        } catch (_) {}
+      }
+      if (!studentCode) return { success: true, data: [], source: 'empty' };
       try {
         const endpoint = `${this.config.url}/rest/v1/student_attendance_summary?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
         const res = await fetch(endpoint, {

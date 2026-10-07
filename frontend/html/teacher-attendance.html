@@ -521,7 +521,7 @@
         <div class="cards-view-header">
           <div class="cards-view-title-group">
             <h1>My Class Cards</h1>
-            <p>Select your class card to start student attendance marking for <strong id="cardsViewSelectedDate" class="selected-date-highlight">17 September 2026</strong>.</p>
+            <p>Select your class card to start student attendance marking for <strong id="cardsViewSelectedDate" class="selected-date-highlight">--</strong>.</p>
           </div>
           <div class="cards-view-actions">
             <button class="btn-change-date" id="btnChangeDateFromCards" title="Choose a different date">
@@ -618,13 +618,13 @@
               <!-- Metadata Information Bar -->
               <div class="meta-top-bar">
                 <div class="meta-box-teacher" id="rosterTeacherInfo">
-                  Dr. J.M.Patil (FAC-CSE-1048) Associate Professor CSE
+                  Loading Faculty Profile...
                 </div>
                 <div class="meta-box-subject">
-                  <span id="rosterClassText"><strong>Class:</strong> SY-CSE-A</span>
-                  <span id="rosterSubjectText"><strong>Subject:</strong> 3CS205MD Database Management (THEORY)</span>
-                  <span id="rosterTimeText"><strong>Time:</strong> 02:15 PM TO 03:15 PM (4)</span>
-                  <span id="rosterDateText"><strong>Date:</strong> 22/09/2026</span>
+                  <span id="rosterClassText"><strong>Class:</strong> --</span>
+                  <span id="rosterSubjectText"><strong>Subject:</strong> --</span>
+                  <span id="rosterTimeText"><strong>Time:</strong> --</span>
+                  <span id="rosterDateText"><strong>Date:</strong> --</span>
                   <span><strong>Type:</strong> [REGULAR]</span>
                 </div>
               </div>
@@ -719,7 +719,7 @@
                     <input type="checkbox" checked>
                     <span>Topic Taught</span>
                   </label>
-                  <input type="text" value="ER Diagram Normalization & Relational Schema" class="form-input" style="width: 260px;">
+                  <input type="text" placeholder="Enter topic taught..." class="form-input" style="width: 260px;" id="rosterTopicInput">
                   <label class="topic-check-item">
                     <input type="checkbox">
                     <span>Additional Topics</span>
@@ -790,7 +790,7 @@
                     stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle>
                 </svg>
                 <div class="chart-center-text">
-                  <div class="chart-pct" id="summaryChartPct">86.7%</div>
+                  <div class="chart-pct" id="summaryChartPct">0%</div>
                   <div class="chart-sub">ATTENDANCE</div>
                 </div>
               </div>
@@ -798,19 +798,19 @@
 
             <div class="summary-metrics-grid">
               <div class="summary-metric-card m-total">
-                <div class="m-val" id="sumValTotal">60</div>
+                <div class="m-val" id="sumValTotal">0</div>
                 <div class="m-lbl">Total Students</div>
               </div>
               <div class="summary-metric-card m-present">
-                <div class="m-val" id="sumValPresent">52</div>
+                <div class="m-val" id="sumValPresent">0</div>
                 <div class="m-lbl">Present Students</div>
               </div>
               <div class="summary-metric-card m-absent">
-                <div class="m-val" id="sumValAbsent">8</div>
+                <div class="m-val" id="sumValAbsent">0</div>
                 <div class="m-lbl">Absent Students</div>
               </div>
               <div class="summary-metric-card m-rate">
-                <div class="m-val" id="sumValRate">86.67%</div>
+                <div class="m-val" id="sumValRate">0%</div>
                 <div class="m-lbl">Attendance Rate</div>
               </div>
             </div>
@@ -825,7 +825,7 @@
                   <span>✓</span>
                   <span>Present Students</span>
                 </h3>
-                <span class="list-count-badge" id="sumPresentBadge">52 Students</span>
+                <span class="list-count-badge" id="sumPresentBadge">0 Students</span>
               </div>
               <div class="list-scroll-body" id="sumPresentList">
                 <!-- Injected via JS -->
@@ -839,7 +839,7 @@
                   <span>✕</span>
                   <span>Absent Students</span>
                 </h3>
-                <span class="list-count-badge" id="sumAbsentBadge">8 Students</span>
+                <span class="list-count-badge" id="sumAbsentBadge">0 Students</span>
               </div>
               <div class="list-scroll-body" id="sumAbsentList">
                 <!-- Injected via JS -->
@@ -1179,12 +1179,8 @@
         <div style="font-size: 42px; margin-bottom: 12px;">🔍</div>
         <h4 style="font-size: 16px; color: #1E293B; margin-bottom: 6px;">Search Any Enrolled Student</h4>
         <p style="font-size: 13px; max-width: 440px; margin: 0 auto 16px auto;">
-          Enter student's <strong>Full Name</strong> (e.g. Aarti Kawle), <strong>Roll No.</strong> (e.g. 1), or <strong>SIS ID</strong> (e.g. 308979) to inspect full lecture-by-lecture attendance & credentials.
+          Enter student's <strong>Full Name</strong>, <strong>Roll No.</strong>, or <strong>Student ID</strong> above to inspect full lecture-by-lecture attendance &amp; credentials.
         </p>
-        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-          <button class="btn-table-action" onclick="window.CollegeERPApp && window.CollegeERPApp.loadStudentReport('308637')">Demo: Shivam Sanjay Aghao (Roll 60)</button>
-          <button class="btn-table-action" onclick="window.CollegeERPApp && window.CollegeERPApp.loadStudentReport('1')">Demo: Ku. Aarti Kawle (Roll 1)</button>
-        </div>
       </div>
 
     </div>

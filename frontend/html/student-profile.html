@@ -128,10 +128,10 @@
             <!-- Student Profile Pill -->
             <div class="profile-wrapper" id="profileWrapper">
                 <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
-                    <div class="avatar-circle">SA</div>
+                    <div class="avatar-circle">--</div>
                     <div class="profile-details">
-                        <span class="student-name">Shivam Aghao</span>
-                        <span class="student-meta">Roll: 21 â€¢ CSE 2R1 (CSE2401)</span>
+                        <span class="student-name">Loading Profile...</span>
+                        <span class="student-meta">--</span>
                     </div>
                     <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -140,11 +140,11 @@
                 <!-- Profile Dropdown Popover -->
                 <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
                     <div class="profile-panel-header">
-                        <div class="large-avatar">SA</div>
+                        <div class="large-avatar">--</div>
                         <div>
-                            <div class="p-name">Shivam Aghao</div>
+                            <div class="p-name">Loading Profile...</div>
                             <div class="p-dept">B.Tech - Computer Science &amp; Engg.</div>
-                            <div class="p-roll">Roll No: 21 â€¢ Class: 2R1 â€¢ Sem IV (CSE2401)</div>
+                            <div class="p-roll">--</div>
                         </div>
                     </div>
                     <div class="p-links">
@@ -471,23 +471,23 @@
                         <div class="metric-icon-box cgpa"><i class="fa-solid fa-chart-line"></i></div>
                         <div class="metric-content">
                             <span class="metric-label">Cumulative CGPA</span>
-                            <span class="metric-val">8.64</span>
-                            <span class="metric-sub">Distinction (Sem I-IV)</span>
+                            <span class="metric-val" id="metricCgpa">--</span>
+                            <span class="metric-sub">Academic Record</span>
                         </div>
                     </div>
                     <div class="metric-stat-card">
                         <div class="metric-icon-box sgpa"><i class="fa-solid fa-award"></i></div>
                         <div class="metric-content">
                             <span class="metric-label">Latest SGPA</span>
-                            <span class="metric-val">8.84</span>
-                            <span class="metric-sub">Sem IV Regular</span>
+                            <span class="metric-val" id="metricSgpa">--</span>
+                            <span class="metric-sub">Semester Regular</span>
                         </div>
                     </div>
                     <div class="metric-stat-card">
                         <div class="metric-icon-box att"><i class="fa-solid fa-user-check"></i></div>
                         <div class="metric-content">
                             <span class="metric-label">Attendance Rate</span>
-                            <span class="metric-val text-success">82%</span>
+                            <span class="metric-val text-success" id="metricAtt">--%</span>
                             <span class="metric-sub">&gt; 75% Mandatory Safe</span>
                         </div>
                     </div>
@@ -495,8 +495,8 @@
                         <div class="metric-icon-box cred"><i class="fa-solid fa-graduation-cap"></i></div>
                         <div class="metric-content">
                             <span class="metric-label">Earned Credits</span>
-                            <span class="metric-val">86 / 160</span>
-                            <span class="metric-sub">53.7% Degree Done</span>
+                            <span class="metric-val" id="metricCredits">--</span>
+                            <span class="metric-sub">Degree Progress</span>
                         </div>
                     </div>
                 </div>
@@ -513,8 +513,8 @@
                             <input type="file" id="photoUpload" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-info">
-                            <h2>Shivam Sanjay Aghao</h2>
-                            <span class="profile-id">PRN: 202401088219 &bull; Roll No: 21 &bull; UID: CSE2401-21</span>
+                            <h2>Loading Profile...</h2>
+                            <span class="profile-id">PRN: -- &bull; Roll No: -- &bull; UID: --</span>
                             <div class="profile-details" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px;">
                                 <div class="profile-detail">
                                     <i class="fa-solid fa-graduation-cap" style="color:var(--primary);"></i>
@@ -522,11 +522,11 @@
                                 </div>
                                 <div class="profile-detail">
                                     <i class="fa-solid fa-layer-group" style="color:var(--accent);"></i>
-                                    <span>Division 2R1 &bull; Class Roll #21</span>
+                                    <span>Enrolled Student</span>
                                 </div>
                                 <div class="profile-detail">
                                     <i class="fa-solid fa-calendar-days" style="color:var(--primary);"></i>
-                                    <span>Academic Session 2025-26 &bull; Semester IV</span>
+                                    <span>Autonomous Institute</span>
                                 </div>
                                 <div class="profile-detail">
                                     <span class="status-badge" style="background:#ECFDF5; color:#059669; font-weight:700; border:1px solid #A7F3D0;">
@@ -554,17 +554,17 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Full Legal Name</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Shivam Sanjay Aghao</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Date of Birth</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">15 August 2004</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Gender</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Male</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Nationality</div>
@@ -574,12 +574,12 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Blood Group</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value" id="valBloodGroup">O+ve</div>
+                                    <div class="profile-info-value" id="valBloodGroup">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Caste / Category</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">OBC (Non-Creamy Layer)</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                             </div>
                         </div>
@@ -613,17 +613,17 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Roll &amp; Section</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">21 (Class 2R1, Second Year)</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">PRN Number</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">202401088219</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Cumulative CGPA</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value text-success">8.64 (First Class with Distinction)</div>
+                                    <div class="profile-info-value text-success">--</div>
                                 </div>
                             </div>
                         </div>
@@ -646,7 +646,7 @@
                                 </div>
                                 <div>
                                     <div class="profile-contact-label">Primary Mobile</div>
-                                    <div class="profile-contact-value" id="valMobile">+91 94221 88219</div>
+                                    <div class="profile-contact-value" id="valMobile">--</div>
                                 </div>
                             </div>
                             <div class="profile-contact-card">
@@ -655,7 +655,7 @@
                                 </div>
                                 <div>
                                     <div class="profile-contact-label">Institutional Email</div>
-                                    <div class="profile-contact-value" id="valEmail">shivam.aghao@ssgmce.ac.in</div>
+                                    <div class="profile-contact-value" id="valEmail">--</div>
                                 </div>
                             </div>
                             <div class="profile-contact-card">
@@ -664,7 +664,7 @@
                                 </div>
                                 <div>
                                     <div class="profile-contact-label">Emergency Guardian Phone</div>
-                                    <div class="profile-contact-value" id="valEmergency">+91 98230 41092</div>
+                                    <div class="profile-contact-value" id="valEmergency">--</div>
                                 </div>
                             </div>
                         </div>
@@ -686,22 +686,22 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Address Line</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value" id="valAddress">Plot 14, Gajanan Colony, Buldhana Road, Shegaon</div>
+                                    <div class="profile-info-value" id="valAddress">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">District &amp; State</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Buldhana, Maharashtra</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Postal PIN Code</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">444203</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Hostel Accommodation</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Day Scholar (Local Transport Transit)</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                             </div>
                         </div>
@@ -720,22 +720,22 @@
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Father's Name</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Mr. Sanjay Aghao</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Mother's Name</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Mrs. Sunita Aghao</div>
+                                    <div class="profile-info-value">--</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Faculty Counselor</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">Dr. Rohan Deshmukh (CSE Dept.)</div>
+                                    <div class="profile-info-value">Faculty Advisor (CSE Dept.)</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Admission Quota</div>
                                     <div class="profile-info-colon">:</div>
-                                    <div class="profile-info-value">MHT-CET State Merit (Autonomous CAP)</div>
+                                    <div class="profile-info-value">Autonomous Institute Record</div>
                                 </div>
                             </div>
                         </div>

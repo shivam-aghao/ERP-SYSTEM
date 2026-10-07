@@ -97,20 +97,20 @@ def seed_database(db: Session):
         active_teacher = None
         if fac_res.data and len(fac_res.data) > 0:
             f = fac_res.data[0]
-            emp_code = f.get("employee_id") or "FAC-CSE-1048"
+            emp_code = f.get("employee_id") or f.get("emp_code") or ""
             dept_code = f.get("department_code") or "CSE"
             dept = dept_map.get(dept_code) or db.query(Department).filter_by(code=dept_code).first()
             teacher = db.query(Teacher).filter((Teacher.emp_code == emp_code) | (Teacher.email == f.get("email"))).first()
             if not teacher:
                 teacher = Teacher(
-                    full_name=f.get("name") or "Dr. J.M.Patil",
-                    emp_code=emp_code,
-                    email=f.get("email") or "jm.patil@ssgmce.ac.in",
+                    full_name=f.get("name") or "Faculty",
+                    emp_code=emp_code or f.get("emp_code") or "EMP-001",
+                    email=f.get("email") or "faculty@ssgmce.ac.in",
                     password_hash=hash_password("Teacher@123"),
-                    designation=f.get("title") or "Associate Professor",
+                    designation=f.get("title") or "Faculty",
                     department_id=dept.id if dept else None,
-                    phone=f.get("phone") or "+91 98765 43210",
-                    avatar=f.get("avatar_initials") or "JP"
+                    phone=f.get("phone") or "",
+                    avatar=f.get("avatar_initials") or "FA"
                 )
                 db.add(teacher)
                 db.flush()

@@ -77,15 +77,15 @@ const StudentTimetableApp = {
 
     // Default student context from ERP model
     this.studentSession = {
-      fullName: "Shivam Sanjay Aghao",
-      shortName: "Shivam Aghao",
-      initials: "SA",
-      rollNo: 21,
-      studentCode: "308637",
-      className: "B.Tech CSE 2R1",
+      fullName: "Student",
+      shortName: "Student",
+      initials: "ST",
+      rollNo: "--",
+      studentCode: "",
+      className: "",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: "shivam.aghao@ssgmce.ac.in"
+      email: ""
     };
   },
 
@@ -188,9 +188,9 @@ const StudentTimetableApp = {
     const menuName = document.getElementById("profile-menu-name");
     const menuTitle = document.getElementById("profile-menu-title");
 
-    const displayName = s.shortName || s.fullName || "Shivam Aghao";
-    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
-    const initials = s.initials || "SA";
+    const displayName = s.shortName || s.fullName || "Student";
+    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '--'}` : "";
+    const initials = s.initials || "ST";
 
     if (headerName) headerName.textContent = displayName;
     if (headerDept) headerDept.textContent = displayClass;

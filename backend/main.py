@@ -874,11 +874,20 @@ def export_attendance_csv(class_name: str = Query("3R"), db: Session = Depends(g
 @api.get("/reports/classes/{class_id}/stats", tags=["Faculty Portal"])
 def get_class_stats(class_id: str, db: Session = Depends(get_db)):
     total = db.execute(text("SELECT count(*) FROM students WHERE class_id = :cid"), {"cid": class_id}).scalar() or 0
+    tot_records = db.execute(text("""
+        SELECT count(*) as total, sum(case when status='present' then 1 else 0 end) as present 
+        FROM attendance_records ar
+        JOIN students s ON ar.student_id = s.id
+        WHERE s.class_id = :cid
+    """), {"cid": class_id}).fetchone()
+    tot_rec = tot_records[0] or 0 if tot_records else 0
+    pres_rec = tot_records[1] or 0 if tot_records else 0
+    avg_att = round((pres_rec / tot_rec * 100), 1) if tot_rec > 0 else 0.0
     return success_response({
         "class_id": class_id,
         "total_enrolled": total,
-        "average_attendance": 84.2,
-        "defaulters_count": 4
+        "average_attendance": avg_att,
+        "defaulters_count": 0
     })
 
 # ==============================================================================
@@ -887,28 +896,32 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
 # ==============================================================================
 @api.get("/student/profile", tags=["Student Portal"])
 @api.get("/profile", tags=["Student Portal"])
-def get_student_profile(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    row = db.execute(
-        text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
-        {"c": student_code}
-    ).fetchone()
-    if not row:
+def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    if student_code:
+        row = db.execute(
+            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
+            {"c": student_code}
+        ).fetchone()
+    else:
         row = db.execute(text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not row:
         return error_response("Student profile not found", 404)
     m = dict(row._mapping)
     # Map attributes for camelCase compatibility
-    m["studentCode"] = m.get("student_code", student_code)
-    m["fullName"] = m.get("full_name", "Shivam Sanjay Aghao")
-    m["rollNo"] = m.get("roll_no", 21)
-    m["className"] = m.get("class_name", "3R")
+    m["studentCode"] = m.get("student_code") or ""
+    m["fullName"] = m.get("full_name") or ""
+    m["rollNo"] = m.get("roll_no") or 0
+    m["className"] = m.get("class_name") or ""
     return success_response(m)
 
 @api.put("/student/profile", tags=["Student Portal"])
 @api.put("/profile", tags=["Student Portal"])
 @api.post("/student/profile/update", tags=["Student Portal"])
 @api.post("/profile/update", tags=["Student Portal"])
-def update_student_profile(payload: StudentProfileUpdate, student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def update_student_profile(payload: StudentProfileUpdate, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    if not student_code:
+        st_first = db.execute(text("SELECT student_code FROM students LIMIT 1")).fetchone()
+        student_code = st_first[0] if st_first else ""
     updates = payload.model_dump(exclude_unset=True)
     for k, v in updates.items():
         if v is not None:
@@ -919,23 +932,24 @@ def update_student_profile(payload: StudentProfileUpdate, student_code: str = Qu
 
 @api.get("/student/overview", tags=["Student Portal"])
 @api.get("/overview", tags=["Student Portal"])
-def get_student_overview(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
-    if not st:
+def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    if student_code:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+    else:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     
     st_dict = dict(st._mapping) if st else {}
     student_obj = {
         **st_dict,
-        "fullName": st_dict.get("full_name") or "Shivam Sanjay Aghao",
-        "full_name": st_dict.get("full_name") or "Shivam Sanjay Aghao",
-        "rollNo": st_dict.get("roll_no") or 21,
-        "roll_no": st_dict.get("roll_no") or 21,
-        "studentCode": st_dict.get("student_code") or "308637",
-        "student_code": st_dict.get("student_code") or "308637",
-        "department": "Computer Science & Engineering",
-        "className": st_dict.get("class_name") or "2R1",
-        "class_name": st_dict.get("class_name") or "2R1",
+        "fullName": st_dict.get("full_name") or "",
+        "full_name": st_dict.get("full_name") or "",
+        "rollNo": st_dict.get("roll_no") or 0,
+        "roll_no": st_dict.get("roll_no") or 0,
+        "studentCode": st_dict.get("student_code") or "",
+        "student_code": st_dict.get("student_code") or "",
+        "department": st_dict.get("department") or "",
+        "className": st_dict.get("class_name") or "",
+        "class_name": st_dict.get("class_name") or "",
         "division": st_dict.get("division") or "2R1",
         "semester": 4,
         "academicYear": "2026-2027"
@@ -971,18 +985,7 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
             "classroom": m.get("classroom") or "LH-204"
         })
 
-    if not subject_wise:
-        subject_wise = [
-            {"code": "CS-301", "subjectCode": "CS-301", "subject_code": "CS-301", "name": "Data Structures & Algorithms", "subjectName": "Data Structures & Algorithms", "subject_name": "Data Structures & Algorithms", "attended": 32, "attendedLectures": 32, "total": 36, "totalLectures": 36, "percentage": 88.9, "faculty": "Prof. Rajesh Sharma", "classroom": "LH-204"},
-            {"code": "CS-302", "subjectCode": "CS-302", "subject_code": "CS-302", "name": "Database Management Systems", "subjectName": "Database Management Systems", "subject_name": "Database Management Systems", "attended": 28, "attendedLectures": 28, "total": 34, "totalLectures": 34, "percentage": 82.4, "faculty": "Dr. P. R. Wankhede", "classroom": "LH-204"},
-            {"code": "CS-303", "subjectCode": "CS-303", "subject_code": "CS-303", "name": "Operating Systems", "subjectName": "Operating Systems", "subject_name": "Operating Systems", "attended": 30, "attendedLectures": 30, "total": 35, "totalLectures": 35, "percentage": 85.7, "faculty": "Prof. S. B. Patil", "classroom": "LH-205"},
-            {"code": "CS-304", "subjectCode": "CS-304", "subject_code": "CS-304", "name": "Computer Networks", "subjectName": "Computer Networks", "subject_name": "Computer Networks", "attended": 26, "attendedLectures": 26, "total": 34, "totalLectures": 34, "percentage": 76.5, "faculty": "Prof. V. M. Umale", "classroom": "LH-205"},
-            {"code": "CS-305", "subjectCode": "CS-305", "subject_code": "CS-305", "name": "Theory of Computation", "subjectName": "Theory of Computation", "subject_name": "Theory of Computation", "attended": 29, "attendedLectures": 29, "total": 35, "totalLectures": 35, "percentage": 82.9, "faculty": "Dr. A. S. Alvi", "classroom": "LH-206"}
-        ]
-        tot_pres = 145
-        tot_lecs = 174
-
-    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 82.4
+    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
     absent_count = max(0, tot_lecs - tot_pres)
 
     attendance_summary = {
@@ -1099,14 +1102,9 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
 @api.get("/student/academic-metrics", tags=["Student Portal"])
 @api.get("/academic-metrics", tags=["Student Portal"])
 @api.get("/metrics", tags=["Student Portal"])
-def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     rows = db.execute(text("SELECT * FROM academic_metrics LIMIT 10")).fetchall()
-    return success_response([dict(r._mapping) for r in rows] if rows else [
-        {"semester": 1, "sgpa": 8.45, "credits": 20},
-        {"semester": 2, "sgpa": 8.62, "credits": 22},
-        {"semester": 3, "sgpa": 8.80, "credits": 24},
-        {"semester": 4, "sgpa": 8.91, "credits": 24}
-    ])
+    return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/student/timetable", tags=["Student Portal"])
 @api.get("/timetable", tags=["Student Portal"])
@@ -1118,14 +1116,18 @@ def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_d
 
 @api.get("/student/attendance", tags=["Student Portal"])
 @api.get("/attendance", tags=["Student Portal"])
-def get_student_attendance_summary(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_attendance_summary(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
+    sub_dicts = [dict(s._mapping) for s in subjects]
+    tot_conducted = sum(s.get("total_periods", 0) for s in sub_dicts)
+    tot_attended = sum(s.get("present_periods", 0) for s in sub_dicts)
+    overall_pct = round((tot_attended / tot_conducted * 100), 1) if tot_conducted > 0 else 0.0
     return success_response({
-        "student_code": student_code,
-        "overall_percentage": 82.4,
-        "total_conducted": 142,
-        "total_attended": 117,
-        "subjects": [dict(s._mapping) for s in subjects]
+        "student_code": student_code or "",
+        "overall_percentage": overall_pct,
+        "total_conducted": tot_conducted,
+        "total_attended": tot_attended,
+        "subjects": sub_dicts
     })
 
 @api.get("/student/syllabus", tags=["Student Portal"])
@@ -1154,7 +1156,7 @@ def get_student_syllabus(subject_id: Optional[str] = None, db: Session = Depends
 @api.get("/student/documents", tags=["Student Portal"])
 @api.get("/documents", tags=["Student Portal"])
 @api.get("/dwallet", tags=["Student Portal"])
-def get_student_documents(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_documents(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     rows = db.execute(text("SELECT * FROM student_documents LIMIT 10")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
@@ -1166,8 +1168,10 @@ def upload_student_document(payload: Dict[str, Any] = Body(...), db: Session = D
 
 @api.get("/student/notifications", tags=["Student Portal"])
 @api.get("/notifications", tags=["Student Portal"])
-def get_student_notifications(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id = :c LIMIT 1"), {"c": student_code}).fetchone()
+def get_student_notifications(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    st = None
+    if student_code:
+        st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT id, class_id FROM students LIMIT 1")).fetchone()
     
@@ -1195,7 +1199,7 @@ def mark_notification_read(id: str, db: Session = Depends(get_db)):
 
 @api.get("/student/fees", tags=["Student Portal"])
 @api.get("/fees", tags=["Student Portal"])
-def get_student_fees(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_fees(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     records = db.execute(text("SELECT * FROM fee_records LIMIT 5")).fetchall()
     receipts = db.execute(text("SELECT * FROM fee_receipts LIMIT 5")).fetchall()
     return success_response({
@@ -1405,7 +1409,7 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
         VALUES (:id, :tid, :title, :msg, :cid, :cname, 'quiz', 0, CURRENT_TIMESTAMP)
     """), {
         "id": notif_id,
-        "tid": q._mapping.get("teacher_id") or "FAC-CSE-1048",
+        "tid": q._mapping.get("teacher_id") or "",
         "title": f"New Quiz Published: {q._mapping['title']}",
         "msg": f"A new quiz has been published for {c_name} ({q._mapping.get('subject_name', 'Computer Science')}). Duration: {q._mapping['duration_minutes']} mins.",
         "cid": target_class_id,
@@ -1446,7 +1450,7 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
         VALUES (:id, :tid, 'Quiz', :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     """), {
         "id": tt_test_id,
-        "tid": q._mapping.get("teacher_id") or "FAC-CSE-1048",
+        "tid": q._mapping.get("teacher_id") or "",
         "subject": q._mapping.get("subject_name") or "Computer Science",
         "title": q._mapping.get("title") or "Quiz Assessment",
         "date": date_val,
@@ -1570,8 +1574,10 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 # ==============================================================================
 @api.get("/student/quizzes", tags=["Student Quiz Portal"])
 @api.get("/quiz/student/quizzes", tags=["Student Quiz Portal"])
-def get_student_available_quizzes(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    st = None
+    if student_code:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -1614,8 +1620,10 @@ def get_student_available_quizzes(student_code: str = Query("308637"), db: Sessi
 
 @api.get("/student/quizzes/{quiz_id}", tags=["Student Quiz Portal"])
 @api.get("/quiz/student/quizzes/{quiz_id}", tags=["Student Quiz Portal"])
-def get_student_quiz_info(quiz_id: str, student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    st = None
+    if student_code:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
@@ -1640,8 +1648,10 @@ def get_student_quiz_info(quiz_id: str, student_code: str = Query("308637"), db:
 @api.post("/student/quizzes/{quiz_id}/start", tags=["Student Quiz Portal"])
 @api.post("/quiz/student/quizzes/{quiz_id}/start", tags=["Student Quiz Portal"])
 def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
-    st_id = payload.get("student_id") or payload.get("student_code") or "308637"
-    st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
+    st_id = payload.get("student_id") or payload.get("student_code")
+    st = None
+    if st_id:
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:

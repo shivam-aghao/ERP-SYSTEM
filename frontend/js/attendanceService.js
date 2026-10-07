@@ -34,17 +34,17 @@
             return {
               success: true,
               data: {
-                fullName: p.fullName || 'Shivam Sanjay Aghao',
-                rollNumber: p.rollNo || 21,
-                enrollmentNumber: p.studentCode || 'CSE2401',
+                fullName: p.fullName || 'Student',
+                rollNumber: p.rollNo || '--',
+                enrollmentNumber: p.studentCode || '--',
                 department: p.department || 'Computer Science & Engineering',
-                semester: p.semester || 5,
-                division: p.division || 'A',
-                academicYear: p.academicYear || '2026-2027',
-                prn: p.prn || 'CSE2401',
-                facultyMentor: p.facultyMentor || 'Dr. Rohan Deshmukh (HOD, CSE)',
-                email: p.email || 'shivam.aghao@ssgmce.ac.in',
-                phone: p.phone || '+91 94221 88219'
+                semester: p.semester || '--',
+                division: p.division || '--',
+                academicYear: p.academicYear || '--',
+                prn: p.prn || '--',
+                facultyMentor: p.facultyMentor || '--',
+                email: p.email || '--',
+                phone: p.phone || '--'
               }
             };
           }

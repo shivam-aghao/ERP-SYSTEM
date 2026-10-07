@@ -25,7 +25,7 @@ export const PROTOTYPE_ERP_DATA = {
               'Aniket Joshi', 'Anushka Raut', 'Aryan Patil', 'Atharva Kale', 'Bhavika Shah',
               'Chetan Shinde', 'Darshan Gaikwad', 'Deepika Mane', 'Devendra More', 'Divya Chauhan',
               'Gaurav Rathod', 'Harshada Wagh', 'Isha Kulkarni', 'Karan Mehta', 'Kavita Jadhav',
-              'Shivam Aghao', 'Manish Sawant', 'Mayur Gawande', 'Neha Badokar', 'Nikhil Shelke',
+              'Sarang Patil', 'Manish Sawant', 'Mayur Gawande', 'Neha Badokar', 'Nikhil Shelke',
               'Omkar Bhise', 'Pooja Tiwari', 'Pranav Kadam', 'Pranita Ingle', 'Prasad Muley',
               'Prathamesh Dhole', 'Priya Deshpande', 'Rahul Sangle', 'Rani Shinde', 'Riddhi Thakare',
               'Ritesh Kharat', 'Rohit Solanke', 'Ruchita Tayade', 'Rushikesh Borse', 'Sakshi Wankhade',

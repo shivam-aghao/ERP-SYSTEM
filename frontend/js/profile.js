@@ -278,21 +278,28 @@ function viewDocument(docType) {
         return;
     }
 
+    const p = window.currentStudentProfile || (window.ERPAuth && typeof window.ERPAuth.getSession === 'function' ? window.ERPAuth.getSession() : null) || {};
+    const studentName = (p.full_name || p.fullName || p.name || 'Student').toUpperCase();
+    const studentInitials = p.initials || (studentName !== 'STUDENT' ? studentName.split(' ').map(n => n[0]).join('').slice(0, 2) : 'ST');
+    const studentRoll = p.roll_no || p.rollNo || '--';
+    const studentPrn = p.prn || p.student_code || p.studentCode || '--';
+    const className = p.class_name || p.className || 'B.Tech Computer Science & Engineering';
+
     const docDetails = {
         'id-card': {
             title: 'SSGMCE Smart RFID Identity Card',
             html: `
                 <div style="border:2px solid var(--primary); border-radius:12px; padding:20px; background:#F8FAFC; text-align:center;">
                     <div style="font-weight:800; color:var(--navy); font-size:1.1rem;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</div>
-                    <div style="font-size:0.8rem; color:var(--primary); font-weight:600; margin-bottom:14px;">An Autonomous Institute â€¢ Shegaon - 444503</div>
+                    <div style="font-size:0.8rem; color:var(--primary); font-weight:600; margin-bottom:14px;">An Autonomous Institute • Shegaon - 444503</div>
                     <div style="display:flex; justify-content:center; margin-bottom:12px;">
-                        <div style="width:75px; height:85px; border-radius:8px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800;">SA</div>
+                        <div style="width:75px; height:85px; border-radius:8px; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800;">${studentInitials}</div>
                     </div>
-                    <div style="font-size:1.05rem; font-weight:700; color:var(--navy);">SHIVAM SANJAY AGHAO</div>
-                    <div style="font-size:0.85rem; color:var(--muted);">Roll No: 21 â€¢ PRN: 202401088219</div>
-                    <div style="font-size:0.85rem; color:var(--text); font-weight:600; margin-top:6px;">B.Tech Computer Science &amp; Engineering</div>
+                    <div style="font-size:1.05rem; font-weight:700; color:var(--navy);">${studentName}</div>
+                    <div style="font-size:0.85rem; color:var(--muted);">Roll No: ${studentRoll} • PRN: ${studentPrn}</div>
+                    <div style="font-size:0.85rem; color:var(--text); font-weight:600; margin-top:6px;">${className}</div>
                     <div style="margin-top:14px; padding:6px 12px; background:rgba(16,185,129,0.12); color:#10B981; font-weight:700; font-size:0.75rem; border-radius:999px; display:inline-block;">
-                        âœ“ ACTIVE INSTITUTIONAL RFID â€¢ VALID THRU 2028
+                        ✓ ACTIVE INSTITUTIONAL RFID • VALID
                     </div>
                 </div>
             `
@@ -310,15 +317,11 @@ function viewDocument(docType) {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Semester I</td><td>22 / 22</td><td><strong>8.42</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester II</td><td>22 / 22</td><td><strong>8.58</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester III</td><td>21 / 21</td><td><strong>8.64</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
-                        <tr><td>Semester IV</td><td>21 / 21</td><td><strong>8.84</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
+                        <tr><td>Semester I</td><td>22 / 22</td><td><strong>--</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
+                        <tr><td>Semester II</td><td>22 / 22</td><td><strong>--</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
+                        <tr><td>Semester III</td><td>21 / 21</td><td><strong>--</strong></td><td><span class="status-badge" style="background:#ECFDF5; color:#059669;">PASSED</span></td></tr>
                     </tbody>
                 </table>
-                <div style="margin-top:14px; text-align:right; font-weight:700; color:var(--navy);">
-                    Cumulative CGPA: <span style="color:var(--primary); font-size:1.1rem;">8.64</span>
-                </div>
             `
         },
         'bonafide': {
@@ -327,14 +330,14 @@ function viewDocument(docType) {
                 <div style="border:1px dashed var(--border-color); padding:20px; border-radius:10px; background:#FFF;">
                     <div style="text-align:center; margin-bottom:12px;">
                         <strong style="color:var(--navy); font-size:1rem;">INSTITUTIONAL BONAFIDE CERTIFICATE</strong>
-                        <div style="font-size:0.75rem; color:var(--muted);">Ref: SSGMCE/ACAD/2026/BONA-88219</div>
+                        <div style="font-size:0.75rem; color:var(--muted);">Ref: SSGMCE/ACAD/BONA</div>
                     </div>
                     <p style="font-size:0.85rem; line-height:1.6; color:var(--text);">
-                        This is to certify that <strong>Mr. Shivam Sanjay Aghao</strong> (Roll No: 21, PRN: 202401088219) is a bonafide student of <strong>Second Year B.Tech (Computer Science &amp; Engineering)</strong> at Shri Sant Gajanan Maharaj College of Engineering, Shegaon for the academic year 2025-2026.
+                        This is to certify that <strong>${studentName}</strong> (Roll No: ${studentRoll}, PRN: ${studentPrn}) is a bonafide student of <strong>${className}</strong> at Shri Sant Gajanan Maharaj College of Engineering, Shegaon.
                     </p>
                     <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:flex-end;">
-                        <span style="font-size:0.75rem; color:var(--muted);">Issue Date: 15 Jan 2026</span>
-                        <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">Dean (Academics) Seal âœ“</span>
+                        <span style="font-size:0.75rem; color:var(--muted);">Academic Clearance</span>
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">Dean (Academics) Seal ✓</span>
                     </div>
                 </div>
             `
