@@ -109,10 +109,37 @@ const AttendanceState = {
     }
   },
 
-  loadStudentsForCurrentClass() {
-    if (!TeacherERPData || !TeacherERPData.getStudentsForClass) return;
-    this.students = TeacherERPData.getStudentsForClass(this.selectedClass.code);
-    this.loadRecordForSession(this.selectedDate, this.selectedClass.code, this.selectedSubject.code);
+  async loadStudentsForCurrentClass() {
+    const code = (this.selectedClass && this.selectedClass.code) ? this.selectedClass.code : '2R1';
+    if (window.TeacherAPI && typeof window.TeacherAPI.getStudents === 'function') {
+      try {
+        const res = await window.TeacherAPI.getStudents(code);
+        const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+        if (list && list.length > 0) {
+          this.students = list.map(s => {
+            const rollInt = typeof s.roll_no === 'number' ? s.roll_no : (parseInt(s.rollNo, 10) || 1);
+            const rollFmt = s.rollFormatted || (rollInt < 10 ? `0${rollInt}` : `${rollInt}`);
+            return {
+              rollNo: rollInt,
+              rollFormatted: rollFmt,
+              name: s.name || s.full_name || 'Student',
+              enrollmentNo: s.enrollmentNo || `EN2024CSE${rollFmt}`,
+              division: code,
+              department: this.selectedDepartment ? this.selectedDepartment.code : 'CSE',
+              defaultAttendance: s.defaultAttendance || 'present'
+            };
+          });
+          this.loadRecordForSession(this.selectedDate, code, this.selectedSubject.code);
+          return;
+        }
+      } catch (e) {
+        console.warn('TeacherAPI.getStudents error, using local data:', e);
+      }
+    }
+    if (TeacherERPData && TeacherERPData.getStudentsForClass) {
+      this.students = TeacherERPData.getStudentsForClass(code);
+      this.loadRecordForSession(this.selectedDate, code, this.selectedSubject.code);
+    }
   },
 
   setDepartment(code) {

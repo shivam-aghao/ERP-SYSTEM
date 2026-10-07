@@ -15,6 +15,7 @@ class Student(Base):
     email = Column(String(150), nullable=True, index=True)
     phone = Column(String(20), nullable=True)
     status = Column(String(20), default="ACTIVE")
+    division = Column(String(20), default="1")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class AcademicMetrics(Base):

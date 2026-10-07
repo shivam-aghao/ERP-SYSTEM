@@ -238,9 +238,12 @@
     },
 
     getStudents: async function (classCode) {
-      var query = classCode ? '?classCode=' + encodeURIComponent(classCode) : '';
+      var query = classCode ? '?classCode=' + encodeURIComponent(classCode) + '&class_code=' + encodeURIComponent(classCode) : '';
       var res = await this.request('/students' + query);
-      return res.data;
+      var data = res.data !== undefined ? res.data : res;
+      if (data && Array.isArray(data.students)) return data.students;
+      if (Array.isArray(data)) return data;
+      return (data && data.students) || [];
     },
 
     // 6. Timetable & Syllabus
