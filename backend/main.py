@@ -2282,6 +2282,15 @@ if os.path.isdir(STUDENT_DIR):
     app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
     logger.info("Mounted student static assets from %s", STUDENT_DIR)
 
+# Dedicated Attendance routes mapped to Teacher Dashboard Hub
+@app.get("/attendance", include_in_schema=False)
+def attendance_route():
+    return RedirectResponse(url="/teacher-dashboard.html#attendance")
+
+@app.get("/attendance/roster", include_in_schema=False)
+def attendance_roster_route():
+    return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
+
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")
     js_dir = os.path.join(FRONTEND_DIR, "js")
@@ -2301,11 +2310,6 @@ if os.path.isdir(FRONTEND_DIR):
         app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
     logger.info("Mounted frontend static assets from %s and %s", FRONTEND_DIR, HTML_DIR)
-
-# Root fallback
-@app.get("/", include_in_schema=False)
-def root_redirect():
-    return RedirectResponse(url="/login.html")
 
 if __name__ == "__main__":
     import uvicorn

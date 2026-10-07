@@ -22,6 +22,84 @@
   <link rel="stylesheet" href="../css/modules.css">
   <link rel="stylesheet" href="../css/timetable.css">
   <link rel="stylesheet" href="../css/toast.css">
+  <style>
+    /* ========================================================
+       INTEGRATED ATTENDANCE SUB-MODULE STYLES
+       ======================================================== */
+    .attendance-integration-header {
+      background: #FFFFFF;
+      border: 1px solid var(--border-light, #E2E8F0);
+      border-radius: 12px 12px 0 0;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .attendance-module-tabs {
+      display: inline-flex;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      gap: 4px;
+    }
+    .attendance-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: #475569;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .attendance-tab-btn:hover {
+      color: #0B5CAD;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    .attendance-tab-btn.active {
+      background: #0B5CAD !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 2px 6px rgba(11, 92, 173, 0.3) !important;
+    }
+    .attendance-frame-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 870px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light, #E2E8F0);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .attendance-integrated-frame {
+      width: 100%;
+      height: 880px;
+      min-height: 870px;
+      border: none;
+      display: block;
+      background: #FFFFFF;
+    }
+    @keyframes spinAttendanceLoader {
+      to { transform: rotate(360deg); }
+    }
+    .attendance-loader-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #E2E8F0;
+      border-top-color: #0B5CAD;
+      border-radius: 50%;
+      animation: spinAttendanceLoader 0.75s linear infinite;
+    }
+  </style>
   <script src="../js/toast.js"></script>
   <!-- Authentication Guard -->
   <script src="../js/config.js"></script>
@@ -166,7 +244,7 @@
           <ul class="sidebar-menu-list">
             <!-- 1. Dashboard (Active) - At Very Top! -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link active" data-view="dashboard" onclick="TeacherApp.switchView('dashboard')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -184,7 +262,7 @@
 
             <!-- 2. Attendance (with badge & chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -200,7 +278,7 @@
 
             <!-- 3. Timetable (with chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="timetable" onclick="TeacherApp.switchView('timetable')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="timetable" onclick="TeacherApp.switchView('timetable')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -214,7 +292,7 @@
 
             <!-- 4. Classes (with chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="classes" onclick="TeacherApp.switchView('classes')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="classes" onclick="TeacherApp.switchView('classes')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M2 3h20"></path>
                   <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
@@ -227,7 +305,7 @@
 
             <!-- 5. Students (with chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="students" onclick="TeacherApp.switchView('students')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="students" onclick="TeacherApp.switchView('students')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
@@ -241,7 +319,7 @@
 
             <!-- 6. Syllabus (with chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="syllabus" onclick="TeacherApp.switchView('syllabus')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="syllabus" onclick="TeacherApp.switchView('syllabus')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -587,173 +665,85 @@
         </section>
 
         <!-- ========================================================
-             PANE 2: TEACHER ATTENDANCE MANAGEMENT WORKFLOW
+             PANE 2: INTEGRATED TEACHER ATTENDANCE MODULE
              ======================================================== -->
-        <section id="attendance-module" class="view-section-pane attendance-management-wrapper">
+        <section id="attendance-module" class="view-section-pane attendance-management-wrapper" style="padding:0; min-height:880px;">
           
-          <!-- Top Navigation & Breadcrumb Trail -->
-          <div class="attendance-top-bar">
-            <button class="btn-dash-back-link" onclick="TeacherApp.switchView('dashboard')">
-              <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
-              Back to Dashboard
-            </button>
+          <!-- Top Control Header & Sub-Module Switcher Tabs -->
+          <div class="attendance-integration-header">
+            <!-- Left: Back Button, Title & Active Description -->
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+              <button type="button" class="btn-dash-back-link" onclick="TeacherApp.switchView('dashboard')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#F1F5F9; border:1px solid #CBD5E1; border-radius:6px; color:#0B1F3A; font-size:13px; font-weight:600; cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px;height:14px;"><path d="m15 18-6-6 6-6"/></svg>
+                <span>Dashboard</span>
+              </button>
 
-            <!-- Clickable Reactive Breadcrumb -->
-            <div class="attendance-breadcrumb" id="attendance-breadcrumb-trail">
-              <span class="bc-item current">Attendance</span>
-            </div>
-          </div>
-
-          <!-- Attendance Landing Banner -->
-          <div style="margin-bottom:20px;">
-            <h2 style="font-size:22px; font-weight:800; color:var(--dark-navy);">Attendance Management</h2>
-            <p style="font-size:13.5px; color:var(--text-muted); margin-top:2px;">
-              Mark attendance directly using the dynamic selector below, from the Timetable, or via the step-by-step wizard.
-            </p>
-          </div>
-
-          <!-- Attendance Module View Mode Selector / Manual Card -->
-          <div class="manual-attendance-card" style="margin-bottom:24px;">
-            <div class="manual-card-header">
               <div>
-                <h3 style="font-size:16px; font-weight:750; color:var(--dark-navy); display:flex; align-items:center; gap:8px;">
-                  <i data-lucide="calendar-check" style="width:18px;height:18px; color:var(--primary-blue);"></i>
-                  Manual Attendance Marking Module
-                </h3>
-                <p style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">
-                  Select a date to dynamically load scheduled classes from your timetable, or toggle Override for substitute lectures.
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <h2 style="font-size:17px; font-weight:800; color:#0B1F3A; margin:0;">Teacher Attendance Hub</h2>
+                  <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#ECFDF5; color:#059669; font-weight:700; border:1px solid #A7F3D0;">Live Sync</span>
+                </div>
+                <p style="font-size:12px; color:#64748B; margin:2px 0 0 0;" id="attendance-active-subview-desc">
+                  Mark lecture/lab attendance or record RFID swipes
                 </p>
               </div>
-              <div id="manual-pending-indicator">
-                <span class="badge badge-pending" id="manual-pending-badge">02 Pending Today</span>
-              </div>
             </div>
 
-            <div class="manual-form-grid">
-              <!-- Date Picker -->
-              <div class="manual-form-group">
-                <label for="manual-attendance-date" class="manual-label">
-                  <i data-lucide="calendar" style="width:14px;height:14px; color:var(--primary-blue);"></i>
-                  <span>1. Attendance Date</span>
-                </label>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <input type="date" id="manual-attendance-date" class="manual-input" onchange="AttendanceDrawer.handleManualDateChange(this.value)">
-                  <span id="manual-date-day-chip" class="manual-day-chip">Today</span>
-                </div>
-              </div>
+            <!-- Center: Sub-Module Switcher Tabs -->
+            <div class="attendance-module-tabs">
+              <button type="button" class="attendance-tab-btn active" id="tab-attendance-mark" onclick="TeacherApp.switchAttendanceSubView('marking')" title="Mark Lecture & Practical Attendance">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Mark Attendance</span>
+              </button>
 
-              <!-- Scheduled Class Dropdown -->
-              <div class="manual-form-group" id="scheduled-class-group">
-                <label for="manual-attendance-slot-select" class="manual-label">
-                  <i data-lucide="clock" style="width:14px;height:14px; color:var(--primary-blue);"></i>
-                  <span>2. Scheduled Timetable Lectures for Date</span>
-                </label>
-                <select id="manual-attendance-slot-select" class="manual-input">
-                  <!-- Dynamically populated based on date -->
-                </select>
-              </div>
+              <button type="button" class="attendance-tab-btn" id="tab-attendance-roster" onclick="TeacherApp.switchAttendanceSubView('roster')" title="View Master Class Roster & Percentages">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <span>Attendance Roster</span>
+              </button>
             </div>
 
-            <!-- Override / Substitute Checkbox -->
-            <div class="manual-override-box">
-              <label class="manual-override-checkbox-label">
-                <input type="checkbox" id="manual-attendance-override-toggle" onchange="AttendanceDrawer.toggleOverrideMode(this.checked)">
-                <span><strong>Override / Other Class</strong> (Mark unscheduled lecture, lab, or substitute class)</span>
-              </label>
+            <!-- Right: Quick Tools (Refresh & Popout) -->
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button type="button" class="btn-refresh-frame" onclick="TeacherApp.reloadAttendanceFrame()" title="Refresh Module" style="padding:6px 12px; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; color:#0B1F3A; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Refresh</span>
+              </button>
 
-              <!-- Hidden by default, revealed when override checked -->
-              <div id="manual-override-fields" class="manual-override-fields" style="display:none; margin-top:14px;">
-                <div class="manual-override-grid">
-                  <div class="manual-form-group">
-                    <label class="manual-label">Department</label>
-                    <select id="override-dept-select" class="manual-input" onchange="AttendanceDrawer.handleOverrideDeptChange(this.value)">
-                      <option value="CSE">Computer Science & Eng (CSE)</option>
-                      <option value="IT">Information Technology (IT)</option>
-                      <option value="EE">Electrical Engineering (EE)</option>
-                      <option value="MECH">Mechanical Engineering (MECH)</option>
-                    </select>
-                  </div>
-                  <div class="manual-form-group">
-                    <label class="manual-label">Class</label>
-                    <select id="override-class-select" class="manual-input">
-                      <option value="2R1">2R1 (Second Year CSE Div 1)</option>
-                      <option value="2R2">2R2 (Second Year CSE Div 2)</option>
-                      <option value="3R">3R (Third Year CSE)</option>
-                      <option value="4R">4R (Final Year CSE)</option>
-                    </select>
-                  </div>
-                  <div class="manual-form-group">
-                    <label class="manual-label">Subject / Topic Name</label>
-                    <input type="text" id="override-subject-input" class="manual-input" value="Data Structures" placeholder="e.g. Data Structures">
-                  </div>
-                  <div class="manual-form-group">
-                    <label class="manual-label">Room / Lab</label>
-                    <input type="text" id="override-room-input" class="manual-input" value="Room 201" placeholder="e.g. Room 201">
-                  </div>
-                  <div class="manual-form-group">
-                    <label class="manual-label">Timeslot</label>
-                    <select id="override-timeslot-select" class="manual-input">
-                      <option value="09:00 - 10:30 AM">09:00 - 10:30 AM</option>
-                      <option value="11:00 - 12:30 PM">11:00 - 12:30 PM</option>
-                      <option value="01:30 - 03:00 PM">01:30 - 03:00 PM</option>
-                      <option value="03:30 - 05:00 PM">03:30 - 05:00 PM</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Button -->
-            <div style="margin-top:18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <button type="button" class="btn-load-students-drawer" onclick="AttendanceMarkingManager.loadFromManualForm()">
-                  <i data-lucide="users" style="width:16px;height:16px;"></i>
-                  <span>Load Students & Open Attendance Marking Page</span>
-                </button>
-                <button type="button" class="btn-export-attendance-csv" onclick="AttendanceMarkingManager.exportAttendanceSheet()" style="padding:10px 16px; background:#f0fdf4; border:1.5px solid #86efac; color:#166534; border-radius:8px; font-weight:650; font-size:13.5px; display:inline-flex; align-items:center; gap:7px; cursor:pointer; transition:all 0.15s ease;">
-                  <i data-lucide="file-spreadsheet" style="width:16px;height:16px; color:#16a34a;"></i>
-                  <span>Export Attendance CSV</span>
-                </button>
-              </div>
-              <span style="font-size:12px; color:var(--text-muted);">Or use the step-by-step wizard below:</span>
+              <button type="button" class="btn-popout-frame" onclick="TeacherApp.openAttendanceStandalone()" title="Open in Full Window" style="padding:6px 12px; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:6px; color:#0B1F3A; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <span>Open Dedicated</span>
+              </button>
             </div>
           </div>
 
-          <!-- 5-Step Continuous Horizontal Stepper -->
-          <div class="stepper-workflow-container">
-            <div class="workflow-step-node active" onclick="AttendanceWorkflow.goToStep(1)">
-              <div class="step-bubble">01</div>
-              <span>Department</span>
+          <!-- Seamless Responsive Frame Container -->
+          <div class="attendance-frame-wrapper">
+            <!-- Loading Indicator -->
+            <div id="attendance-frame-loader" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.95); z-index:5;">
+              <div class="attendance-loader-spinner"></div>
+              <span style="font-size:13px; font-weight:600; color:#0B1F3A; margin-top:12px;" id="attendance-loader-text">Loading Attendance Module...</span>
             </div>
-            <div class="workflow-step-connector"></div>
 
-            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(2)">
-              <div class="step-bubble">02</div>
-              <span>Class</span>
+            <!-- Error State Container -->
+            <div id="attendance-frame-error" style="display:none; padding:50px 20px; text-align:center; background:#FFFFFF;">
+              <div style="width:54px; height:54px; border-radius:50%; background:#FEE2E2; color:#DC2626; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h3 style="font-size:17px; color:#1E293B; font-weight:700;">Unable to Load Attendance View</h3>
+              <p style="font-size:13px; color:#64748B; margin:6px 0 16px;">The requested module could not be rendered inside the dashboard container.</p>
+              <button type="button" onclick="TeacherApp.reloadAttendanceFrame()" style="padding:8px 18px; background:#0B5CAD; color:#FFFFFF; border-radius:6px; border:none; font-weight:600; cursor:pointer;">
+                Retry Loading
+              </button>
             </div>
-            <div class="workflow-step-connector"></div>
 
-            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(3)">
-              <div class="step-bubble">03</div>
-              <span>Date</span>
-            </div>
-            <div class="workflow-step-connector"></div>
-
-            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(4)">
-              <div class="step-bubble">04</div>
-              <span>Subject</span>
-            </div>
-            <div class="workflow-step-connector"></div>
-
-            <div class="workflow-step-node muted" onclick="AttendanceWorkflow.goToStep(5)">
-              <div class="step-bubble">05</div>
-              <span>Students</span>
-            </div>
-          </div>
-
-          <!-- Dynamic Container for Step 1 through 6 -->
-          <div id="attendance-step-content">
-            <!-- Dynamically rendered by js/attendance.js -->
+            <!-- Embedded Live Attendance Module -->
+            <iframe id="attendance-integrated-frame" 
+                    class="attendance-integrated-frame"
+                    src="teacher-attendance.html?embedded=true" 
+                    title="Teacher Attendance Management"
+                    onload="TeacherApp.onAttendanceFrameLoaded()"
+                    onerror="TeacherApp.onAttendanceFrameError()">
+            </iframe>
           </div>
 
         </section>

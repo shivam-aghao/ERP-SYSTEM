@@ -2293,8 +2293,33 @@
                     result = resData.data || resData;
                 }
 
-                const role = String(result.role || result.user?.role || "student").toLowerCase().trim();
+                const user = result.user || result;
+                const token = result.token || 'auth_token_' + Date.now();
+                const role = String(result.role || user.role || "student").toLowerCase().trim();
+                user.role = (role === "faculty" || role === "employee") ? "teacher" : role;
+
+                // Sync unified session across ERP_AUTH and browser storage
+                if (window.ERP_AUTH && typeof window.ERP_AUTH.setSession === "function") {
+                    window.ERP_AUTH.setSession(user, token);
+                } else {
+                    const userJson = JSON.stringify(user);
+                    localStorage.setItem("ssgmce_user", userJson);
+                    localStorage.setItem("ssgmce_erp_session", userJson);
+                    localStorage.setItem("ssgmce_active_role", user.role);
+                    sessionStorage.setItem("ssgmce_user", userJson);
+                    sessionStorage.setItem("ssgmce_erp_session", userJson);
+                }
+
                 let redirectUrl = result.redirect;
+
+                // Check for requested return destination from query param
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const dest = urlParams.get('redirect') || urlParams.get('returnUrl');
+                    if (dest && !dest.startsWith('http') && !dest.includes('login.html')) {
+                        redirectUrl = dest;
+                    }
+                } catch (_) {}
 
                 if (!redirectUrl) {
                     if (role === "teacher" || role === "faculty" || role === "employee") {
@@ -2306,12 +2331,12 @@
                     }
                 }
 
-                // Storage permissions
+                // Storage permissions for role-based components
                 const storage = rememberMe ? localStorage : sessionStorage;
                 storage.setItem("user_role", role);
                 storage.setItem("dashboard_permissions", JSON.stringify({
                     student_dashboard: role === "student",
-                    employee_dashboard: role === "teacher" || role === "employee",
+                    employee_dashboard: role === "teacher" || role === "employee" || role === "faculty",
                     faculty_dashboard: role === "teacher" || role === "faculty",
                     admin_dashboard: role === "admin"
                 }));
