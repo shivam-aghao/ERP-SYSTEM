@@ -464,14 +464,38 @@ def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
 # ==============================================================================
 @api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
-def get_teacher_profile(db: Session = Depends(get_db)):
-    row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
+@api.get("/profile", tags=["Faculty Portal"])
+def get_teacher_profile(
+    empCode: Optional[str] = Query(None, alias="empCode"),
+    emp_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    code = empCode or emp_code or teacher_id
+    if code:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            WHERE LOWER(t.emp_code) = LOWER(:code) 
+               OR t.id = :code 
+               OR LOWER(t.email) = LOWER(:code)
+            LIMIT 1
+        """), {"code": code}).fetchone()
+    else:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            LIMIT 1
+        """)).fetchone()
+
     if not row:
         return error_response("Teacher record not found", 404)
     data = dict(row._mapping)
     data["fullName"] = data.get("full_name")
     data["empCode"] = data.get("emp_code")
-    data["department"] = data.get("department_name") or "CSE"
+    data["department"] = data.get("department_name") or data.get("department_code") or "Computer Science & Engineering"
     return success_response(data)
 
 @api.put("/teacher/profile", tags=["Faculty Portal"])

@@ -41,11 +41,13 @@ class AuthService:
         try:
             teacher_row = db.execute(
                 text("""
-                    SELECT * FROM teachers 
-                    WHERE LOWER(emp_code) = LOWER(:uid) 
-                       OR LOWER(email) = LOWER(:uid) 
-                       OR id = :uid 
-                       OR LOWER(full_name) LIKE LOWER(:uid_pattern)
+                    SELECT t.*, d.name as dept_name, d.code as dept_code
+                    FROM teachers t
+                    LEFT JOIN departments d ON t.department_id = d.id
+                    WHERE LOWER(t.emp_code) = LOWER(:uid) 
+                       OR LOWER(t.email) = LOWER(:uid) 
+                       OR t.id = :uid 
+                       OR LOWER(t.full_name) LIKE LOWER(:uid_pattern)
                     LIMIT 1
                 """),
                 {"uid": uid, "uid_pattern": f"%{uid}%"}
@@ -61,13 +63,20 @@ class AuthService:
             or hint_role in ("teacher", "faculty", "employee")
         ):
             try:
-                teacher_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+                teacher_row = db.execute(text("""
+                    SELECT t.*, d.name as dept_name, d.code as dept_code
+                    FROM teachers t
+                    LEFT JOIN departments d ON t.department_id = d.id
+                    LIMIT 1
+                """)).fetchone()
             except Exception:
                 pass
 
         if teacher_row:
             m = teacher_row._mapping
             t_name = m.get("full_name") or f"{m.get('first_name', '')} {m.get('last_name', '')}".strip() or uid
+            dept_name = m.get("dept_name") or "Computer Science & Engineering"
+            dept_code = m.get("dept_code") or "CSE"
             return {
                 "token": f"teach_token_{m.get('id', uid)}",
                 "user": {
@@ -76,7 +85,14 @@ class AuthService:
                     "full_name": t_name,
                     "email": m.get("email", ""),
                     "emp_code": m.get("emp_code", uid),
-                    "department": m.get("department_id", ""),
+                    "empCode": m.get("emp_code", uid),
+                    "designation": m.get("designation") or "Associate Professor",
+                    "department": dept_name,
+                    "department_id": m.get("department_id", ""),
+                    "department_name": dept_name,
+                    "department_code": dept_code,
+                    "phone": m.get("phone", ""),
+                    "avatar": m.get("avatar", ""),
                     "role": "teacher"
                 },
                 "role": "teacher",

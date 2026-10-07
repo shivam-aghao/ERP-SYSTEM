@@ -82,8 +82,9 @@
       return res.data;
     },
 
-    getProfile: async function () {
-      var res = await this.request('/auth/profile');
+    getProfile: async function (empCode) {
+      var query = empCode ? '?empCode=' + encodeURIComponent(empCode) : '';
+      var res = await this.request('/teacher/profile' + query);
       return res.data;
     },
 

@@ -11,8 +11,15 @@ from backend.utils.helpers import success_response, error_response
 router = APIRouter(tags=["Faculty Portal"])
 
 @router.get("/teacher/profile")
-def get_teacher_profile(db: Session = Depends(get_db)):
-    data = FacultyService.get_profile(db)
+@router.get("/profile")
+def get_teacher_profile(
+    empCode: Optional[str] = Query(None, alias="empCode"),
+    emp_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    code = empCode or emp_code or teacher_id
+    data = FacultyService.get_profile(db, emp_code=code)
     if not data:
         return error_response("Teacher profile not found", 404)
     return success_response(data)

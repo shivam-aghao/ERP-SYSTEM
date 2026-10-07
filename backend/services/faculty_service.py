@@ -5,9 +5,32 @@ from sqlalchemy import text
 
 class FacultyService:
     @staticmethod
-    def get_profile(db: Session) -> Optional[Dict[str, Any]]:
-        row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
-        return dict(row._mapping) if row else None
+    def get_profile(db: Session, emp_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if emp_code:
+            row = db.execute(text("""
+                SELECT t.*, d.name as department_name, d.code as department_code
+                FROM teachers t
+                LEFT JOIN departments d ON t.department_id = d.id
+                WHERE LOWER(t.emp_code) = LOWER(:code) 
+                   OR t.id = :code 
+                   OR LOWER(t.email) = LOWER(:code)
+                LIMIT 1
+            """), {"code": emp_code}).fetchone()
+        else:
+            row = db.execute(text("""
+                SELECT t.*, d.name as department_name, d.code as department_code
+                FROM teachers t
+                LEFT JOIN departments d ON t.department_id = d.id
+                LIMIT 1
+            """)).fetchone()
+
+        if not row:
+            return None
+        m = dict(row._mapping)
+        m["fullName"] = m.get("full_name")
+        m["empCode"] = m.get("emp_code")
+        m["department"] = m.get("department_name") or m.get("department_code") or "Computer Science & Engineering"
+        return m
 
     @staticmethod
     def update_profile(updates: Dict[str, Any], db: Session) -> Optional[Dict[str, Any]]:

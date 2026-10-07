@@ -1428,7 +1428,7 @@ const AttendanceWorkflow = {
   // ------------------------------------------------------
   openSaveDraftModal() {
     const summary = AttendanceState.getSummary();
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
 
     const modalHTML = `
@@ -1501,7 +1501,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Enforce duplicate attendance prevention
     if (AttendanceState.isSessionAlreadySubmitted(date, classCode, subCode, lectureTime)) {
@@ -1563,7 +1563,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Record submitted session with full metadata for persistence and duplicate prevention
     const sessionRecord = {
