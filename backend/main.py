@@ -451,14 +451,43 @@ def get_all_students(class_name: Optional[str] = None, class_id: Optional[str] =
 
 @api.get("/students/class/{class_id}", tags=["Master Data"])
 def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
+    # 1. Check Supabase
+    try:
+        import urllib.request, urllib.parse, json, re
+        from backend.config.settings import settings
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            url = f"{settings.SUPABASE_URL}/rest/v1/students?class_name=eq.{urllib.parse.quote(class_id)}&select=*&order=roll_no"
+            req = urllib.request.Request(
+                url,
+                headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data and len(data) > 0:
+                    def sort_key(s):
+                        m = re.search(r'\d+', str(s.get('roll_no') or ''))
+                        return int(m.group()) if m else 9999
+                    data.sort(key=sort_key)
+                    return success_response(data)
+    except Exception:
+        pass
+
+    # 2. SQLite fallback
     rows = db.execute(text("""
-        SELECT s.*, c.class_name, c.division
+        SELECT s.*, COALESCE(c.class_name, s.class_name) as class_name, c.division
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE s.class_id = :cid OR c.class_name = :cid
+        WHERE s.class_id = :cid OR c.class_name = :cid OR s.class_name = :cid
         ORDER BY s.roll_no ASC
     """), {"cid": class_id}).fetchall()
-    return success_response([dict(r._mapping) for r in rows])
+    data = [dict(r._mapping) for r in rows]
+    import re
+    def sort_key(s):
+        m = re.search(r'\d+', str(s.get('roll_no') or ''))
+        return int(m.group()) if m else 9999
+    data.sort(key=sort_key)
+    return success_response(data)
+
 
 # ==============================================================================
 # 7. TEACHER PORTAL & ATTENDANCE MANAGEMENT
@@ -489,22 +518,18 @@ def get_all_faculty_members(db: Session = Depends(get_db)):
 
 @api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
-<<<<<<< HEAD
-def get_teacher_profile(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
-    data = FacultyService.get_profile(db, tid)
-    if not data:
-        return error_response("Teacher record not found", 404)
-=======
 @api.get("/profile", tags=["Faculty Portal"])
 def get_teacher_profile(
+    request: Request,
     empCode: Optional[str] = Query(None, alias="empCode"),
     emp_code: Optional[str] = Query(None),
     teacher_id: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     code = empCode or emp_code or teacher_id
-    if code:
+    tid = extract_teacher_identifier_unified(request, teacher_id, code)
+    data = FacultyService.get_profile(db, tid)
+    if not data:
         row = db.execute(text("""
             SELECT t.*, d.name as department_name, d.code as department_code 
             FROM teachers t 
@@ -513,23 +538,17 @@ def get_teacher_profile(
                OR t.id = :code 
                OR LOWER(t.email) = LOWER(:code)
             LIMIT 1
-        """), {"code": code}).fetchone()
-    else:
-        row = db.execute(text("""
-            SELECT t.*, d.name as department_name, d.code as department_code 
-            FROM teachers t 
-            LEFT JOIN departments d ON t.department_id = d.id 
-            LIMIT 1
-        """)).fetchone()
-
-    if not row:
-        return error_response("Teacher record not found", 404)
-    data = dict(row._mapping)
-    data["fullName"] = data.get("full_name")
-    data["empCode"] = data.get("emp_code")
-    data["department"] = data.get("department_name") or data.get("department_code") or "Computer Science & Engineering"
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+        """), {"code": tid or "TEA001"}).fetchone()
+        if not row:
+            row = db.execute(text("SELECT t.*, d.name as department_name, d.code as department_code FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
+        if not row:
+            return error_response("Teacher record not found", 404)
+        data = dict(row._mapping)
+        data["fullName"] = data.get("full_name")
+        data["empCode"] = data.get("emp_code")
+        data["department"] = data.get("department_name") or data.get("department_code") or "Computer Science & Engineering"
     return success_response(data)
+
 
 @api.put("/teacher/profile", tags=["Faculty Portal"])
 def update_teacher_profile(payload: TeacherProfileUpdate, request: Request, teacher_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
@@ -538,13 +557,15 @@ def update_teacher_profile(payload: TeacherProfileUpdate, request: Request, teac
     return success_response(data or {}, "Teacher profile updated")
 
 @api.get("/dashboard/summary", tags=["Faculty Portal"])
-<<<<<<< HEAD
 def get_teacher_dashboard_summary(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
-    data = FacultyService.get_summary(db, tid)
-    return success_response(data)
-=======
-def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
+    try:
+        data = FacultyService.get_summary(db, tid)
+        if data and data.get("faculty"):
+            return success_response(data)
+    except Exception:
+        pass
+
     classes_cnt = 0
     students_cnt = 0
     quizzes_cnt = 0
@@ -560,14 +581,13 @@ def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
     except Exception:
         pass
 
-    # Dynamic Teacher Profile
     faculty_dict = {
         "id": "",
         "name": "Faculty Member",
         "employeeId": "",
         "prefix": "Prof.",
         "title": "Faculty Member",
-        "departmentCode": "",
+        "departmentCode": "CSE",
         "cabinLocation": ""
     }
     try:
@@ -586,7 +606,6 @@ def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
     except Exception:
         pass
 
-    # Dynamic Today's Timetable Schedule
     today_schedule = []
     try:
         from datetime import datetime
@@ -624,7 +643,6 @@ def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
         "total_attendance_sessions": sessions_cnt,
         "attendance_average_pct": avg_att_pct
     })
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 
 @api.get("/timetable/my", tags=["Faculty Portal"])
 @api.get("/teacher/timetable", tags=["Faculty Portal"])
@@ -907,12 +925,40 @@ def get_attendance_records(class_id: Optional[str] = None, class_name: Optional[
 @app.get("/api/teacher/class-roster", tags=["Attendance Marking"])
 def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
     cid = classId or class_id or "3R"
+    import re
+
+    # Helper for natural sorting (e.g. 3R1, 3R2, ..., 3R10, ..., 3R80)
+    def extract_numeric(val):
+        m = re.search(r'\d+', str(val or ''))
+        return int(m.group()) if m else 9999
+
+    # Fetch recent attendance history (last 10 sessions) for this class
+    history_map = {}
+    try:
+        hist_rows = db.execute(text("""
+            SELECT ar.student_id, ar.status, asess.session_date
+            FROM attendance_records ar
+            JOIN attendance_sessions asess ON ar.session_id = asess.id
+            WHERE asess.class_name = :cid
+            ORDER BY asess.session_date DESC, asess.created_at DESC
+            LIMIT 1200
+        """), {"cid": cid}).fetchall()
+        for hr in hist_rows:
+            sid = str(hr[0])
+            st = "P" if str(hr[1]).upper().startswith("P") else "A"
+            if sid not in history_map:
+                history_map[sid] = []
+            if len(history_map[sid]) < 10:
+                history_map[sid].append(st)
+    except Exception:
+        pass
+
     # 1. Query Supabase Cloud students table
     try:
         import urllib.request, urllib.parse, json
         from backend.config.settings import settings
         if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
-            url = f"{settings.SUPABASE_URL}/rest/v1/students?class_name=eq.{urllib.parse.quote(cid)}&select=id,roll_no,full_name,student_code,email,class_name&order=roll_no"
+            url = f"{settings.SUPABASE_URL}/rest/v1/students?class_name=eq.{urllib.parse.quote(cid)}&select=id,roll_no,full_name,student_code,email,class_name"
             req = urllib.request.Request(
                 url,
                 headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
@@ -920,18 +966,27 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
             with urllib.request.urlopen(req, timeout=3) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 if data and len(data) > 0:
+                    data.sort(key=lambda s: extract_numeric(s.get("roll_no")))
                     students = []
                     for m in data:
-                        roll = m.get("roll_no") or "1"
-                        roll_fmt = f"{m.get('class_name') or cid}-{str(roll)}"
+                        raw_roll = m.get("roll_no") or "1"
+                        roll_str = str(raw_roll)
+                        num_roll = extract_numeric(roll_str)
+                        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}{num_roll}"
+                        sid = str(m.get("id"))
+                        hist = history_map.get(sid, ["P"] * 10)
+                        is_provisional = "D" in str(m.get("student_code", "")).upper()
                         students.append({
-                            "id": m.get("id"),
-                            "rollNo": roll,
+                            "id": sid,
+                            "rollNo": num_roll,
                             "rollFormatted": roll_fmt,
                             "name": m.get("full_name"),
+                            "studentCode": m.get("student_code"),
                             "enrollmentNo": m.get("student_code"),
                             "cardId": f"CARD-{roll_fmt}",
-                            "classCode": m.get("class_name") or cid
+                            "classCode": m.get("class_name") or cid,
+                            "recentHistory": hist,
+                            "isProvisional": is_provisional
                         })
                     return success_response({"students": students})
     except Exception:
@@ -939,26 +994,34 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
 
     # 2. SQLite fallback
     rows = db.execute(text("""
-        SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, s.class_name
+        SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, COALESCE(c.class_name, s.class_name) as class_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
         WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id = :cid OR c.id = :cid
-        ORDER BY s.roll_no ASC
     """), {"cid": cid}).fetchall()
 
+    sorted_rows = sorted(rows, key=lambda r: extract_numeric(r._mapping.get("roll_no")))
     students = []
-    for r in rows:
+    for r in sorted_rows:
         m = dict(r._mapping)
-        roll = m.get("roll_no") or 1
-        roll_fmt = f"{m.get('class_name') or cid}-{str(roll)}"
+        raw_roll = m.get("roll_no") or 1
+        roll_str = str(raw_roll)
+        num_roll = extract_numeric(roll_str)
+        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}{num_roll}"
+        sid = str(m.get("id"))
+        hist = history_map.get(sid, ["P"] * 10)
+        is_provisional = "D" in str(m.get("student_code", "")).upper()
         students.append({
-            "id": m.get("id"),
-            "rollNo": roll,
+            "id": sid,
+            "rollNo": num_roll,
             "rollFormatted": roll_fmt,
             "name": m.get("full_name"),
+            "studentCode": m.get("student_code"),
             "enrollmentNo": m.get("student_code"),
             "cardId": f"CARD-{roll_fmt}",
-            "classCode": m.get("class_name") or cid
+            "classCode": m.get("class_name") or cid,
+            "recentHistory": hist,
+            "isProvisional": is_provisional
         })
     return success_response({"students": students})
 
@@ -2626,12 +2689,11 @@ if os.path.isdir(STUDENT_DIR):
     app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
     logger.info("Mounted student static assets from %s", STUDENT_DIR)
 
-<<<<<<< HEAD
 TEACHER_DIR = os.path.join(ERP_ROOT, "Teacher_Dashboard", "frontend")
 if os.path.isdir(TEACHER_DIR):
     app.mount("/teacher", StaticFiles(directory=TEACHER_DIR, html=True), name="teacher")
     logger.info("Mounted teacher dashboard static assets from %s", TEACHER_DIR)
-=======
+
 # Dedicated Attendance routes mapped to Teacher Dashboard Hub
 @app.get("/attendance", include_in_schema=False)
 def attendance_route():
@@ -2640,7 +2702,7 @@ def attendance_route():
 @app.get("/attendance/roster", include_in_schema=False)
 def attendance_roster_route():
     return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+
 
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")

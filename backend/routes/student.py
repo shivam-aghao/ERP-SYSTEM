@@ -41,8 +41,8 @@ def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session 
 
 @router.get("/student/attendance")
 @router.get("/attendance")
-<<<<<<< HEAD
-def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
+def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    sc = student_code or "308637"
     sub_dicts = []
     recent_records = []
     
@@ -53,7 +53,7 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
         if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
             headers = {"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
             # Query subjects
-            url = f"{settings.SUPABASE_URL}/rest/v1/student_attendance_subjects?student_code=eq.{urllib.parse.quote(student_code)}&order=subject_code"
+            url = f"{settings.SUPABASE_URL}/rest/v1/student_attendance_subjects?student_code=eq.{urllib.parse.quote(sc)}&order=subject_code"
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=3) as resp:
                 sub_data = json.loads(resp.read().decode('utf-8'))
@@ -61,7 +61,7 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
                     sub_dicts = sub_data
 
             # Query recent attendance history records with joined session info
-            rec_url = f"{settings.SUPABASE_URL}/rest/v1/attendance_records?student_code=eq.{urllib.parse.quote(student_code)}&select=id,is_present,status,remarks,created_at,attendance_sessions(session_date,subject_code,subject_name,period_number,session_type)&order=created_at.desc&limit=50"
+            rec_url = f"{settings.SUPABASE_URL}/rest/v1/attendance_records?student_code=eq.{urllib.parse.quote(sc)}&select=id,is_present,status,remarks,created_at,attendance_sessions(session_date,subject_code,subject_name,period_number,session_type)&order=created_at.desc&limit=50"
             rec_req = urllib.request.Request(rec_url, headers=headers)
             with urllib.request.urlopen(rec_req, timeout=3) as resp:
                 raw_recs = json.loads(resp.read().decode('utf-8'))
@@ -84,7 +84,7 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
     if not sub_dicts:
         subjects = db.execute(
             text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
-            {"sc": student_code}
+            {"sc": sc}
         ).fetchall()
         if not subjects:
             subjects = db.execute(text("SELECT * FROM student_attendance_subjects WHERE class_name = '3R' LIMIT 6")).fetchall()
@@ -99,16 +99,10 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
                 WHERE ar.student_id = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
                 ORDER BY s.session_date DESC
                 LIMIT 30
-            """), {"sc": student_code}
+            """), {"sc": sc}
         ).fetchall()
         recent_records = [dict(r._mapping) for r in rec_rows]
 
-=======
-def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    code_val = student_code or "308637"
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
-    sub_dicts = [dict(s._mapping) for s in subjects]
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
     overall_pct = round((tot_pres / tot_lecs * 100), 2) if tot_lecs > 0 else 0.0

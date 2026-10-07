@@ -18,7 +18,6 @@ TIME_SLOT_HEADERS = [
 
 class FacultyService:
     @staticmethod
-<<<<<<< HEAD
     def get_teacher_by_identifier(identifier: Optional[str], db: Session) -> Optional[Dict[str, Any]]:
         """Find teacher by ID, emp_code, email, or partial name."""
         if not identifier:
@@ -36,7 +35,7 @@ class FacultyService:
             LEFT JOIN departments d ON t.department_id = d.id 
             WHERE t.id = :uid 
                OR LOWER(t.emp_code) = LOWER(:uid) 
-               OR LOWER(t.email) = LOWER(:uid)
+               OR LOWER(t.email) = LOWER(:uid) 
                OR LOWER(t.full_name) = LOWER(:uid)
             LIMIT 1
         """), {"uid": clean_id}).fetchone()
@@ -58,34 +57,17 @@ class FacultyService:
                 row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
 
         return dict(row._mapping) if row else None
-=======
-    def get_profile(db: Session, emp_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        if emp_code:
-            row = db.execute(text("""
-                SELECT t.*, d.name as department_name, d.code as department_code
-                FROM teachers t
-                LEFT JOIN departments d ON t.department_id = d.id
-                WHERE LOWER(t.emp_code) = LOWER(:code) 
-                   OR t.id = :code 
-                   OR LOWER(t.email) = LOWER(:code)
-                LIMIT 1
-            """), {"code": emp_code}).fetchone()
-        else:
-            row = db.execute(text("""
-                SELECT t.*, d.name as department_name, d.code as department_code
-                FROM teachers t
-                LEFT JOIN departments d ON t.department_id = d.id
-                LIMIT 1
-            """)).fetchone()
 
-        if not row:
+    @staticmethod
+    def get_profile(db: Session, emp_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        teacher = FacultyService.get_teacher_by_identifier(emp_code, db)
+        if not teacher:
             return None
-        m = dict(row._mapping)
-        m["fullName"] = m.get("full_name")
-        m["empCode"] = m.get("emp_code")
-        m["department"] = m.get("department_name") or m.get("department_code") or "Computer Science & Engineering"
-        return m
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+        teacher["fullName"] = teacher.get("full_name")
+        teacher["empCode"] = teacher.get("emp_code")
+        teacher["department"] = teacher.get("department_name") or teacher.get("department_code") or "Computer Science & Engineering"
+        return teacher
+
 
     @staticmethod
     def get_profile(db: Session, teacher_identifier: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -112,7 +94,6 @@ class FacultyService:
         return dict(upd._mapping) if upd else None
 
     @staticmethod
-<<<<<<< HEAD
     def get_all_teachers(db: Session) -> List[Dict[str, Any]]:
         """List all 15 faculty members with department & load count."""
         rows = db.execute(text("""
@@ -225,15 +206,6 @@ class FacultyService:
                 "periods": slot_objects
             })
 
-=======
-    def get_summary(db: Session) -> Dict[str, Any]:
-        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 0
-        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 0
-        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 0
-        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 0
-        avg_att = db.execute(text("SELECT AVG(attendance_rate) FROM attendance_sessions")).scalar()
-        avg_att_pct = round(float(avg_att), 1) if avg_att is not None else 0.0
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
         return {
             "teacher": {
                 "id": tid,
@@ -312,11 +284,7 @@ class FacultyService:
             "total_students": students_cnt,
             "total_quizzes": quizzes_cnt,
             "total_attendance_sessions": sessions_cnt,
-<<<<<<< HEAD
             "attendance_average_pct": 87.4
-=======
-            "attendance_average_pct": avg_att_pct
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
         }
 
     @staticmethod
