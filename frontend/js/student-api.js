@@ -12,7 +12,15 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const DEFAULT_BASE_URL = 'http://localhost:8000/api/v1/student';
+  function resolveBaseUrl() {
+    if (typeof window !== 'undefined' && window.__STUDENT_API_BASE__) {
+      return window.__STUDENT_API_BASE__;
+    }
+    if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
+      return `${window.location.origin}/api/v1/student`;
+    }
+    return 'http://127.0.0.1:8000/api/v1/student';
+  }
 
   function getActiveStudentCode() {
     if (typeof window !== 'undefined' && window.ERP_AUTH) {
@@ -25,7 +33,9 @@
   }
 
   const StudentApi = {
-    baseUrl: (typeof window !== 'undefined' && window.__STUDENT_API_BASE__) || DEFAULT_BASE_URL,
+    get baseUrl() {
+      return resolveBaseUrl();
+    },
 
     async request(endpoint, options = {}) {
       const url = `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
