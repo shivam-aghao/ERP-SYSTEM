@@ -2225,12 +2225,16 @@ try:
     from backend.routes.attendance import router as attendance_router
     from backend.routes.student import router as student_router
     from backend.routes.syllabus import router as syllabus_router
+    from backend.routes.student_records import router as student_records_router
+    from backend.routes.notifications import router as notifications_router
     app.include_router(admin_router, prefix="/api/v1")
     app.include_router(faculty_router, prefix="/api/v1")
     app.include_router(attendance_router, prefix="/api/v1")
     app.include_router(student_router, prefix="/api/v1")
     app.include_router(syllabus_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance, student, syllabus) included under /api/v1")
+    app.include_router(student_records_router, prefix="/api/v1")
+    app.include_router(notifications_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications) included under /api/v1")
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 
