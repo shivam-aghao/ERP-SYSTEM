@@ -1007,22 +1007,26 @@
         <div class="module-content-pane" data-module="fees">
           <!-- Subtab 1: Payable Fee -->
           <div class="subtab-pane active" data-subpane="payable-fee">
-            <div class="fee-summary-banner">
+            <div class="fee-summary-banner" id="modalFeeSummaryBanner">
               <div class="fee-stat-box">
-                <span class="fee-label">Total Annual Fee</span>
-                <span class="fee-val">₹85,000</span>
+                <span class="fee-label">Total College Fee</span>
+                <span class="fee-val">₹1,18,500</span>
+              </div>
+              <div class="fee-stat-box">
+                <span class="fee-label">Scholarship / Concession</span>
+                <span class="fee-val text-accent">₹60,000</span>
+              </div>
+              <div class="fee-stat-box">
+                <span class="fee-label">Net Payable Fee</span>
+                <span class="fee-val">₹58,500</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Amount Paid</span>
-                <span class="fee-val text-success">₹60,000</span>
+                <span class="fee-val text-success">₹45,000</span>
               </div>
               <div class="fee-stat-box">
                 <span class="fee-label">Outstanding Balance</span>
-                <span class="fee-val text-warning">₹25,000</span>
-              </div>
-              <div class="fee-stat-box">
-                <span class="fee-label">Due Date</span>
-                <span class="fee-val text-accent">15 April 2026</span>
+                <span class="fee-val text-warning">₹13,500</span>
               </div>
             </div>
             <div class="table-responsive-wrapper">
@@ -1036,7 +1040,7 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="modalFeeTableBody">
                   <tr>
                     <td>Tuition Fee (Semester IV)</td>
                     <td>₹68,500</td>
@@ -1125,7 +1129,7 @@
               <h4>Verified Payment Receipts History</h4>
               <span class="badge-status-safe">Official College Counterfoil</span>
             </div>
-            <div class="receipts-list">
+            <div class="receipts-list" id="modalFeeReceiptsList">
               <div class="receipt-item">
                 <div class="receipt-meta">
                   <span class="receipt-id">Receipt #SSGMCE-2025-8821</span>
@@ -1454,35 +1458,45 @@
           </div>
 
           <!-- Subtab 2: Download Document -->
-          <div class="subtab-pane" data-subpane="download-document">
+          <div class="subtab-pane active" data-subpane="download-document">
             <div class="pane-section-header">
               <h4>Available Verified Institutional Credentials</h4>
-              <span class="badge-status-safe">D-Wallet Cloud Vault</span>
+              <span class="badge-status-safe">Supabase Storage Cloud Vault</span>
             </div>
-            <div class="wallet-download-list">
+            <div class="wallet-download-list" id="modalDwalletDocList">
               <div class="wallet-doc-item">
                 <div class="w-doc-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
                 <div class="w-doc-info">
-                  <h5>Semester III Autonomous Grade Card</h5>
-                  <p>Official SGPA: 8.64 • Digitally Signed by Controller of Examinations</p>
-                  <span class="file-size-tag">Verified PDF • 420 KB</span>
-                </div>
-                <button type="button" class="btn-download-action" onclick="showToast('Downloading Semester III Grade Card PDF...', 'success')">Download PDF</button>
-              </div>
-
-              <div class="wallet-doc-item">
-                <div class="w-doc-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                </div>
-                <div class="w-doc-info">
                   <h5>Institutional Bonafide Certificate</h5>
-                  <p>Issued for Passport and Education Loan Verification • Valid for 2025-26</p>
+                  <p>Issued for Passport and Education Loan Verification • Valid for 2026-27</p>
                   <span class="file-size-tag">Verified PDF • 210 KB</span>
                 </div>
-                <button type="button" class="btn-download-action" onclick="showToast('Downloading Bonafide Certificate PDF...', 'success')">Download PDF</button>
+                <button type="button" class="btn-download-action" onclick="showToast('Accessing Bonafide Certificate from Supabase Storage...', 'success')">Download PDF</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Institutional Digital Certificates -->
+          <div class="subtab-pane" data-subpane="digital-certificates">
+            <div class="pane-section-header">
+              <h4>Official Digital Certificates &amp; Credentials</h4>
+              <span class="badge-status-safe">SSGMCE Cryptographic Registry</span>
+            </div>
+            <div class="wallet-download-list" id="modalDwalletCertList">
+              <!-- Dynamically hydrated from /api/v1/student/certificates -->
+            </div>
+
+            <!-- Instant Certificate Verification Box -->
+            <div class="cert-verify-card" style="margin-top:20px; padding:20px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px;">
+              <h5 style="color:#15803d; margin-bottom:6px; font-weight:700;">Instant Digital Certificate Authenticity Verification</h5>
+              <p style="font-size:12.5px; color:#475569; margin-bottom:12px;">Verify any SSGMCE issued certificate using its unique tamper-evident verification code against the autonomous registry:</p>
+              <div style="display:flex; gap:10px;">
+                <input type="text" id="verifyCertInput" class="form-control" placeholder="e.g. SSGMCE-ACAD-308637" value="SSGMCE-ACAD-308637" style="flex:1; border-color:#86efac;">
+                <button type="button" class="btn btn-primary" onclick="verifyCertificateInModal()" style="background:#16a34a; border-color:#16a34a; padding:8px 20px; font-weight:600;">Verify Certificate</button>
+              </div>
+              <div id="verifyCertResultBox" style="margin-top:14px; display:none;"></div>
             </div>
           </div>
         </div>
@@ -1491,71 +1505,43 @@
         <div class="module-content-pane" data-module="examination">
           <!-- Subtab 1: View Marks -->
           <div class="subtab-pane active" data-subpane="view-marks">
-            <div class="exam-marks-banner">
+            <div class="exam-marks-banner" id="modalExamMarksBanner">
               <div class="marks-stat">
-                <span class="ms-lbl">Current Cumulative CGPA</span>
-                <span class="ms-val">8.64</span>
+                <span class="ms-lbl">Current Semester SGPA</span>
+                <span class="ms-val text-primary">9.25</span>
+              </div>
+              <div class="marks-stat">
+                <span class="ms-lbl">Cumulative CGPA</span>
+                <span class="ms-val text-success">8.87</span>
               </div>
               <div class="marks-stat">
                 <span class="ms-lbl">Total Credits Earned</span>
-                <span class="ms-val text-accent">68 / 160</span>
+                <span class="ms-val text-accent">134 / 134</span>
               </div>
               <div class="marks-stat">
                 <span class="ms-lbl">Active Backlogs</span>
                 <span class="ms-val text-success">0 (Clear)</span>
               </div>
             </div>
-            <div class="pane-section-header">
-              <h4>Semester IV Continuous Internal Evaluation (CIE) Marks</h4>
-              <span class="badge badge-cyan">Mid-Sem Progress</span>
+            <div class="pane-section-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <h4>Semester V Autonomous Examination Results</h4>
+              <span class="badge badge-cyan" id="modalExamResultBadge">Result Published ✓</span>
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
                 <thead>
                   <tr>
                     <th>Subject Code &amp; Title</th>
-                    <th>Class Test 1 (20)</th>
-                    <th>Class Test 2 (20)</th>
-                    <th>Teacher Assessment (10)</th>
-                    <th>Total CIE (50)</th>
+                    <th>Course Type</th>
+                    <th>Credits</th>
+                    <th>Internal CIE (30)</th>
+                    <th>End-Sem ESE (70)</th>
+                    <th>Total Marks (100)</th>
+                    <th>Grade</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>CS-301 Data Structures</td>
-                    <td>18</td>
-                    <td>17</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-302 Java Programming</td>
-                    <td>19</td>
-                    <td>18</td>
-                    <td>10</td>
-                    <td><strong>47 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-303 Operating Systems</td>
-                    <td>16</td>
-                    <td>15</td>
-                    <td>8</td>
-                    <td><strong>39 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-304 Database Systems</td>
-                    <td>17</td>
-                    <td>18</td>
-                    <td>9</td>
-                    <td><strong>44 / 50</strong></td>
-                  </tr>
-                  <tr>
-                    <td>CS-305 Computer Networks</td>
-                    <td>15</td>
-                    <td>14</td>
-                    <td>8</td>
-                    <td><strong>37 / 50</strong></td>
-                  </tr>
+                <tbody id="modalExamMarksTableBody">
+                  <!-- Dynamically populated from /api/v1/student/examination -->
                 </tbody>
               </table>
             </div>
@@ -1567,18 +1553,18 @@
               <h4>Apply for Autonomous End-Sem Answer Book Revaluation / Verification</h4>
               <p>Revaluation Fee: ₹300 per subject • Max 2 subjects per student per semester.</p>
               <form class="academic-form" onsubmit="handleRevaluationSubmit(event)">
-                <div class="subject-select-list">
+                <div class="subject-select-list" id="modalRevalSubjectList">
                   <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-301" onchange="calculateRevalFee()">
-                    <span><strong>CS-301 Data Structures</strong> • End-Sem Marks: 58/70 (Fee: ₹300)</span>
+                    <input type="checkbox" name="revalSubject" value="CS501" onchange="calculateRevalFee()">
+                    <span><strong>CS501 Database Management Systems</strong> • Grade: A+ (Fee: ₹300)</span>
                   </label>
                   <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-303" onchange="calculateRevalFee()">
-                    <span><strong>CS-303 Operating Systems</strong> • End-Sem Marks: 46/70 (Fee: ₹300)</span>
+                    <input type="checkbox" name="revalSubject" value="CS502" onchange="calculateRevalFee()">
+                    <span><strong>CS502 Computer Networks &amp; Protocols</strong> • Grade: O (Fee: ₹300)</span>
                   </label>
                   <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS-305" onchange="calculateRevalFee()">
-                    <span><strong>CS-305 Computer Networks</strong> • End-Sem Marks: 42/70 (Fee: ₹300)</span>
+                    <input type="checkbox" name="revalSubject" value="CS503" onchange="calculateRevalFee()">
+                    <span><strong>CS503 Theory of Computation</strong> • Grade: A (Fee: ₹300)</span>
                   </label>
                 </div>
                 <div class="reval-total-box">
@@ -1594,13 +1580,13 @@
 
           <!-- Subtab 3: Backlog -->
           <div class="subtab-pane" data-subpane="backlog">
-            <div class="backlog-status-card">
+            <div class="backlog-status-card" id="modalBacklogCard">
               <div class="backlog-icon-safe">
                 <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               </div>
               <h4>All Clear Academic Record!</h4>
               <p>You have <strong>0 active backlogs</strong>. All registered autonomous semester courses have been successfully passed in the first attempt.</p>
-              <span class="badge-status-safe">Degree Eligibility: Outstanding</span>
+              <span class="badge-status-safe">Degree Eligibility: Outstanding (100% Cleared)</span>
             </div>
           </div>
         </div>

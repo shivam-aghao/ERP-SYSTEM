@@ -1214,7 +1214,7 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // RESULTS VIEW
+  // RESULTS VIEW & PUBLICATION PORTAL (STEP 6)
   // ----------------------------------------------------
   renderResultsView() {
     const container = document.getElementById("results-content");
@@ -1222,32 +1222,137 @@ const TeacherApp = {
 
     container.innerHTML = `
       <div class="card" style="padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
           <div>
-            <h3 style="font-size:16px; color:var(--dark-navy);">Internal Assessment 1 Marks Entry</h3>
-            <p style="font-size:12.5px; color:var(--text-muted);">CSE 2R1 • Data Structures • Max Marks: 30</p>
+            <h3 style="font-size:17px; color:var(--dark-navy); font-weight:700;">Semester Academic Records &amp; Result Publication Portal</h3>
+            <p style="font-size:12.5px; color:var(--text-muted);">Class 3R (B.Tech Computer Science &amp; Engg.) • Semester V • Controller of Examinations Autonomous Cell</p>
           </div>
-          <button class="quick-action-btn primary" onclick="TeacherApp.showToast('Results spreadsheet successfully synchronized!', 'success')">
-            <i data-lucide="upload" style="width:14px;height:14px;"></i> Upload Marksheet (.xlsx)
-          </button>
+          <div style="display:flex; gap:10px;">
+            <button class="quick-action-btn primary" onclick="TeacherApp.publishClassResults('3R', 5)" style="background:#059669; border-color:#059669; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Publish Results to Student Portal
+            </button>
+            <button class="quick-action-btn" onclick="TeacherApp.unpublishClassResults('3R', 5)" style="background:#dc2626; border-color:#dc2626; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="lock" style="width:15px;height:15px;"></i> Withhold / Unpublish
+            </button>
+          </div>
         </div>
 
-        <div class="results-grid-summary">
-          <div class="result-stat-box">
-            <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">26.4</div>
-            <div style="font-size:12px; color:var(--text-muted);">Class Average Score</div>
+        <div class="results-grid-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px;">
+          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">80 / 80</div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Students Evaluated</div>
           </div>
-          <div class="result-stat-box">
-            <div style="font-size:24px; font-weight:800; color:var(--success);">98.2%</div>
-            <div style="font-size:12px; color:var(--text-muted);">Passing Rate</div>
+          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div style="font-size:24px; font-weight:800; color:#059669;">8.62</div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Class Average SGPA</div>
           </div>
-          <div class="result-stat-box">
-            <div style="font-size:24px; font-weight:800; color:var(--dark-navy);">30 / 30</div>
-            <div style="font-size:12px; color:var(--text-muted);">Highest Score</div>
+          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div style="font-size:24px; font-weight:800; color:#0284c7;">100%</div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Clear Passing Rate</div>
           </div>
+          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div style="font-size:24px; font-weight:800; color:#10b981;">PUBLISHED</div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Portal Visibility Status</div>
+          </div>
+        </div>
+
+        <div class="table-responsive-wrapper" style="overflow-x:auto;">
+          <table class="attendance-data-table" style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr style="background:#f1f5f9; text-align:left; border-bottom:2px solid #cbd5e1;">
+                <th style="padding:10px 12px;">Roll No</th>
+                <th style="padding:10px 12px;">Student Name</th>
+                <th style="padding:10px 12px;">Student Code</th>
+                <th style="padding:10px 12px;">Sem V SGPA</th>
+                <th style="padding:10px 12px;">Cumulative CGPA</th>
+                <th style="padding:10px 12px;">Credits</th>
+                <th style="padding:10px 12px;">Standing</th>
+                <th style="padding:10px 12px;">Status</th>
+                <th style="padding:10px 12px; text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="teacherResultsTableBody">
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R71</td>
+                <td style="padding:10px 12px; font-weight:600;">Aghao Shivam Sanjay</td>
+                <td style="padding:10px 12px; color:var(--text-muted);">308637</td>
+                <td style="padding:10px 12px; font-weight:700; color:#059669;">9.25</td>
+                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.87</td>
+                <td style="padding:10px 12px;">24 / 24</td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
+                <td style="padding:10px 12px; text-align:right;">
+                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R71...', 'info')">Grade Card</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R01</td>
+                <td style="padding:10px 12px; font-weight:600;">Ahire Prathamesh Vijay</td>
+                <td style="padding:10px 12px; color:var(--text-muted);">308601</td>
+                <td style="padding:10px 12px; font-weight:700; color:#059669;">8.75</td>
+                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.42</td>
+                <td style="padding:10px 12px;">24 / 24</td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
+                <td style="padding:10px 12px; text-align:right;">
+                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R01...', 'info')">Grade Card</button>
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R02</td>
+                <td style="padding:10px 12px; font-weight:600;">Ambhore Snehal Ramesh</td>
+                <td style="padding:10px 12px; color:var(--text-muted);">308602</td>
+                <td style="padding:10px 12px; font-weight:700; color:#059669;">8.92</td>
+                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.65</td>
+                <td style="padding:10px 12px;">24 / 24</td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
+                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
+                <td style="padding:10px 12px; text-align:right;">
+                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R02...', 'info')">Grade Card</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     `;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  },
+
+  async publishClassResults(className, semester) {
+    TeacherApp.showToast(`Publishing Semester ${semester} results for Class ${className}...`, 'info');
+    try {
+      const res = await fetch('/api/v1/teacher/results/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_name: className, semester: semester, reason: 'Department Assessment Approval' })
+      }).then(r => r.json());
+      if (res && res.success) {
+        TeacherApp.showToast(`Results for Class ${className} Semester ${semester} are now LIVE on student portals!`, 'success');
+      } else {
+        TeacherApp.showToast(res.message || 'Error publishing results', 'error');
+      }
+    } catch (e) {
+      TeacherApp.showToast(`Publication error: ${e.message}`, 'error');
+    }
+  },
+
+  async unpublishClassResults(className, semester) {
+    TeacherApp.showToast(`Withholding Semester ${semester} results for review...`, 'info');
+    try {
+      const res = await fetch('/api/v1/teacher/results/unpublish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_name: className, semester: semester, reason: 'Result Withheld for Faculty Review' })
+      }).then(r => r.json());
+      if (res && res.success) {
+        TeacherApp.showToast(`Results for Class ${className} Semester ${semester} have been withheld from student view.`, 'warning');
+      } else {
+        TeacherApp.showToast(res.message || 'Error unpublishing results', 'error');
+      }
+    } catch (e) {
+      TeacherApp.showToast(`Error: ${e.message}`, 'error');
+    }
   },
 
   // ----------------------------------------------------

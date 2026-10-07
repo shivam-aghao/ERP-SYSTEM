@@ -157,10 +157,24 @@
       });
     },
 
-    // 10. D-Wallet
+    // 10. D-Wallet & Documents
     async getDwallet(studentCode = null) {
       const code = studentCode || getActiveStudentCode();
       return await this.request(`/dwallet?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async getDocuments(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/documents?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async getCertificates(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/certificates?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async verifyCertificate(code) {
+      return await this.request(`/certificates/verify/${encodeURIComponent(code)}`);
     },
 
     async uploadDocument(payload, studentCode = null) {
@@ -171,9 +185,31 @@
       });
     },
 
-    // 11. Examination
-    async getExamination() {
-      return await this.request('/examination');
+    // 11. Examination & Academic Records
+    async getExamination(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/examination?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async getAcademicDashboard(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/academic-dashboard?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async getSemesterResults(studentCode = null, semester = null) {
+      const code = studentCode || getActiveStudentCode();
+      const semParam = semester ? `&semester=${encodeURIComponent(semester)}` : '';
+      return await this.request(`/semester-results?student_code=${encodeURIComponent(code)}${semParam}`);
+    },
+
+    async getAcademicHistory(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/academic-history?student_code=${encodeURIComponent(code)}`);
+    },
+
+    async getFeeTransactions(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/fee-transactions?student_code=${encodeURIComponent(code)}`);
     },
 
     async submitRevaluation(payload) {

@@ -162,17 +162,34 @@ def get_student_attendance(student_code: Optional[str] = Query(None), db: Sessio
 @router.get("/documents")
 @router.get("/dwallet")
 def get_student_documents(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    sc = student_code or "308637"
+    try:
+        from backend.services.academic_wallet_service import AcademicWalletService
+        docs = AcademicWalletService.get_student_documents(sc)
+        if docs:
+            return success_response(docs)
+    except Exception:
+        pass
     rows = db.execute(text("SELECT * FROM student_documents LIMIT 10")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @router.post("/student/documents/upload")
 @router.post("/documents/upload")
 def upload_student_document(payload: Dict[str, Any] = Body(...)):
-    return success_response({"document_id": str(uuid.uuid4())}, "Document uploaded successfully", code=201)
+    return success_response({"document_id": str(uuid.uuid4()), "status": "pending_verification"}, "Document uploaded successfully", code=201)
 
 @router.get("/student/fees")
 @router.get("/fees")
+@router.get("/student/fee-wallet")
 def get_student_fees(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    sc = student_code or "308637"
+    try:
+        from backend.services.academic_wallet_service import AcademicWalletService
+        wallet = AcademicWalletService.get_student_fee_wallet(sc)
+        if wallet:
+            return success_response(wallet)
+    except Exception:
+        pass
     records = db.execute(text("SELECT * FROM fee_records LIMIT 5")).fetchall()
     receipts = db.execute(text("SELECT * FROM fee_receipts LIMIT 5")).fetchall()
     return success_response({
@@ -183,6 +200,16 @@ def get_student_fees(student_code: Optional[str] = Query(None), db: Session = De
 @router.post("/student/fees/pay")
 @router.post("/fees/pay")
 def pay_student_fees(payload: Dict[str, Any] = Body(...)):
+    sc = payload.get("student_code") or "308637"
+    amount = float(payload.get("amount") or 5000.0)
+    method = payload.get("payment_method") or payload.get("paymode") or "upi"
+    gateway = payload.get("gateway") or "BillDesk"
+    try:
+        from backend.services.academic_wallet_service import AcademicWalletService
+        res = AcademicWalletService.record_online_payment(sc, amount, method, gateway)
+        return success_response(res, "Fee payment processed successfully", code=201)
+    except Exception:
+        pass
     return success_response({"transaction_id": f"TXN_{uuid.uuid4().hex[:10].upper()}", "status": "SUCCESS"}, "Payment processed")
 
 @router.get("/student/elearning")
@@ -208,6 +235,39 @@ def submit_change_info_request(payload: Dict[str, Any] = Body(...)):
 
 @router.get("/student/examination")
 @router.get("/examination")
-def get_student_examination(db: Session = Depends(get_db)):
+def get_student_examination(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    sc = student_code or "308637"
+    try:
+        from backend.services.academic_wallet_service import AcademicWalletService
+        dash = AcademicWalletService.get_student_academic_dashboard(sc) or {}
+        results = AcademicWalletService.get_student_semester_results(sc, 5)
+        courses = []
+        for r in results:
+            courses.append({
+                "subject_code": r.get("subject_code"),
+                "subject_name": r.get("subject_name"),
+                "credits": r.get("credits", 4),
+                "internal_marks": r.get("cie_marks", 25),
+                "endsem_marks": r.get("ese_marks", 60),
+                "total_marks": r.get("total_marks", 85),
+                "grade": r.get("grade", "A"),
+                "grade_point": r.get("grade_point", 8.0),
+                "is_pass": r.get("is_pass", True)
+            })
+        return success_response({
+            "student_code": sc,
+            "student_name": dash.get("student_name", "Aghao Shivam Sanjay"),
+            "class_name": dash.get("class_name", "3R"),
+            "current_semester": dash.get("current_semester", 5),
+            "sgpa": dash.get("latest_sgpa", 9.25),
+            "cgpa": dash.get("latest_cgpa", 8.87),
+            "credits_earned": dash.get("earned_credits", 134),
+            "total_credits": dash.get("total_credits", 134),
+            "active_backlogs": dash.get("active_backlogs", 0),
+            "standing": "First Class with Distinction",
+            "courses": courses
+        })
+    except Exception:
+        pass
     marks = db.execute(text("SELECT * FROM exam_marks LIMIT 10")).fetchall()
     return success_response({"marks": [dict(m._mapping) for m in marks]})

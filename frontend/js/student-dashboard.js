@@ -808,12 +808,13 @@ const studentModuleConfig = {
     ]
   },
   dwallet: {
-    title: 'D-Wallet Digital Vault',
+    title: 'D-Wallet Digital Vault & Certificates',
     eyebrow: 'DIGITAL REPOSITORY & CREDENTIALS',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>',
     subtabs: [
-      { key: 'upload-document', label: 'Upload Document' },
-      { key: 'download-document', label: 'Download Document' }
+      { key: 'download-document', label: 'Institutional Documents' },
+      { key: 'digital-certificates', label: 'Verified Certificates' },
+      { key: 'upload-document', label: 'Upload Document' }
     ]
   },
   examination: {
@@ -1111,22 +1112,32 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
       if (fees) {
         const summary = document.getElementById('modalFeeSummaryBanner');
         if (summary) {
+          const tot = fees.total_fees || 118500;
+          const sch = (fees.scholarship_amount || 55000) + (fees.discount_amount || 5000);
+          const pay = fees.payable_amount || 58500;
+          const paid = fees.paid_amount || 45000;
+          const pend = fees.pending_amount || 13500;
+
           summary.innerHTML = `
-            <div class="fee-summary-item">
-              <span class="fsi-label">Total Annual Tuition & Dev Fee</span>
-              <strong class="fsi-val">₹${(fees.total_fees || 98500).toLocaleString('en-IN')}</strong>
+            <div class="fee-stat-box">
+              <span class="fee-label">Total College Fee</span>
+              <span class="fee-val">₹${tot.toLocaleString('en-IN')}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Total Amount Paid</span>
-              <strong class="fsi-val text-success">₹${(fees.paid_amount || 73500).toLocaleString('en-IN')}</strong>
+            <div class="fee-stat-box">
+              <span class="fee-label">Scholarship / Concession</span>
+              <span class="fee-val text-accent">-₹${sch.toLocaleString('en-IN')}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Balance Outstanding</span>
-              <strong class="fsi-val text-danger">₹${(fees.pending_amount || 25000).toLocaleString('en-IN')}</strong>
+            <div class="fee-stat-box">
+              <span class="fee-label">Net Payable Fee</span>
+              <span class="fee-val">₹${pay.toLocaleString('en-IN')}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Installment Due Date</span>
-              <strong class="fsi-val">${fees.due_date || '31 Oct 2026'}</strong>
+            <div class="fee-stat-box">
+              <span class="fee-label">Amount Paid</span>
+              <span class="fee-val text-success">₹${paid.toLocaleString('en-IN')}</span>
+            </div>
+            <div class="fee-stat-box">
+              <span class="fee-label">Outstanding Balance</span>
+              <span class="fee-val text-warning">₹${pend.toLocaleString('en-IN')}</span>
             </div>
           `;
         }
@@ -1147,19 +1158,22 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
         const receiptsList = document.getElementById('modalFeeReceiptsList');
         if (receiptsList && fees.receipts) {
           receiptsList.innerHTML = fees.receipts.map(r => `
-            <div class="receipt-row-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
-              <div class="receipt-info">
-                <strong style="color:var(--text-heading);">${r.receipt_number || r.id}</strong>
-                <span style="font-size:12px; color:var(--text-muted); display:block;">Paid on: ${r.payment_date || r.date} • Mode: ${r.payment_mode || 'Online NetBanking'}</span>
+            <div class="receipt-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+              <div class="receipt-meta">
+                <span class="receipt-id" style="font-weight:700; color:var(--text-heading); font-size:13.5px;">${r.receipt_number || r.id}</span>
+                <span class="receipt-date" style="font-size:12px; color:var(--text-muted); display:block;">Paid on: ${r.payment_date || r.date} • Mode: ${r.payment_mode || 'Online NetBanking'}</span>
+                <span style="font-size:11.5px; color:#059669; font-weight:600;">Verified Institutional Receipt ✓</span>
               </div>
-              <div class="receipt-amount text-success" style="font-size:16px; font-weight:700;">₹${(r.amount || 0).toLocaleString('en-IN')}</div>
-              <button class="btn btn-sm btn-outline-primary" onclick="showToast('Downloading verified institutional fee receipt #${r.receipt_number}...', 'info')">Download Receipt</button>
+              <div class="receipt-amount-block" style="text-align:right;">
+                <span class="receipt-val text-success" style="font-size:16px; font-weight:700; display:block; margin-bottom:4px;">₹${(r.amount || 0).toLocaleString('en-IN')}</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="showToast('Downloading verified fee receipt ${r.receipt_number}...', 'success')">Download PDF</button>
+              </div>
             </div>
           `).join('');
         }
 
         const amountInput = document.getElementById('payAmountInput') || document.getElementById('modalFeeAmountInput');
-        if (amountInput) amountInput.value = (fees.pending_amount || 25000);
+        if (amountInput) amountInput.value = (fees.pending_amount || 13500);
       }
     }
 
@@ -1222,19 +1236,56 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
     }
 
     else if (moduleKey === 'dwallet') {
-      const res = await fetch(`${apiBase}/student/dwallet?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      // 1. Fetch Verified Documents from Supabase Cloud
+      const res = await fetch(`${apiBase}/student/documents?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
       const docs = (res && res.data) ? res.data : [];
       const docList = document.getElementById('modalDwalletDocList');
       if (docList && docs.length > 0) {
         docList.innerHTML = docs.map(d => `
-          <div class="wallet-doc-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
-            <div class="wdoc-details">
-              <div class="wdoc-title" style="font-weight:600; color:var(--text-heading); font-size:13.5px;">${d.document_name || d.name}</div>
-              <div class="wdoc-meta" style="font-size:12px; color:var(--text-muted);">Category: ${d.category || 'Academic'} • Uploaded: ${d.upload_date || d.uploaded_at || 'Aug 2026'} • Size: ${d.file_size || '1.4 MB'}</div>
+          <div class="wallet-doc-item" style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="w-doc-icon" style="width:42px; height:42px; border-radius:8px; background:rgba(0,166,214,0.12); color:#00a6d6; display:flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </div>
+              <div class="w-doc-info">
+                <h5 style="font-size:14px; font-weight:600; color:var(--text-heading); margin-bottom:2px;">${d.document_name || d.document_title}</h5>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${d.category || 'Institutional'} • Doc No: <strong>${d.document_number || 'SSGMCE-OFFICIAL'}</strong> • Issued: ${d.upload_date}</p>
+                <span class="file-size-tag" style="font-size:11px; padding:2px 8px; border-radius:4px; background:#e0f2fe; color:#0284c7; font-weight:600;">Digitally Signed PDF • ${d.file_size}</span>
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span class="badge badge-success">Digitally Verified</span>
-              <button class="btn btn-sm btn-outline-primary" onclick="showToast('Accessing verified credential from D-Wallet: ${d.document_name}...', 'success')">Download Copy</button>
+            <div style="text-align:right;">
+              <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Verified ✓</span>
+              <button type="button" class="btn-download-action" onclick="showToast('Accessing verified ${d.document_name} from Supabase Storage...', 'success')" style="display:block;">Download PDF</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 2. Fetch Issued Certificates from Supabase Cloud
+      const certRes = await fetch(`${apiBase}/student/certificates?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      const certs = (certRes && certRes.data) ? certRes.data : [];
+      const certList = document.getElementById('modalDwalletCertList');
+      if (certList && certs.length > 0) {
+        certList.innerHTML = certs.map(c => `
+          <div class="wallet-doc-item" style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="w-doc-icon" style="width:42px; height:42px; border-radius:8px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+              </div>
+              <div class="w-doc-info">
+                <h5 style="font-size:14px; font-weight:600; color:#14532d; margin-bottom:2px;">${c.title}</h5>
+                <p style="font-size:12px; color:#334155; margin-bottom:4px;">Type: <strong>${c.certificate_type}</strong> • Issued: ${c.issue_date} • Reg: ${c.certificate_number}</p>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:11px; font-weight:700; background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; border:1px solid #86efac;">
+                    Code: <code>${c.verification_code}</code>
+                  </span>
+                  <button type="button" class="btn btn-sm btn-link" style="padding:0; font-size:11px; color:#059669; text-decoration:underline;" onclick="navigator.clipboard.writeText('${c.verification_code}'); showToast('Verification code copied!', 'info');">Copy</button>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Active & Valid ✓</span>
+              <button type="button" class="btn-download-action" onclick="showToast('Accessing authentic certificate ${c.certificate_number}...', 'success')" style="display:block; background:#16a34a; border-color:#16a34a;">Download PDF</button>
             </div>
           </div>
         `).join('');
@@ -1248,21 +1299,21 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
         const banner = document.getElementById('modalExamMarksBanner');
         if (banner) {
           banner.innerHTML = `
-            <div class="fee-summary-item">
-              <span class="fsi-label">Current Semester SGPA</span>
-              <strong class="fsi-val text-primary">${exam.sgpa || '8.76'}</strong>
+            <div class="marks-stat">
+              <span class="ms-lbl">Current Semester SGPA</span>
+              <span class="ms-val text-primary">${exam.sgpa || '9.25'}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Cumulative CGPA</span>
-              <strong class="fsi-val text-success">${exam.cgpa || '8.82'}</strong>
+            <div class="marks-stat">
+              <span class="ms-lbl">Cumulative CGPA</span>
+              <span class="ms-val text-success">${exam.cgpa || '8.87'}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Academic Standing</span>
-              <strong class="fsi-val text-info">First Class with Distinction</strong>
+            <div class="marks-stat">
+              <span class="ms-lbl">Total Credits Earned</span>
+              <span class="ms-val text-accent">${exam.credits_earned || 134} / ${exam.total_credits || 134}</span>
             </div>
-            <div class="fee-summary-item">
-              <span class="fsi-label">Active Backlogs</span>
-              <strong class="fsi-val text-success">0 (All Clear)</strong>
+            <div class="marks-stat">
+              <span class="ms-lbl">Active Backlogs</span>
+              <span class="ms-val text-success">${exam.active_backlogs || 0} (Clear)</span>
             </div>
           `;
         }
@@ -1271,27 +1322,14 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
         if (tbody && exam.courses) {
           tbody.innerHTML = exam.courses.map(c => `
             <tr>
-              <td style="font-weight:700; color:var(--primary);">${c.subject_code}</td>
-              <td style="font-weight:600;">${c.subject_name}</td>
-              <td>${c.credits || 4}</td>
-              <td>${c.internal_marks || 26}/30</td>
-              <td>${c.endsem_marks || 60}/70</td>
-              <td style="font-weight:700;">${c.total_marks || 86}/100</td>
-              <td><span class="badge badge-success">${c.grade || 'A+'}</span></td>
+              <td style="font-weight:700; color:var(--primary);">${c.subject_code} - ${c.subject_name}</td>
+              <td>Theory &amp; Lab</td>
+              <td><strong>${c.credits || 4}</strong></td>
+              <td>${c.internal_marks || 26} / 30</td>
+              <td>${c.endsem_marks || 60} / 70</td>
+              <td style="font-weight:700;">${c.total_marks || 86} / 100</td>
+              <td><span class="badge ${['O', 'A+', 'A'].includes(c.grade) ? 'badge-success' : 'badge-info'}" style="font-size:12px; font-weight:700;">${c.grade || 'A+'} (${c.grade_point || 9.0})</span></td>
             </tr>
-          `).join('');
-        }
-
-        const revalList = document.getElementById('modalRevalSubjectList');
-        if (revalList && exam.courses) {
-          revalList.innerHTML = exam.courses.map(c => `
-            <label class="reval-option-item" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px; cursor:pointer;">
-              <input type="checkbox" name="reval_subject" value="${c.subject_code}">
-              <div style="flex:1;">
-                <div style="font-weight:600; font-size:13.5px;">${c.subject_code} - ${c.subject_name}</div>
-                <div style="font-size:12px; color:var(--text-muted);">Current Grade: ${c.grade || 'A'} • Scored: ${c.total_marks || 80}/100 • Fee: ₹500</div>
-              </div>
-            </label>
           `).join('');
         }
 
@@ -1300,10 +1338,11 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
           backlogCard.innerHTML = `
             <div style="text-align:center; padding:30px 20px;">
               <div style="font-size:42px; color:#10B981; margin-bottom:10px;">✓</div>
-              <h3 style="font-size:18px; color:var(--text-heading); margin-bottom:6px;">No Active Backlogs Recorded</h3>
-              <p style="font-size:13px; color:var(--text-muted); max-width:440px; margin:0 auto;">
-                Student <strong>Shivam Sanjay Aghao</strong> has cleared all academic coursework with 100% credit compliance through Semester IV.
+              <h3 style="font-size:18px; color:var(--text-heading); margin-bottom:6px;">All Clear Academic Record!</h3>
+              <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">
+                Student <strong>${exam.student_name || 'Shivam Sanjay Aghao'}</strong> (${exam.student_code}) has cleared all autonomous courses with <strong>0 backlogs</strong> and <strong>${exam.credits_earned || 134} credits earned</strong>.
               </p>
+              <span class="badge-status-safe" style="display:inline-block; margin-top:10px;">Standing: ${exam.standing || 'First Class with Distinction'}</span>
             </div>
           `;
         }
@@ -2131,3 +2170,49 @@ async function hydrateDashboardData() {
     console.error('Error during dashboard dynamic hydration:', err);
   }
 }
+
+/* ==========================================================================
+   CERTIFICATE AUTHENTICITY VERIFICATION HANDLER
+   ========================================================================== */
+window.verifyCertificateInModal = async function() {
+  const input = document.getElementById('verifyCertInput');
+  const code = (input ? input.value : '').trim();
+  const box = document.getElementById('verifyCertResultBox');
+  if (!code || !box) {
+    showToast('Please enter a certificate verification code', 'warning');
+    return;
+  }
+
+  box.style.display = 'block';
+  box.innerHTML = '<div style="padding:10px; color:#475569; font-size:12.5px;">Querying SSGMCE autonomous credentials registry &amp; cryptographic seals...</div>';
+
+  try {
+    const res = await fetch(`/api/v1/certificates/verify/${encodeURIComponent(code)}`).then(r => r.json());
+    if (res && res.data && res.data.is_valid) {
+      const d = res.data;
+      box.innerHTML = `
+        <div style="background:#ecfdf5; border:1px solid #10b981; border-radius:8px; padding:12px 16px;">
+          <div style="display:flex; align-items:center; gap:8px; color:#065f46; font-weight:700; font-size:13.5px; margin-bottom:4px;">
+            <span style="font-size:16px;">✓</span> VERIFIED AUTHENTIC OFFICIAL INSTITUTIONAL CREDENTIAL
+          </div>
+          <div style="font-size:12px; color:#1e293b; line-height:1.6;">
+            <strong>Title:</strong> ${d.title}<br>
+            <strong>Awarded To:</strong> ${d.student_name} (${d.student_code}) • Class: ${d.class_name}<br>
+            <strong>Certificate ID:</strong> ${d.certificate_number} • <strong>Date of Issue:</strong> ${d.issue_date}<br>
+            <strong>Issuing Body:</strong> ${d.institution}
+          </div>
+        </div>
+      `;
+      showToast('Certificate verified authentic!', 'success');
+    } else {
+      box.innerHTML = `
+        <div style="background:#fef2f2; border:1px solid #ef4444; border-radius:8px; padding:12px 16px; color:#991b1b; font-size:12.5px;">
+          <strong>✕ Verification Failed:</strong> Verification code "${code}" is invalid, revoked, or not found in institutional registry.
+        </div>
+      `;
+      showToast('Certificate verification failed', 'error');
+    }
+  } catch (err) {
+    box.innerHTML = `<div style="color:#ef4444; font-size:12px;">Verification request error: ${err.message}</div>`;
+  }
+};

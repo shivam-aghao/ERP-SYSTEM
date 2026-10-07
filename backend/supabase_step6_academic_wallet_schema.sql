@@ -815,3 +815,4 @@ CREATE POLICY sdoc_all_policy ON public.student_documents FOR ALL TO public USIN
 CREATE POLICY scert_all_policy ON public.student_certificates FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY arp_all_policy ON public.academic_result_publications FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY arcl_all_policy ON public.academic_result_change_logs FOR ALL TO public USING (true) WITH CHECK (true);
+
