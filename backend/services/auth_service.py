@@ -137,6 +137,7 @@ class AuthService:
         except Exception:
             pass
 
+
         if student_row:
             m = student_row._mapping
             s_name = m.get("full_name") or m.get("name") or "Shivam Sanjay Aghao"
