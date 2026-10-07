@@ -710,30 +710,13 @@ const TeacherTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Resolve active teacher so each teacher sees strictly their own timetable
-    const activeEmpCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
-      ? TeacherERPData.getActiveTeacherEmpCode()
-      : 'EMP-CSE-1001';
-
-    const facList = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
-      ? TeacherERPData.facultyList
-      : [];
-
-    const currentFacObj = facList.find(f => f.empCode === activeEmpCode) || {
-      empCode: activeEmpCode,
-      name: "Dr. J. M. Patil",
-      title: "Professor & Head",
-      totalLoad: 12
-    };
-
-    // Pull personal timetable from official PDF data
-    const timetableData = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTimetableForTeacher === 'function')
-      ? TeacherERPData.getTimetableForTeacher(activeEmpCode)
-      : [];
-
-    const teachingLoad = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTeachingLoadForTeacher === 'function')
-      ? TeacherERPData.getTeachingLoadForTeacher(activeEmpCode)
-      : [];
+    // Exact original schedule data preserved
+    const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && TeacherERPData.timetable.length > 0)
+      ? TeacherERPData.timetable
+      : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(day => ({
+        day: day,
+        slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
+      }));
 
     // Helper: Parse slot string into title, location, and type
     const parseSlotInfo = (slotText) => {

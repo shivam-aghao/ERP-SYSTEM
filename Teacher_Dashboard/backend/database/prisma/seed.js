@@ -26,15 +26,15 @@ async function main() {
 
   // 2. Faculty
   const faculty = await prisma.faculty.upsert({
-    where: { employeeId: 'FAC-CSE-1048' },
+    where: { employeeId: 'EMP-CSE-1001' },
     update: {
-      name: 'Dr. Rohan Deshmukh',
+      name: 'Faculty Member',
       prefix: 'Prof.',
       title: 'Associate Professor',
       departmentCode: 'CSE',
-      email: 'rohan.deshmukh@ssgmce.ac.in',
+      email: 'faculty@ssgmce.ac.in',
       phone: '+91 98765 43210',
-      avatarInitials: 'RD',
+      avatarInitials: 'FM',
       cabinLocation: 'Academic Block B, Room 204',
       officeHours: 'Mon-Thu: 3:00 PM - 5:00 PM',
       qualification: 'Ph.D. in Computer Science & Engineering',
@@ -42,14 +42,14 @@ async function main() {
     },
     create: {
       id: 'a0000000-0000-0000-0000-000000000001',
-      employeeId: 'FAC-CSE-1048',
-      name: 'Dr. Rohan Deshmukh',
+      employeeId: 'EMP-CSE-1001',
+      name: 'Faculty Member',
       prefix: 'Prof.',
       title: 'Associate Professor',
       departmentCode: 'CSE',
-      email: 'rohan.deshmukh@ssgmce.ac.in',
+      email: 'faculty@ssgmce.ac.in',
       phone: '+91 98765 43210',
-      avatarInitials: 'RD',
+      avatarInitials: 'FM',
       cabinLocation: 'Academic Block B, Room 204',
       officeHours: 'Mon-Thu: 3:00 PM - 5:00 PM',
       qualification: 'Ph.D. in Computer Science & Engineering',

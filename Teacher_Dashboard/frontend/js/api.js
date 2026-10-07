@@ -97,8 +97,8 @@
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
-    // 2. Authentication
     login: async function (email, password) {
+<<<<<<< HEAD
       var storedUser = null;
       try {
         storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
@@ -107,6 +107,11 @@
       var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
       email = email || defaultIdentifier;
       password = password || 'Faculty@123';
+=======
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
@@ -123,6 +128,7 @@
         }
         return data;
       } catch (err) {
+<<<<<<< HEAD
         console.warn('[TeacherAPI] login attempt:', err.message);
         return {
           user: storedUser && storedUser.name ? storedUser : {
@@ -133,6 +139,10 @@
           },
           token: this.token || 'teach_token_default'
         };
+=======
+        console.warn('[TeacherAPI] login failed:', err.message);
+        throw err;
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       }
     },
 

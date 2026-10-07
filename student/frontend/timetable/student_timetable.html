@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SSGMCE Shegaon - Autonomous Student ERP Timetable Portal for Shivam Sanjay Aghao (CSE2401). Weekly lecture schedule, lab allocations, and scheduled assessments.">
+  <meta name="description" content="SSGMCE Shegaon - Autonomous Student ERP Timetable Portal. Weekly lecture schedule, lab allocations, and scheduled assessments.">
   <title>Weekly Timetable | SSGMCE Shegaon College ERP</title>
 
   <!-- Google Fonts: Inter & Poppins -->
@@ -15,21 +15,21 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- SSGMCE Design System & Timetable CSS -->
-  <link rel="stylesheet" href="../../../frontend/css/dashboard.css">
-  <link rel="stylesheet" href="student_timetable.css">
-  <link rel="icon" type="image/png" href="../../../frontend/images/logo.png">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/student_timetable.css">
+  <link rel="icon" type="image/png" href="../images/logo.png">
 
   <!-- Central Config & Auth Guard -->
-  <script src="../../../frontend/js/config.js"></script>
-  <script src="../../../frontend/js/auth.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
       window.ERP_AUTH.requireAuth('student');
     }
   </script>
-  <script src="../../../frontend/js/erp-auth-guard.js"></script>
-  <script src="../../../frontend/js/erp-supabase.js"></script>
-  <script src="../../../frontend/js/student-supabase.js"></script>
+  <script src="../js/erp-auth-guard.js"></script>
+  <script src="../js/erp-supabase.js"></script>
+  <script src="../js/student-supabase.js"></script>
   <script>
     if (window.ERPAuth) {
       window.ERPAuth.guard('student');
@@ -58,7 +58,7 @@
       <!-- SSGMCE College Crest / Brand -->
       <a href="student-dashboard.html" class="header-brand" aria-label="SSGMCE Home">
         <div class="brand-crest">
-          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img" onerror="this.src='../../../frontend/images/logo.png'">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img" onerror="this.src='../images/logo.png'">
         </div>
         <div class="brand-text-block">
           <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>

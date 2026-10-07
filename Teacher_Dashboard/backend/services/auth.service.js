@@ -5,35 +5,8 @@ import { prisma } from '../config/db.js';
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const MOCK_FACULTY = {
-  id: 'a0000000-0000-0000-0000-000000000001',
-  employeeId: 'FAC-CSE-1048',
-  name: 'Dr. Rohan Deshmukh',
-  prefix: 'Prof.',
-  title: 'Associate Professor',
-  departmentCode: 'CSE',
-  email: 'rohan.deshmukh@ssgmce.ac.in',
-  phone: '+91 98765 43210',
-  avatarInitials: 'RD',
-  cabinLocation: 'Academic Block B, Room 204',
-  officeHours: 'Mon-Thu: 3:00 PM - 5:00 PM',
-  qualification: 'Ph.D. in Computer Science & Engineering',
-  role: 'faculty',
-};
-
 export const authService = {
   async login(email, password) {
-    // Fast path for standard faculty credentials
-    if (email === MOCK_FACULTY.email || (email.includes('@ssgmce.ac.in') && password === 'Faculty@123')) {
-      const user = { ...MOCK_FACULTY, email };
-      const token = this.generateToken(user);
-      return {
-        user,
-        token,
-        refreshToken: 'mock-refresh-token-' + Date.now(),
-        expiresIn: 86400,
-      };
-    }
 
     if (env.SUPABASE_URL && !env.SUPABASE_URL.includes('mock-ssgmce')) {
       try {

@@ -489,11 +489,46 @@ def get_all_faculty_members(db: Session = Depends(get_db)):
 
 @api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
+<<<<<<< HEAD
 def get_teacher_profile(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
     data = FacultyService.get_profile(db, tid)
     if not data:
         return error_response("Teacher record not found", 404)
+=======
+@api.get("/profile", tags=["Faculty Portal"])
+def get_teacher_profile(
+    empCode: Optional[str] = Query(None, alias="empCode"),
+    emp_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    code = empCode or emp_code or teacher_id
+    if code:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            WHERE LOWER(t.emp_code) = LOWER(:code) 
+               OR t.id = :code 
+               OR LOWER(t.email) = LOWER(:code)
+            LIMIT 1
+        """), {"code": code}).fetchone()
+    else:
+        row = db.execute(text("""
+            SELECT t.*, d.name as department_name, d.code as department_code 
+            FROM teachers t 
+            LEFT JOIN departments d ON t.department_id = d.id 
+            LIMIT 1
+        """)).fetchone()
+
+    if not row:
+        return error_response("Teacher record not found", 404)
+    data = dict(row._mapping)
+    data["fullName"] = data.get("full_name")
+    data["empCode"] = data.get("emp_code")
+    data["department"] = data.get("department_name") or data.get("department_code") or "Computer Science & Engineering"
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     return success_response(data)
 
 @api.put("/teacher/profile", tags=["Faculty Portal"])
@@ -503,10 +538,93 @@ def update_teacher_profile(payload: TeacherProfileUpdate, request: Request, teac
     return success_response(data or {}, "Teacher profile updated")
 
 @api.get("/dashboard/summary", tags=["Faculty Portal"])
+<<<<<<< HEAD
 def get_teacher_dashboard_summary(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     tid = extract_teacher_identifier_unified(request, teacher_id, emp_code)
     data = FacultyService.get_summary(db, tid)
     return success_response(data)
+=======
+def get_teacher_dashboard_summary(db: Session = Depends(get_db)):
+    classes_cnt = 0
+    students_cnt = 0
+    quizzes_cnt = 0
+    sessions_cnt = 0
+    avg_att_pct = 0.0
+    try:
+        classes_cnt = db.execute(text("SELECT count(*) FROM classes")).scalar() or 0
+        students_cnt = db.execute(text("SELECT count(*) FROM students")).scalar() or 0
+        quizzes_cnt = db.execute(text("SELECT count(*) FROM quizzes")).scalar() or 0
+        sessions_cnt = db.execute(text("SELECT count(*) FROM attendance_sessions")).scalar() or 0
+        avg_att = db.execute(text("SELECT AVG(attendance_rate) FROM attendance_sessions")).scalar()
+        avg_att_pct = round(float(avg_att), 1) if avg_att is not None else 0.0
+    except Exception:
+        pass
+
+    # Dynamic Teacher Profile
+    faculty_dict = {
+        "id": "",
+        "name": "Faculty Member",
+        "employeeId": "",
+        "prefix": "Prof.",
+        "title": "Faculty Member",
+        "departmentCode": "",
+        "cabinLocation": ""
+    }
+    try:
+        t_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+        if t_row:
+            tm = dict(t_row._mapping)
+            faculty_dict = {
+                "id": str(tm.get("id") or ""),
+                "name": tm.get("full_name") or f"{tm.get('first_name', '')} {tm.get('last_name', '')}".strip() or "Faculty Member",
+                "employeeId": tm.get("emp_code") or "",
+                "prefix": "Prof.",
+                "title": tm.get("designation") or "Faculty Member",
+                "departmentCode": tm.get("department_id") or "CSE",
+                "cabinLocation": tm.get("cabin_location") or ""
+            }
+    except Exception:
+        pass
+
+    # Dynamic Today's Timetable Schedule
+    today_schedule = []
+    try:
+        from datetime import datetime
+        day_name = datetime.now().strftime("%A")
+        t_entries = db.execute(
+            text("SELECT * FROM timetable_entries WHERE LOWER(day_of_week) = LOWER(:d) ORDER BY period_number ASC"),
+            {"d": day_name}
+        ).fetchall()
+        for te in t_entries:
+            m = dict(te._mapping)
+            today_schedule.append({
+                "time": f"{m.get('start_time', '09:00')} - {m.get('end_time', '10:00')}",
+                "subject": m.get("subject_name") or m.get("course_name") or "Course",
+                "class": m.get("class_name") or "",
+                "room": m.get("room") or m.get("venue") or "",
+                "type": m.get("session_type") or "Lecture"
+            })
+    except Exception:
+        pass
+
+    return success_response({
+        "faculty": faculty_dict,
+        "metrics": {
+            "totalClasses": classes_cnt,
+            "totalStudents": students_cnt,
+            "averageAttendance": f"{avg_att_pct}%",
+            "syllabusCompleted": "0%",
+            "unreadNotifications": 0,
+            "totalLecturesDelivered": sessions_cnt
+        },
+        "todaySchedule": today_schedule,
+        "total_classes": classes_cnt,
+        "total_students": students_cnt,
+        "total_quizzes": quizzes_cnt,
+        "total_attendance_sessions": sessions_cnt,
+        "attendance_average_pct": avg_att_pct
+    })
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 
 @api.get("/timetable/my", tags=["Faculty Portal"])
 @api.get("/teacher/timetable", tags=["Faculty Portal"])
@@ -2508,10 +2626,21 @@ if os.path.isdir(STUDENT_DIR):
     app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
     logger.info("Mounted student static assets from %s", STUDENT_DIR)
 
+<<<<<<< HEAD
 TEACHER_DIR = os.path.join(ERP_ROOT, "Teacher_Dashboard", "frontend")
 if os.path.isdir(TEACHER_DIR):
     app.mount("/teacher", StaticFiles(directory=TEACHER_DIR, html=True), name="teacher")
     logger.info("Mounted teacher dashboard static assets from %s", TEACHER_DIR)
+=======
+# Dedicated Attendance routes mapped to Teacher Dashboard Hub
+@app.get("/attendance", include_in_schema=False)
+def attendance_route():
+    return RedirectResponse(url="/teacher-dashboard.html#attendance")
+
+@app.get("/attendance/roster", include_in_schema=False)
+def attendance_roster_route():
+    return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")
@@ -2532,11 +2661,6 @@ if os.path.isdir(FRONTEND_DIR):
         app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
     logger.info("Mounted frontend static assets from %s and %s", FRONTEND_DIR, HTML_DIR)
-
-# Root fallback
-@app.get("/", include_in_schema=False)
-def root_redirect():
-    return RedirectResponse(url="/login.html")
 
 if __name__ == "__main__":
     import uvicorn

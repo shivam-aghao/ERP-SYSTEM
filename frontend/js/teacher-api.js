@@ -68,8 +68,9 @@
 
     // 2. Authentication
     login: async function (email, password) {
-      email = email || 'rohan.deshmukh@ssgmce.ac.in';
-      password = password || 'Faculty@123';
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
       var res = await this.request('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: email, password: password }),
@@ -81,8 +82,9 @@
       return res.data;
     },
 
-    getProfile: async function () {
-      var res = await this.request('/auth/profile');
+    getProfile: async function (empCode) {
+      var query = empCode ? '?empCode=' + encodeURIComponent(empCode) : '';
+      var res = await this.request('/teacher/profile' + query);
       return res.data;
     },
 

@@ -34,9 +34,21 @@ def get_all_teachers(db: Session = Depends(get_db)):
     return success_response(data)
 
 @router.get("/teacher/profile")
+<<<<<<< HEAD
 def get_teacher_profile(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     tid = extract_teacher_identifier(request, teacher_id, emp_code)
     data = FacultyService.get_profile(db, tid)
+=======
+@router.get("/profile")
+def get_teacher_profile(
+    empCode: Optional[str] = Query(None, alias="empCode"),
+    emp_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    code = empCode or emp_code or teacher_id
+    data = FacultyService.get_profile(db, emp_code=code)
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     if not data:
         return error_response("Teacher profile not found", 404)
     return success_response(data)

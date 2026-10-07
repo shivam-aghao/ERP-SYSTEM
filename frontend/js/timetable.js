@@ -166,31 +166,13 @@
       const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
       const term = this.activeTerm || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getCurrentAcademicTerm() : { academicYear: "2026-2027", semesterType: "Odd" });
 
-      // Identify active teacher
-      const activeEmpCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
-        ? TeacherERPData.getActiveTeacherEmpCode()
-        : 'EMP-CSE-1001';
-
-      const facList = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
-        ? TeacherERPData.facultyList
-        : [];
-
-      const currentFacObj = facList.find(f => f.empCode === activeEmpCode) || {
-        empCode: activeEmpCode,
-        name: (this.liveData && this.liveData.teacher && this.liveData.teacher.name) || "Dr. J. M. Patil",
-        title: (this.liveData && this.liveData.teacher && this.liveData.teacher.designation) || "Professor & Head",
-        totalLoad: (this.liveData && this.liveData.teacher && this.liveData.teacher.total_load_hours) || 12
-      };
-
-      const timetableData = (this.liveData && this.liveData.teacher && this.liveData.teacher.emp_code === activeEmpCode && this.liveData.grid && this.liveData.grid.length > 0)
-        ? this.liveData.grid
-        : ((typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTimetableForTeacher === 'function')
-          ? TeacherERPData.getTimetableForTeacher(activeEmpCode)
-          : []);
-
-      const teachingLoad = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTeachingLoadForTeacher === 'function')
-        ? TeacherERPData.getTeachingLoadForTeacher(activeEmpCode)
-        : [];
+      // Dynamic schedule rows with empty day slot defaults
+      const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && TeacherERPData.timetable.length > 0)
+        ? TeacherERPData.timetable
+        : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(day => ({
+          day: day,
+          slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
+        }));
 
       return `
       <div class="timetable-grid-card">

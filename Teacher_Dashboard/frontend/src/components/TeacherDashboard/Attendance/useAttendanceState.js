@@ -18,33 +18,7 @@ export const PROTOTYPE_ERP_DATA = {
             { code: 'CS201L', name: 'Data Structures Lab', isLab: true, room: 'Lab 01' },
             { code: 'CS203', name: 'Discrete Mathematics', isLab: false, room: 'Room 201' }
           ],
-          students: Array.from({ length: 60 }, (_, i) => {
-            const roll = i + 1;
-            const names = [
-              'Aarav Sharma', 'Aditi Patel', 'Aditya Verma', 'Akash Kulkarni', 'Ananya Deshmukh',
-              'Aniket Joshi', 'Anushka Raut', 'Aryan Patil', 'Atharva Kale', 'Bhavika Shah',
-              'Chetan Shinde', 'Darshan Gaikwad', 'Deepika Mane', 'Devendra More', 'Divya Chauhan',
-              'Gaurav Rathod', 'Harshada Wagh', 'Isha Kulkarni', 'Karan Mehta', 'Kavita Jadhav',
-              'Sarang Patil', 'Manish Sawant', 'Mayur Gawande', 'Neha Badokar', 'Nikhil Shelke',
-              'Omkar Bhise', 'Pooja Tiwari', 'Pranav Kadam', 'Pranita Ingle', 'Prasad Muley',
-              'Prathamesh Dhole', 'Priya Deshpande', 'Rahul Sangle', 'Rani Shinde', 'Riddhi Thakare',
-              'Ritesh Kharat', 'Rohit Solanke', 'Ruchita Tayade', 'Rushikesh Borse', 'Sakshi Wankhade',
-              'Samarth Wagh', 'Sanket Dhumal', 'Sanika Joshi', 'Sarang Gite', 'Saurabh Tayade',
-              'Sayali Choudhary', 'Shantanu Gore', 'Shreya Pande', 'Shrikant Mohite', 'Shubham Dhoke',
-              'Siddhesh Pawar', 'Snehal Ingle', 'Soham Kulkarni', 'Sumit Tayade', 'Suraj Nemade',
-              'Tanmay Wankhede', 'Tejas Solanke', 'Vaibhav Shinde', 'Vedant Deshmukh', 'Yash Pachpor'
-            ];
-            return {
-              id: `std-2r1-${String(roll).padStart(3, '0')}`,
-              rollNo: roll,
-              rollFormatted: `2R1-${String(roll).padStart(2, '0')}`,
-              name: names[i] || `Student ${roll}`,
-              enrollmentNo: `EN24CSE${String(roll).padStart(3, '0')}`,
-              classCode: '2R1',
-              department: 'CSE',
-              isCR: roll === 21
-            };
-          })
+          students: []
         },
         {
           code: '2R2',
@@ -53,15 +27,7 @@ export const PROTOTYPE_ERP_DATA = {
             { code: 'CS202', name: 'Java Programming', isLab: false, room: 'Room 305' },
             { code: 'CS204', name: 'Digital Logic', isLab: false, room: 'Room 305' }
           ],
-          students: Array.from({ length: 58 }, (_, i) => ({
-            id: `std-2r2-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `2R2-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 2R2-${i + 1}`,
-            enrollmentNo: `EN24CSE1${String(i + 1).padStart(2, '0')}`,
-            classCode: '2R2',
-            department: 'CSE'
-          }))
+          students: []
         },
         {
           code: '3R',
@@ -71,15 +37,7 @@ export const PROTOTYPE_ERP_DATA = {
             { code: 'CS302', name: 'Operating Systems', isLab: false, room: 'Room 201' },
             { code: 'CS301L', name: 'Database Systems Lab', isLab: true, room: 'Lab 03' }
           ],
-          students: Array.from({ length: 62 }, (_, i) => ({
-            id: `std-3r-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `3R-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 3R-${i + 1}`,
-            enrollmentNo: `EN23CSE${String(i + 1).padStart(3, '0')}`,
-            classCode: '3R',
-            department: 'CSE'
-          }))
+          students: []
         },
         {
           code: '4R',
@@ -88,15 +46,7 @@ export const PROTOTYPE_ERP_DATA = {
             { code: 'CS401', name: 'Algorithms', isLab: false, room: 'Room 304' },
             { code: 'CS402', name: 'Project Guidance', isLab: false, room: 'Seminar Hall' }
           ],
-          students: Array.from({ length: 60 }, (_, i) => ({
-            id: `std-4r-${String(i + 1).padStart(3, '0')}`,
-            rollNo: i + 1,
-            rollFormatted: `4R-${String(i + 1).padStart(2, '0')}`,
-            name: `Student 4R-${i + 1}`,
-            enrollmentNo: `EN22CSE${String(i + 1).padStart(3, '0')}`,
-            classCode: '4R',
-            department: 'CSE'
-          }))
+          students: []
         }
       ]
     }

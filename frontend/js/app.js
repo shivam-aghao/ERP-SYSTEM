@@ -17,6 +17,7 @@ const TeacherApp = {
     this.renderNotificationsList();
     this.initLucideIcons();
     this.checkBackendConnection();
+    this.initHashRouting();
     if (typeof window.AttendanceMarkingManager !== 'undefined') {
       window.AttendanceMarkingManager.init();
     }
@@ -59,7 +60,7 @@ const TeacherApp = {
           }
           setStatus(true, latency);
 
-          const teacherName = (loginData && loginData.user && loginData.user.name) || 'Dr. Rohan Deshmukh';
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
             this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
@@ -69,6 +70,26 @@ const TeacherApp = {
           try {
             const data = await window.TeacherAPI.getDashboardSummary();
             console.log('📊 Live Dashboard KPI metrics:', data ? (data.metrics || data) : null);
+
+            // Fetch live profile from backend if available
+            try {
+              const prof = await window.TeacherAPI.getProfile();
+              if (prof) {
+                if (window.ERP_AUTH && typeof window.ERP_AUTH.setSession === 'function') {
+                  const currUser = window.ERP_AUTH.getCurrentUser() || {};
+                  window.ERP_AUTH.setSession({
+                    ...currUser,
+                    ...prof,
+                    name: prof.full_name || prof.name || currUser.name,
+                    full_name: prof.full_name || prof.name || currUser.full_name,
+                    emp_code: prof.emp_code || prof.empCode || currUser.emp_code,
+                    role: 'teacher'
+                  });
+                }
+              }
+            } catch (pErr) {
+              console.warn('Teacher profile fetch note:', pErr.message);
+            }
 
             // Seamlessly bind live data to UI cards
             if (data && typeof TeacherERPData !== 'undefined') {
@@ -244,11 +265,21 @@ const TeacherApp = {
             : null;
           return {
             name: fn,
+<<<<<<< HEAD
             department: u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || 'CSE',
             title: u.designation || (facObj && facObj.title) || 'Faculty Member',
             employeeId: empCode || (facObj && facObj.empCode) || 'EMP-CSE-1001',
             avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+=======
+            department: u.department_name || u.department || 'Computer Science & Engineering',
+            departmentCode: u.department_code || u.departmentCode || 'CSE',
+            title: u.designation || 'Faculty Member',
+            employeeId: u.emp_code || u.empCode || u.id || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            avatarInitials: u.avatar || u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
           };
         }
       }
@@ -281,6 +312,7 @@ const TeacherApp = {
       name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
+<<<<<<< HEAD
       title: facObj.title,
       employeeId: facObj.empCode,
       avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
@@ -291,6 +323,13 @@ const TeacherApp = {
       title: "Professor & Head",
       employeeId: "EMP-CSE-1001",
       avatarInitials: "JP"
+=======
+      title: "Faculty",
+      employeeId: "",
+      email: "",
+      phone: "",
+      avatarInitials: "FM"
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     };
   },
 
@@ -330,6 +369,11 @@ const TeacherApp = {
       menuTitleElem.textContent = `${teacher.title || "Faculty"} • ${teacher.departmentCode || teacher.department || ""}`;
     }
 
+    const menuEmpIdElem = document.getElementById("profile-menu-empid");
+    if (menuEmpIdElem) {
+      menuEmpIdElem.textContent = teacher.employeeId ? `Employee Code: ${teacher.employeeId}` : "SSGMCE Faculty Record";
+    }
+
     const heroDeptElem = document.getElementById("hero-faculty-department");
     if (heroDeptElem) {
       heroDeptElem.textContent = teacher.department || teacher.departmentCode || "Computer Science & Engineering";
@@ -337,17 +381,53 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");
     if (heroIdElem) {
       heroIdElem.textContent = teacher.employeeId ? `Faculty ID: ${teacher.employeeId}` : "Faculty ID: --";
+    }
+
+    // Dynamic Binding for Dedicated Profile Pane
+    const profAvatarLarge = document.getElementById("teacher-profile-avatar-large");
+    if (profAvatarLarge) {
+      profAvatarLarge.textContent = initials || "FM";
+    }
+
+    const profFullName = document.getElementById("teacher-profile-fullname");
+    if (profFullName) {
+      profFullName.textContent = teacher.name || "Faculty Member";
+    }
+
+    const profDeptText = document.getElementById("teacher-profile-dept-text");
+    if (profDeptText) {
+      profDeptText.textContent = teacher.department ? `Department of ${teacher.department}` : "Department Faculty";
+    }
+
+    const profEmpId = document.getElementById("teacher-profile-empid");
+    if (profEmpId) {
+      profEmpId.textContent = teacher.employeeId ? `Employee Code: ${teacher.employeeId}` : "SSGMCE Faculty Record";
+    }
+
+    const profEmail = document.getElementById("teacher-profile-email-text");
+    if (profEmail) {
+      profEmail.textContent = teacher.email || (teacher.employeeId ? `${teacher.employeeId.toLowerCase()}@ssgmce.ac.in` : "faculty@ssgmce.ac.in");
+    }
+
+    const profDesig = document.getElementById("teacher-profile-designation-text");
+    if (profDesig) {
+      profDesig.textContent = teacher.title || "Faculty Member";
+    }
+
+    const profPhone = document.getElementById("teacher-profile-phone-text");
+    if (profPhone) {
+      profPhone.textContent = teacher.phone || "--";
     }
   },
 
@@ -431,13 +511,13 @@ const TeacherApp = {
   // ----------------------------------------------------
   // VIEW ROUTING / SWITCHING
   // ----------------------------------------------------
-  switchView(viewName) {
+  switchView(viewName, subView) {
     this.currentView = viewName;
 
     // Update navigation active state
     document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
       item.classList.remove("active");
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === viewName || (viewName && viewName.startsWith('attendance') && item.dataset.view === 'attendance')) {
         item.classList.add("active");
       }
     });
@@ -478,13 +558,18 @@ const TeacherApp = {
         break;
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance");
-        AttendanceWorkflow.init();
+        setHeaderBadge("Teacher Attendance Hub");
+        this.initIntegratedAttendance(subView);
         break;
       case 'attendance-mark':
-        const markPage = document.getElementById("attendance-marking-page");
-        if (markPage) markPage.style.display = "block";
-        setHeaderBadge("Mark Attendance");
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('marking');
+        break;
+      case 'attendance-roster':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('roster');
         break;
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
@@ -742,20 +827,191 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-  openAttendanceModule() {
-    this.switchView('attendance');
-    AttendanceWorkflow.goToStep(1);
+  // ----------------------------------------------------
+  // INTEGRATED ATTENDANCE SUB-MODULE CONTROLLER
+  // ----------------------------------------------------
+  currentAttendanceSubView: 'marking',
+
+  openAttendanceModule(subView = 'marking') {
+    this.switchView('attendance', subView);
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance');
-    AttendanceState.setClass(classCode);
-    if (subject) {
-      const subs = TeacherERPData.subjects[classCode] || [];
-      const match = subs.find(s => s.name.toLowerCase().includes(subject.toLowerCase()));
-      if (match) AttendanceState.setSubject(match.code);
+    this.switchView('attendance', 'marking');
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+      frame.src = q;
     }
-    AttendanceWorkflow.goToStep(3);
+  },
+
+  initIntegratedAttendance(subView) {
+    let target = subView;
+    if (!target) {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('roster')) {
+        target = 'roster';
+      } else {
+        try {
+          target = localStorage.getItem('ssgmce_teacher_attendance_subview') || 'marking';
+        } catch (_) {
+          target = 'marking';
+        }
+      }
+    }
+    this.switchAttendanceSubView(target, false);
+  },
+
+  switchAttendanceSubView(subView, updateHash = true) {
+    const mode = (subView === 'roster') ? 'roster' : 'marking';
+    this.currentAttendanceSubView = mode;
+    try {
+      localStorage.setItem('ssgmce_teacher_attendance_subview', mode);
+    } catch (_) {}
+
+    const markTab = document.getElementById('tab-attendance-mark');
+    const rosterTab = document.getElementById('tab-attendance-roster');
+    const descElem = document.getElementById('attendance-active-subview-desc');
+    const frame = document.getElementById('attendance-integrated-frame');
+    const loaderText = document.getElementById('attendance-loader-text');
+
+    if (markTab && rosterTab) {
+      if (mode === 'marking') {
+        markTab.classList.add('active');
+        markTab.style.background = '#0B5CAD';
+        markTab.style.color = '#FFFFFF';
+        markTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        rosterTab.classList.remove('active');
+        rosterTab.style.background = 'transparent';
+        rosterTab.style.color = '#475569';
+        rosterTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Mark lecture/lab attendance or record RFID swipes";
+        if (loaderText) loaderText.textContent = "Loading Mark Attendance...";
+      } else {
+        rosterTab.classList.add('active');
+        rosterTab.style.background = '#0B5CAD';
+        rosterTab.style.color = '#FFFFFF';
+        rosterTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        markTab.classList.remove('active');
+        markTab.style.background = 'transparent';
+        markTab.style.color = '#475569';
+        markTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Review detailed class-wise attendance roster, percentages, and summaries";
+        if (loaderText) loaderText.textContent = "Loading Attendance Roster...";
+      }
+    }
+
+    const targetSrc = (mode === 'roster') 
+      ? 'teacher-attendance-roster.html?embedded=true' 
+      : 'teacher-attendance.html?embedded=true';
+
+    if (frame) {
+      const currentSrc = frame.getAttribute('src') || '';
+      if (!currentSrc.includes(targetSrc)) {
+        this.showAttendanceLoader();
+        frame.src = targetSrc;
+      }
+    }
+
+    if (updateHash) {
+      const hashVal = mode === 'roster' ? '#attendance/roster' : '#attendance';
+      if (window.location.hash !== hashVal) {
+        history.pushState(null, null, hashVal);
+      }
+    }
+  },
+
+  showAttendanceLoader() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'flex';
+    if (errorEl) errorEl.style.display = 'none';
+  },
+
+  onAttendanceFrameLoaded() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+      const frame = document.getElementById('attendance-integrated-frame');
+      if (frame && frame.contentWindow) {
+        // Synchronize authenticated session into child iframe context
+        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+          const user = window.ERP_AUTH.getCurrentUser();
+          if (frame.contentWindow.ERP_AUTH && typeof frame.contentWindow.ERP_AUTH.setSession === 'function') {
+            frame.contentWindow.ERP_AUTH.setSession(user);
+          }
+          if (frame.contentWindow.ERP_DATA && !frame.contentWindow.ERP_DATA.teacher) {
+            frame.contentWindow.ERP_DATA.teacher = {
+              name: user.fullName || user.name,
+              id: user.empCode || user.emp_code || user.id,
+              department: user.department || 'CSE'
+            };
+          }
+        }
+
+        if (frame.contentWindow.document) {
+          const doc = frame.contentWindow.document;
+          const h = Math.max(doc.body.scrollHeight || 0, doc.documentElement.scrollHeight || 0, 880);
+          frame.style.height = (h + 30) + 'px';
+        }
+      }
+    } catch (e) {
+      console.info('[TeacherApp] Frame height auto-fit restricted by origin, standard layout preserved.');
+    }
+  },
+
+  onAttendanceFrameError(status = 'Network Error') {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+    console.error(`[Attendance] Fetch failed: ${status}. Module could not be loaded into dashboard frame.`);
+  },
+
+  reloadAttendanceFrame() {
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      this.showAttendanceLoader();
+      frame.src = frame.src;
+      this.showToast('Refreshing attendance module...');
+    }
+  },
+
+  openAttendanceStandalone() {
+    const url = (this.currentAttendanceSubView === 'roster')
+      ? 'teacher-attendance-roster.html'
+      : 'teacher-attendance.html';
+    window.open(url, '_blank');
+  },
+
+  initHashRouting() {
+    const handleHash = () => {
+      const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      if (!rawHash) return;
+      if (rawHash.startsWith('attendance')) {
+        const sub = rawHash.includes('roster') ? 'roster' : 'marking';
+        this.switchView('attendance', sub);
+      } else {
+        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
+        if (validViews.includes(rawHash)) {
+          this.switchView(rawHash);
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+
+    if (window.location.hash) {
+      handleHash();
+    }
   },
 
   // ----------------------------------------------------

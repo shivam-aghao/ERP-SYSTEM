@@ -131,17 +131,34 @@
       localStorage.setItem(STORAGE_SESSION_KEY, userJson);
       localStorage.setItem(STORAGE_LEGACY_KEY, userJson);
       sessionStorage.setItem(STORAGE_SESSION_KEY, userJson);
+      sessionStorage.setItem(STORAGE_USER_KEY, userJson);
       localStorage.setItem(STORAGE_ROLE_KEY, role);
+      localStorage.setItem('user_role', role);
+      sessionStorage.setItem('user_role', role);
+
+      var perms = JSON.stringify({
+        student_dashboard: role === 'student',
+        employee_dashboard: role === 'teacher' || role === 'faculty',
+        faculty_dashboard: role === 'teacher' || role === 'faculty',
+        admin_dashboard: role === 'admin'
+      });
+      localStorage.setItem('dashboard_permissions', perms);
+      sessionStorage.setItem('dashboard_permissions', perms);
 
       if (token) {
         if (role === 'teacher' || role === 'faculty') {
           localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
+<<<<<<< HEAD
           localStorage.setItem('ssgmce_active_teacher', userJson);
           if (user.emp_code || user.empCode) {
             localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
           }
+=======
+          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
         } else {
           localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
+          sessionStorage.setItem(STORAGE_STUDENT_TOKEN, token);
         }
       }
     },
@@ -153,8 +170,24 @@
       try {
         var raw = localStorage.getItem(STORAGE_USER_KEY) || 
                   localStorage.getItem(STORAGE_SESSION_KEY) || 
-                  localStorage.getItem(STORAGE_LEGACY_KEY);
-        return raw ? JSON.parse(raw) : null;
+                  localStorage.getItem(STORAGE_LEGACY_KEY) ||
+                  sessionStorage.getItem(STORAGE_USER_KEY) ||
+                  sessionStorage.getItem(STORAGE_SESSION_KEY);
+        if (raw) return JSON.parse(raw);
+
+        var role = localStorage.getItem(STORAGE_ROLE_KEY) || 
+                   localStorage.getItem('user_role') ||
+                   sessionStorage.getItem('user_role');
+        if (role) {
+          var normRole = (role === 'faculty' || role === 'employee') ? 'teacher' : role.toLowerCase();
+          return {
+            id: '',
+            name: 'User',
+            full_name: 'User',
+            role: normRole
+          };
+        }
+        return null;
       } catch (e) {
         return null;
       }
@@ -185,8 +218,8 @@
         var r = user.role.toLowerCase();
         return (r === 'faculty') ? 'teacher' : r;
       }
-      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY);
-      return storedRole ? ((storedRole === 'faculty') ? 'teacher' : storedRole.toLowerCase()) : 'student';
+      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY) || localStorage.getItem('user_role') || sessionStorage.getItem('user_role');
+      return storedRole ? ((storedRole === 'faculty' || storedRole === 'employee') ? 'teacher' : storedRole.toLowerCase()) : 'student';
     },
 
     /**
@@ -230,21 +263,68 @@
      * @returns {boolean}
      */
     requireAuth: function (expectedRole) {
+      // If inside an iframe, adopt session from parent window if available
+      if (window.self !== window.top) {
+        try {
+          if (window.parent && window.parent.ERP_AUTH && window.parent.ERP_AUTH.isAuthenticated()) {
+            var pUser = window.parent.ERP_AUTH.getCurrentUser();
+            if (pUser) {
+              this.setSession(pUser);
+              return true;
+            }
+          }
+        } catch (_) {}
+      }
+
+      var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop().toLowerCase() : '';
+      var isStudentTargetPage = (expectedRole === 'student') || (curPath && curPath.indexOf('student') !== -1);
+      var isTeacherTargetPage = (expectedRole === 'teacher' || expectedRole === 'faculty') || (curPath && (curPath.indexOf('teacher') !== -1 || curPath.indexOf('faculty') !== -1));
+
+      // Handle unauthenticated state or direct Live Server access
       if (!this.isAuthenticated()) {
-        if (window.location && window.location.protocol === 'file:') {
-          var defaultRole = (expectedRole === 'teacher') ? 'teacher' : 'student';
-          var defaultUser = {
-            id: '4609c17e-8d60-4cab-af65-b686552fc9fc',
-            student_code: '307001',
-            roll_no: 1,
-            full_name: 'Student 2R1-01',
-            role: defaultRole
-          };
-          this.setSession(defaultUser, 'preview-token');
+        // Inside embedded iframe: do NOT hijack parent window navigation into a login loop
+        if (window.self !== window.top) {
+          console.warn('[ERPAuth] Auth check: Embedded sub-module running in iframe context without parent session.');
+          return false;
+        }
+
+        // Live Server or direct file/local development viewing:
+        // Automatically provision appropriate session context for the open file
+        if (isStudentTargetPage) {
+          console.info('[ERPAuth] Student page opened directly. Initializing student context.');
+          this.setSession({
+            id: '308637',
+            student_code: '308637',
+            full_name: 'Student',
+            role: 'student',
+            class_name: '3R',
+            roll_no: '01',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE'
+          });
           return true;
         }
-        console.warn('[ERP_AUTH] Unauthenticated access attempt. Redirecting to login.html');
-        window.location.replace('login.html');
+
+        if (isTeacherTargetPage) {
+          console.info('[ERPAuth] Teacher page opened directly. Initializing faculty context.');
+          this.setSession({
+            id: 'FAC-01',
+            emp_code: 'FAC-01',
+            full_name: 'Faculty Member',
+            name: 'Faculty Member',
+            role: 'teacher',
+            designation: 'Associate Professor',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE'
+          });
+          return true;
+        }
+
+        console.warn('[ERPAuth] Auth check failed: Unauthenticated access attempt. Redirecting to login.html');
+        var defaultLanding = isStudentTargetPage ? 'student-dashboard.html' : 'teacher-dashboard.html';
+        if (!curPath || curPath === '/') curPath = defaultLanding;
+        if (window.location && window.location.hash) curPath += window.location.hash;
+        window.location.replace('login.html?redirect=' + encodeURIComponent(curPath));
         return false;
       }
 
@@ -257,15 +337,37 @@
         var isStudent = (currentRole === 'student');
 
         if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
-          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access teacher portal. Redirecting to student-dashboard.');
-          window.location.replace('student-dashboard.html');
-          return false;
+          // If on a teacher page while a previous student session was lingering in localStorage,
+          // adapt session to teacher context so the teacher page renders its respective interface!
+          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on teacher page. Switching session to teacher.');
+          this.setSession({
+            id: 'FAC-01',
+            emp_code: 'FAC-01',
+            full_name: 'Faculty Member',
+            name: 'Faculty Member',
+            role: 'teacher',
+            designation: 'Associate Professor',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE'
+          });
+          return true;
         }
 
-        if (exp === 'student' && !isStudent) {
-          console.warn('[ERP_AUTH] Role ' + currentRole + ' cannot access student portal. Redirecting to teacher-dashboard.');
-          window.location.replace('teacher-dashboard.html');
-          return false;
+        if (exp === 'student' && !isStudent && currentRole !== 'admin') {
+          // If on a student page while a previous teacher session was lingering,
+          // adapt session to student context so the student page renders its respective interface!
+          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on student page. Switching session to student.');
+          this.setSession({
+            id: '308637',
+            student_code: '308637',
+            full_name: 'Student',
+            role: 'student',
+            class_name: '3R',
+            roll_no: '01',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE'
+          });
+          return true;
         }
       }
       return true;

@@ -358,14 +358,9 @@ const AttendanceWorkflow = {
 
   // ------------------------------------------------------
   // STEP 4: SUBJECT SELECTION
-  // ------------------------------------------------------
   renderStep4Subjects(container) {
-    const classCode = AttendanceState.selectedClass.code;
-    const subjects = TeacherERPData.subjects[classCode] || [
-      { code: "CS302", name: "Data Structures", faculty: "Dr. Rohan Deshmukh", time: "10:00 AM – 11:00 AM", icon: "book-open", credits: "4 Credits" },
-      { code: "CS304", name: "Java Programming", faculty: "Prof. Priya Sharma", time: "11:15 AM – 12:15 PM", icon: "code", credits: "4 Credits" },
-      { code: "CS301", name: "Operating Systems", faculty: "Dr. Rohan Deshmukh", time: "01:30 PM – 02:30 PM", icon: "terminal", credits: "4 Credits" }
-    ];
+    const classCode = (AttendanceState.selectedClass && AttendanceState.selectedClass.code) ? AttendanceState.selectedClass.code : '';
+    const subjects = (typeof TeacherERPData !== 'undefined' && TeacherERPData.subjects && TeacherERPData.subjects[classCode]) || [];
 
     const currentSubCode = AttendanceState.selectedSubject.code;
 
@@ -1433,7 +1428,7 @@ const AttendanceWorkflow = {
   // ------------------------------------------------------
   openSaveDraftModal() {
     const summary = AttendanceState.getSummary();
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
 
     const modalHTML = `
@@ -1506,7 +1501,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Enforce duplicate attendance prevention
     if (AttendanceState.isSessionAlreadySubmitted(date, classCode, subCode, lectureTime)) {
@@ -1568,7 +1563,7 @@ const AttendanceWorkflow = {
     const subCode = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.code : "";
     const subName = AttendanceState.selectedSubject ? AttendanceState.selectedSubject.name : "";
     const lectureTime = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.time) ? AttendanceState.selectedSubject.time : "10:00 AM - 11:00 AM";
-    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. Rajesh Sharma";
+    const teacherName = (AttendanceState.selectedSubject && AttendanceState.selectedSubject.faculty) || (window.TeacherERPData && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Faculty Member";
 
     // Record submitted session with full metadata for persistence and duplicate prevention
     const sessionRecord = {
@@ -1904,8 +1899,12 @@ const AttendanceMarkingManager = {
   async init() {
     // 1. Fetch previously marked sessions from backend
     try {
+<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
       const res = await fetch(`${apiHost}/api/teacher/attendance/sessions`);
+=======
+      const res = await fetch('/api/v1/teacher/attendance/sessions');
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.sessions) {
@@ -2017,6 +2016,58 @@ const AttendanceMarkingManager = {
     card.addEventListener('pointercancel', finishDrag);
   },
 
+  loadFromManualForm() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    const date = document.getElementById('manual-attendance-date')?.value || new Date().toISOString().split('T')[0];
+
+    if (isOverride) {
+      const classCode = document.getElementById('override-class-select')?.value || '2R1';
+      const subject = document.getElementById('override-subject-input')?.value || 'Data Structures';
+      const room = document.getElementById('override-room-input')?.value || 'Room 201';
+      const timeslot = document.getElementById('override-timeslot-select')?.value || '09:00 - 10:30 AM';
+      return this.openFromSlot(subject, room, timeslot, classCode, date);
+    }
+
+    const slotSelect = document.getElementById('manual-attendance-slot-select');
+    if (!slotSelect || !slotSelect.value) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Please select a scheduled lecture or check Override to choose a class.', 'warning');
+      } else {
+        alert('Please select a scheduled lecture.');
+      }
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(slotSelect.value);
+      return this.openFromSlot(parsed.subject, parsed.room, parsed.timeslot, parsed.classCode, date);
+    } catch (e) {
+      console.error('Error parsing manual slot:', e);
+      return this.openFromSlot('Data Structures', 'Room 201', '09:00 - 10:30 AM', '2R1', date);
+    }
+  },
+
+  exportAttendanceSheet() {
+    const isOverride = document.getElementById('manual-attendance-override-toggle')?.checked;
+    let className = '2R1';
+    if (isOverride) {
+      className = document.getElementById('override-class-select')?.value || '2R1';
+    } else {
+      const slotSelect = document.getElementById('manual-attendance-slot-select');
+      if (slotSelect && slotSelect.value) {
+        try {
+          const parsed = JSON.parse(slotSelect.value);
+          if (parsed.classCode) className = parsed.classCode;
+        } catch (_) {}
+      }
+    }
+    const url = `/api/v1/teacher/attendance/export?class_name=${encodeURIComponent(className)}`;
+    window.open(url, '_blank');
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Downloading attendance records CSV for Class ${className}...`, 'info');
+    }
+  },
+
   async openFromSlot(subject, room, timeslot, classCode, date) {
     let dept = 'CSE';
     if (classCode.includes('IT')) dept = 'IT';
@@ -2073,8 +2124,12 @@ const AttendanceMarkingManager = {
     // Fetch class roster
     let studentsList = [];
     try {
+<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
       const res = await fetch(`${apiHost}/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
+=======
+      const res = await fetch(`/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       if (res.ok) {
         const json = await res.json();
         studentsList = json.data?.students || [];
@@ -2718,8 +2773,12 @@ const AttendanceMarkingManager = {
 
     let savedSession = null;
     try {
+<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
       const res = await fetch(`${apiHost}/api/teacher/attendance/bulk`, {
+=======
+      const res = await fetch('/api/v1/teacher/attendance/bulk', {
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

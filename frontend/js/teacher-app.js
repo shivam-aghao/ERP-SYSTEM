@@ -17,6 +17,7 @@ const TeacherApp = {
     this.renderNotificationsList();
     this.initLucideIcons();
     this.checkBackendConnection();
+    this.initHashRouting();
   },
 
   async checkBackendConnection(isManualCheck = false) {
@@ -51,7 +52,7 @@ const TeacherApp = {
           const loginData = await window.TeacherAPI.login();
           setStatus(true, latency);
 
-          const teacherName = (loginData && loginData.user && loginData.user.name) || 'Faculty Member';
+          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
           if (isManualCheck) {
             this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
           } else {
@@ -65,10 +66,10 @@ const TeacherApp = {
 
             // Seamlessly bind live Supabase data to UI cards
             if (data && data.metrics && typeof TeacherERPData !== 'undefined') {
-              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses).padStart(2, '0');
-              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents);
-              if (data.metrics.averageAttendance) {
-                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 87;
+              TeacherERPData.stats.totalClasses = String(data.metrics.totalClasses || 0).padStart(2, '0');
+              TeacherERPData.stats.totalStudents = String(data.metrics.totalStudents || 0);
+              if (data.metrics.averageAttendance !== undefined) {
+                TeacherERPData.stats.attendancePercent = parseInt(data.metrics.averageAttendance, 10) || 0;
               }
               if (data.faculty) {
                 TeacherERPData.faculty.name = data.faculty.name;
@@ -303,12 +304,12 @@ const TeacherApp = {
 
     const heroNameElem = document.getElementById("hero-teacher-name");
     if (heroNameElem) {
-      heroNameElem.textContent = teacher.name || "Dr. Rohan Deshmukh";
+      heroNameElem.textContent = teacher.name || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || "Faculty";
     }
 
     const heroDesigElem = document.getElementById("hero-teacher-designation");
     if (heroDesigElem) {
-      heroDesigElem.textContent = teacher.title || "Associate Professor";
+      heroDesigElem.textContent = teacher.title || "Department Faculty";
     }
 
     const heroIdElem = document.getElementById("hero-teacher-id");
@@ -397,13 +398,13 @@ const TeacherApp = {
   // ----------------------------------------------------
   // VIEW ROUTING / SWITCHING
   // ----------------------------------------------------
-  switchView(viewName) {
+  switchView(viewName, subView) {
     this.currentView = viewName;
 
     // Update navigation active state
     document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
       item.classList.remove("active");
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === viewName || (viewName && viewName.startsWith('attendance') && item.dataset.view === 'attendance')) {
         item.classList.add("active");
       }
     });
@@ -444,11 +445,18 @@ const TeacherApp = {
         break;
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance");
-        const attFrame = document.getElementById("attendance-embedded-frame");
-        if (attFrame && (!attFrame.src || !attFrame.src.includes('teacher-attendance.html'))) {
-          attFrame.src = 'teacher-attendance.html?embedded=1';
-        }
+        setHeaderBadge("Teacher Attendance Hub");
+        this.initIntegratedAttendance(subView);
+        break;
+      case 'attendance-mark':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('marking');
+        break;
+      case 'attendance-roster':
+        document.getElementById("attendance-module").style.display = "block";
+        setHeaderBadge("Teacher Attendance Hub");
+        this.switchAttendanceSubView('roster');
         break;
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
@@ -705,23 +713,220 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-  openAttendanceModule() {
-    this.switchView('attendance');
-    const iframe = document.getElementById('attendance-embedded-frame');
-    if (iframe && iframe.contentWindow) {
-      try {
-        if (iframe.contentWindow.TeacherAttendanceApp && typeof iframe.contentWindow.TeacherAttendanceApp.goToStep === 'function') {
-          iframe.contentWindow.TeacherAttendanceApp.goToStep(1);
-        }
-      } catch (e) {}
-    }
+  // ----------------------------------------------------
+  // INTEGRATED ATTENDANCE SUB-MODULE CONTROLLER
+  // ----------------------------------------------------
+  currentAttendanceSubView: 'marking',
+
+  openAttendanceModule(subView = 'marking') {
+    this.switchView('attendance', subView);
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance');
-    const iframe = document.getElementById('attendance-embedded-frame');
-    if (iframe) {
-      iframe.src = `teacher-attendance.html?embedded=1&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+    this.switchView('attendance', 'marking');
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+      frame.src = q;
+    }
+  },
+
+  initIntegratedAttendance(subView) {
+    let target = subView;
+    if (!target) {
+      const hash = (window.location.hash || '').toLowerCase();
+      if (hash.includes('roster')) {
+        target = 'roster';
+      } else {
+        try {
+          target = localStorage.getItem('ssgmce_teacher_attendance_subview') || 'marking';
+        } catch (_) {
+          target = 'marking';
+        }
+      }
+    }
+    this.switchAttendanceSubView(target, false);
+  },
+
+  switchAttendanceSubView(subView, updateHash = true) {
+    const mode = (subView === 'roster') ? 'roster' : 'marking';
+    this.currentAttendanceSubView = mode;
+    try {
+      localStorage.setItem('ssgmce_teacher_attendance_subview', mode);
+    } catch (_) {}
+
+    const markTab = document.getElementById('tab-attendance-mark');
+    const rosterTab = document.getElementById('tab-attendance-roster');
+    const descElem = document.getElementById('attendance-active-subview-desc');
+    const frame = document.getElementById('attendance-integrated-frame');
+    const loaderText = document.getElementById('attendance-loader-text');
+
+    if (markTab && rosterTab) {
+      if (mode === 'marking') {
+        markTab.classList.add('active');
+        markTab.style.background = '#0B5CAD';
+        markTab.style.color = '#FFFFFF';
+        markTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        rosterTab.classList.remove('active');
+        rosterTab.style.background = 'transparent';
+        rosterTab.style.color = '#475569';
+        rosterTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Mark lecture/lab attendance or record RFID swipes";
+        if (loaderText) loaderText.textContent = "Loading Mark Attendance...";
+      } else {
+        rosterTab.classList.add('active');
+        rosterTab.style.background = '#0B5CAD';
+        rosterTab.style.color = '#FFFFFF';
+        rosterTab.style.boxShadow = '0 2px 6px rgba(11, 92, 173, 0.3)';
+
+        markTab.classList.remove('active');
+        markTab.style.background = 'transparent';
+        markTab.style.color = '#475569';
+        markTab.style.boxShadow = 'none';
+
+        if (descElem) descElem.textContent = "Review detailed class-wise attendance roster, percentages, and summaries";
+        if (loaderText) loaderText.textContent = "Loading Attendance Roster...";
+      }
+    }
+
+    const targetSrc = (mode === 'roster') 
+      ? 'teacher-attendance-roster.html?embedded=true' 
+      : 'teacher-attendance.html?embedded=true';
+
+    if (frame) {
+      const currentSrc = frame.getAttribute('src') || '';
+      if (!currentSrc.includes(targetSrc)) {
+        this.showAttendanceLoader();
+        frame.src = targetSrc;
+      }
+    }
+
+    if (updateHash) {
+      const hashVal = mode === 'roster' ? '#attendance/roster' : '#attendance';
+      if (window.location.hash !== hashVal) {
+        history.pushState(null, null, hashVal);
+      }
+    }
+  },
+
+  showAttendanceLoader() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'flex';
+    if (errorEl) errorEl.style.display = 'none';
+  },
+
+  onAttendanceFrameLoaded() {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+      const frame = document.getElementById('attendance-integrated-frame');
+      if (frame && frame.contentWindow) {
+        if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
+          const user = window.ERP_AUTH.getCurrentUser();
+          if (frame.contentWindow.ERP_AUTH && typeof frame.contentWindow.ERP_AUTH.setSession === 'function') {
+            frame.contentWindow.ERP_AUTH.setSession(user);
+          }
+          if (frame.contentWindow.ERP_DATA && !frame.contentWindow.ERP_DATA.teacher) {
+            frame.contentWindow.ERP_DATA.teacher = {
+              name: user.fullName || user.name,
+              id: user.empCode || user.emp_code || user.id,
+              department: user.department || 'CSE'
+            };
+          }
+        }
+        if (frame.contentWindow.document) {
+          const doc = frame.contentWindow.document;
+          const h = Math.max(doc.body.scrollHeight || 0, doc.documentElement.scrollHeight || 0, 880);
+          frame.style.height = (h + 30) + 'px';
+        }
+      }
+    } catch (e) {
+      console.info('[TeacherApp] Frame height auto-fit restricted by origin, standard layout preserved.');
+    }
+  },
+
+  onAttendanceFrameError(status = 'Network Error') {
+    const loader = document.getElementById('attendance-frame-loader');
+    const errorEl = document.getElementById('attendance-frame-error');
+    if (loader) loader.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+    console.error(`[Attendance] Fetch failed: ${status}. Module could not be loaded into dashboard frame.`);
+  },
+
+  reloadAttendanceFrame() {
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      this.showAttendanceLoader();
+      frame.src = frame.src;
+      this.showToast('Refreshing attendance module...');
+    }
+  },
+
+  openAttendanceStandalone() {
+    const url = (this.currentAttendanceSubView === 'roster')
+      ? 'teacher-attendance-roster.html'
+      : 'teacher-attendance.html';
+    window.open(url, '_blank');
+  },
+
+  openAttendanceReports() {
+    if (this.currentView !== 'attendance') {
+      this.switchView('attendance', 'marking');
+    } else if (this.currentAttendanceSubView !== 'marking') {
+      this.switchAttendanceSubView('marking');
+    }
+    const frame = document.getElementById('attendance-integrated-frame');
+    if (frame) {
+      const openModal = () => {
+        try {
+          const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          if (doc) {
+            const m = doc.getElementById('modalPdfCenter');
+            if (m) {
+              m.classList.remove('hidden');
+              return true;
+            }
+          }
+        } catch (err) {
+          console.warn('[Attendance] Cannot access frame document:', err);
+        }
+        return false;
+      };
+
+      if (!openModal()) {
+        frame.addEventListener('load', () => {
+          setTimeout(openModal, 150);
+        }, { once: true });
+      }
+    }
+  },
+
+  initHashRouting() {
+    const handleHash = () => {
+      const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+      if (!rawHash) return;
+      if (rawHash.startsWith('attendance')) {
+        const sub = rawHash.includes('roster') ? 'roster' : 'marking';
+        this.switchView('attendance', sub);
+      } else {
+        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
+        if (validViews.includes(rawHash)) {
+          this.switchView(rawHash);
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+
+    if (window.location.hash) {
+      handleHash();
     }
   },
 

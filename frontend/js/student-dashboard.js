@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)
    ========================================================================== */
 function initAttendanceChart() {
-  renderAttendanceChart(82, 18, 157, 34);
+  renderAttendanceChart(0, 0, 0, 0);
 }
 
-function renderAttendanceChart(presentPercentage, absentPercentage, attendedLectures = 157, absentLectures = 34) {
+function renderAttendanceChart(presentPercentage, absentPercentage, attendedLectures = 0, absentLectures = 0) {
   const canvas = document.getElementById('overallAttendanceChart');
   if (!canvas) return;
 
@@ -124,9 +124,7 @@ function renderSvgDoughnutFallback(canvas, presentPct) {
    2. CURRICULUM ANALYTICS: SYLLABUS COMPLETED GRADIENT BAR CHART
    ========================================================================== */
 function initSyllabusProgressChart() {
-  const defaultSubjects = ['Data Struct.', 'Java Prog.', 'Operating Sys.', 'Database Mgmt', 'Comp. Networks'];
-  const defaultData = [82, 80, 75, 78, 65];
-  renderSyllabusChart(defaultSubjects, defaultData);
+  renderSyllabusChart([], []);
 }
 
 function renderSyllabusChart(subjects, progressData) {
@@ -1510,10 +1508,10 @@ async function hydrateDashboardData() {
 
     // 3. Attendance
     const att = overview.attendanceSummary || {};
-    const overallPct = Math.round(att.overallPercentage !== undefined ? att.overallPercentage : (overview.metrics?.overallAttendancePct || 82));
-    const absentPct = 100 - overallPct;
-    const attendedCount = att.attendedLectures !== undefined ? att.attendedLectures : 157;
-    const absentCount = att.absentLectures !== undefined ? att.absentLectures : 34;
+    const overallPct = Math.round(att.overallPercentage !== undefined ? att.overallPercentage : (overview.metrics?.overallAttendancePct || 0));
+    const absentPct = overallPct > 0 ? (100 - overallPct) : 0;
+    const attendedCount = att.attendedLectures !== undefined ? att.attendedLectures : 0;
+    const absentCount = att.absentLectures !== undefined ? att.absentLectures : 0;
 
     const centerPct = document.getElementById('overallAttCenterPct');
     const presentPctEl = document.getElementById('overallAttPresentPct');

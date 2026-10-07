@@ -42,5 +42,8 @@ class StudentService:
 
     @staticmethod
     def get_academic_metrics(student_code: str, db: Session) -> List[Dict[str, Any]]:
-        rows = db.execute(text("SELECT * FROM academic_metrics WHERE student_code = :code OR student_code IS NULL LIMIT 10"), {"code": student_code}).fetchall()
-        return [dict(r._mapping) for r in rows] if rows else []
+        try:
+            rows = db.execute(text("SELECT * FROM academic_metrics WHERE student_code = :code OR student_code IS NULL LIMIT 10"), {"code": student_code}).fetchall()
+            return [dict(r._mapping) for r in rows] if rows else []
+        except Exception:
+            return []

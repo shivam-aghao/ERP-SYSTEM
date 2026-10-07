@@ -34,17 +34,17 @@
             return {
               success: true,
               data: {
-                fullName: p.fullName || p.full_name || '',
-                rollNumber: p.rollNo || p.roll_no || '',
-                enrollmentNumber: p.studentCode || p.student_code || '',
-                department: p.department || p.department_name || '',
-                semester: p.semester || p.current_semester || '',
-                division: p.division || '',
-                academicYear: p.academicYear || p.academic_year || '',
-                prn: p.prn || '',
-                facultyMentor: p.facultyMentor || p.faculty_mentor || '',
-                email: p.email || p.institutional_email || '',
-                phone: p.phone || p.primary_mobile || ''
+                fullName: p.fullName || p.full_name || 'Student',
+                rollNumber: p.rollNo || p.roll_no || '--',
+                enrollmentNumber: p.studentCode || p.student_code || '--',
+                department: p.department || p.department_name || 'Computer Science & Engineering',
+                semester: p.semester || p.current_semester || '--',
+                division: p.division || '--',
+                academicYear: p.academicYear || p.academic_year || '--',
+                prn: p.prn || '--',
+                facultyMentor: p.facultyMentor || p.faculty_mentor || '--',
+                email: p.email || p.institutional_email || '--',
+                phone: p.phone || p.primary_mobile || '--'
               }
             };
           }
@@ -131,12 +131,12 @@
 
             return {
               id: item.id || `sub-${idx}`,
-              code: item.code || item.subjectCode || 'SUB-101',
-              name: item.name || item.subjectName || 'Course',
+              code: item.code || item.subjectCode || item.subject_code || '',
+              name: item.name || item.subjectName || item.subject_name || '',
               type: item.type || (item.code && item.code.includes('LAB') ? 'PR' : 'TH'),
               typeName: item.typeName || (item.type === 'PR' ? 'Practical' : 'Theory'),
-              faculty: item.faculty || 'Course Faculty',
-              classroom: item.classroom || 'LH-201',
+              faculty: item.faculty || item.faculty_name || '',
+              classroom: item.classroom || item.room || '',
               present: attended,
               total: total,
               absent: total >= attended ? total - attended : 0,

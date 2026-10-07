@@ -41,6 +41,7 @@ def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session 
 
 @router.get("/student/attendance")
 @router.get("/attendance")
+<<<<<<< HEAD
 def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
     sub_dicts = []
     recent_records = []
@@ -102,6 +103,12 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
         ).fetchall()
         recent_records = [dict(r._mapping) for r in rec_rows]
 
+=======
+def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    code_val = student_code or "308637"
+    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    sub_dicts = [dict(s._mapping) for s in subjects]
+>>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
     tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
     overall_pct = round((tot_pres / tot_lecs * 100), 2) if tot_lecs > 0 else 0.0
@@ -140,7 +147,7 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
             needed = max(1, int((0.75 * tot_lecs - tot_pres) / 0.25))
 
     return success_response({
-        "student_code": student_code,
+        "student_code": code_val,
         "overall_percentage": overall_pct,
         "overallPercentage": overall_pct,
         "total_conducted": tot_lecs,
