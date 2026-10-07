@@ -351,8 +351,24 @@ function initSidebarLinks() {
         return;
       }
 
+      // Timetable page navigation
+      if (navKey === 'timetable') {
+        if (href && !href.startsWith('#') && href !== 'javascript:void(0)') {
+          return;
+        }
+        e.preventDefault();
+        const timetableCard = document.getElementById('timetableCard');
+        if (timetableCard) {
+          timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          timetableCard.classList.add('card-highlight-pulse');
+          setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
+        }
+        return;
+      }
+
       // Check on-page scroll targets
-      if (navKey === 'timetable' || href === '#timetableCard') {
+      if (href === '#timetableCard') {
         e.preventDefault();
         const timetableCard = document.getElementById('timetableCard');
         if (timetableCard) {
