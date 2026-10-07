@@ -94,7 +94,9 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   async loadTests() {
     try {
-      const res = await fetch(`${this.getApiBase()}/timetable/tests`);
+      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '';
+      const url = classCode ? `${this.getApiBase()}/timetable/tests?class_code=${encodeURIComponent(classCode)}` : `${this.getApiBase()}/timetable/tests`;
+      const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
@@ -123,18 +125,61 @@ const StudentTimetableApp = {
   },
 
   bindEvents() {
-    // Profile Dropdown Trigger
-    const profileTrigger = document.getElementById("profile-dropdown-trigger");
-    const profileMenu = document.getElementById("profile-dropdown-menu");
+    // Mobile Drawer Toggle (identical to Student Dashboard & Attendance)
+    const toggleBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.getElementById("dashboardSidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
 
-    if (profileTrigger && profileMenu) {
-      profileTrigger.addEventListener("click", (e) => {
+    if (toggleBtn && sidebar) {
+      toggleBtn.addEventListener("click", () => {
+        const isOpen = sidebar.classList.contains("drawer-open");
+        if (isOpen) {
+          sidebar.classList.remove("drawer-open");
+          if (backdrop) backdrop.classList.remove("active");
+          document.body.style.overflow = "";
+        } else {
+          sidebar.classList.add("drawer-open");
+          if (backdrop) backdrop.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
+      });
+
+      if (backdrop) {
+        backdrop.addEventListener("click", () => {
+          sidebar.classList.remove("drawer-open");
+          backdrop.classList.remove("active");
+          document.body.style.overflow = "";
+        });
+      }
+    }
+
+    // Profile Dropdown Toggle
+    const profileBtn = document.getElementById("profileBtn") || document.getElementById("profile-dropdown-trigger");
+    const profilePanel = document.getElementById("profilePanel") || document.getElementById("profile-dropdown-menu");
+    if (profileBtn && profilePanel) {
+      profileBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const isOpen = profileMenu.classList.contains("show");
+        const isOpen = profilePanel.classList.contains("active") || profilePanel.classList.contains("show");
         this.closeAllDropdowns();
         if (!isOpen) {
-          profileMenu.classList.add("show");
-          profileTrigger.classList.add("active");
+          profilePanel.classList.add("active");
+          profilePanel.classList.add("show");
+          profileBtn.classList.add("active");
+        }
+      });
+    }
+
+    // Notifications Dropdown Toggle
+    const notifBtn = document.getElementById("notifBtn");
+    const notifPanel = document.getElementById("notifPanel");
+    if (notifBtn && notifPanel) {
+      notifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = notifPanel.classList.contains("active") || notifPanel.classList.contains("show");
+        this.closeAllDropdowns();
+        if (!isOpen) {
+          notifPanel.classList.add("active");
+          notifPanel.classList.add("show");
         }
       });
     }
@@ -144,9 +189,10 @@ const StudentTimetableApp = {
       this.closeAllDropdowns();
     });
 
-    // Close modals on Escape key
+    // Close modals and popovers on Escape key
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
+        this.closeAllDropdowns();
         this.closeTestDetailsModal();
       }
     });
@@ -163,11 +209,19 @@ const StudentTimetableApp = {
   },
 
   closeAllDropdowns() {
-    const profileMenu = document.getElementById("profile-dropdown-menu");
-    const profileTrigger = document.getElementById("profile-dropdown-trigger");
+    const profilePanel = document.getElementById("profilePanel") || document.getElementById("profile-dropdown-menu");
+    const profileBtn = document.getElementById("profileBtn") || document.getElementById("profile-dropdown-trigger");
+    const notifPanel = document.getElementById("notifPanel");
 
-    if (profileMenu) profileMenu.classList.remove("show");
-    if (profileTrigger) profileTrigger.classList.remove("active");
+    if (profilePanel) {
+      profilePanel.classList.remove("active");
+      profilePanel.classList.remove("show");
+    }
+    if (profileBtn) profileBtn.classList.remove("active");
+    if (notifPanel) {
+      notifPanel.classList.remove("active");
+      notifPanel.classList.remove("show");
+    }
   },
 
   initLucideIcons() {
@@ -180,23 +234,33 @@ const StudentTimetableApp = {
     const s = this.studentSession;
     if (!s) return;
 
+    const displayName = s.shortName || s.fullName || "Shivam Aghao";
+    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
+    const initials = s.initials || "SA";
+
+    // Standard IDs
     const headerName = document.getElementById("header-profile-name");
     const headerDept = document.getElementById("header-profile-dept");
     const avatarElem = document.getElementById("header-profile-avatar");
     const menuName = document.getElementById("profile-menu-name");
     const menuTitle = document.getElementById("profile-menu-title");
 
-    const displayName = s.shortName || s.fullName || "Shivam Aghao";
-    const displayClass = s.className ? `${s.className} • Roll ${s.rollNo || '21'}` : "B.Tech CSE 2R1 • Roll 21";
-    const initials = s.initials || "SA";
-
     if (headerName) headerName.textContent = displayName;
     if (headerDept) headerDept.textContent = displayClass;
     if (menuName) menuName.textContent = s.fullName || displayName;
     if (menuTitle) menuTitle.textContent = `${displayClass} • ${s.departmentCode || 'CSE'}`;
-    if (avatarElem) {
-      avatarElem.innerHTML = `<span>${initials}</span>`;
-    }
+    if (avatarElem) avatarElem.innerHTML = `<span>${initials}</span>`;
+
+    // Common Dashboard classes
+    document.querySelectorAll('.avatar-circle, .large-avatar').forEach(el => {
+      el.textContent = initials;
+    });
+    document.querySelectorAll('.student-name, .p-name').forEach(el => {
+      el.textContent = displayName;
+    });
+    document.querySelectorAll('.student-meta').forEach(el => {
+      el.textContent = `Roll: ${s.rollNo || 21} • ${s.className || 'CSE 2R1'} (${s.studentCode || 'CSE2401'})`;
+    });
   },
 
   handleTimetableDateChange(dateVal) {
