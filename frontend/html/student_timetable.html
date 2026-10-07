@@ -31,15 +31,6 @@
   <header class="app-header ssgmce-top-header" id="app-header" role="banner">
     <!-- Left: College Logo & Full College Name + ERP Brand -->
     <div class="header-left header-left-brand">
-      <!-- Mobile Hamburger Toggle Button -->
-      <button type="button" class="mobile-menu-toggle hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-
       <!-- Official SSGMCE Logo & College Title -->
       <a href="student-dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Student Dashboard">
         <div class="brand-crest college-logo-crest">
@@ -120,161 +111,11 @@
     </div>
   </header>
 
-  <!-- Mobile Overlay -->
-  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
-
   <!-- ========================================================
-       APPLICATION BODY LAYOUT (SIDEBAR + MAIN CONTENT)
+       APPLICATION MAIN CONTENT (DEDICATED FULL-WIDTH TIMETABLE)
        ======================================================== -->
-  <div class="app-body-wrapper">
-
-    <!-- ========================================================
-         OFFICIAL SIDEBAR NAVIGATION (SSGMCE Dark Navy #0B1F3A)
-         ======================================================== -->
-    <aside class="app-sidebar ssgmce-left-sidebar" id="app-sidebar" aria-label="Main Navigation">
-      <div class="sidebar-inner">
-
-        <!-- Mobile Drawer Close Header -->
-        <div class="sidebar-mobile-header">
-          <div class="sidebar-brand-mobile">
-            <span class="brand-bold">SSGMCE</span>
-            <span class="brand-thin">Student Portal</span>
-          </div>
-          <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation sidebar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Academic Role Status Pill -->
-        <div class="sidebar-role-indicator">
-          <span class="role-dot" aria-hidden="true"></span>
-          <span class="role-name">STUDENT CONTEXT</span>
-          <span class="role-badge">ENROLLED</span>
-        </div>
-
-        <!-- Navigation Menu -->
-        <nav class="sidebar-nav" role="navigation" aria-label="Portal Modules">
-          <ul class="nav-list">
-            
-            <!-- 1. Dashboard -->
-            <li class="sidebar-item">
-              <a href="student-dashboard.html" class="nav-item sidebar-link">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-                <span class="nav-label">Dashboard</span>
-              </a>
-            </li>
-
-            <!-- 2. Attendance -->
-            <li class="sidebar-item">
-              <a href="student-attendance.html" class="nav-item sidebar-link">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <polyline points="9 16 11 18 15 14"></polyline>
-                </svg>
-                <span class="nav-label">Attendance</span>
-              </a>
-            </li>
-
-            <!-- 3. Timetable (ACTIVE PAGE) -->
-            <li class="sidebar-item">
-              <a href="student_timetable.html" class="nav-item sidebar-link active" data-view="timetable">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span class="nav-label">Timetable</span>
-              </a>
-            </li>
-
-            <!-- 4. Syllabus -->
-            <li class="sidebar-item">
-              <a href="student-syllabus.html" class="nav-item sidebar-link">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                <span class="nav-label">Syllabus</span>
-              </a>
-            </li>
-
-            <!-- 5. Quizzes & Tests -->
-            <li class="sidebar-item">
-              <a href="student-quiz.html" class="nav-item sidebar-link">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span class="nav-label">Quizzes &amp; Tests</span>
-              </a>
-            </li>
-
-            <!-- Preferences & Info Divider -->
-            <li class="sidebar-item">
-              <div class="sidebar-section-divider"></div>
-              <span class="sidebar-section-caption">Account &amp; Info</span>
-            </li>
-
-            <!-- 6. Profile -->
-            <li class="sidebar-item">
-              <a href="student-profile.html" class="nav-item sidebar-link">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span class="nav-label">Student Profile</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
-        <div class="sidebar-footer-artwork">
-          <div class="ssgmce-dome-illustration" aria-hidden="true">
-            <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
-              <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
-              <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
-              <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
-              <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
-              <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
-              <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
-              <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
-              <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
-            </svg>
-          </div>
-          <div class="sidebar-motto-text">
-            <span>Discipline</span>
-            <span class="dot">•</span>
-            <span>Development</span>
-            <span class="dot">•</span>
-            <span>Dedication</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- ========================================================
-         MAIN CONTENT WRAPPER
-         ======================================================== -->
-    <div class="app-main">
-
-      <main class="content-container">
+  <main class="timetable-page-main" id="main-content">
+    <div class="timetable-container content-container">
 
         <!-- Top Header Action Bar with Back to Dashboard Button -->
         <div class="timetable-page-topbar">
@@ -300,7 +141,8 @@
           </div>
         </section>
 
-      </main>
+    </div>
+  </main>
 
       <!-- ========================================================
            FOOTER (Dark Navy #0B1F3A)
@@ -336,9 +178,7 @@
             <span>SGBAU Affiliated</span>
           </div>
         </div>
-      </footer>
-    </div>
-  </div>
+  </footer>
 
   <!-- ========================================================
        MODALS: STUDENT TEST DETAILS DIALOG (READ-ONLY OVERVIEW)

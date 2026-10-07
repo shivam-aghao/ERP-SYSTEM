@@ -351,8 +351,29 @@ function initSidebarLinks() {
         return;
       }
 
+<<<<<<< HEAD
+      // Timetable page
+      if (navKey === 'timetable' && href && href.includes('student_timetable.html')) {
+=======
+      // Timetable page navigation
+      if (navKey === 'timetable') {
+        if (href && !href.startsWith('#') && href !== 'javascript:void(0)') {
+          return;
+        }
+        e.preventDefault();
+        const timetableCard = document.getElementById('timetableCard');
+        if (timetableCard) {
+          timetableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          timetableCard.classList.add('card-highlight-pulse');
+          setTimeout(() => timetableCard.classList.remove('card-highlight-pulse'), 1500);
+          showToast("Viewing Today's Timetable (CSE 2R1)", 'info');
+        }
+>>>>>>> 4497a8fe247df5d9fde5fdc8f6cddc7c312ac309
+        return;
+      }
+
       // Check on-page scroll targets
-      if (navKey === 'timetable' || href === '#timetableCard') {
+      if (href === '#timetableCard') {
         e.preventDefault();
         const timetableCard = document.getElementById('timetableCard');
         if (timetableCard) {
@@ -1249,27 +1270,31 @@ function renderTimetablePeriods(periods) {
     const isCompleted = Boolean(p.isCompleted || p.is_completed);
     const isActiveNow = Boolean(p.isActiveNow || p.is_active_now);
     const isCritical = Boolean(p.isCritical || p.is_critical);
+    const isQuiz = Boolean(p.is_assessment || p.type === 'quiz' || (p.code && p.code.toLowerCase().includes('quiz')) || (p.num && p.num.includes('QUIZ')));
 
     let cardClass = 'timetable-period';
+    if (isQuiz) cardClass += ' quiz-period-card';
     if (isCompleted) cardClass += ' completed';
     if (isActiveNow) cardClass += ' active-now';
-    if (isCritical) cardClass += ' upcoming critical-period';
+    if (isCritical && !isQuiz) cardClass += ' upcoming critical-period';
     else if (!isCompleted && !isActiveNow) cardClass += ' upcoming';
 
     let slotClass = 'period-slot-badge';
-    if (isActiveNow) slotClass += ' slot-live';
-    if (isCritical) slotClass += ' slot-critical';
+    if (isQuiz) slotClass += ' slot-quiz';
+    else if (isActiveNow) slotClass += ' slot-live';
+    else if (isCritical) slotClass += ' slot-critical';
 
     const num = p.num || (p.period_num ? `Period ${p.period_num}` : `Period ${p.periodNumber || 1}`);
     const status = p.status || (isCompleted ? 'Completed ✓' : isActiveNow ? 'Live Now' : 'Scheduled');
-    const statusClass = p.statusClass || p.status_class || (isCompleted ? 'status-done' : isActiveNow ? 'status-live' : 'status-upcoming');
+    const statusClass = isQuiz ? 'status-quiz-tag' : (p.statusClass || p.status_class || (isCompleted ? 'status-done' : isActiveNow ? 'status-live' : 'status-upcoming'));
     const time = p.time || p.period_time || `${p.startTime || '09:00'} - ${p.endTime || '10:00'}`;
     const name = p.name || p.course_name || p.subjectName || p.subject_name || p.code || 'Course Period';
     const venue = p.venue || `${p.classroom || 'LH-204'} • ${p.teacher_name || p.teacher || 'Faculty'}`;
     const att = p.att || p.att_label || (isCompleted ? 'Attendance: Present' : isCritical ? 'Critical for 75%' : isActiveNow ? 'Live in Session' : 'Scheduled');
+    const quizLink = p.link || 'student-quiz.html';
 
     html += `
-      <div class="${cardClass}">
+      <div class="${cardClass}" ${isQuiz ? `onclick="window.location.href='${quizLink}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"` : ''}>
         <div class="period-top-row">
           <div class="${slotClass}">${num}</div>
           <span class="period-status-tag ${statusClass}">${status}</span>
@@ -1277,9 +1302,11 @@ function renderTimetablePeriods(periods) {
         <div class="period-time">
           <span class="time-main ${isActiveNow ? 'text-primary' : ''}">${time}</span>
         </div>
-        <div class="period-course ${isActiveNow ? 'text-primary' : ''}">${name}</div>
+        <div class="period-course ${isQuiz ? 'text-danger' : (isActiveNow ? 'text-primary' : '')}" style="${isQuiz ? 'font-weight:700;' : ''}">${name}</div>
         <div class="period-meta">${venue}</div>
-        <div class="period-att-status ${isCritical ? 'text-warning' : isActiveNow ? 'text-accent' : isCompleted ? 'text-success' : 'text-muted'}">${att}</div>
+        <div class="period-att-status ${isQuiz ? 'text-danger' : (isCritical ? 'text-warning' : isActiveNow ? 'text-accent' : isCompleted ? 'text-success' : 'text-muted')}">
+          ${isQuiz ? `🎯 Click to Open Quiz Portal →` : att}
+        </div>
       </div>
     `;
   });
@@ -1339,7 +1366,6 @@ function renderSubjectWiseAttendance(subjects) {
       </div>
     `;
   });
-
   container.innerHTML = html;
 }
 
@@ -1356,7 +1382,7 @@ function renderNotifications(notifs) {
     return;
   }
 
-  const unreadCount = notifs.filter(n => !n.isRead).length;
+  const unreadCount = notifs.filter(n => !n.isRead && !n.is_read).length;
   if (badge) {
     badge.textContent = unreadCount;
     badge.style.display = unreadCount > 0 ? '' : 'none';
@@ -1367,17 +1393,18 @@ function renderNotifications(notifs) {
 
   let html = '';
   notifs.forEach(n => {
-    const isUnread = !n.isRead;
-    const bulletBg = n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success');
-    const timeFormatted = n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
-    const category = n.category || 'Academic Cell';
+    const isUnread = !(n.isRead || n.is_read);
+    const isQuiz = (n.type && n.type.toLowerCase().includes('quiz')) || (n.title && n.title.toLowerCase().includes('quiz'));
+    const bulletBg = isQuiz ? 'bg-danger' : (n.severity === 'error' || n.category === 'ATTENDANCE' ? 'bg-warning' : (n.category === 'EXAM' ? 'bg-error' : 'bg-success'));
+    const timeFormatted = n.created_at || n.createdAt ? new Date(n.created_at || n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+    const category = isQuiz ? 'Online Quiz Portal' : (n.category || 'Academic Cell');
 
     html += `
-      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
-        <span class="notif-bullet ${bulletBg}"></span>
+      <li class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}" ${isQuiz ? `onclick="window.location.href='student-quiz.html'"` : ''} style="${isQuiz ? 'cursor: pointer; background: rgba(225,29,72,0.03);' : ''}">
+        <span class="notif-bullet ${bulletBg}" style="${isQuiz ? 'background: #E11D48 !important;' : ''}"></span>
         <div class="notif-info">
-          <p class="notif-msg">${n.message || n.title}</p>
-          <span class="notif-time">${timeFormatted} • ${category}</span>
+          <p class="notif-msg" style="${isQuiz ? 'font-weight: 600; color: #1E293B;' : ''}">${n.message || n.title}</p>
+          <span class="notif-time">${timeFormatted} • <strong style="${isQuiz ? 'color: #E11D48;' : ''}">${category}</strong></span>
         </div>
       </li>
     `;
@@ -1613,6 +1640,37 @@ async function hydrateDashboardData() {
 
     // 5. Syllabus Progress
     hydrateSyllabusAnalytics();
+
+    // 6. Quizzes Notification Pill on Sidebar
+    try {
+      const qRes = await fetch(`/api/v1/student/quizzes?student_code=${studentCode}`);
+      if (qRes.ok) {
+        const qData = await qRes.json();
+        const quizzes = (qData && qData.data) ? qData.data : [];
+        const unattempted = quizzes.filter(q => !q.attempt_status || !['submitted', 'auto_submitted', 'SUBMITTED'].includes(q.attempt_status));
+        const sbQuizBadge = document.getElementById('sidebarQuizBadge');
+        if (sbQuizBadge) {
+          if (unattempted.length > 0) {
+            sbQuizBadge.textContent = `${unattempted.length} New`;
+            sbQuizBadge.style.background = '#E11D48';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = '0 0 10px rgba(225, 29, 72, 0.45)';
+          } else if (quizzes.length > 0) {
+            sbQuizBadge.textContent = 'Active';
+            sbQuizBadge.style.background = '#10B981';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = 'none';
+          } else {
+            sbQuizBadge.textContent = 'None';
+            sbQuizBadge.style.background = '#64748B';
+            sbQuizBadge.style.color = '#FFFFFF';
+            sbQuizBadge.style.boxShadow = 'none';
+          }
+        }
+      }
+    } catch (qErr) {
+      console.warn('Could not update sidebar quiz badge:', qErr);
+    }
 
   } catch (err) {
     console.error('Error during dashboard dynamic hydration:', err);
