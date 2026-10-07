@@ -483,36 +483,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Recent Attendance Section -->
-        <div class="recent-attendance-section">
-          <div class="section-header-bar">
-            <div>
-              <h3>Recent Attendance Records</h3>
-              <p style="color: var(--text-muted); font-size: 13px;">Previously marked and submitted classroom attendance logs</p>
-            </div>
-            <button class="btn-table-action" id="btnRefreshRecent">↻ Refresh</button>
-          </div>
-          <div class="table-responsive">
-            <table class="erp-table" id="recentAttendanceTable">
-              <thead>
-                <tr>
-                  <th>Record ID</th>
-                  <th>Date</th>
-                  <th>Dept / Class</th>
-                  <th>Subject</th>
-                  <th>Attendance</th>
-                  <th>Status</th>
-                  <th>Timestamp</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="recentAttendanceTbody">
-                <!-- Dynamically populated -->
-              </tbody>
-            </table>
-          </div>
-        </div>
       </section>
 
       <!-- ================================================================
@@ -1310,6 +1280,64 @@
       <button class="btn-action-submit" id="btnDownloadTeacherPdf" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 10px 20px; background: #0B5CAD; color: #fff; border-radius: 6px; cursor: pointer; border: none; font-size: 13.5px; box-shadow: 0 2px 6px rgba(11,92,173,0.3);">
         <span>📥</span> Download Employee Conducted Classes (PDF)
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL: TEACHER PROFILE POPUP
+     ==================================================================== -->
+<div class="modal-backdrop hidden" id="modal-teacher-profile" onclick="if(event.target === this) { this.classList.add('hidden'); this.style.display = 'none'; }">
+  <div class="modal-card" style="max-width: 540px; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(11, 31, 58, 0.45); background: #fff;">
+    <div class="modal-header" style="background: linear-gradient(135deg, #0B1F3A 0%, #153A6B 100%); color: #FFFFFF; padding: 18px 24px; border-bottom: none; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 700; color: #FFFFFF; margin: 0;">Faculty Profile</h3>
+        <small style="color: #94A3B8; font-size: 11.5px;">SSGMCE Verified Faculty Credential</small>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="var m=document.getElementById('modal-teacher-profile'); if(m){ m.classList.add('hidden'); m.style.display='none'; }" style="color: #FFFFFF; background: rgba(255,255,255,0.15); border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;" title="Close Profile">✕</button>
+    </div>
+
+    <div class="modal-body" style="padding: 24px;">
+      <!-- Profile Header Banner -->
+      <div style="display: flex; gap: 18px; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0; margin-bottom: 20px;">
+        <div class="avatar-circle profile-avatar" id="modal-profile-avatar" style="width: 70px; height: 70px; font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #00A6D6 0%, #0B5CAD 100%); color: #FFFFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 166, 214, 0.35); position: relative;">
+          <span>JP</span>
+          <span style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10B981; border: 2.5px solid #FFFFFF; border-radius: 50%;" title="Active Faculty"></span>
+        </div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h2 id="modal-profile-name" style="font-size: 20px; font-weight: 800; color: #0B1F3A; margin: 0;">Prof. J. M. Patil</h2>
+            <span style="background: #E0F2FE; color: #0284C7; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">Verified Faculty</span>
+          </div>
+          <div id="modal-profile-title" style="color: #0B5CAD; font-weight: 600; font-size: 13.5px; margin-top: 3px;">Professor & Head, CSE</div>
+          <div id="modal-profile-dept" style="color: #64748B; font-size: 12px; margin-top: 2px;">Department of Computer Science & Engineering</div>
+        </div>
+      </div>
+
+      <!-- Info Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;">
+          <span style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Employee Code</span>
+          <div id="modal-profile-empid" style="font-weight: 700; color: #0B1F3A; font-size: 13px; margin-top: 2px;">EMP-CSE-1001</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;">
+          <span style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Official Email</span>
+          <div id="modal-profile-email" style="font-weight: 700; color: #0B1F3A; font-size: 13px; margin-top: 2px; word-break: break-all;">jmpatil@ssgmce.ac.in</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;">
+          <span style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Office Location</span>
+          <div id="modal-profile-cabin" style="font-weight: 700; color: #0B1F3A; font-size: 13px; margin-top: 2px;">Room B-204, Academic Block</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 12px;">
+          <span style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Office Hours</span>
+          <div id="modal-profile-hours" style="font-weight: 700; color: #0B1F3A; font-size: 13px; margin-top: 2px;">Mon - Fri, 10:00 AM - 04:00 PM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding: 14px 20px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+      <button type="button" class="btn-step-back" onclick="var m=document.getElementById('modal-teacher-profile'); if(m){ m.classList.add('hidden'); m.style.display='none'; }">Close</button>
+      <button type="button" class="btn-action-submit" onclick="window.location.href='teacher-dashboard.html#profile'" style="font-size: 13px; padding: 9px 18px; background: #0B5CAD; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Open Full Profile</button>
     </div>
   </div>
 </div>

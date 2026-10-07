@@ -4,7 +4,9 @@
  */
 
 (function () {
-  var preferredBase = (window.ERP_CONFIG && window.ERP_CONFIG.TEACHER_API_BASE) || 'http://localhost:5001/api/v1';
+  var preferredBase = (window.ERP_CONFIG && window.ERP_CONFIG.TEACHER_API_BASE) || 
+                      (window.ERP_CONFIG && window.ERP_CONFIG.BACKEND_ORIGIN ? window.ERP_CONFIG.BACKEND_ORIGIN + '/api/v1' : null) || 
+                      'http://localhost:8000/api/v1';
   var fallbackBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || window.__API_BASE__ || 'http://localhost:8000/api/v1';
   var API_BASE_URL = preferredBase;
 
@@ -64,63 +66,35 @@
 
     // 1. Healthcheck
     checkHealth: async function () {
-      // Step 1: Probe configured Teacher API Base (port 8000 by default in config.js)
-      try {
-        var root = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-        var res = await fetch(root + '/health');
-        if (res.ok) {
-          var data = await res.json();
-          if (data.status === 'OK' || data.status === 'healthy') {
-            return { status: 'OK', service: data.service || 'ssgmce-unified-erp-backend', port: 8000 };
-          }
-        }
-      } catch (_) {}
+      var endpoints = [
+        API_BASE_URL.replace(/\/api\/v1\/?$/, '') + '/health',
+        API_BASE_URL + '/health',
+        'http://localhost:8000/health',
+        'http://127.0.0.1:8000/health',
+        'http://localhost:8000/api/v1/health',
+        'http://127.0.0.1:8000/api/v1/health',
+        'http://localhost:5001/health'
+      ];
 
-      // Step 2: Probe FastAPI Unified Backend on port 8000 explicitly
-      try {
-        var base8000 = (window.ERP_CONFIG && window.ERP_CONFIG.BACKEND_ORIGIN) || 'http://localhost:8000';
-        var res2 = await fetch(base8000 + '/health');
-        if (res2.ok) {
-          var data2 = await res2.json();
-          if (data2.status === 'OK' || data2.status === 'healthy') {
-            API_BASE_URL = base8000 + '/api/v1';
-            return { status: 'OK', service: data2.service || 'ssgmce-unified-erp-backend', port: 8000 };
+      for (var i = 0; i < endpoints.length; i++) {
+        var u = endpoints[i];
+        try {
+          var res = await fetch(u, { signal: AbortSignal.timeout(2000) });
+          if (res.ok) {
+            var data = await res.json();
+            if (data.status === 'OK' || data.status === 'healthy' || data.database === 'connected') {
+              var port = u.includes('5001') ? 5001 : 8000;
+              API_BASE_URL = u.includes('/api/v1') ? u.replace(/\/health\/?$/, '') : u.replace(/\/health\/?$/, '') + '/api/v1';
+              return { status: 'OK', service: data.service || 'ssgmce-unified-erp-backend', port: port };
+            }
           }
-        }
-      } catch (_) {}
-
-      // Step 3: Probe optional Express Teacher Backend on port 5001 if available
-      try {
-        var res3 = await fetch('http://localhost:5001/health');
-        if (res3.ok) {
-          var data3 = await res3.json();
-          if (data3.status === 'OK' || data3.status === 'healthy') {
-            API_BASE_URL = 'http://localhost:5001/api/v1';
-            return { status: 'OK', service: data3.service || 'ssgmce-teacher-dashboard-backend', port: 5001 };
-          }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
 
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
     login: async function (email, password) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      var storedUser = null;
-      try {
-        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
-      } catch (e) {}
-
-      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
-      email = email || defaultIdentifier;
-      password = password || 'Faculty@123';
-=======
-      if (!email || !password) {
-        throw new Error('Email and password are required');
-      }
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
-=======
       // If session is already authenticated via ERP_AUTH, return active user
       if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
         var u = window.ERP_AUTH.getCurrentUser();
@@ -129,9 +103,13 @@
         return { user: u, token: tok };
       }
 
-      var loginId = email || 'FAC-01';
+      var storedUser = null;
+      try {
+        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+      } catch (e) {}
+
+      var loginId = email || (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'FAC-01';
       var loginPass = password || 'faculty123';
->>>>>>> c3a6495353e93b6761c5e1221164e4bc5443619f
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
@@ -151,28 +129,18 @@
         }
         return data;
       } catch (err) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        console.warn('[TeacherAPI] login attempt:', err.message);
+        console.warn('[TeacherAPI] login note:', err.message);
         var activeUser = (storedUser && storedUser.name) ? storedUser : {
           id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
-          name: 'Dr. J. M. Patil',
+          name: 'Faculty Member',
           role: 'teacher',
-          emp_code: 'EMP-CSE-1001',
-          employeeId: 'EMP-CSE-1001'
+          emp_code: 'FAC-01',
+          employeeId: 'FAC-01'
         };
         return {
           user: activeUser,
           token: this.token || 'teach_token_default'
         };
-=======
-        console.warn('[TeacherAPI] login failed:', err.message);
-        throw err;
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
-=======
-        console.warn('[TeacherAPI] login note:', err.message);
-        return { user: { name: 'Faculty Member', role: 'teacher' } };
->>>>>>> c3a6495353e93b6761c5e1221164e4bc5443619f
       }
     },
 

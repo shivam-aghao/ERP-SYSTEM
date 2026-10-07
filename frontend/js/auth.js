@@ -148,14 +148,11 @@
       if (token) {
         if (role === 'teacher' || role === 'faculty') {
           localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-<<<<<<< HEAD
+          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
           localStorage.setItem('ssgmce_active_teacher', userJson);
           if (user.emp_code || user.empCode) {
             localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
           }
-=======
-          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
         } else {
           localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
           sessionStorage.setItem(STORAGE_STUDENT_TOKEN, token);

@@ -92,16 +92,21 @@ const AttendanceService = {
     }
   },
 
-  checkDuplicate(department, classId, date, subjectCode) {
-    const records = this.getAllRecords();
-    return records.some(
-      (r) =>
-        r.department === department &&
-        r.classId === classId &&
-        r.date === date &&
-        r.subjectCode === subjectCode &&
-        r.status === "Submitted"
-    );
+  async checkDuplicate(department, classId, date, subjectCode) {
+    try {
+      const records = await this.getAllRecords();
+      if (!Array.isArray(records)) return false;
+      return records.some(
+        (r) =>
+          r.department === department &&
+          (r.classId === classId || r.className === classId) &&
+          r.date === date &&
+          r.subjectCode === subjectCode &&
+          r.status === "Submitted"
+      );
+    } catch (e) {
+      return false;
+    }
   },
 
   getDraft(department, classId, date, subjectCode) {
@@ -134,7 +139,8 @@ const AttendanceService = {
 
   async submitAttendance(sessionData) {
     this.init();
-    if (this.checkDuplicate(sessionData.department, sessionData.classId, sessionData.date, sessionData.subjectCode)) {
+    const isDup = await this.checkDuplicate(sessionData.department, sessionData.classId, sessionData.date, sessionData.subjectCode);
+    if (isDup) {
       throw {
         duplicate: true,
         message: `Attendance for ${sessionData.classId} - ${sessionData.subjectName} on ${sessionData.date} is already submitted!`
@@ -240,7 +246,52 @@ const AttendanceService = {
       return ERP_DATA.classCards;
     }
 
-    return [];
+    const defaultCards = [
+      {
+        id: "CARD-2R1-DS",
+        department: "CSE",
+        department_name: "Computer Science & Engineering",
+        class: "2R1",
+        class_name: "2R1",
+        subject_code: "CS302",
+        subject_name: "Data Structures",
+        card_type: "scheduled",
+        time_slot: "10:30 AM - 11:30 AM",
+        room_number: "Hall A",
+        color_gradient: "from-blue-600 to-indigo-700"
+      },
+      {
+        id: "CARD-2R2-JP",
+        department: "CSE",
+        department_name: "Computer Science & Engineering",
+        class: "2R2",
+        class_name: "2R2",
+        subject_code: "CS303",
+        subject_name: "Java Programming",
+        card_type: "scheduled",
+        time_slot: "11:30 AM - 12:30 PM",
+        room_number: "Lab 301 / Hall B",
+        color_gradient: "from-teal-600 to-emerald-700"
+      },
+      {
+        id: "CARD-3R-DBMS",
+        department: "CSE",
+        department_name: "Computer Science & Engineering",
+        class: "3R",
+        class_name: "3R",
+        subject_code: "CS305",
+        subject_name: "Database Management",
+        card_type: "scheduled",
+        time_slot: "02:00 PM - 03:00 PM",
+        room_number: "Hall C",
+        color_gradient: "from-indigo-600 to-purple-700"
+      }
+    ];
+
+    try {
+      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(defaultCards));
+    } catch (_) {}
+    return defaultCards;
   },
 
   async getTeacherCards(teacherId) {

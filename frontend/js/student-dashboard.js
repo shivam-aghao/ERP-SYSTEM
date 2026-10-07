@@ -1059,7 +1059,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
               <div style="font-weight:600; color:var(--text-heading);">${c.subject_name || c.name}</div>
               <div style="font-size:12px; color:var(--text-muted);">${c.category || 'Core Program Theory'}</div>
             </td>
-            <td>${c.faculty_name || 'Dr. Rohan Deshmukh'}</td>
+            <td>${c.faculty_name || 'Prof. J. M. Patil'}</td>
             <td><span class="badge badge-info">${c.credits || 4} Credits</span></td>
             <td>${c.hours_per_week || 4} hrs/wk</td>
             <td style="width:140px;">
@@ -1081,11 +1081,11 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
           <div class="faculty-contact-card">
             <div class="faculty-avatar">${(c.faculty_name || 'Prof').split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
             <div class="faculty-details">
-              <div class="faculty-name">${c.faculty_name || 'Dr. Rohan Deshmukh'}</div>
-              <div class="faculty-role">Associate Professor • Course In-Charge</div>
+              <div class="faculty-name">${c.faculty_name || 'Prof. J. M. Patil'}</div>
+              <div class="faculty-role">Professor & HOD • Course In-Charge</div>
               <div class="faculty-meta">Course: <strong>${c.subject_code || 'CS-301'} - ${c.subject_name || 'Data Structures'}</strong></div>
-              <div class="faculty-meta">Cabin: Room 204 • CSE Dept</div>
-              <div class="faculty-meta">Email: ${(c.faculty_name || 'faculty').toLowerCase().replace(/[^a-z]/g, '.')}@ssgmce.ac.in</div>
+              <div class="faculty-meta">Cabin: Academic Block B, Room 201 • CSE Dept</div>
+              <div class="faculty-meta">Email: jmpatil@ssgmce.ac.in</div>
             </div>
           </div>
         `).join('');
@@ -1498,11 +1498,11 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
         if (mentorCard) {
           mentorCard.innerHTML = `
             <div style="display:flex; gap:16px; align-items:center;">
-              <div class="faculty-avatar" style="width:52px; height:52px; font-size:18px; border-radius:50%; background:#00A6D6; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">RD</div>
+              <div class="faculty-avatar" style="width:52px; height:52px; font-size:18px; border-radius:50%; background:#00A6D6; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">JP</div>
               <div>
-                <h4 style="font-size:16px; font-weight:700; color:var(--text-heading); margin-bottom:3px;">Dr. Rohan Deshmukh</h4>
-                <div style="font-size:12.5px; color:var(--text-muted);">Teacher Guardian & HOD Mentor • Associate Professor</div>
-                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Cabin: Room 204 • Ext: 4108 • rohan.deshmukh@ssgmce.ac.in</div>
+                <h4 style="font-size:16px; font-weight:700; color:var(--text-heading); margin-bottom:3px;">Prof. J. M. Patil</h4>
+                <div style="font-size:12.5px; color:var(--text-muted);">Teacher Guardian & HOD • Professor & Head, CSE</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Cabin: Academic Block B, Room 201 • Ext: 4101 • jmpatil@ssgmce.ac.in</div>
               </div>
             </div>
           `;

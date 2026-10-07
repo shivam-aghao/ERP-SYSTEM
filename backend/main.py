@@ -518,6 +518,8 @@ def get_all_faculty_members(db: Session = Depends(get_db)):
 
 @api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
+@api.get("/faculty/profile", tags=["Faculty Portal"])
+@api.get("/auth/profile", tags=["Faculty Portal"])
 @api.get("/profile", tags=["Faculty Portal"])
 def get_teacher_profile(
     request: Request,
@@ -591,7 +593,7 @@ def get_teacher_dashboard_summary(request: Request, teacher_id: Optional[str] = 
         "cabinLocation": ""
     }
     try:
-        t_row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+        t_row = db.execute(text("SELECT * FROM teachers ORDER BY CASE WHEN emp_code = 'EMP-CSE-1001' THEN 0 ELSE 1 END LIMIT 1")).fetchone()
         if t_row:
             tm = dict(t_row._mapping)
             faculty_dict = {
@@ -927,14 +929,14 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
     cid = classId or class_id or "3R"
     import re
 
-    # Helper for natural sorting (e.g. 3R1, 3R2, ..., 3R10, ..., 3R80)
+    # Helper for natural sorting (e.g. 2RA1..2RA80, 2RB1..2RB80, 3R1..3R80)
     def extract_numeric(val):
-        s = str(val or "")
-        if s.upper().startswith(cid.upper()):
-            s = s[len(cid):]
-        m = re.search(r'\d+', s)
-        return int(m.group()) if m else 9999
-
+        s = str(val or "").strip()
+        m = re.search(r'(\d+)$', s)
+        if m:
+            return int(m.group(1))
+        nums = re.findall(r'\d+', s)
+        return int(nums[-1]) if nums else 9999
 
     # Fetch recent attendance history (last 10 sessions) for this class
     history_map = {}
@@ -972,11 +974,12 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
                 if data and len(data) > 0:
                     data.sort(key=lambda s: extract_numeric(s.get("roll_no")))
                     students = []
-                    for m in data:
-                        raw_roll = m.get("roll_no") or "1"
+                    for idx, m in enumerate(data, start=1):
+                        parsed_roll = extract_numeric(m.get("roll_no"))
+                        num_roll = parsed_roll if (parsed_roll != 9999 and parsed_roll > 0) else idx
+                        raw_roll = m.get("roll_no") or f"{cid}-{num_roll}"
                         roll_str = str(raw_roll)
-                        num_roll = extract_numeric(roll_str)
-                        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}{num_roll}"
+                        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}-{num_roll}"
                         sid = str(m.get("id"))
                         hist = history_map.get(sid, ["P"] * 10)
                         is_provisional = "D" in str(m.get("student_code", "")).upper()
@@ -1006,12 +1009,13 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
 
     sorted_rows = sorted(rows, key=lambda r: extract_numeric(r._mapping.get("roll_no")))
     students = []
-    for r in sorted_rows:
+    for idx, r in enumerate(sorted_rows, start=1):
         m = dict(r._mapping)
-        raw_roll = m.get("roll_no") or 1
+        parsed_roll = extract_numeric(m.get("roll_no"))
+        num_roll = parsed_roll if (parsed_roll != 9999 and parsed_roll > 0) else idx
+        raw_roll = m.get("roll_no") or f"{cid}-{num_roll}"
         roll_str = str(raw_roll)
-        num_roll = extract_numeric(roll_str)
-        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}{num_roll}"
+        roll_fmt = roll_str if roll_str.upper().startswith(cid.upper()) else f"{cid}-{num_roll}"
         sid = str(m.get("id"))
         hist = history_map.get(sid, ["P"] * 10)
         is_provisional = "D" in str(m.get("student_code", "")).upper()

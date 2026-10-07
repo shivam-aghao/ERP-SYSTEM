@@ -102,9 +102,19 @@ const TeacherTimetableApp = {
       });
     }
 
-    // Profile Dropdown Trigger
+    // Profile Dropdown Trigger & Direct Profile Click
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
     const profileMenu = document.getElementById("profile-dropdown-menu");
+    const headerProfName = document.getElementById("header-profile-name");
+
+    if (headerProfName) {
+      headerProfName.style.cursor = "pointer";
+      headerProfName.title = "View Faculty Profile";
+      headerProfName.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.location.href = "teacher-dashboard.html#profile";
+      });
+    }
 
     if (profileTrigger && profileMenu) {
       profileTrigger.addEventListener("click", (e) => {
@@ -1082,7 +1092,7 @@ const TeacherTimetableApp = {
         const health = await window.TeacherAPI.checkHealth();
         const latency = Math.round(performance.now() - start);
 
-        if (health && health.status === 'OK') {
+        if (health && (health.status === 'OK' || health.status === 'healthy')) {
           setStatus(true, latency);
         } else {
           setStatus(false);

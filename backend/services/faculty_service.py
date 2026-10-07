@@ -21,8 +21,8 @@ class FacultyService:
     def get_teacher_by_identifier(identifier: Optional[str], db: Session) -> Optional[Dict[str, Any]]:
         """Find teacher by ID, emp_code, email, or partial name."""
         if not identifier:
-            # Fallback to Prof. R. V. Deshmukh (EMP-CSE-1009) or first teacher
-            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1009' OR t.id = '5bc85d0f-ea04-406e-a319-1e5c0f1c81b0' LIMIT 1")).fetchone()
+            # Fallback to Dr. J. M. Patil (EMP-CSE-1001) from Supabase
+            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1001' OR t.id = '8f913c70-85ed-4261-bbd0-f2d3b42f4af1' OR t.full_name LIKE '%Patil%' LIMIT 1")).fetchone()
             if not row:
                 row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
             return dict(row._mapping) if row else None
@@ -51,8 +51,8 @@ class FacultyService:
             """), {"pat": f"%{clean_id}%"}).fetchone()
 
         if not row:
-            # Fallback to default
-            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1009' LIMIT 1")).fetchone()
+            # Fallback to Dr. J. M. Patil
+            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1001' OR t.full_name LIKE '%Patil%' LIMIT 1")).fetchone()
             if not row:
                 row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
 
@@ -96,15 +96,40 @@ class FacultyService:
     @staticmethod
     def get_all_teachers(db: Session) -> List[Dict[str, Any]]:
         """List all 15 faculty members with department & load count."""
-        rows = db.execute(text("""
-            SELECT t.id, t.emp_code, t.full_name, t.designation, t.email,
-                   COALESCE(d.name, 'Computer Science & Engineering') as department_name,
-                   (SELECT count(*) FROM timetable_entries WHERE teacher_id = t.id) as total_load_hours
-            FROM teachers t
-            LEFT JOIN departments d ON t.department_id = d.id
-            ORDER BY t.emp_code ASC
-        """)).fetchall()
-        return [dict(r._mapping) for r in rows]
+        try:
+            import json, os
+            json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_teacher_timetables.json")
+            load_map = {}
+            if os.path.exists(json_path):
+                with open(json_path, "r", encoding="utf-8") as f:
+                    tdata = json.load(f)
+                    for emp, info in tdata.items():
+                        tot = sum(tl.get("total", 0) for tl in info.get("teaching_load", []))
+                        load_map[emp] = tot
+
+            rows = db.execute(text("""
+                SELECT t.id, t.emp_code, t.full_name, t.designation, t.email,
+                       COALESCE(d.name, 'Computer Science & Engineering') as department_name
+                FROM teachers t
+                LEFT JOIN departments d ON t.department_id = d.id
+                ORDER BY t.emp_code ASC
+            """)).fetchall()
+            
+            result = []
+            for r in rows:
+                m = dict(r._mapping)
+                m["total_load_hours"] = load_map.get(m.get("emp_code"), 16)
+                result.append(m)
+            return result
+        except Exception:
+            rows = db.execute(text("""
+                SELECT t.id, t.emp_code, t.full_name, t.designation, t.email,
+                       COALESCE(d.name, 'Computer Science & Engineering') as department_name
+                FROM teachers t
+                LEFT JOIN departments d ON t.department_id = d.id
+                ORDER BY t.emp_code ASC
+            """)).fetchall()
+            return [dict(r._mapping) for r in rows]
 
     @staticmethod
     def get_personal_timetable(teacher_identifier: Optional[str], db: Session) -> Dict[str, Any]:
@@ -125,24 +150,56 @@ class FacultyService:
         dept = teacher.get("department_name") or "Computer Science & Engineering"
 
         # Query all scheduled timetable entries for this teacher
-        rows = db.execute(text("""
-            SELECT id, day, slot_index, period_num, period_time, course_name, venue, class_code, is_lab, batch, status, att_label
-            FROM timetable_entries
-            WHERE teacher_id = :tid OR emp_code = :emp
-            ORDER BY
-              CASE LOWER(day)
-                WHEN 'monday' THEN 1
-                WHEN 'tuesday' THEN 2
-                WHEN 'wednesday' THEN 3
-                WHEN 'thursday' THEN 4
-                WHEN 'friday' THEN 5
-                WHEN 'saturday' THEN 6
-                ELSE 7
-              END,
-              slot_index ASC
-        """), {"tid": tid, "emp": emp_code}).fetchall()
+        entries = []
+        try:
+            rows = db.execute(text("""
+                SELECT id, day, period_num, period_time, course_name, venue, status, att_label
+                FROM timetable_entries
+                WHERE teacher_name LIKE :tname
+                ORDER BY
+                  CASE LOWER(day)
+                    WHEN 'monday' THEN 1
+                    WHEN 'tuesday' THEN 2
+                    WHEN 'wednesday' THEN 3
+                    WHEN 'thursday' THEN 4
+                    WHEN 'friday' THEN 5
+                    WHEN 'saturday' THEN 6
+                    ELSE 7
+                  END,
+                  period_num ASC
+            """), {"tname": f"%{t_name}%"}).fetchall()
+            entries = [dict(r._mapping) for r in rows]
+        except Exception:
+            pass
 
-        entries = [dict(r._mapping) for r in rows]
+        # Fallback to local JSON timetable dataset from PDF
+        if not entries:
+            try:
+                import json, os
+                json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data_teacher_timetables.json")
+                if os.path.exists(json_path):
+                    with open(json_path, "r", encoding="utf-8") as f:
+                        tdata = json.load(f)
+                        fac_entry = tdata.get(emp_code)
+                        if fac_entry and "schedule" in fac_entry:
+                            for day, s_list in fac_entry["schedule"].items():
+                                for itm in s_list:
+                                    entries.append({
+                                        "id": f"{emp_code}-{day}-{itm.get('slot', 1)}",
+                                        "day": day,
+                                        "slot_index": itm.get("slot", 1),
+                                        "period_num": itm.get("slot", 1),
+                                        "period_time": TIME_SLOT_HEADERS[itm.get("slot", 1)] if itm.get("slot", 1) < len(TIME_SLOT_HEADERS) else "11:00 - 12:00 PM",
+                                        "course_name": itm.get("subject", ""),
+                                        "venue": itm.get("venue", ""),
+                                        "class_code": itm.get("class", ""),
+                                        "is_lab": itm.get("is_lab", False),
+                                        "batch": itm.get("batch"),
+                                        "status": "scheduled",
+                                        "att_label": "Theory" if not itm.get("is_lab") else "Lab"
+                                    })
+            except Exception:
+                pass
 
         # If local entries are empty, attempt reading from Cloud Supabase REST API
         if not entries:
@@ -244,32 +301,36 @@ class FacultyService:
         if teacher:
             tid = teacher["id"]
             emp_code = teacher["emp_code"]
-            t_rows = db.execute(text("""
-                SELECT * FROM timetable_entries 
-                WHERE (teacher_id = :tid OR emp_code = :emp) AND LOWER(day) = LOWER(:tday)
-                ORDER BY slot_index ASC
-            """), {"tid": tid, "emp": emp_code, "tday": today_name}).fetchall()
+            t_name = teacher.get("full_name", "")
+            try:
+                t_rows = db.execute(text("""
+                    SELECT * FROM timetable_entries 
+                    WHERE LOWER(teacher_name) LIKE LOWER(:tname) AND LOWER(day) = LOWER(:tday)
+                    ORDER BY period_num ASC
+                """), {"tname": f"%{t_name}%", "tday": today_name}).fetchall()
 
-            for r in t_rows:
-                m = dict(r._mapping)
-                today_schedule.append({
-                    "time": m.get("period_time", "11:00 AM - 12:00 PM"),
-                    "subject": m.get("course_name", "Lecture"),
-                    "class": m.get("class_code", "2R1"),
-                    "room": m.get("venue", "Room 201"),
-                    "type": "Practical" if m.get("is_lab") else "Lecture",
-                    "status": "scheduled"
-                })
+                for r in t_rows:
+                    m = dict(r._mapping)
+                    today_schedule.append({
+                        "time": m.get("period_time", "11:00 AM - 12:00 PM"),
+                        "subject": m.get("course_name", "Lecture"),
+                        "class": "CSE",
+                        "room": m.get("venue", "Room 201"),
+                        "type": "Lecture",
+                        "status": "scheduled"
+                    })
+            except Exception:
+                pass
 
         return {
             "faculty": {
-                "id": teacher["id"] if teacher else "a0000000-0000-0000-0000-000000000001",
-                "name": teacher["full_name"] if teacher else "Dr. Rohan Deshmukh",
-                "employeeId": teacher["emp_code"] if teacher else "FAC-CSE-1048",
+                "id": teacher["id"] if teacher else "8f913c70-85ed-4261-bbd0-f2d3b42f4af1",
+                "name": teacher["full_name"] if teacher else "Dr. J. M. Patil",
+                "employeeId": teacher["emp_code"] if teacher else "EMP-CSE-1001",
                 "prefix": "Prof.",
-                "title": teacher.get("designation") if teacher else "Associate Professor",
+                "title": teacher.get("designation") if teacher else "Professor & Head, CSE",
                 "departmentCode": "CSE",
-                "cabinLocation": "Academic Block B, Room 204"
+                "cabinLocation": "Academic Block B, Room 201"
             },
             "metrics": {
                 "totalClasses": classes_cnt,
