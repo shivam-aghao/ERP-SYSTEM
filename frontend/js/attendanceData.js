@@ -1,7 +1,8 @@
 /**
  * SSGMCE AUTONOMOUS COLLEGE ERP - STUDENT ATTENDANCE PORTAL
- * Independent Attendance Mock Data Layer
+ * Attendance Data Layer Configuration & State
  * 
+<<<<<<< HEAD
  * Student: Student Profile (Dynamic)
  * Class: TY B.E. Computer Science and Engineering-A
  * Academic Year: 2026–2027
@@ -10,11 +11,16 @@
  * STRICT ARCHITECTURAL PRINCIPLE:
  * This data is strictly isolated to the Student Attendance System.
  * DO NOT link, import, or leak into the Student Dashboard.
+=======
+ * Strict Zero-Static-Mock Policy:
+ * Dynamic data loaded from Supabase / Backend API.
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
  */
 
 (function (global) {
   'use strict';
 
+<<<<<<< HEAD
   const getSessionStudent = () => {
     try {
       if (global.ERPAuth && typeof global.ERPAuth.getSession === 'function') {
@@ -148,6 +154,8 @@
     }
   ];
 
+=======
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
   const attendanceThresholds = {
     good: 80,       // 80%+ -> Good
     warning: 75,    // 75-79% -> Warning
@@ -156,8 +164,8 @@
   };
 
   const attendanceDataExports = {
-    studentProfile,
-    attendanceData,
+    studentProfile: null,
+    attendanceData: [],
     attendanceThresholds
   };
 

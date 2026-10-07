@@ -34,6 +34,7 @@
             return {
               success: true,
               data: {
+<<<<<<< HEAD
                 fullName: p.fullName || 'Student',
                 rollNumber: p.rollNo || '--',
                 enrollmentNumber: p.studentCode || '--',
@@ -45,15 +46,28 @@
                 facultyMentor: p.facultyMentor || '--',
                 email: p.email || '--',
                 phone: p.phone || '--'
+=======
+                fullName: p.fullName || p.full_name || '',
+                rollNumber: p.rollNo || p.roll_no || '',
+                enrollmentNumber: p.studentCode || p.student_code || '',
+                department: p.department || p.department_name || '',
+                semester: p.semester || p.current_semester || '',
+                division: p.division || '',
+                academicYear: p.academicYear || p.academic_year || '',
+                prn: p.prn || '',
+                facultyMentor: p.facultyMentor || p.faculty_mentor || '',
+                email: p.email || p.institutional_email || '',
+                phone: p.phone || p.primary_mobile || ''
+>>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
               }
             };
           }
         }
       } catch (err) {
-        console.warn('AttendanceService: Live profile fetch failed, using fallback:', err);
+        console.warn('AttendanceService: Live profile fetch failed:', err);
       }
 
-      return { success: true, data: this._getData().studentProfile || {} };
+      return { success: false, data: {} };
     }
 
     /**
@@ -106,22 +120,10 @@
           return { success: true, data: list, overall: attData };
         }
       } catch (err) {
-        console.warn('AttendanceService: Fetch failed, using isolated fallback', err);
+        console.warn('AttendanceService: Fetch failed:', err);
       }
 
-      // Offline fallback
-      const rawList = this._getData().attendanceData || [];
-      const list = rawList.map(item => {
-        const pct = calc.calculatePercentage ? calc.calculatePercentage(item.present, item.total) : Number(((item.present / item.total) * 100).toFixed(2));
-        const status = calc.getStatus ? calc.getStatus(pct) : { label: 'Active', badgeClass: 'att-badge-good' };
-        return {
-          ...item,
-          absent: item.total - item.present,
-          percentage: pct,
-          status
-        };
-      });
-      return { success: true, data: list };
+      return { success: false, data: [] };
     }
 
     /**

@@ -64,13 +64,10 @@
           return { success: true, data: rows, source: 'supabase' };
         }
       } catch (err) {
-        // Fallback to local storage or mock dataset
-        console.info('[ERPSupabase] Offline fallback for student attendance summary:', err.message);
+        console.warn('[ERPSupabase] Failed to fetch student attendance summary:', err.message);
       }
 
-      // Fallback response with live mock calculation
-      const fallbackData = (global.AttendanceData && global.AttendanceData.attendanceData) || [];
-      return { success: true, data: fallbackData, source: 'local-cache' };
+      return { success: false, data: [], source: 'supabase' };
     },
 
     /**

@@ -721,70 +721,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* ==========================================================================
-   13. TIMETABLE DAY SWITCHER TABS (MONDAY - SATURDAY FULL SCHEDULE)
-   ========================================================================== */
-const timetableScheduleData = {
-  monday: {
-    dayLabel: 'Monday • 5 Periods Scheduled',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures & Algorithms', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-301L', name: 'DSA Lab (Batch 2R1)', venue: 'Software Lab 2 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
-    ]
-  },
-  tuesday: {
-    dayLabel: 'Tuesday • 5 Periods Scheduled',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-302', name: 'Java Programming & OOP', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-302L', name: 'Java Lab (Batch 2R1)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true },
-      { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-304', name: 'Database Management Tutorial', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Tutorial Active', isCompleted: true }
-    ]
-  },
-  wednesday: {
-    dayLabel: 'Wednesday • 5 Periods Scheduled',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-304', name: 'Database Management Systems', venue: 'LH-112 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-303', name: 'Operating Systems', venue: 'LH-301 • Prof. V. K. Ramanujan', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-302', name: 'Java Programming', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 5', time: '02:45 PM - 04:45 PM', code: 'CS-304L', name: 'DBMS Lab (Batch 2R1)', venue: 'Database Lab 1 • Dr. P. Deshmukh', status: 'Completed ✓', statusClass: 'status-done', att: 'Practical Present', isCompleted: true }
-    ]
-  },
-  thursday: {
-    dayLabel: 'Thursday • 5 Periods Scheduled',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-301', name: 'Data Structures (CS-301)', venue: 'Lecture Hall 204 • Prof. R. Sharma', status: 'Completed ✓', statusClass: 'status-done', att: 'Attendance: Present', isCompleted: true },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-302L', name: 'Java Programming Lab (CS-302L)', venue: 'Advanced Systems Lab 3 • Dr. S. Kulkarni', status: 'Live Now', statusClass: 'status-live', att: 'Biometric Logged In', isActiveNow: true },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-303', name: 'Operating Systems (CS-303)', venue: 'Lecture Hall 301 • Prof. V. K. Ramanujan', status: 'Next Up', statusClass: 'status-upcoming', att: 'Starts in 15 mins' },
-      { num: 'Period 4', time: '01:30 PM - 02:30 PM', code: 'CS-305', name: 'Computer Networks (CS-305)', venue: 'Lecture Hall 108 • Dr. Ananya Sen', status: 'Must Attend', statusClass: 'status-critical', att: 'Critical for 75% threshold', isCritical: true },
-      { num: 'Period 5', time: '02:45 PM - 03:45 PM', code: 'CS-304', name: 'Database Management (CS-304)', venue: 'Seminar Hall 1 • Tutorial Batch B', status: 'Tutorial', statusClass: 'status-upcoming', att: 'Problem Solving Session' }
-    ]
-  },
-  friday: {
-    dayLabel: 'Friday • 5 Periods Scheduled',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:00 AM', code: 'CS-305', name: 'Computer Networks', venue: 'LH-108 • Dr. Ananya Sen', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Mandatory Lecture' },
-      { num: 'Period 2', time: '10:15 AM - 11:15 AM', code: 'CS-301', name: 'Data Structures', venue: 'LH-204 • Prof. R. Sharma', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Regular Lecture' },
-      { num: 'Period 3', time: '11:30 AM - 12:30 PM', code: 'CS-302', name: 'Java Programming', venue: 'LH-201 • Dr. S. Kulkarni', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Regular Lecture' },
-      { num: 'Period 4', time: '01:30 PM - 03:30 PM', code: 'CS-303L', name: 'OS Linux Kernel Lab', venue: 'Systems Lab 1 • Prof. Ramanujan', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Practical Session' },
-      { num: 'Period 5', time: '03:45 PM - 04:45 PM', code: 'CS-306', name: 'Mini-Project / AICTE Activity', venue: 'Project Lab 4 • Mentors', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Team Mentoring' }
-    ]
-  },
-  saturday: {
-    dayLabel: 'Saturday • 3 Periods (Half Day)',
-    periods: [
-      { num: 'Period 1', time: '09:00 AM - 10:30 AM', code: 'SEM-01', name: 'Technical Seminar Presentations', venue: 'Seminar Hall 2 • Evaluation Committee', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Continuous Evaluation' },
-      { num: 'Period 2', time: '10:45 AM - 12:15 PM', code: 'CLUB-01', name: 'Coding Club & Hackathon Practice', venue: 'Advanced Computing Lab • CSI SSGMCE', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Skill Enhancement' },
-      { num: 'Period 3', time: '12:30 PM - 01:30 PM', code: 'PROCTOR', name: 'Teacher-Guardian (Proctor) Meeting', venue: 'Faculty Cabins • Designated Mentors', status: 'Scheduled', statusClass: 'status-upcoming', att: 'Mentorship Session' }
-    ]
-  }
-};
-
 function initTimetableDayTabs() {
   const dayTabBtns = document.querySelectorAll('.day-tab-btn');
   const badge = document.getElementById('scheduleDayBadge');
@@ -816,13 +752,8 @@ function initTimetableDayTabs() {
         console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
       }
 
-      // Fallback to local schedule data if API unreachable
-      const dayData = timetableScheduleData[dayKey];
-      if (dayData) {
-        if (badge) badge.textContent = dayData.dayLabel;
-        renderTimetablePeriods(dayData.periods);
-        showToast('Switched schedule to ' + dayData.dayLabel.split('•')[0].trim(), 'info');
-      }
+      if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
+      renderTimetablePeriods([]);
     });
   });
 }
@@ -1425,15 +1356,10 @@ async function hydrateSyllabusAnalytics() {
       }
     }
 
-    if (!syllabusList || syllabusList.length === 0) {
-      syllabusList = [
-        { subject_code: 'CS-301', subject_name: 'Data Structures & Algorithms', syllabus_progress: 85 },
-        { subject_code: 'CS-302', subject_name: 'Java Programming & OOP', syllabus_progress: 78 },
-        { subject_code: 'CS-303', subject_name: 'Operating System Principles', syllabus_progress: 82 },
-        { subject_code: 'CS-304', subject_name: 'Database Management Systems', syllabus_progress: 90 },
-        { subject_code: 'CS-305', subject_name: 'Computer Networks & Protocols', syllabus_progress: 70 }
-      ];
+    if (!syllabusList) {
+      syllabusList = [];
     }
+
 
     const subjects = syllabusList.map(s => {
       const code = s.subject_code || s.subjectCode || s.code || 'Course';

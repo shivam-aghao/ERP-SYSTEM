@@ -45,9 +45,13 @@
         : '127.0.0.1';
       var rawEndpoints = [
         apiBase + '/auth/login',
+<<<<<<< HEAD
+        'http://localhost:5001/api/v1/auth/login',
+=======
         'http://' + currentHost + ':8000/api/v1/auth/login',
         'http://127.0.0.1:8000/api/v1/auth/login',
         'http://localhost:8000/api/v1/auth/login',
+>>>>>>> 3f6b09207df37440d46a828e243de03f141d60e3
         '/api/v1/auth/login',
         '/auth/login',
         '/api/auth/login'
