@@ -94,8 +94,13 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   async loadTests() {
     try {
-      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '';
-      const url = classCode ? `${this.getApiBase()}/timetable/tests?class_code=${encodeURIComponent(classCode)}` : `${this.getApiBase()}/timetable/tests`;
+      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '2R1';
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code)) || '308637';
+      const params = new URLSearchParams();
+      if (classCode) params.append('class_code', classCode);
+      if (studentCode) params.append('student_code', studentCode);
+
+      const url = `${this.getApiBase()}/timetable/tests?${params.toString()}`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
@@ -281,7 +286,17 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   timeToMinutes(timeStr) {
     if (!timeStr) return 0;
-    const parts = timeStr.split(":");
+    const str = timeStr.trim();
+    const match = str.match(/^(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?$/);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const meridiem = match[3] ? match[3].toUpperCase() : null;
+      if (meridiem === "PM" && h < 12) h += 12;
+      if (meridiem === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    const parts = str.split(":");
     const hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
     return hours * 60 + mins;
@@ -289,20 +304,43 @@ const StudentTimetableApp = {
 
   formatTime12Hour(timeStr) {
     if (!timeStr) return "";
-    const parts = timeStr.split(":");
-    let h = parseInt(parts[0], 10);
-    const m = parts[1] ? parts[1].padStart(2, "0") : "00";
+    const mins = this.timeToMinutes(timeStr);
+    let h = Math.floor(mins / 60);
+    const m = String(mins % 60).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12;
     h = h ? h : 12;
     return `${String(h).padStart(2, "0")}:${m} ${ampm}`;
   },
 
+  subjectsMatch(sub1, sub2) {
+    if (!sub1 || !sub2) return false;
+    const s1 = sub1.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const s2 = sub2.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (s1 === s2) return true;
+    if (s1.includes(s2) || s2.includes(s1)) return true;
+
+    const aliases = [
+      ['databasemanagementsystems', 'databasesystems', 'dbms'],
+      ['datastructuresandalgorithms', 'datastructures', 'dsa'],
+      ['operatingsystems', 'os', 'operatingsystem'],
+      ['computernetworks', 'cn', 'networks'],
+      ['javaprogrammingandoop', 'javaprogramming', 'java', 'javalab', 'javaprogramminglab']
+    ];
+
+    for (const group of aliases) {
+      const match1 = group.some(alias => s1.includes(alias));
+      const match2 = group.some(alias => s2.includes(alias));
+      if (match1 && match2) return true;
+    }
+    return false;
+  },
+
   getSlotIndexForTime(timeStr) {
-    // 0: 09:00 - 10:30 (540 to 630 mins)
-    // 1: 11:00 - 12:30 (660 to 750 mins)
-    // 2: 13:30 - 15:00 (810 to 900 mins)
-    // 3: 15:30 - 17:00 (930 to 1020 mins)
+    // 0: 09:00 - 10:30 (center ~ 585 mins)
+    // 1: 11:00 - 12:30 (center ~ 705 mins)
+    // 2: 13:30 - 15:00 (center ~ 855 mins)
+    // 3: 15:30 - 17:00 (center ~ 975 mins)
     const mins = this.timeToMinutes(timeStr);
     if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
     if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
@@ -733,9 +771,16 @@ const StudentTimetableApp = {
                     const slotTests = this.tests.filter(t => {
                       if (!t.date || !t.start) return false;
                       const [y, m, d] = t.date.split("-").map(Number);
-                      const testDayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+                      // Use noon local time to avoid midnight timezone day rollback
+                      const testDateObj = new Date(y, m - 1, d, 12, 0, 0);
+                      const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
                       if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
-                      return this.getSlotIndexForTime(t.start) === slotIdx;
+
+                      const timeSlotMatch = (this.getSlotIndexForTime(t.start) === slotIdx);
+                      const subjectMatch = (!parsed.isFree && this.subjectsMatch(t.subject, parsed.subject));
+
+                      // Associate test with slot by time slot index or by matching subject
+                      return timeSlotMatch || subjectMatch;
                     });
 
                     // Build regular class card HTML if not free
@@ -789,6 +834,9 @@ const StudentTimetableApp = {
                           <div class="test-subject">${t.subject}</div>
                           <div class="test-title" title="${t.title}">${t.title}</div>
                           <div class="test-time">
+                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                            <span>${t.date}</span>
+                            <span style="margin: 0 4px; opacity:0.5;">•</span>
                             <i data-lucide="clock" style="width:11px;height:11px;"></i>
                             <span>${start12} – ${end12}</span>
                           </div>
