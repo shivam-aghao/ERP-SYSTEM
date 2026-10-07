@@ -460,12 +460,17 @@ def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
 # ==============================================================================
 # 7. TEACHER PORTAL & ATTENDANCE MANAGEMENT
 # ==============================================================================
+@api.get("/profile/active", tags=["Faculty Portal"])
 @api.get("/teacher/profile", tags=["Faculty Portal"])
 def get_teacher_profile(db: Session = Depends(get_db)):
-    row = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
+    row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
     if not row:
         return error_response("Teacher record not found", 404)
-    return success_response(dict(row._mapping))
+    data = dict(row._mapping)
+    data["fullName"] = data.get("full_name")
+    data["empCode"] = data.get("emp_code")
+    data["department"] = data.get("department_name") or "CSE"
+    return success_response(data)
 
 @api.put("/teacher/profile", tags=["Faculty Portal"])
 def update_teacher_profile(payload: TeacherProfileUpdate, db: Session = Depends(get_db)):
@@ -966,19 +971,9 @@ def get_student_overview(student_code: str = Query("308637"), db: Session = Depe
             "classroom": m.get("classroom") or "LH-204"
         })
 
-    if not subject_wise:
-        subject_wise = [
-            {"code": "CS-301", "subjectCode": "CS-301", "subject_code": "CS-301", "name": "Data Structures & Algorithms", "subjectName": "Data Structures & Algorithms", "subject_name": "Data Structures & Algorithms", "attended": 32, "attendedLectures": 32, "total": 36, "totalLectures": 36, "percentage": 88.9, "faculty": "Prof. Rajesh Sharma", "classroom": "LH-204"},
-            {"code": "CS-302", "subjectCode": "CS-302", "subject_code": "CS-302", "name": "Database Management Systems", "subjectName": "Database Management Systems", "subject_name": "Database Management Systems", "attended": 28, "attendedLectures": 28, "total": 34, "totalLectures": 34, "percentage": 82.4, "faculty": "Dr. P. R. Wankhede", "classroom": "LH-204"},
-            {"code": "CS-303", "subjectCode": "CS-303", "subject_code": "CS-303", "name": "Operating Systems", "subjectName": "Operating Systems", "subject_name": "Operating Systems", "attended": 30, "attendedLectures": 30, "total": 35, "totalLectures": 35, "percentage": 85.7, "faculty": "Prof. S. B. Patil", "classroom": "LH-205"},
-            {"code": "CS-304", "subjectCode": "CS-304", "subject_code": "CS-304", "name": "Computer Networks", "subjectName": "Computer Networks", "subject_name": "Computer Networks", "attended": 26, "attendedLectures": 26, "total": 34, "totalLectures": 34, "percentage": 76.5, "faculty": "Prof. V. M. Umale", "classroom": "LH-205"},
-            {"code": "CS-305", "subjectCode": "CS-305", "subject_code": "CS-305", "name": "Theory of Computation", "subjectName": "Theory of Computation", "subject_name": "Theory of Computation", "attended": 29, "attendedLectures": 29, "total": 35, "totalLectures": 35, "percentage": 82.9, "faculty": "Dr. A. S. Alvi", "classroom": "LH-206"}
-        ]
-        tot_pres = 145
-        tot_lecs = 174
-
-    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 82.4
+    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
     absent_count = max(0, tot_lecs - tot_pres)
+
 
     attendance_summary = {
         "overallPercentage": overall_pct,
@@ -1114,13 +1109,42 @@ def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_d
 @api.get("/student/attendance", tags=["Student Portal"])
 @api.get("/attendance", tags=["Student Portal"])
 def get_student_attendance_summary(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
+    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    sub_dicts = [dict(s._mapping) for s in subjects]
+    tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
+    tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
+    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
+    subject_wise = []
+    for s in sub_dicts:
+        p = s.get("present_periods", 0)
+        t = s.get("total_periods", 0)
+        pct = round((p / t * 100), 1) if t > 0 else 0.0
+        subject_wise.append({
+            "id": s.get("id"),
+            "code": s.get("subject_code"),
+            "subjectCode": s.get("subject_code"),
+            "name": s.get("subject_name"),
+            "subjectName": s.get("subject_name"),
+            "type": s.get("subject_type"),
+            "typeName": s.get("type_name"),
+            "present": p,
+            "attended": p,
+            "total": t,
+            "percentage": pct,
+            "faculty": s.get("faculty_name"),
+            "classroom": s.get("classroom")
+        })
     return success_response({
         "student_code": student_code,
-        "overall_percentage": 82.4,
-        "total_conducted": 142,
-        "total_attended": 117,
-        "subjects": [dict(s._mapping) for s in subjects]
+        "overall_percentage": overall_pct,
+        "overallPercentage": overall_pct,
+        "total_conducted": tot_lecs,
+        "totalLectures": tot_lecs,
+        "total_attended": tot_pres,
+        "attendedLectures": tot_pres,
+        "absentLectures": max(0, tot_lecs - tot_pres),
+        "subjects": sub_dicts,
+        "subjectWise": subject_wise
     })
 
 @api.get("/student/syllabus", tags=["Student Portal"])

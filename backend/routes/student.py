@@ -42,13 +42,42 @@ def get_academic_metrics(student_code: str = Query("308637"), db: Session = Depe
 @router.get("/student/attendance")
 @router.get("/attendance")
 def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
+    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 20")).fetchall()
+    sub_dicts = [dict(s._mapping) for s in subjects]
+    tot_pres = sum(s.get("present_periods", 0) for s in sub_dicts)
+    tot_lecs = sum(s.get("total_periods", 0) for s in sub_dicts)
+    overall_pct = round((tot_pres / tot_lecs * 100), 1) if tot_lecs > 0 else 0.0
+    subject_wise = []
+    for s in sub_dicts:
+        p = s.get("present_periods", 0)
+        t = s.get("total_periods", 0)
+        pct = round((p / t * 100), 1) if t > 0 else 0.0
+        subject_wise.append({
+            "id": s.get("id"),
+            "code": s.get("subject_code"),
+            "subjectCode": s.get("subject_code"),
+            "name": s.get("subject_name"),
+            "subjectName": s.get("subject_name"),
+            "type": s.get("subject_type"),
+            "typeName": s.get("type_name"),
+            "present": p,
+            "attended": p,
+            "total": t,
+            "percentage": pct,
+            "faculty": s.get("faculty_name"),
+            "classroom": s.get("classroom")
+        })
     return success_response({
         "student_code": student_code,
-        "overall_percentage": 82.4,
-        "total_conducted": 142,
-        "total_attended": 117,
-        "subjects": [dict(s._mapping) for s in subjects]
+        "overall_percentage": overall_pct,
+        "overallPercentage": overall_pct,
+        "total_conducted": tot_lecs,
+        "totalLectures": tot_lecs,
+        "total_attended": tot_pres,
+        "attendedLectures": tot_pres,
+        "absentLectures": max(0, tot_lecs - tot_pres),
+        "subjects": sub_dicts,
+        "subjectWise": subject_wise
     })
 
 @router.get("/student/documents")

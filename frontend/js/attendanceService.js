@@ -34,26 +34,26 @@
             return {
               success: true,
               data: {
-                fullName: p.fullName || 'Shivam Sanjay Aghao',
-                rollNumber: p.rollNo || 21,
-                enrollmentNumber: p.studentCode || 'CSE2401',
-                department: p.department || 'Computer Science & Engineering',
-                semester: p.semester || 5,
-                division: p.division || 'A',
-                academicYear: p.academicYear || '2026-2027',
-                prn: p.prn || 'CSE2401',
-                facultyMentor: p.facultyMentor || 'Dr. Rohan Deshmukh (HOD, CSE)',
-                email: p.email || 'shivam.aghao@ssgmce.ac.in',
-                phone: p.phone || '+91 94221 88219'
+                fullName: p.fullName || p.full_name || '',
+                rollNumber: p.rollNo || p.roll_no || '',
+                enrollmentNumber: p.studentCode || p.student_code || '',
+                department: p.department || p.department_name || '',
+                semester: p.semester || p.current_semester || '',
+                division: p.division || '',
+                academicYear: p.academicYear || p.academic_year || '',
+                prn: p.prn || '',
+                facultyMentor: p.facultyMentor || p.faculty_mentor || '',
+                email: p.email || p.institutional_email || '',
+                phone: p.phone || p.primary_mobile || ''
               }
             };
           }
         }
       } catch (err) {
-        console.warn('AttendanceService: Live profile fetch failed, using fallback:', err);
+        console.warn('AttendanceService: Live profile fetch failed:', err);
       }
 
-      return { success: true, data: this._getData().studentProfile || {} };
+      return { success: false, data: {} };
     }
 
     /**
@@ -106,22 +106,10 @@
           return { success: true, data: list, overall: attData };
         }
       } catch (err) {
-        console.warn('AttendanceService: Fetch failed, using isolated fallback', err);
+        console.warn('AttendanceService: Fetch failed:', err);
       }
 
-      // Offline fallback
-      const rawList = this._getData().attendanceData || [];
-      const list = rawList.map(item => {
-        const pct = calc.calculatePercentage ? calc.calculatePercentage(item.present, item.total) : Number(((item.present / item.total) * 100).toFixed(2));
-        const status = calc.getStatus ? calc.getStatus(pct) : { label: 'Active', badgeClass: 'att-badge-good' };
-        return {
-          ...item,
-          absent: item.total - item.present,
-          percentage: pct,
-          status
-        };
-      });
-      return { success: true, data: list };
+      return { success: false, data: [] };
     }
 
     /**
