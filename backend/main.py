@@ -554,26 +554,74 @@ def get_teacher_timetable(db: Session = Depends(get_db)):
 @api.get("/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/student/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/teacher/timetable/tests", tags=["Timetable Assessments"])
-def get_timetable_tests(class_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    """Fetch all scheduled tests & assessments from database (accessible to both faculty and students)."""
-    if class_code:
-        rows = db.execute(text("SELECT * FROM timetable_assessments WHERE LOWER(class_code) = LOWER(:cc) OR class_code IS NULL ORDER BY date ASC, start_time ASC"), {"cc": class_code}).fetchall()
-    else:
-        rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
+def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: Optional[str] = Query(None), request: Request = None, db: Session = Depends(get_db)):
+    """Fetch all scheduled tests & assessments from database with robust class/student mapping.
+    - Faculty callers see all scheduled tests.
+    - Students see tests matching their class, section, batch, or global assessments.
+    """
+    is_faculty = False
+    if request:
+        try:
+            headers = {k.lower(): v for k, v in request.headers.items()}
+            role = headers.get("x-user-role", "").lower()
+            auth_header = headers.get("authorization", "")
+            if role in ["faculty", "teacher", "admin"] or "teach_token" in auth_header:
+                is_faculty = True
+        except Exception:
+            pass
+
+    enrolled_classes = set()
+    if isinstance(student_code, str) and student_code.strip():
+        try:
+            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+            if st_row:
+                m = dict(st_row._mapping)
+                if m.get("class_name"): enrolled_classes.add(m["class_name"].strip().lower())
+                if m.get("c_code"): enrolled_classes.add(m["c_code"].strip().lower())
+        except Exception:
+            pass
+
+    if isinstance(class_code, str) and class_code.strip():
+        cc_clean = class_code.strip().lower()
+        enrolled_classes.add(cc_clean)
+        for token in ["2r1", "2r2", "3r", "4r", "2n1", "2n2", "3n", "4n", "2e1", "2e2", "3e", "4e", "2m1", "2m2", "3m", "4m"]:
+            if token in cc_clean:
+                enrolled_classes.add(token)
+
+    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
     tests = []
     for r in rows:
         m = dict(r._mapping)
-        tests.append({
-            "id": m["id"],
-            "type": m["type"],
-            "subject": m["subject"],
-            "title": m["title"],
-            "date": m["date"],
-            "start": m["start_time"],
-            "end": m["end_time"],
-            "link": m["link"],
-            "class_code": m.get("class_code", "2R1")
-        })
+        item_class = (m.get("class_code") or "").strip().lower()
+
+        visible = False
+        if is_faculty:
+            visible = True
+        elif not item_class or item_class in ["all", "any", "global"]:
+            visible = True
+        elif not enrolled_classes:
+            visible = True
+        else:
+            if item_class in enrolled_classes:
+                visible = True
+            else:
+                for ec in enrolled_classes:
+                    if item_class in ec or ec in item_class:
+                        visible = True
+                        break
+
+        if visible:
+            tests.append({
+                "id": m["id"],
+                "type": m["type"],
+                "subject": m["subject"],
+                "title": m["title"],
+                "date": m["date"],
+                "start": m["start_time"],
+                "end": m["end_time"],
+                "link": m["link"],
+                "class_code": m.get("class_code") or "2R1"
+            })
     return success_response(tests)
 
 @api.post("/timetable/tests", tags=["Timetable Assessments"])

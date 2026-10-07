@@ -139,13 +139,6 @@ img, svg {
   color: var(--navy);
 }
 
-<<<<<<< HEAD
-/* Pulse indicator dot */
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-=======
->>>>>>> b7fdf147124e6c60efdfb815bf1069a2f8fc8816
 /* Pulse Animations */
 .pulse-dot, .pulse-indicator {
   width: 7px;

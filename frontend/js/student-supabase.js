@@ -22,7 +22,6 @@
     };
   };
 
-<<<<<<< HEAD
   // Dynamic Empty Profile Defaults
   const SEED_DATA = {
     profile: {
@@ -88,8 +87,6 @@
     return null;
   };
 
-=======
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
   const StudentSupabase = {
     /**
      * Get active Supabase REST headers
@@ -110,7 +107,6 @@
     getStudentProfile: async function (studentCode = null) {
       studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-<<<<<<< HEAD
       if (studentCode) {
         try {
           const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
@@ -120,38 +116,10 @@
             if (Array.isArray(rows) && rows.length > 0) {
               return { success: true, data: rows[0], source: 'supabase' };
             }
-=======
-      try {
-        const endpoint = `${cfg.url}/rest/v1/view_student_full_profile?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            let profile = rows[0];
-            // Overlay any user edited fields from localStorage if present
-            try {
-              if (typeof localStorage !== 'undefined') {
-                const saved = JSON.parse(localStorage.getItem('ssgmce_student_profile_data') || '{}');
-                if (saved.mobile) profile.primary_mobile = saved.mobile;
-                if (saved.email) profile.institutional_email = saved.email;
-                if (saved.blood) profile.blood_group = saved.blood;
-                if (saved.emergency) profile.emergency_contact = saved.emergency;
-                if (saved.address) profile.permanent_address = saved.address;
-              }
-            } catch (e) {
-              console.warn('[StudentSupabase] LocalStorage parse error:', e);
-            }
-            return { success: true, data: profile, source: 'supabase' };
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
           }
         } catch (err) {
           console.info('[StudentSupabase] Offline mode: using local cache for profile:', err.message);
         }
-<<<<<<< HEAD
-=======
-      } catch (err) {
-        console.error('[StudentSupabase] Error fetching student profile from Supabase:', err);
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
       }
 
       return { success: false, data: null, source: 'supabase' };
@@ -176,11 +144,6 @@
         } catch (err) {
           console.info('[StudentSupabase] Offline mode: using local cache for metrics');
         }
-<<<<<<< HEAD
-=======
-      } catch (err) {
-        console.error('[StudentSupabase] Error fetching academic metrics from Supabase:', err);
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
       }
 
       return { success: false, data: null, source: 'supabase' };
@@ -192,7 +155,6 @@
     getAttendanceSummary: async function (studentCode = null) {
       studentCode = resolveCurrentStudentCode(studentCode);
       const cfg = getSupabaseConfig();
-<<<<<<< HEAD
       if (studentCode) {
         try {
           const endpoint = `${cfg.url}/rest/v1/student_attendance_summary?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
@@ -202,36 +164,10 @@
             if (Array.isArray(rows) && rows.length > 0) {
               return { success: true, data: rows, source: 'supabase' };
             }
-=======
-      try {
-        const endpoint = `${cfg.url}/rest/v1/student_attendance_subjects?student_code=eq.${encodeURIComponent(studentCode)}&select=*`;
-        const res = await fetch(endpoint, { headers: this._getHeaders() });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
-            const mapped = rows.map((r, idx) => ({
-              id: r.id || idx + 1,
-              subject: r.subject_name,
-              code: r.subject_code,
-              type: r.subject_type || 'TH',
-              typeName: r.type_name || 'Theory',
-              present: r.present_periods,
-              total: r.total_periods,
-              faculty: r.faculty_name,
-              room: r.classroom || 'LH-201',
-              credits: 3.0
-            }));
-            return { success: true, data: mapped, source: 'supabase' };
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
           }
         } catch (err) {
           console.info('[StudentSupabase] Offline mode: using local cache for attendance');
         }
-<<<<<<< HEAD
-=======
-      } catch (err) {
-        console.error('[StudentSupabase] Error fetching student attendance from Supabase:', err);
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
       }
 
       return { success: false, data: [], source: 'supabase' };

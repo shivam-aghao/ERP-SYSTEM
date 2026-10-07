@@ -41,20 +41,6 @@ def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session 
 
 @router.get("/student/attendance")
 @router.get("/attendance")
-<<<<<<< HEAD
-def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    subjects = db.execute(text("SELECT * FROM student_attendance_subjects LIMIT 10")).fetchall()
-    sub_dicts = [dict(s._mapping) for s in subjects]
-    tot_conducted = sum(s.get("total_periods", 0) for s in sub_dicts)
-    tot_attended = sum(s.get("present_periods", 0) for s in sub_dicts)
-    overall_pct = round((tot_attended / tot_conducted * 100), 1) if tot_conducted > 0 else 0.0
-    return success_response({
-        "student_code": student_code,
-        "overall_percentage": overall_pct,
-        "total_conducted": tot_conducted,
-        "total_attended": tot_attended,
-        "subjects": sub_dicts
-=======
 def get_student_attendance(student_code: str = Query("308637"), db: Session = Depends(get_db)):
     subjects = db.execute(
         text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
@@ -98,7 +84,6 @@ def get_student_attendance(student_code: str = Query("308637"), db: Session = De
         "absentLectures": max(0, tot_lecs - tot_pres),
         "subjects": sub_dicts,
         "subjectWise": subject_wise
->>>>>>> 6b0c02d9a501abd8d11477e39456e96e70766c43
     })
 
 @router.get("/student/documents")

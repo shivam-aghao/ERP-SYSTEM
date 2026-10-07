@@ -203,7 +203,18 @@ const TeacherTimetableApp = {
   // ----------------------------------------------------
   timeToMinutes(timeStr) {
     if (!timeStr) return 0;
-    const parts = timeStr.split(":");
+    const str = timeStr.trim();
+    // Check if format has AM/PM
+    const match = str.match(/^(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?$/);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const meridiem = match[3] ? match[3].toUpperCase() : null;
+      if (meridiem === "PM" && h < 12) h += 12;
+      if (meridiem === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    const parts = str.split(":");
     const hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
     return hours * 60 + mins;
@@ -211,9 +222,9 @@ const TeacherTimetableApp = {
 
   formatTime12Hour(timeStr) {
     if (!timeStr) return "";
-    const parts = timeStr.split(":");
-    let h = parseInt(parts[0], 10);
-    const m = parts[1] ? parts[1].padStart(2, "0") : "00";
+    const mins = this.timeToMinutes(timeStr);
+    let h = Math.floor(mins / 60);
+    const m = String(mins % 60).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12;
     h = h ? h : 12;
@@ -221,10 +232,11 @@ const TeacherTimetableApp = {
   },
 
   getSlotIndexForTime(timeStr) {
-    // 0: 09:00 - 10:30 (540 to 630 mins)
-    // 1: 11:00 - 12:30 (660 to 750 mins)
-    // 2: 13:30 - 15:00 (810 to 900 mins)
-    // 3: 15:30 - 17:00 (930 to 1020 mins)
+    // Standard periods:
+    // Period 1: 09:00 - 10:30 (center ~ 585 mins)
+    // Period 2: 11:00 - 12:30 (center ~ 705 mins)
+    // Period 3: 13:30 - 15:00 (center ~ 855 mins)
+    // Period 4: 15:30 - 17:00 (center ~ 975 mins)
     const mins = this.timeToMinutes(timeStr);
     if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
     if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
@@ -326,6 +338,10 @@ const TeacherTimetableApp = {
     document.getElementById("testEndTimeInput").value = test.end;
     document.getElementById("testLinkInput").value = test.link;
 
+    if (test.class_code && document.getElementById("testClassSelect")) {
+      document.getElementById("testClassSelect").value = test.class_code;
+    }
+
     if (title) title.textContent = "Edit Assessment";
     if (badge) badge.textContent = "EDIT MODE";
     if (btnText) btnText.textContent = "Update Assessment";
@@ -351,6 +367,8 @@ const TeacherTimetableApp = {
     const id = document.getElementById("testFormId").value.trim();
     const type = document.getElementById("testTypeSelect").value;
     const subject = document.getElementById("testSubjectSelect").value;
+    const classElem = document.getElementById("testClassSelect");
+    const classCode = classElem ? classElem.value : "2R1";
     const title = document.getElementById("testTitleInput").value.trim();
     const date = document.getElementById("testDateInput").value;
     const start = document.getElementById("testStartTimeInput").value;
@@ -404,7 +422,7 @@ const TeacherTimetableApp = {
       start_time: start,
       end_time: end,
       link,
-      class_code: "2R1"
+      class_code: classCode || "2R1"
     };
 
     try {
@@ -427,25 +445,16 @@ const TeacherTimetableApp = {
       if (res && res.ok) {
         await this.loadTests();
         this.showToast(id ? "Assessment updated successfully" : "Assessment scheduled and saved to backend database", "success");
+        this.closeTestFormModal();
+        this.renderTimetableView();
       } else {
         const err = res ? await res.json().catch(() => ({})) : {};
-        throw new Error(err.message || "Backend rejected request");
+        throw new Error(err.message || (err.detail ? (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)) : "Backend rejected request"));
       }
     } catch (err) {
-      console.warn("Backend save notice, caching locally:", err);
-      const savedObj = { id: id || ("local-" + Date.now()), type, subject, title, date, start, end, link };
-      if (id) {
-        const idx = this.tests.findIndex(t => t.id === id);
-        if (idx !== -1) this.tests[idx] = savedObj;
-      } else {
-        this.tests.push(savedObj);
-      }
-      this.saveTests();
-      this.showToast("Assessment scheduled successfully", "success");
+      console.error("Backend save error:", err);
+      this.showToast(err.message || "Failed to schedule test on backend server", "error");
     }
-
-    this.closeTestFormModal();
-    this.renderTimetableView();
   },
 
   openTestDetails(testId) {
@@ -931,6 +940,9 @@ const TeacherTimetableApp = {
                           <div class="test-subject">${t.subject}</div>
                           <div class="test-title" title="${t.title}">${t.title}</div>
                           <div class="test-time">
+                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                            <span>${t.date}</span>
+                            <span style="margin: 0 4px; opacity:0.5;">•</span>
                             <i data-lucide="clock" style="width:11px;height:11px;"></i>
                             <span>${start12} – ${end12}</span>
                           </div>

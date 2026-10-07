@@ -454,10 +454,12 @@
             <div class="select-wrapper">
               <select id="testSubjectSelect" class="form-select" required>
                 <option value="" disabled selected>Select Subject...</option>
+                <option value="Database Management Systems">Database Management Systems</option>
                 <option value="Data Structures">Data Structures</option>
                 <option value="Java Programming">Java Programming</option>
                 <option value="Database Systems">Database Systems</option>
                 <option value="Operating Systems">Operating Systems</option>
+                <option value="Computer Networks">Computer Networks</option>
                 <option value="Algorithms">Algorithms</option>
                 <option value="Software Engg">Software Engg</option>
                 <option value="Data Structures Lab">Data Structures Lab</option>
@@ -466,18 +468,35 @@
           </div>
         </div>
 
-        <!-- 3. Title -->
-        <div class="form-field-group">
-          <label for="testTitleInput" class="form-label">
-            <span>Test Title / Topic</span>
-            <span class="required-star">*</span>
-          </label>
-          <input type="text"
-                 id="testTitleInput"
-                 class="form-input"
-                 placeholder="e.g. Unit 2 Quiz, Mid-Term Assessment, Coding Assignment 1"
-                 maxlength="100"
-                 required>
+        <div class="form-row-grid two-cols">
+          <!-- Target Class -->
+          <div class="form-field-group">
+            <label for="testClassSelect" class="form-label">
+              <span>Target Class / Section</span>
+              <span class="required-star">*</span>
+            </label>
+            <div class="select-wrapper">
+              <select id="testClassSelect" class="form-select" required>
+                <option value="2R1" selected>B.Tech CSE - 2R1 (Year II)</option>
+                <option value="3R">B.Tech CSE - 3R (Year III)</option>
+                <option value="2R2">B.Tech CSE - 2R2 (Year II)</option>
+                <option value="ALL">All Classes (CSE)</option>
+              </select>
+            </div>
+          </div>
+          <!-- 3. Title -->
+          <div class="form-field-group">
+            <label for="testTitleInput" class="form-label">
+              <span>Test Title / Topic</span>
+              <span class="required-star">*</span>
+            </label>
+            <input type="text"
+                   id="testTitleInput"
+                   class="form-input"
+                   placeholder="e.g. Unit 2 Quiz, Mid-Term Assessment, Coding Assignment 1"
+                   maxlength="100"
+                   required>
+          </div>
         </div>
 
         <div class="form-row-grid three-cols">
