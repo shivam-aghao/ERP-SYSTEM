@@ -6,20 +6,30 @@ const TeacherApp = {
   currentView: 'dashboard',
 
   init() {
-    this.bindEvents();
-    this.renderHeaderProfile();
-    this.renderDynamicDates();
-    this.renderDashboardData();
-    this.renderTimetableView();
-    this.renderStudentsView();
-    this.renderSyllabusView();
-    this.renderResultsView();
-    this.renderNotificationsList();
-    this.initLucideIcons();
+    // 1. Immediately test and display backend connection status
     this.checkBackendConnection();
-    this.initHashRouting();
+
+    // 2. Safely render each dashboard module
+    try { this.bindEvents(); } catch (e) { console.warn('bindEvents:', e); }
+    try { this.renderHeaderProfile(); } catch (e) { console.warn('renderHeaderProfile:', e); }
+    try { this.renderDynamicDates(); } catch (e) { console.warn('renderDynamicDates:', e); }
+    try { this.renderDashboardData(); } catch (e) { console.warn('renderDashboardData:', e); }
+    try { this.renderTimetableView(); } catch (e) { console.warn('renderTimetableView:', e); }
+    try { this.renderStudentsView(); } catch (e) { console.warn('renderStudentsView:', e); }
+    try { this.renderSyllabusView(); } catch (e) { console.warn('renderSyllabusView:', e); }
+    try { this.renderResultsView(); } catch (e) { console.warn('renderResultsView:', e); }
+    try { this.renderNotificationsList(); } catch (e) { console.warn('renderNotificationsList:', e); }
+    try { this.initLucideIcons(); } catch (e) { console.warn('initLucideIcons:', e); }
+    try { this.initHashRouting(); } catch (e) { console.warn('initHashRouting:', e); }
     if (typeof window.AttendanceMarkingManager !== 'undefined') {
-      window.AttendanceMarkingManager.init();
+      try { window.AttendanceMarkingManager.init(); } catch (e) {}
+    }
+
+    // 3. Periodic health monitor (every 7 seconds)
+    if (!this._healthInterval) {
+      this._healthInterval = setInterval(() => {
+        this.checkBackendConnection(false);
+      }, 7000);
     }
   },
 
@@ -28,107 +38,128 @@ const TeacherApp = {
     const dot = document.getElementById('backend-status-dot');
     const text = document.getElementById('backend-status-text');
 
-    const setStatus = (isOnline, latency) => {
+    const setStatus = (isOnline, latency, supabaseOnline) => {
       if (pill) {
-        pill.style.background = isOnline ? '#ECFDF5' : '#FEF2F2';
-        pill.style.borderColor = isOnline ? '#10B981' : '#EF4444';
-        pill.style.color = isOnline ? '#047857' : '#B91C1C';
+        pill.style.background = (isOnline || supabaseOnline) ? '#ECFDF5' : '#FEF2F2';
+        pill.style.borderColor = (isOnline || supabaseOnline) ? '#10B981' : '#EF4444';
+        pill.style.color = (isOnline || supabaseOnline) ? '#047857' : '#B91C1C';
       }
       if (dot) {
-        dot.style.background = isOnline ? '#10B981' : '#EF4444';
-        dot.style.boxShadow = isOnline ? '0 0 8px #10B981' : '0 0 8px #EF4444';
+        dot.style.background = (isOnline || supabaseOnline) ? '#10B981' : '#EF4444';
+        dot.style.boxShadow = (isOnline || supabaseOnline) ? '0 0 8px #10B981' : '0 0 8px #EF4444';
       }
       if (text) {
-        text.textContent = isOnline 
-          ? `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`
-          : '🔴 Backend: Offline';
+        if (isOnline && supabaseOnline) {
+          text.textContent = `🟢 Live Connected (Backend & Supabase)${latency ? ` (${latency}ms)` : ''}`;
+        } else if (isOnline) {
+          text.textContent = `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`;
+        } else if (supabaseOnline) {
+          text.textContent = `🟢 Supabase: Connected (Cloud)`;
+        } else {
+          text.textContent = '🔴 Backend: Offline';
+        }
       }
     };
 
-    if (typeof window.TeacherAPI !== 'undefined') {
+    let isHealthy = false;
+    let supabaseOnline = false;
+    let latency = 0;
+
+    // Probe 1: Via TeacherAPI
+    if (typeof window.TeacherAPI !== 'undefined' && typeof window.TeacherAPI.checkHealth === 'function') {
       try {
         const start = performance.now();
         const health = await window.TeacherAPI.checkHealth();
-        const latency = Math.round(performance.now() - start);
-
+        latency = Math.round(performance.now() - start);
         if (health && (health.status === 'OK' || health.status === 'healthy')) {
-          let loginData = null;
-          try {
-            loginData = await window.TeacherAPI.login();
-          } catch (loginErr) {
-            console.warn('Backend login notice:', loginErr.message);
+          isHealthy = true;
+          if (health.supabase === 'connected' || health.database === 'connected') {
+            supabaseOnline = true;
           }
-          setStatus(true, latency);
-
-          const teacherName = (loginData && loginData.user && loginData.user.name) || (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
-          if (isManualCheck) {
-            this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
-          } else {
-            this.showToast(`🟢 Connected to Backend API (${teacherName})`, 'success');
-          }
-          console.log('✅ Logged in successfully as:', teacherName);
-          try {
-            const data = await window.TeacherAPI.getDashboardSummary();
-            console.log('📊 Live Dashboard KPI metrics:', data ? (data.metrics || data) : null);
-
-            // Fetch live profile from backend if available
-            try {
-              const prof = await window.TeacherAPI.getProfile();
-              if (prof) {
-                if (window.ERP_AUTH && typeof window.ERP_AUTH.setSession === 'function') {
-                  const currUser = window.ERP_AUTH.getCurrentUser() || {};
-                  window.ERP_AUTH.setSession({
-                    ...currUser,
-                    ...prof,
-                    name: prof.full_name || prof.name || currUser.name,
-                    full_name: prof.full_name || prof.name || currUser.full_name,
-                    emp_code: prof.emp_code || prof.empCode || currUser.emp_code,
-                    role: 'teacher'
-                  });
-                }
-              }
-            } catch (pErr) {
-              console.warn('Teacher profile fetch note:', pErr.message);
-            }
-
-            // Seamlessly bind live data to UI cards
-            if (data && typeof TeacherERPData !== 'undefined') {
-              const metrics = data.metrics || {
-                totalClasses: data.total_classes,
-                totalStudents: data.total_students,
-                averageAttendance: data.attendance_average_pct ? `${data.attendance_average_pct}%` : '87%'
-              };
-              if (metrics.totalClasses !== undefined) {
-                TeacherERPData.stats.totalClasses = String(metrics.totalClasses).padStart(2, '0');
-              }
-              if (metrics.totalStudents !== undefined) {
-                TeacherERPData.stats.totalStudents = String(metrics.totalStudents);
-              }
-              if (metrics.averageAttendance) {
-                TeacherERPData.stats.attendancePercent = parseInt(metrics.averageAttendance, 10) || 87;
-              }
-              if (data.faculty) {
-                TeacherERPData.faculty.name = data.faculty.name;
-                TeacherERPData.faculty.employeeId = data.faculty.employeeId;
-                TeacherERPData.faculty.title = data.faculty.title || 'Associate Professor';
-              }
-              this.renderHeaderProfile();
-              this.renderDashboardData();
-            }
-          } catch (kpiErr) {
-            console.warn('Dashboard summary:', kpiErr.message);
-          }
-        } else {
-          setStatus(false);
-          if (isManualCheck) this.showToast('❌ Backend server offline', 'error');
         }
-      } catch (err) {
-        setStatus(false);
-        console.warn('Backend connection:', err.message);
-        if (isManualCheck) this.showToast(`❌ Connection error: ${err.message}`, 'error');
+      } catch (e) {
+        console.warn('TeacherAPI health check failed:', e.message);
+      }
+    }
+
+    // Probe 2: Direct HTTP fetch probes to ensure connection under all port/host configurations
+    if (!isHealthy) {
+      const endpoints = [
+        'http://localhost:8000/health',
+        'http://127.0.0.1:8000/health',
+        'http://localhost:8000/api/v1/health',
+        'http://127.0.0.1:8000/api/v1/health'
+      ];
+      for (const ep of endpoints) {
+        try {
+          const start = performance.now();
+          const res = await fetch(ep, { signal: AbortSignal.timeout(2000) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'OK' || data.status === 'healthy' || data.database === 'connected') {
+              isHealthy = true;
+              if (data.supabase === 'connected' || data.database === 'connected') {
+                supabaseOnline = true;
+              }
+              latency = Math.round(performance.now() - start);
+              break;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Probe 3: Direct Supabase client check
+    if (!supabaseOnline && window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('teachers').select('id').limit(1);
+        if (!error && data) {
+          supabaseOnline = true;
+        }
+      } catch (_) {}
+    }
+
+    if (isHealthy || supabaseOnline) {
+      setStatus(isHealthy, latency, supabaseOnline);
+      let teacherName = (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
+
+      if (typeof window.TeacherAPI !== 'undefined' && typeof window.TeacherAPI.login === 'function') {
+        try {
+          const loginData = await window.TeacherAPI.login();
+          if (loginData && loginData.user && loginData.user.name) {
+            teacherName = loginData.user.name;
+          }
+        } catch (loginErr) {
+          console.warn('Backend login notice:', loginErr.message);
+        }
+      }
+
+      if (isManualCheck) {
+        this.showToast(`✅ Live Backend Connected (${latency}ms)! Authenticated as ${teacherName}`, 'success');
+      }
+
+      // Fetch dynamic dashboard KPIs
+      if (typeof window.TeacherAPI !== 'undefined' && typeof window.TeacherAPI.getDashboardSummary === 'function') {
+        try {
+          const data = await window.TeacherAPI.getDashboardSummary();
+          if (data && typeof TeacherERPData !== 'undefined') {
+            const metrics = data.metrics || {
+              totalClasses: data.total_classes,
+              totalStudents: data.total_students,
+              averageAttendance: data.attendance_average_pct ? `${data.attendance_average_pct}%` : '87%'
+            };
+            if (metrics.totalClasses !== undefined) TeacherERPData.stats.totalClasses = String(metrics.totalClasses).padStart(2, '0');
+            if (metrics.totalStudents !== undefined) TeacherERPData.stats.totalStudents = String(metrics.totalStudents);
+            if (metrics.averageAttendance) TeacherERPData.stats.attendancePercent = parseInt(metrics.averageAttendance, 10) || 87;
+            if (typeof this.renderDashboardData === 'function') this.renderDashboardData();
+          }
+        } catch (kpiErr) {
+          console.warn('Dashboard summary:', kpiErr.message);
+        }
       }
     } else {
       setStatus(false);
+      if (isManualCheck) this.showToast('❌ Backend server offline', 'error');
     }
   },
 
@@ -265,10 +296,10 @@ const TeacherApp = {
             : null;
           return {
             name: fn,
-            department: u.department || u.department_name || 'Computer Science & Engineering',
+            department: u.department_name || u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || u.departmentCode || 'CSE',
             title: u.designation || (facObj && facObj.title) || 'Faculty Member',
-            employeeId: empCode || (facObj && facObj.empCode) || 'EMP-CSE-1001',
+            employeeId: empCode || u.emp_code || u.empCode || u.id || (facObj && facObj.empCode) || '',
             email: u.email || '',
             phone: u.phone || '',
             avatarInitials: u.avatar || u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -283,12 +314,14 @@ const TeacherApp = {
           ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
           : null;
         return {
-          name: u.full_name || u.name || (facObj && facObj.name) || "Dr. J. M. Patil",
-          department: "Computer Science & Engineering",
-          departmentCode: "CSE",
-          title: u.designation || (facObj && facObj.title) || "Professor & Head",
-          employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1001",
-          avatarInitials: (u.name || (facObj && facObj.name) || "JP").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+          name: u.full_name || u.name || (facObj && facObj.name) || "Faculty Member",
+          department: u.department_name || u.department || "Computer Science & Engineering",
+          departmentCode: u.department_code || u.departmentCode || "CSE",
+          title: u.designation || (facObj && facObj.title) || "Faculty Member",
+          employeeId: empCode || (facObj && facObj.empCode) || "",
+          email: u.email || "",
+          phone: u.phone || "",
+          avatarInitials: (u.name || (facObj && facObj.name) || "FM").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
         };
       }
     } catch (e) {
@@ -308,11 +341,13 @@ const TeacherApp = {
       employeeId: facObj.empCode,
       avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
     } : {
-      name: "Dr. J. M. Patil",
+      name: "Prof. J. M. Patil",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      title: "Professor & Head",
+      title: "Professor & Head, CSE",
       employeeId: "EMP-CSE-1001",
+      email: "jmpatil@ssgmce.ac.in",
+      phone: "+91 94228 12345",
       avatarInitials: "JP"
     };
   },
@@ -453,18 +488,72 @@ const TeacherApp = {
       }
     });
 
-    // Header Profile Dropdown toggle
+    // Header Profile Direct Click & Dropdown Toggle
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
     const profileMenu = document.getElementById("profile-dropdown-menu");
+    const headerProfName = document.getElementById("header-profile-name");
+    const headerProfAvatar = document.getElementById("header-profile-avatar");
+    const headerProfDept = document.getElementById("header-profile-dept");
+    const heroProfName = document.getElementById("hero-teacher-name");
+
+    // Clicking directly on Teacher's Name in header opens Profile immediately
+    if (headerProfName) {
+      headerProfName.style.cursor = "pointer";
+      headerProfName.title = "View Faculty Profile";
+      headerProfName.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showTeacherProfile();
+      });
+    }
+
+    // Clicking directly on Teacher's Avatar in header opens Profile immediately
+    if (headerProfAvatar) {
+      headerProfAvatar.style.cursor = "pointer";
+      headerProfAvatar.title = "View Faculty Profile";
+      headerProfAvatar.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showTeacherProfile();
+      });
+    }
+
+    // Clicking on Teacher's Department label
+    if (headerProfDept) {
+      headerProfDept.style.cursor = "pointer";
+      headerProfDept.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showTeacherProfile();
+      });
+    }
+
+    // Clicking on Teacher's Name in Hero section opens Profile immediately
+    if (heroProfName) {
+      heroProfName.style.cursor = "pointer";
+      heroProfName.title = "View Faculty Profile";
+      heroProfName.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showTeacherProfile();
+      });
+    }
 
     if (profileTrigger && profileMenu) {
       profileTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
-        const isOpen = profileMenu.classList.contains("show");
-        this.closeAllDropdowns();
-        if (!isOpen) {
-          profileMenu.classList.add("show");
-          profileTrigger.classList.add("active");
+        // If clicking on chevron icon specifically, toggle dropdown menu
+        if (e.target.closest('.profile-arrow') || e.target.classList.contains('chevron-down-icon') || e.target.tagName.toLowerCase() === 'polyline') {
+          const isOpen = profileMenu.classList.contains("show") || profileMenu.classList.contains("open") || profileMenu.style.display === "flex";
+          this.closeAllDropdowns();
+          if (!isOpen) {
+            profileMenu.classList.add("show");
+            profileMenu.classList.add("open");
+            profileMenu.style.display = "flex";
+            profileMenu.style.opacity = "1";
+            profileMenu.style.visibility = "visible";
+            profileTrigger.classList.add("active");
+            profileTrigger.setAttribute("aria-expanded", "true");
+          }
+        } else {
+          // Clicking anywhere on profile button directly opens Faculty Profile
+          this.showTeacherProfile();
         }
       });
     }
@@ -472,6 +561,14 @@ const TeacherApp = {
     // Close dropdowns on outside click
     document.addEventListener("click", () => {
       this.closeAllDropdowns();
+    });
+
+    // Close modals on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.closeTeacherProfileModal();
+        this.closeAllDropdowns();
+      }
     });
 
     // Global Search Bar Handler
@@ -484,18 +581,101 @@ const TeacherApp = {
     }
   },
 
+  showTeacherProfile() {
+    this.closeAllDropdowns();
+    this.switchView('profile');
+    try { window.location.hash = 'profile'; } catch (_) {}
+    this.openTeacherProfileModal();
+    const profView = document.getElementById("profile-view");
+    if (profView) {
+      profView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  },
+
+  openTeacherProfileModal() {
+    const modal = document.getElementById("modal-teacher-profile");
+    if (modal) {
+      this.renderProfileModalData();
+      modal.style.display = "flex";
+      this.initLucideIcons();
+    }
+  },
+
+  closeTeacherProfileModal() {
+    const modal = document.getElementById("modal-teacher-profile");
+    if (modal) {
+      modal.style.display = "none";
+    }
+  },
+
+  renderProfileModalData() {
+    const teacher = this.getLoggedInTeacher();
+    if (!teacher) return;
+
+    let initials = teacher.avatarInitials;
+    if (!initials && teacher.name) {
+      const cleanName = teacher.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
+      const parts = cleanName.split(/\s+/);
+      initials = parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    const modalAvatar = document.getElementById("modal-profile-avatar");
+    if (modalAvatar) {
+      modalAvatar.innerHTML = `<span>${initials || "JP"}</span><span style="position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: #10B981; border: 2.5px solid #FFFFFF; border-radius: 50%;" title="Active Faculty"></span>`;
+    }
+
+    const modalName = document.getElementById("modal-profile-name");
+    if (modalName) modalName.textContent = teacher.name || "Prof. J. M. Patil";
+
+    const modalTitle = document.getElementById("modal-profile-title");
+    if (modalTitle) modalTitle.textContent = teacher.title || "Professor & Head, CSE";
+
+    const modalDept = document.getElementById("modal-profile-dept");
+    if (modalDept) modalDept.textContent = teacher.department ? `Department of ${teacher.department}` : "Department of Computer Science & Engineering";
+
+    const modalEmpId = document.getElementById("modal-profile-empid");
+    if (modalEmpId) modalEmpId.textContent = teacher.employeeId || "EMP-CSE-1001";
+
+    const modalEmail = document.getElementById("modal-profile-email");
+    if (modalEmail) modalEmail.textContent = teacher.email || (teacher.employeeId ? `${teacher.employeeId.toLowerCase()}@ssgmce.ac.in` : "jmpatil@ssgmce.ac.in");
+
+    const modalPhone = document.getElementById("modal-profile-phone");
+    if (modalPhone) modalPhone.textContent = teacher.phone || "+91 94228 12345";
+
+    const modalCabin = document.getElementById("modal-profile-cabin");
+    if (modalCabin) modalCabin.textContent = teacher.cabin || "Room B-204, Academic Block";
+
+    const modalHours = document.getElementById("modal-profile-hours");
+    if (modalHours) modalHours.textContent = teacher.officeHours || "Mon - Fri, 10:00 AM - 04:00 PM";
+
+    const modalTerm = document.getElementById("modal-profile-term");
+    if (modalTerm && typeof AcademicDateUtils !== 'undefined') {
+      modalTerm.textContent = AcademicDateUtils.getCurrentAcademicTerm().fullTerm;
+    }
+  },
+
   closeAllDropdowns() {
     const profileMenu = document.getElementById("profile-dropdown-menu");
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
 
-    if (profileMenu) profileMenu.classList.remove("show");
-    if (profileTrigger) profileTrigger.classList.remove("active");
+    if (profileMenu) {
+      profileMenu.classList.remove("show");
+      profileMenu.classList.remove("open");
+      profileMenu.style.display = "none";
+      profileMenu.style.opacity = "0";
+      profileMenu.style.visibility = "hidden";
+    }
+    if (profileTrigger) {
+      profileTrigger.classList.remove("active");
+      profileTrigger.setAttribute("aria-expanded", "false");
+    }
   },
 
   // ----------------------------------------------------
   // VIEW ROUTING / SWITCHING
   // ----------------------------------------------------
-  switchView(viewName, subView) {
+  switchView(viewName, subView, preserveFrame = false) {
+    this.closeAllDropdowns();
     this.currentView = viewName;
 
     // Update navigation active state
@@ -514,9 +694,10 @@ const TeacherApp = {
       overlay.classList.remove("active");
     }
 
-    // Hide all view containers
+    // Hide all view containers and clear active classes
     document.querySelectorAll(".view-section-pane").forEach(pane => {
       pane.style.display = "none";
+      pane.classList.remove("active");
     });
 
     // Update Header Page Title / Role Badge
@@ -528,14 +709,25 @@ const TeacherApp = {
     };
 
     switch (viewName) {
-      case 'dashboard':
-        document.getElementById("dashboard-view").style.display = "block";
+      case 'dashboard': {
+        const dashView = document.getElementById("dashboard-view");
+        if (dashView) {
+          dashView.style.display = "block";
+          dashView.classList.add("active");
+        }
         setHeaderBadge("Teacher Dashboard");
         break;
-      case 'profile':
-        document.getElementById("profile-view").style.display = "block";
+      }
+      case 'profile': {
+        const profView = document.getElementById("profile-view");
+        if (profView) {
+          profView.style.display = "block";
+          profView.classList.add("active");
+        }
         setHeaderBadge("Faculty Profile");
+        this.renderHeaderProfile();
         break;
+      }
       case 'academics':
         document.getElementById("academics-view").style.display = "block";
         setHeaderBadge("Academics Hub");
@@ -543,7 +735,9 @@ const TeacherApp = {
       case 'attendance':
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance Hub");
-        this.initIntegratedAttendance(subView);
+        if (!preserveFrame) {
+          this.initIntegratedAttendance(subView);
+        }
         break;
       case 'attendance-mark':
         document.getElementById("attendance-module").style.display = "block";
@@ -611,10 +805,16 @@ const TeacherApp = {
         document.getElementById("notifications-view").style.display = "block";
         setHeaderBadge("Notifications");
         break;
-      case 'information':
-        document.getElementById("profile-view").style.display = "block";
+      case 'information': {
+        const profView = document.getElementById("profile-view");
+        if (profView) {
+          profView.style.display = "block";
+          profView.classList.add("active");
+        }
         setHeaderBadge("Faculty Information");
+        this.renderHeaderProfile();
         break;
+      }
       default:
         document.getElementById("dashboard-view").style.display = "block";
         setHeaderBadge("Teacher Dashboard");
@@ -712,8 +912,8 @@ const TeacherApp = {
       const completedCount = TeacherERPData.stats.attendanceCompletedCount;
       const pendingCount = TeacherERPData.stats.attendancePendingCount;
       const totalCount = completedCount + pendingCount;
-      const completedPercent = Math.round((completedCount / totalCount) * 100);
-      const pendingPercent = 100 - completedPercent;
+      const completedPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      const pendingPercent = totalCount > 0 ? (100 - completedPercent) : 0;
 
       attendanceProgressContainer.innerHTML = `
         <div class="attendance-overview-wrapper">
@@ -821,11 +1021,26 @@ const TeacherApp = {
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance', 'marking');
     const frame = document.getElementById('attendance-integrated-frame');
+    const targetUrl = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
+
+    // Switch view to attendance with preserveFrame=true so switchView does not clobber frame
+    this.switchView('attendance', 'marking', true);
+
     if (frame) {
-      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
-      frame.src = q;
+      const currentSrc = frame.getAttribute('src') || '';
+      if (currentSrc.includes(`class=${encodeURIComponent(classCode)}`)) {
+        try {
+          const app = frame.contentWindow && (frame.contentWindow.TeacherAttendanceApp || frame.contentWindow.CollegeERPApp);
+          if (app && typeof app.handleDirectClassLaunch === 'function') {
+            app.handleDirectClassLaunch(classCode, subject);
+            this.onAttendanceFrameLoaded();
+            return;
+          }
+        } catch (_) {}
+      }
+      this.showAttendanceLoader();
+      frame.src = targetUrl;
     }
   },
 
@@ -889,14 +1104,15 @@ const TeacherApp = {
       }
     }
 
-    const targetSrc = (mode === 'roster') 
-      ? 'teacher-attendance-roster.html?embedded=true&class=3R' 
-      : 'teacher-attendance.html?embedded=true&class=3R';
-
+    const defaultPage = (mode === 'roster') ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
+    const targetSrc = `${defaultPage}?embedded=true&class=3R`;
 
     if (frame) {
       const currentSrc = frame.getAttribute('src') || '';
-      if (!currentSrc.includes(targetSrc)) {
+      const currentIsRoster = currentSrc.includes('teacher-attendance-roster.html');
+      const shouldSwitch = (mode === 'roster' && !currentIsRoster) || (mode === 'marking' && currentIsRoster) || !currentSrc;
+
+      if (shouldSwitch) {
         this.showAttendanceLoader();
         frame.src = targetSrc;
       }
@@ -1202,7 +1418,9 @@ const TeacherApp = {
     const container = document.getElementById("students-content");
     if (!container) return;
 
-    const allStudents = TeacherERPData.students["2R1"];
+    const allStudents = (TeacherERPData && TeacherERPData.students && TeacherERPData.students["2R1"]) 
+      || (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass("2R1") : []) 
+      || [];
 
     container.innerHTML = `
       <div class="card" style="padding:20px;">
@@ -1242,6 +1460,9 @@ const TeacherApp = {
   },
 
   generateRosterRows(students) {
+    if (!Array.isArray(students) || students.length === 0) {
+      return `<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-muted);">No student records found in database</td></tr>`;
+    }
     return students.map(st => `
       <tr>
         <td style="font-weight:700; color:var(--primary-blue);">ROLL ${st.rollNo}</td>
@@ -1434,7 +1655,11 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // Initialize application when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    TeacherApp.init();
+  });
+} else {
   TeacherApp.init();
-});
+}
 

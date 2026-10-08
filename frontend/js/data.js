@@ -145,7 +145,7 @@ if (typeof window !== 'undefined') {
    ======================================================== */
 const SSGMCE_FACULTY_TIMETABLES = {
   "EMP-CSE-1001": {
-    "name": "Dr. J. M. Patil",
+    "name": "Prof. J. M. Patil",
     "teaching_load": [
       {
         "semester": "VII",
@@ -2433,15 +2433,15 @@ const getSessionFaculty = () => {
     }
   } catch (_) {}
   return {
-    name: "Faculty Member",
+    name: "Prof. J. M. Patil",
     prefix: "Prof.",
-    title: "Faculty Member",
+    title: "Professor & Head, CSE",
     department: "Computer Science & Engineering",
     departmentCode: "CSE",
-    employeeId: "",
-    email: "",
-    phone: "",
-    avatarInitials: "FA",
+    employeeId: "EMP-CSE-1001",
+    email: "jmpatil@ssgmce.ac.in",
+    phone: "+91 94228 12345",
+    avatarInitials: "JP",
     academicYear: AcademicDateUtils.getCurrentAcademicTerm().academicYear,
     currentSemester: AcademicDateUtils.getCurrentAcademicTerm().semesterName
   };
@@ -2472,41 +2472,47 @@ const TeacherERPData = {
   classes: {},
   subjects: {},
 
+  _studentsData: {
+    "2R1": [
+      { rollNo: "01", name: "Aarav Sharma", email: "aarav.sharma@student.ssgmce.ac.in", attendance: 88 },
+      { rollNo: "02", name: "Ananya Patel", email: "ananya.patel@student.ssgmce.ac.in", attendance: 92 },
+      { rollNo: "03", name: "Devansh Deshmukh", email: "devansh.deshmukh@student.ssgmce.ac.in", attendance: 78 },
+      { rollNo: "04", name: "Isha Kulkarni", email: "isha.kulkarni@student.ssgmce.ac.in", attendance: 95 },
+      { rollNo: "05", name: "Rohan Joshi", email: "rohan.joshi@student.ssgmce.ac.in", attendance: 84 }
+    ],
+    "2R2": [
+      { rollNo: "01", name: "Tanvi Wankhade", email: "tanvi.wankhade@student.ssgmce.ac.in", attendance: 90 },
+      { rollNo: "02", name: "Aditya Raut", email: "aditya.raut@student.ssgmce.ac.in", attendance: 82 },
+      { rollNo: "03", name: "Snehal Kale", email: "snehal.kale@student.ssgmce.ac.in", attendance: 94 }
+    ],
+    "3R": [
+      { rollNo: "01", name: "Pranav Gawande", email: "pranav.gawande@student.ssgmce.ac.in", attendance: 86 },
+      { rollNo: "02", name: "Pooja Thakare", email: "pooja.thakare@student.ssgmce.ac.in", attendance: 91 },
+      { rollNo: "03", name: "Kunal Chopade", email: "kunal.chopade@student.ssgmce.ac.in", attendance: 79 }
+    ]
+  },
+
   getStudentsForClass(classCode) {
-    if (this.students && this.students[classCode]) {
-      return this.students[classCode];
+    if (this._studentsData && this._studentsData[classCode]) {
+      return this._studentsData[classCode];
     }
     return [];
   },
 
-  // Directory students roster getter
   get students() {
-    return {
-      "2R1": this.getStudentsForClass("2R1").map(s => ({
-        rollNo: s.rollFormatted,
-        name: s.name,
-        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
-        attendance: 75 + (s.rollNo % 22)
-      })),
-      "2R2": this.getStudentsForClass("2R2").map(s => ({
-        rollNo: s.rollFormatted,
-        name: s.name,
-        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
-        attendance: 80 + (s.rollNo % 18)
-      })),
-      "3R": this.getStudentsForClass("3R").map(s => ({
-        rollNo: s.rollFormatted,
-        name: s.name,
-        email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@student.ssgmce.ac.in`,
-        attendance: 82 + (s.rollNo % 16)
-      }))
-    };
+    return this._studentsData || {};
+  },
+
+  set students(val) {
+    if (val && typeof val === 'object') {
+      this._studentsData = val;
+    }
   },
 
   // Today's classes schedule for Dashboard
     // All 15 Faculty Members from Official PDF
   facultyList: [
-    { empCode: "EMP-CSE-1001", name: "Dr. J. M. Patil", title: "Professor & Head, CSE", totalLoad: 12 },
+    { empCode: "EMP-CSE-1001", name: "Prof. J. M. Patil", title: "Professor & Head, CSE", totalLoad: 12 },
     { empCode: "EMP-CSE-1002", name: "Dr. N. M. Kandoi", title: "Associate Professor", totalLoad: 15 },
     { empCode: "EMP-CSE-1003", name: "Prof. C. M. Mankar", title: "Assistant Professor", totalLoad: 17 },
     { empCode: "EMP-CSE-1004", name: "Dr. V. S. Mahalle", title: "Associate Professor", totalLoad: 17 },

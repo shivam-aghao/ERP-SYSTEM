@@ -67,6 +67,7 @@ class AuthService:
                     SELECT t.*, d.name as dept_name, d.code as dept_code
                     FROM teachers t
                     LEFT JOIN departments d ON t.department_id = d.id
+                    ORDER BY CASE WHEN t.emp_code = 'EMP-CSE-1001' THEN 0 ELSE 1 END, t.emp_code ASC
                     LIMIT 1
                 """)).fetchone()
             except Exception:
