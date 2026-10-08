@@ -1808,10 +1808,22 @@ function renderTimetablePeriods(periods) {
     const name = p.name || p.course_name || p.subjectName || p.subject_name || p.code || 'Course Period';
     const venue = p.venue || `${p.classroom || 'LH-204'} • ${p.teacher_name || p.teacher || 'Faculty'}`;
     const att = p.att || p.att_label || (isCompleted ? 'Attendance: Present' : isCritical ? 'Critical for 75%' : isActiveNow ? 'Live in Session' : 'Scheduled');
-    const quizLink = p.link || 'student-quiz.html';
+    
+    let quizClick = '';
+    let bottomStatus = att;
+    if (isQuiz) {
+      if (p.is_joinable && p.link) {
+        quizClick = `onclick="window.location.href='${p.link}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"`;
+        bottomStatus = `🎯 Live Now — Click to Join Test →`;
+      } else {
+        quizClick = `onclick="window.location.href='student_timetable.html'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.25);"`;
+        const startTimeStr = time.split('-')[0].trim();
+        bottomStatus = `🔒 Starts at ${startTimeStr} • Link Locked`;
+      }
+    }
 
     html += `
-      <div class="${cardClass}" ${isQuiz ? `onclick="window.location.href='${quizLink}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"` : ''}>
+      <div class="${cardClass}" ${quizClick}>
         <div class="period-top-row">
           <div class="${slotClass}">${num}</div>
           <span class="period-status-tag ${statusClass}">${status}</span>
@@ -1822,7 +1834,7 @@ function renderTimetablePeriods(periods) {
         <div class="period-course ${isQuiz ? 'text-danger' : (isActiveNow ? 'text-primary' : '')}" style="${isQuiz ? 'font-weight:700;' : ''}">${name}</div>
         <div class="period-meta">${venue}</div>
         <div class="period-att-status ${isQuiz ? 'text-danger' : (isCritical ? 'text-warning' : isActiveNow ? 'text-accent' : isCompleted ? 'text-success' : 'text-muted')}">
-          ${isQuiz ? `🎯 Click to Open Quiz Portal →` : att}
+          ${bottomStatus}
         </div>
       </div>
     `;
@@ -2638,6 +2650,95 @@ async function hydrateDashboardData() {
       console.warn('Could not update sidebar quiz badge:', qErr);
     }
 
+    // 7. Upcoming Assessment Strip Hydration (from Teacher Scheduled Tests / Supabase)
+    try {
+      let upcomingTest = overview.upcomingAssessment;
+      if (!upcomingTest) {
+        try {
+          const testRes = await fetch(`/api/v1/timetable/tests?class_code=${encodeURIComponent(cls || '3R')}&student_code=${encodeURIComponent(studentCode)}`);
+          if (testRes.ok) {
+            const testData = await testRes.json();
+            if (testData && testData.success && Array.isArray(testData.data)) {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const upcomingList = testData.data.filter(t => (t.date || '') >= todayStr).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+              if (upcomingList.length > 0) {
+                upcomingTest = upcomingList[0];
+              }
+            }
+          }
+        } catch (_) {}
+
+        if (!upcomingTest) {
+          try {
+            const local = localStorage.getItem('ssgmce_scheduled_tests');
+            if (local) {
+              const parsed = JSON.parse(local);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const upcomingList = parsed.filter(t => (t.date || '') >= todayStr).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+                if (upcomingList.length > 0) {
+                  upcomingTest = upcomingList[0];
+                }
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (upcomingTest) {
+        const stripPill = document.querySelector('.action-strip-alert .strip-pill');
+        const stripText = document.querySelector('.action-strip-alert .strip-text');
+        const isLive = Boolean(upcomingTest.is_joinable && upcomingTest.link);
+
+        if (stripPill) {
+          stripPill.textContent = isLive ? 'Live Assessment' : (upcomingTest.type ? `Upcoming ${upcomingTest.type}` : 'Upcoming Assessment');
+          if (isLive) {
+            stripPill.style.background = '#10B981';
+            stripPill.style.color = '#FFFFFF';
+          } else {
+            stripPill.style.background = '';
+            stripPill.style.color = '';
+          }
+        }
+        if (stripText) {
+          const dateStr = upcomingTest.date || '';
+          const timeStr = upcomingTest.start ? ` • ${upcomingTest.start}${upcomingTest.end ? ` - ${upcomingTest.end}` : ''}` : '';
+          
+          if (isLive) {
+            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} (Live Now — Click to Join)`;
+            stripText.style.cursor = 'pointer';
+            stripText.onclick = () => {
+              window.location.href = upcomingTest.link;
+            };
+          } else {
+            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} on ${dateStr}${timeStr}`;
+            stripText.style.cursor = 'pointer';
+            stripText.onclick = () => {
+              window.location.href = 'student_timetable.html';
+            };
+          }
+        }
+      } else {
+        const stripPill = document.querySelector('.action-strip-alert .strip-pill');
+        const stripText = document.querySelector('.action-strip-alert .strip-text');
+        if (stripPill) {
+          stripPill.textContent = 'Schedule';
+          stripPill.style.background = '';
+          stripPill.style.color = '';
+        }
+        if (stripText) {
+          stripText.innerHTML = `No upcoming tests currently scheduled by faculty. View weekly timetable below.`;
+          stripText.style.cursor = 'default';
+          stripText.onclick = null;
+        }
+      }
+    } catch (stripErr) {
+      console.warn('Could not hydrate upcoming assessment strip:', stripErr);
+    }
+
+    // Initialize Realtime subscription & ticker once
+    initDashboardRealtime(cls || '3R');
+
   } catch (err) {
     console.error('Error during dashboard dynamic hydration:', err);
   }
@@ -2688,3 +2789,47 @@ window.verifyCertificateInModal = async function() {
     box.innerHTML = `<div style="color:#ef4444; font-size:12px;">Verification request error: ${err.message}</div>`;
   }
 };
+
+let _dashboardRealtimeSubscribed = false;
+let _dashboardTickerInterval = null;
+
+async function initDashboardRealtime(studentClass) {
+  if (_dashboardRealtimeSubscribed) return;
+  _dashboardRealtimeSubscribed = true;
+
+  try {
+    const getClient = window.getSupabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient : null);
+    const client = getClient ? await getClient() : (window.supabaseClient || null);
+
+    if (client) {
+      const sClass = (studentClass || '3R').trim().toLowerCase();
+      client
+        .channel('realtime:student_dashboard_assessments')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'timetable_assessments' }, async (payload) => {
+          console.log('[StudentDashboard Realtime Event]', payload.eventType, payload);
+          const record = payload.new || payload.old || {};
+          const tid = String(record.id || '');
+
+          if (!tid.startsWith('test-') && !tid.startsWith('quiz-')) return;
+
+          const targetClass = (record.class_code || '').trim().toLowerCase();
+          const isTargeted = (!targetClass || targetClass === 'all' || targetClass === 'any' || targetClass === 'global' || targetClass === sClass || sClass.includes(targetClass) || targetClass.includes(sClass));
+
+          if (isTargeted || payload.eventType === 'DELETE') {
+            hydrateDashboardData();
+          }
+        })
+        .subscribe((status) => {
+          console.info('[StudentDashboard Realtime] Status:', status);
+        });
+    }
+  } catch (err) {
+    console.warn('[StudentDashboard Realtime] Note:', err);
+  }
+
+  if (!_dashboardTickerInterval) {
+    _dashboardTickerInterval = setInterval(() => {
+      hydrateDashboardData();
+    }, 15000);
+  }
+}
