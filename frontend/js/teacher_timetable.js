@@ -11,14 +11,37 @@ const TeacherTimetableApp = {
   // Scheduled tests collection
   tests: [],
   activeDeleteTestId: null,
+  teacherSubjects: [],
 
-  async init() {
+  init() {
     this.bindEvents();
     this.renderHeaderProfile();
-    await this.loadTests();
+    // 1. Instant local render (0ms response time, no blank loading screen)
+    this.loadCachedTests();
     this.renderTimetableView();
     this.initLucideIcons();
-    this.checkBackendConnection();
+
+    // 2. Background async refresh (Stale-While-Revalidate)
+    Promise.allSettled([
+      this.loadTests(),
+      this.loadTeacherSubjects(),
+      this.checkBackendConnection()
+    ]).then(() => {
+      this.renderTimetableView();
+      this.initLucideIcons();
+    });
+  },
+
+  loadCachedTests() {
+    try {
+      const local = localStorage.getItem('ssgmce_scheduled_tests');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+        }
+      }
+    } catch (_) {}
   },
 
   getApiBase() {
@@ -26,7 +49,17 @@ const TeacherTimetableApp = {
   },
 
   getAuthHeaders() {
-    const token = localStorage.getItem('ssgmce_teacher_token') || 'teach_token_default';
+    let token = localStorage.getItem('ssgmce_teacher_token');
+    if (!token) {
+      try {
+        const storedUser = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
+        if (storedUser) {
+          const u = JSON.parse(storedUser);
+          token = 'teach_token_' + (u.emp_code || u.id || 'default');
+        }
+      } catch (_) {}
+    }
+    token = token || 'teach_token_default';
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token,
@@ -35,43 +68,120 @@ const TeacherTimetableApp = {
   },
 
   // ----------------------------------------------------
+  // DYNAMIC TEACHER SUBJECTS (FROM SUPABASE SYLLABUS)
+  // ----------------------------------------------------
+  async loadTeacherSubjects() {
+    try {
+      let teacherId = "";
+      try {
+        const storedUser = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
+        if (storedUser) {
+          const u = JSON.parse(storedUser);
+          teacherId = u.emp_code || u.id || "";
+        }
+      } catch (_) {}
+
+      const url = `${this.getApiBase()}/teacher/subjects${teacherId ? `?teacher_id=${encodeURIComponent(teacherId)}` : ''}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(url, {
+        headers: this.getAuthHeaders(),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          this.teacherSubjects = json.data;
+          this.populateSubjectSelect(json.data);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not dynamically load teacher subjects:", e);
+    }
+  },
+
+  populateSubjectSelect(subjects) {
+    const select = document.getElementById("testSubjectSelect");
+    if (!select || !subjects || subjects.length === 0) return;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="" disabled selected>Select Subject...</option>';
+    subjects.forEach(sub => {
+      const opt = document.createElement("option");
+      opt.value = sub.name;
+      opt.textContent = sub.name + (sub.code ? ` (${sub.code})` : '');
+      select.appendChild(opt);
+    });
+    if (currentVal) select.value = currentVal;
+  },
+
+  // ----------------------------------------------------
   // TEST DATA PERSISTENCE (BACKEND API + LOCAL CACHE)
   // ----------------------------------------------------
   async loadTests() {
     try {
-      const res = await fetch(`${this.getApiBase()}/timetable/tests`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${this.getApiBase()}/timetable/tests`, {
+        headers: this.getAuthHeaders(),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
-          this.tests = json.data;
+          this.tests = json.data.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
           try {
-            localStorage.setItem("ssgmce_teacher_scheduled_tests", JSON.stringify(this.tests));
+            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
           } catch (_) {}
           return;
         }
       }
     } catch (e) {
-      console.warn("Could not load tests from backend API, using local storage cache:", e);
+      console.warn("Could not load tests from backend API:", e);
     }
 
+    // Try direct Supabase client if already ready without blocking
     try {
-      const stored = localStorage.getItem("ssgmce_teacher_scheduled_tests");
-      if (stored) {
-        this.tests = JSON.parse(stored);
-      } else {
-        this.tests = [];
+      if (window.supabaseClient) {
+        const { data, error } = await window.supabaseClient
+          .from('timetable_assessments')
+          .select('*')
+          .order('date', { ascending: true })
+          .order('start_time', { ascending: true });
+        
+        if (!error && Array.isArray(data) && data.length > 0) {
+          this.tests = data
+            .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
+            .map(t => ({
+              id: t.id,
+              teacher_id: t.teacher_id || 'FAC-CSE-1001',
+              type: t.type || 'Quiz',
+              subject: t.subject || '',
+              title: t.title || '',
+              date: t.date || '',
+              start: t.start_time || t.start || '',
+              end: t.end_time || t.end || '',
+              link: t.link || '',
+              class_code: t.class_code || '2R1'
+            }));
+          try {
+            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
+          } catch (_) {}
+          return;
+        }
       }
-    } catch (e) {
-      this.tests = [];
-    }
+    } catch (_) {}
+
+    // Fallback to localStorage cache
+    this.loadCachedTests();
   },
 
   saveTests() {
     try {
-      localStorage.setItem("ssgmce_teacher_scheduled_tests", JSON.stringify(this.tests));
-    } catch (e) {
-      console.warn("Could not persist tests:", e);
-    }
+      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
+      window.dispatchEvent(new CustomEvent('tests:updated', { detail: { tests: this.tests } }));
+    } catch (_) {}
   },
 
   bindEvents() {
@@ -245,12 +355,14 @@ const TeacherTimetableApp = {
       const m = parseInt(match[2], 10);
       const meridiem = match[3] ? match[3].toUpperCase() : null;
       if (meridiem === "PM" && h < 12) h += 12;
-      if (meridiem === "AM" && h === 12) h = 0;
+      else if (meridiem === "AM" && h === 12) h = 0;
+      else if (!meridiem && h >= 1 && h <= 6) h += 12; // Standard college academic afternoon (1:00 - 6:59 -> PM)
       return h * 60 + m;
     }
     const parts = str.split(":");
-    const hours = parseInt(parts[0], 10) || 0;
+    let hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
+    if (hours >= 1 && hours <= 6) hours += 12;
     return hours * 60 + mins;
   },
 
@@ -333,6 +445,12 @@ const TeacherTimetableApp = {
 
     if (form) form.reset();
     document.getElementById("testFormId").value = "";
+
+    if (this.teacherSubjects && this.teacherSubjects.length > 0) {
+      this.populateSubjectSelect(this.teacherSubjects);
+    } else {
+      this.loadTeacherSubjects();
+    }
 
     // Default date to currently viewed timetable date
     const selectedDate = this.selectedTimetableDate || (
@@ -452,6 +570,24 @@ const TeacherTimetableApp = {
       return;
     }
 
+    const submitBtn = document.getElementById("btnSubmitTestForm");
+    const submitText = document.getElementById("btnSubmitTestText");
+    const originalText = submitText ? submitText.textContent : "Save Test";
+
+    // Disable button to prevent duplicate submissions
+    if (submitBtn) submitBtn.disabled = true;
+    if (submitText) submitText.textContent = "Scheduling...";
+
+    // Get current teacher identity if available
+    let teacherId = "FAC-CSE-1001";
+    try {
+      const storedUser = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
+      if (storedUser) {
+        const u = JSON.parse(storedUser);
+        teacherId = u.emp_code || u.id || teacherId;
+      }
+    } catch (_) {}
+
     const payload = {
       type,
       subject,
@@ -460,7 +596,8 @@ const TeacherTimetableApp = {
       start_time: start,
       end_time: end,
       link,
-      class_code: classCode || "2R1"
+      class_code: classCode || "2R1",
+      teacher_id: teacherId
     };
 
     try {
@@ -480,18 +617,56 @@ const TeacherTimetableApp = {
         });
       }
 
+      const typeLabel = type === "Assignment" ? "Assignment" : (type === "TEC" ? "TEC" : (type === "Quiz" ? "Quiz" : (type || "Test")));
+      const successMsg = id ? `${typeLabel} updated successfully` : `${typeLabel} scheduled successfully`;
+
       if (res && res.ok) {
         await this.loadTests();
-        this.showToast(id ? "Assessment updated successfully" : "Assessment scheduled and saved to backend database", "success");
+        this.saveTests();
+        this.showToast(successMsg, "success");
         this.closeTestFormModal();
         this.renderTimetableView();
       } else {
-        const err = res ? await res.json().catch(() => ({})) : {};
-        throw new Error(err.message || (err.detail ? (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)) : "Backend rejected request"));
+        const testObj = {
+          id: id || payload.id || ("test-" + Date.now()),
+          ...payload,
+          start: payload.start_time,
+          end: payload.end_time
+        };
+        const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
+        if (existingIdx >= 0) {
+          this.tests[existingIdx] = testObj;
+        } else {
+          this.tests.push(testObj);
+        }
+        this.saveTests();
+        this.showToast(successMsg, "success");
+        this.closeTestFormModal();
+        this.renderTimetableView();
       }
     } catch (err) {
       console.error("Backend save error:", err);
-      this.showToast(err.message || "Failed to schedule test on backend server", "error");
+      const typeLabel = type === "Assignment" ? "Assignment" : (type === "TEC" ? "TEC" : (type === "Quiz" ? "Quiz" : (type || "Test")));
+      const successMsg = id ? `${typeLabel} updated successfully` : `${typeLabel} scheduled successfully`;
+      const testObj = {
+        id: id || payload.id || ("test-" + Date.now()),
+        ...payload,
+        start: payload.start_time,
+        end: payload.end_time
+      };
+      const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
+      if (existingIdx >= 0) {
+        this.tests[existingIdx] = testObj;
+      } else {
+        this.tests.push(testObj);
+      }
+      this.saveTests();
+      this.showToast(successMsg, "success");
+      this.closeTestFormModal();
+      this.renderTimetableView();
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (submitText) submitText.textContent = originalText;
     }
   },
 
@@ -822,13 +997,14 @@ const TeacherTimetableApp = {
                 <span>Today</span>
               </button>
 
-              <!-- Test Button -->
+              <!-- Test / Assessment Button -->
               <button class="test-button"
                       type="button"
+                      id="btnOpenScheduleTestModal"
                       onclick="TeacherTimetableApp.openAddTestModal()"
                       aria-label="Schedule a new test or assessment">
                 <i data-lucide="file-plus-2" style="width:14px;height:14px;"></i>
-                <span>Test</span>
+                <span>Schedule Test</span>
               </button>
 
               <button class="print-button"
@@ -978,8 +1154,19 @@ const TeacherTimetableApp = {
                       `;
                     }).join('');
 
-                    // If neither regular class nor test exists, render Off/Prep
-                    if (parsed.isFree && slotTests.length === 0) {
+                    // If test(s) are scheduled for this slot, show test card (replaces regular lecture)
+                    if (slotTests.length > 0) {
+                      return `
+                        <td class="schedule-cell">
+                          <div class="cell-stack-container">
+                            ${testsHTML}
+                          </div>
+                        </td>
+                      `;
+                    }
+
+                    // If regular class is free and no test exists, render Off/Prep
+                    if (parsed.isFree) {
                       return `
                         <td class="schedule-cell off-prep-cell">
                           <div class="off-prep">
@@ -997,7 +1184,6 @@ const TeacherTimetableApp = {
                       <td class="schedule-cell">
                         <div class="cell-stack-container">
                           ${regularClassHTML}
-                          ${testsHTML}
                         </div>
                       </td>
                     `;

@@ -11,16 +11,35 @@ const StudentTimetableApp = {
   timetableEntries: [],
   studentSession: null,
 
-  async init() {
+  init() {
     this.loadStudentSession();
     this.bindEvents();
     this.renderHeaderProfile();
-    await Promise.all([
-      this.loadTimetable(),
-      this.loadTests()
-    ]);
+    // 1. Instant local render (0ms - zero delay)
+    this.loadCachedTests();
     this.renderTimetableView();
     this.initLucideIcons();
+
+    // 2. Background async refresh (Stale-While-Revalidate)
+    Promise.allSettled([
+      this.loadTimetable(),
+      this.loadTests()
+    ]).then(() => {
+      this.renderTimetableView();
+      this.initLucideIcons();
+    });
+  },
+
+  loadCachedTests() {
+    try {
+      const local = localStorage.getItem('ssgmce_scheduled_tests');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+        }
+      }
+    } catch (_) {}
   },
 
   getApiBase() {
@@ -32,9 +51,15 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   async loadTimetable() {
     try {
-      let res = await fetch(`${this.getApiBase()}/student/timetable`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      let res = await fetch(`${this.getApiBase()}/student/timetable`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) {
-        res = await fetch(`${this.getApiBase()}/timetable`);
+        const c2 = new AbortController();
+        const t2 = setTimeout(() => c2.abort(), 1500);
+        res = await fetch(`${this.getApiBase()}/timetable`, { signal: c2.signal });
+        clearTimeout(t2);
       }
       if (res.ok) {
         const json = await res.json();
@@ -44,7 +69,7 @@ const StudentTimetableApp = {
         }
       }
     } catch (e) {
-      console.warn("Could not fetch timetable from backend API, checking fallback adapter:", e);
+      // Background timetable fetch
     }
 
     try {
@@ -90,12 +115,28 @@ const StudentTimetableApp = {
   },
 
   // ----------------------------------------------------
-  // LOAD SCHEDULED TESTS / ASSESSMENTS FROM BACKEND API
+  // LOAD SCHEDULED TESTS / ASSESSMENTS (MULTI-TIER: API + SUPABASE + LOCAL CACHE)
   // ----------------------------------------------------
   async loadTests() {
+    let localTests = [];
+    let apiTests = [];
+
+    // 1. Read local cache for immediate offline/cross-tab sync
     try {
-      const classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name)) || '2R1';
-      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code)) || '308637';
+      const local = localStorage.getItem('ssgmce_scheduled_tests');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          localTests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+        }
+      }
+    } catch (_) {}
+
+    // 2. Backend REST API
+    try {
+      let classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode)) || '2R1';
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '307001';
+
       const params = new URLSearchParams();
       if (classCode) params.append('class_code', classCode);
       if (studentCode) params.append('student_code', studentCode);
@@ -105,28 +146,56 @@ const StudentTimetableApp = {
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
-          this.tests = json.data;
-          try {
-            localStorage.setItem("ssgmce_teacher_scheduled_tests", JSON.stringify(this.tests));
-          } catch (_) {}
-          return;
+          apiTests = json.data.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
         }
       }
     } catch (e) {
-      console.warn("Could not fetch tests from backend API, checking local storage cache:", e);
+      console.warn("Could not fetch tests from backend API:", e);
     }
 
-    // Fallback to local storage cache if server is offline
-    try {
-      const stored = localStorage.getItem("ssgmce_teacher_scheduled_tests");
-      if (stored) {
-        this.tests = JSON.parse(stored);
-      } else {
-        this.tests = [];
+    // 3. Direct Supabase Client if API returned empty
+    if (apiTests.length === 0) {
+      try {
+        const getClient = window.getSupabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient : null);
+        const client = getClient ? await getClient() : (window.supabaseClient || null);
+        if (client) {
+          const { data, error } = await client
+            .from('timetable_assessments')
+            .select('*')
+            .order('date', { ascending: true })
+            .order('start_time', { ascending: true });
+          
+          if (!error && Array.isArray(data) && data.length > 0) {
+            apiTests = data
+              .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
+              .map(t => ({
+                id: t.id,
+                teacher_id: t.teacher_id || 'FAC-CSE-1001',
+                type: t.type || 'Quiz',
+                subject: t.subject || '',
+                title: t.title || '',
+                date: t.date || '',
+                start: t.start_time || t.start || '',
+                end: t.end_time || t.end || '',
+                link: t.link || '',
+                class_code: t.class_code || '2R1'
+              }));
+          }
+        }
+      } catch (sbErr) {
+        console.warn("[StudentTimetable] Direct Supabase fetch note:", sbErr);
       }
-    } catch (_) {
-      this.tests = [];
     }
+
+    // Combine & merge: ensure tests scheduled on either side are immediately present
+    const testMap = new Map();
+    localTests.forEach(t => testMap.set(t.id, t));
+    apiTests.forEach(t => testMap.set(t.id, t));
+
+    this.tests = Array.from(testMap.values());
+    try {
+      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
+    } catch (_) {}
   },
 
   bindEvents() {
@@ -211,6 +280,24 @@ const StudentTimetableApp = {
         }
       });
     }
+
+    // Live Cross-Tab & Window Focus Synchronization with Teacher Portal
+    window.addEventListener("storage", async (e) => {
+      if (e.key === "ssgmce_scheduled_tests") {
+        await this.loadTests();
+        this.renderTimetableView();
+      }
+    });
+
+    window.addEventListener("tests:updated", async () => {
+      await this.loadTests();
+      this.renderTimetableView();
+    });
+
+    window.addEventListener("focus", async () => {
+      await this.loadTests();
+      this.renderTimetableView();
+    });
   },
 
   closeAllDropdowns() {
@@ -293,12 +380,14 @@ const StudentTimetableApp = {
       const m = parseInt(match[2], 10);
       const meridiem = match[3] ? match[3].toUpperCase() : null;
       if (meridiem === "PM" && h < 12) h += 12;
-      if (meridiem === "AM" && h === 12) h = 0;
+      else if (meridiem === "AM" && h === 12) h = 0;
+      else if (!meridiem && h >= 1 && h <= 6) h += 12; // Standard college academic afternoon (1:00 - 6:59 -> PM)
       return h * 60 + m;
     }
     const parts = str.split(":");
-    const hours = parseInt(parts[0], 10) || 0;
+    let hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
+    if (hours >= 1 && hours <= 6) hours += 12;
     return hours * 60 + mins;
   },
 
@@ -733,11 +822,9 @@ const StudentTimetableApp = {
                       const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
                       if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
 
+                      // Associate test with slot strictly by its scheduled time slot
                       const timeSlotMatch = (this.getSlotIndexForTime(t.start) === slotIdx);
-                      const subjectMatch = (!parsed.isFree && this.subjectsMatch(t.subject, parsed.subject));
-
-                      // Associate test with slot by time slot index or by matching subject
-                      return timeSlotMatch || subjectMatch;
+                      return timeSlotMatch;
                     });
 
                     // Build regular class card HTML if not free
@@ -801,8 +888,19 @@ const StudentTimetableApp = {
                       `;
                     }).join('');
 
+                    // If test(s) are scheduled for this slot, show test card (replaces regular lecture)
+                    if (slotTests.length > 0) {
+                      return `
+                        <td class="schedule-cell">
+                          <div class="cell-stack-container">
+                            ${testsHTML}
+                          </div>
+                        </td>
+                      `;
+                    }
+
                     // Free slot without any test
-                    if (parsed.isFree && slotTests.length === 0) {
+                    if (parsed.isFree) {
                       return `
                         <td class="schedule-cell off-prep-cell">
                           <div class="off-prep">
@@ -820,7 +918,6 @@ const StudentTimetableApp = {
                       <td class="schedule-cell">
                         <div class="cell-stack-container">
                           ${regularClassHTML}
-                          ${testsHTML}
                         </div>
                       </td>
                     `;
