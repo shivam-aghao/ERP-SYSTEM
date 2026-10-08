@@ -138,7 +138,6 @@ if (typeof window !== 'undefined') {
    TEACHER ERP DATA STORE - EXPANDED ACADEMIC MODEL
    ======================================================== */
 
-<<<<<<< HEAD
 /* ========================================================
    OFFICIAL SSGMCE CSE FACULTY PERSONAL TIMETABLES
    Extracted directly from DATA/Personal Timtable for teacher.pdf
@@ -2412,10 +2411,6 @@ if (typeof window !== 'undefined') {
   window.SSGMCE_FACULTY_TIMETABLES = SSGMCE_FACULTY_TIMETABLES;
 }
 
-const TeacherERPData = {
-  faculty: {
-    name: "Dr. Rohan Deshmukh",
-=======
 const getSessionFaculty = () => {
   try {
     if (typeof window !== 'undefined' && window.ERP_AUTH) {
@@ -2439,7 +2434,6 @@ const getSessionFaculty = () => {
   } catch (_) {}
   return {
     name: "Faculty Member",
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     prefix: "Prof.",
     title: "Faculty Member",
     department: "Computer Science & Engineering",
@@ -2485,7 +2479,6 @@ const TeacherERPData = {
     return [];
   },
 
-<<<<<<< HEAD
   // Directory students roster getter
   get students() {
     return {
@@ -2783,15 +2776,6 @@ const TeacherERPData = {
       icon: "book-open"
     }
   ]
-=======
-  students: {},
-  todayClasses: [],
-  timetable: [],
-  assignedClasses: [],
-  syllabus: [],
-  recentActivities: [],
-  notifications: []
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 };
 
 if (typeof window !== 'undefined') {

@@ -3,51 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SSGMCE Shegaon - Autonomous Student ERP Timetable Portal. Weekly lecture schedule, lab allocations, and scheduled assessments.">
-  <title>Weekly Timetable | SSGMCE Shegaon College ERP</title>
-
-  <!-- Google Fonts: Inter & Poppins -->
+  <title>Student Timetable — Shri Sant Gajanan Maharaj College of Engineering, Shegaon (SSGMCE)</title>
+  
+  <!-- Academic Fonts: Inter & Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- SSGMCE Design System & Timetable CSS -->
-  <link rel="stylesheet" href="../css/dashboard.css">
+  <!-- Shared ERP Stylesheets -->
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/attendance.css">
+  <link rel="stylesheet" href="../css/modules.css">
+
+  <!-- Student Timetable Isolated Stylesheet -->
   <link rel="stylesheet" href="../css/student_timetable.css">
-  <link rel="icon" type="image/png" href="../images/logo.png">
-
-  <!-- Central Config & Auth Guard -->
-  <script src="../js/config.js"></script>
-  <script src="../js/auth.js"></script>
-  <script>
-    if (window.ERP_AUTH) {
-      window.ERP_AUTH.requireAuth('student');
-    }
-  </script>
-  <script src="../js/erp-auth-guard.js"></script>
-  <script src="../js/erp-supabase.js"></script>
-  <script src="../js/student-supabase.js"></script>
-  <script>
-    if (window.ERPAuth) {
-      window.ERPAuth.guard('student');
-    }
-  </script>
 </head>
-<body class="dashboard-body">
+<body>
 
-  <!-- Mobile Drawer Backdrop Overlay -->
-  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
-
-  <!-- ========================================================================
-       TOP HEADER (Identical to Student Dashboard & Attendance)
-       ======================================================================== -->
-  <header class="ssgmce-top-header" role="banner">
-    <div class="header-left">
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
       <!-- Mobile Hamburger Toggle Button -->
-      <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -55,12 +41,12 @@
         </svg>
       </button>
 
-      <!-- SSGMCE College Crest / Brand -->
-      <a href="student-dashboard.html" class="header-brand" aria-label="SSGMCE Home">
-        <div class="brand-crest">
-          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img" onerror="this.src='../images/logo.png'">
+      <!-- Official SSGMCE Logo & College Title -->
+      <a href="student-dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Student Dashboard">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
         </div>
-        <div class="brand-text-block">
+        <div class="brand-text-block college-brand-info">
           <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
           <div class="college-sub-tag">(An Autonomous Institute)</div>
         </div>
@@ -70,13 +56,13 @@
       <div class="brand-divider" aria-hidden="true"></div>
       <div class="erp-tag-wrap">
         <span class="erp-badge-text">ERP</span>
-        <span class="erp-slogan">Learn | Grow | Excel</span>
+        <span class="erp-slogan">Student Academic Portal</span>
       </div>
     </div>
 
-    <!-- Right Controls: Live Sync Indicator, Notifications & Student Profile -->
-    <div class="header-right">
-      <!-- Live Sync Status Indicator -->
+    <!-- Right Controls: Status Pill, Notifications & Student Profile -->
+    <div class="header-right header-right-controls">
+      <!-- Live Sync Indicator -->
       <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600;" title="Real-time academic sync">
         <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
         <span id="backend-status-text">Academic Sync: Live</span>
@@ -84,46 +70,13 @@
 
       <!-- Notification Bell -->
       <div class="notif-wrapper" id="notifWrapper">
-        <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications, 3 unread" aria-haspopup="true" aria-expanded="false">
+        <a href="student-dashboard.html" class="header-icon-btn" id="notifBtn" aria-label="Notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span class="notif-badge">3</span>
-        </button>
-        <!-- Notification Dropdown Popover -->
-        <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
-          <div class="panel-header">
-            <h4>Notifications</h4>
-            <span class="unread-tag">3 New</span>
-          </div>
-          <ul class="notif-list">
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-error"></span>
-              <div class="notif-info">
-                <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
-                <span class="notif-time">10 mins ago • Examination Cell</span>
-              </div>
-            </li>
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-warning"></span>
-              <div class="notif-info">
-                <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
-                <span class="notif-time">2 hours ago • Academic Cell</span>
-              </div>
-            </li>
-            <li class="notif-item unread">
-              <span class="notif-bullet bg-success"></span>
-              <div class="notif-info">
-                <p class="notif-msg">Assignment 2 for Data Structures uploaded to portal.</p>
-                <span class="notif-time">Yesterday • Prof. R. Sharma</span>
-              </div>
-            </li>
-          </ul>
-          <div class="panel-footer">
-            <button type="button" class="btn-link-action" id="markAllReadBtn">Mark all as read</button>
-          </div>
-        </div>
+          <span class="notif-badge">2</span>
+        </a>
       </div>
 
       <!-- Student Profile Pill Trigger & Menu -->
@@ -149,47 +102,48 @@
             <div style="font-size:11px; color:var(--tt-gray-text); margin-top:2px;">Computer Science &amp; Engineering</div>
           </div>
           <div class="p-links">
-            <a href="student-profile.html" class="p-link-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              My Student Profile
+            <a href="student-dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>Student Dashboard</span>
             </a>
-            <a href="student-attendance.html" class="p-link-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              Subject-wise Attendance (82%)
+            <a href="student-profile.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>My Profile &amp; PRN</span>
             </a>
-            <a href="student_timetable.html" class="p-link-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path></svg>
-              Weekly Timetable
+            <div class="p-divider" style="height:1px; background:#E2E8F0; margin:4px 0;"></div>
+            <a href="login.html" class="profile-dropdown-item p-link-item text-danger danger" style="text-decoration:none; color:#DC2626;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Logout</span>
             </a>
-            <a href="javascript:void(0)" onclick="if(window.openStudentModule){openStudentModule('settings')}else{alert('Settings available in Dashboard.');}" class="p-link-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              Account Settings
-            </a>
-            <div class="p-divider"></div>
-            <button type="button" class="p-link-item text-danger" id="logoutBtn" onclick="if(window.ERPAuth){ERPAuth.logout()}else{window.location.href='login.html'}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              Sign Out
-            </button>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- ========================================================================
-       MAIN APP WRAPPER (SIDEBAR + TIMETABLE CONTENT)
-       ======================================================================== -->
-  <div class="dashboard-wrapper">
+  <!-- ========================================================
+       APPLICATION MASTER WRAPPER (SIDEBAR + TIMETABLE CONTENT)
+       ======================================================== -->
+  <div class="app-wrapper dashboard-wrapper">
+    <!-- Off-canvas Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-    <!-- ==================== LEFT SIDEBAR ==================== -->
-    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Student Main Navigation">
+    <!-- ========================================================
+         2. LEFT SIDEBAR (Dark Navy #0B1F3A)
+         ======================================================== -->
+    <aside class="app-sidebar dashboard-sidebar" id="dashboardSidebar" aria-label="Student Main Navigation">
       <div class="sidebar-inner">
-        <!-- Sidebar Navigation List (19 items) -->
-        <nav class="sidebar-nav-container" aria-label="Sidebar Menu">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
           <ul class="sidebar-menu-list">
             <!-- 1. Dashboard -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html" class="sidebar-link" data-nav="dashboard">
+              <a href="student-dashboard.html" class="nav-item sidebar-link" data-nav="dashboard">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -205,11 +159,11 @@
               </div>
             </li>
 
-            <!-- 2. Timetable Tab (Dedicated Item - ACTIVE HIGHLIGHTED) -->
+            <!-- 2. Timetable (ACTIVE PAGE) -->
             <li class="sidebar-item" data-module="timetable">
-              <a href="student_timetable.html" class="sidebar-link active" data-nav="timetable" aria-current="page">
+              <a href="student-timetable.html" class="nav-item sidebar-link active" data-nav="timetable" aria-current="page">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
@@ -218,28 +172,28 @@
                   <path d="M16 14h.01"></path>
                 </svg>
                 <span class="nav-label">Timetable</span>
-                <span class="nav-badge-pill">DAILY</span>
+                <span class="nav-badge-pill" style="margin-left:auto; background:rgba(255,255,255,0.2); padding:2px 7px; border-radius:10px; font-size:10px; font-weight:700;">DAILY</span>
               </a>
             </li>
 
-            <!-- 3. Attendance (Dedicated Item - NOT ACTIVE) -->
+            <!-- 3. Attendance -->
             <li class="sidebar-item" data-module="attendance">
-              <a href="student-attendance.html" class="sidebar-link" data-nav="attendance">
+              <a href="student-attendance.html" class="nav-item sidebar-link" data-nav="attendance">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <span class="nav-badge-pill pct-pill">82%</span>
+                <span class="nav-badge-pill pct-pill" id="sidebarAttendanceBadge" style="margin-left:auto; background:#10B981; color:#fff; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:700;">82%</span>
               </a>
             </li>
 
             <!-- 4. Syllabus -->
             <li class="sidebar-item" data-module="syllabus">
-              <a href="student-syllabus.html" class="sidebar-link" data-nav="syllabus">
+              <a href="student-syllabus.html" class="nav-item sidebar-link" data-nav="syllabus">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -250,7 +204,7 @@
 
             <!-- 5. Fees -->
             <li class="sidebar-item" data-module="fees">
-              <a href="javascript:void(0)" onclick="if(window.openStudentModule){openStudentModule('fees')}else{alert('Fees module available in Dashboard.');}" class="sidebar-link" data-nav="fees">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#fees'" class="nav-item sidebar-link" data-nav="fees">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
@@ -262,7 +216,7 @@
 
             <!-- 6. Profile -->
             <li class="sidebar-item" data-module="profile">
-              <a href="student-profile.html" class="sidebar-link" data-nav="profile">
+              <a href="student-profile.html" class="nav-item sidebar-link" data-nav="profile">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
@@ -273,9 +227,9 @@
 
             <!-- 7. E-Learning -->
             <li class="sidebar-item" data-module="elearning">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="elearning">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#elearning'" class="nav-item sidebar-link" data-nav="elearning">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                   <line x1="8" y1="21" x2="16" y2="21"></line>
                   <line x1="12" y1="17" x2="12" y2="21"></line>
                   <polygon points="10 8 15 10 10 12"></polygon>
@@ -286,7 +240,7 @@
 
             <!-- 8. Change Information -->
             <li class="sidebar-item" data-module="change-info">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="change-info">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#change-info'" class="nav-item sidebar-link" data-nav="change-info">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="8.5" cy="7" r="4"></circle>
@@ -298,7 +252,7 @@
 
             <!-- 9. Updation Information -->
             <li class="sidebar-item" data-module="update-info">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="update-info">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#update-info'" class="nav-item sidebar-link" data-nav="update-info">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -309,7 +263,7 @@
 
             <!-- 10. D-Wallet -->
             <li class="sidebar-item" data-module="dwallet">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="dwallet">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#dwallet'" class="nav-item sidebar-link" data-nav="dwallet">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
                   <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
@@ -321,7 +275,7 @@
 
             <!-- 11. Examination -->
             <li class="sidebar-item" data-module="examination">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="examination">
+              <a href="student-quiz.html" class="nav-item sidebar-link" data-nav="examination">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
@@ -329,13 +283,14 @@
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-                <span class="nav-label">Examination</span>
+                <span class="nav-label">Quiz &amp; Examination</span>
+                <span class="nav-badge-pill" id="sidebarQuizBadge" style="margin-left:auto; background:#00A6D6; color:#fff; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:700;">Live</span>
               </a>
             </li>
 
-            <!-- 12. Course Choices Application -->
+            <!-- 12. Course Choices -->
             <li class="sidebar-item" data-module="course-choices">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="course-choices">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#course-choices'" class="nav-item sidebar-link" data-nav="course-choices">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 11 12 14 22 4"></polyline>
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
@@ -344,9 +299,9 @@
               </a>
             </li>
 
-            <!-- 13. Internal Mark -->
+            <!-- 13. Internal Marks -->
             <li class="sidebar-item" data-module="internal-marks">
-              <a href="javascript:void(0)" class="sidebar-link" data-nav="internal-marks">
+              <a href="javascript:void(0)" onclick="window.location.href='student-dashboard.html#internal-marks'" class="nav-item sidebar-link" data-nav="internal-marks">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -356,7 +311,7 @@
               </a>
             </li>
 
-            <!-- CAMPUS SERVICES Section Divider -->
+            <!-- Campus Services Divider -->
             <li class="sidebar-item">
               <div class="sidebar-section-divider"></div>
               <span class="sidebar-section-caption">Campus Services</span>
@@ -364,7 +319,7 @@
 
             <!-- 14. Documents -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html#documents" class="sidebar-link" data-nav="documents">
+              <a href="student-dashboard.html#documents" class="nav-item sidebar-link" data-nav="documents">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -374,7 +329,7 @@
 
             <!-- 15. Hostel -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html#hostel" class="sidebar-link" data-nav="hostel">
+              <a href="student-dashboard.html#hostel" class="nav-item sidebar-link" data-nav="hostel">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 21h18"></path>
                   <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
@@ -387,7 +342,7 @@
 
             <!-- 16. Library -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html#library" class="sidebar-link" data-nav="library">
+              <a href="student-dashboard.html#library" class="nav-item sidebar-link" data-nav="library">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -398,7 +353,7 @@
 
             <!-- 17. Training & Placement -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html#placement" class="sidebar-link" data-nav="placement">
+              <a href="student-dashboard.html#placement" class="nav-item sidebar-link" data-nav="placement">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="7" width="20" height="14" rx="2"></rect>
                   <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
@@ -407,22 +362,12 @@
               </a>
             </li>
 
-            <!-- 18. Grievance -->
+            <!-- 18. Settings -->
             <li class="sidebar-item">
-              <a href="student-dashboard.html#grievance" class="sidebar-link" data-nav="grievance">
-                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span class="nav-label">Grievance</span>
-              </a>
-            </li>
-
-            <!-- 19. Settings -->
-            <li class="sidebar-item">
-              <a href="student-dashboard.html#settings" class="sidebar-link" data-nav="settings">
+              <a href="student-dashboard.html#settings" class="nav-item sidebar-link" data-nav="settings">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
                 <span class="nav-label">Settings</span>
               </a>
@@ -430,7 +375,7 @@
           </ul>
         </nav>
 
-        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+        <!-- Sidebar Bottom Artwork & Motto -->
         <div class="sidebar-footer-artwork">
           <div class="ssgmce-dome-illustration" aria-hidden="true">
             <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
@@ -460,54 +405,70 @@
       </div>
     </aside>
 
-    <!-- ==================== MAIN DASHBOARD CONTENT ==================== -->
-    <main class="dashboard-main-content" id="mainContent" role="main">
-      <div class="main-dashboard-full-container">
+    <!-- ========================================================
+         3. MAIN CONTENT WRAPPER
+         ======================================================== -->
+    <div class="app-main">
+      <main class="content-container timetable-page-main" id="main-content">
+        <!-- Top Header Action Bar with Back to Dashboard Button -->
+        <div class="timetable-page-topbar">
+          <div class="timetable-breadcrumb-block">
+            <span class="timetable-portal-tag">Student Portal</span>
+            <span class="timetable-crumb-sep">/</span>
+            <span class="timetable-active-crumb">Timetable</span>
+          </div>
 
-        <!-- Breadcrumbs & Back to Dashboard -->
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-          <nav class="breadcrumb-nav" aria-label="Breadcrumb" style="margin-bottom:0;">
-            <a href="student-dashboard.html">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-              Dashboard
-            </a>
-            <span class="breadcrumb-separator">/</span>
-            <span style="color:var(--text-secondary); font-weight:600;">Academics</span>
-            <span class="breadcrumb-separator">/</span>
-            <span style="color:var(--primary); font-weight:700;">Weekly Class Timetable</span>
-          </nav>
-
-          <a href="student-dashboard.html" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:600; text-decoration:none; padding:7px 14px; border-radius:8px; border:1px solid #CBD5E1; color:var(--navy); background:#FFFFFF; transition:all 0.2s;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            <span>&larr; Back to Dashboard</span>
+          <!-- Professional Back to Dashboard Action Button -->
+          <a href="student-dashboard.html" class="btn-back-dashboard" id="btnBackToDashboard" aria-label="Return to Student Dashboard">
+            <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
+            <span>Back to Dashboard</span>
           </a>
         </div>
 
-        <!-- ========================================================
-             STUDENT TIMETABLE MODULE SECTION
-             ======================================================== -->
+        <!-- Timetable Section Pane -->
         <section id="timetable-view" class="view-section-pane app-module-view" style="display:block;">
           <div id="timetable-content">
-            <!-- Timetable generated by student_timetable.js -->
+            <!-- Timetable generated dynamically by student_timetable.js -->
           </div>
         </section>
+      </main>
 
-      </div>
-
-      <!-- FOOTER -->
-      <footer class="dashboard-footer" role="contentinfo">
-        <div class="footer-left">
-          &copy; 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon. All rights reserved.
+      <!-- ========================================================
+           FOOTER (Dark Navy #0B1F3A)
+           ======================================================== -->
+      <footer class="app-footer">
+        <div class="footer-top">
+          <!-- College Branding Column -->
+          <div class="footer-brand">
+            <div class="footer-logo-row">
+              <div class="college-logo-container" style="width:38px;height:38px;">
+                <i data-lucide="graduation-cap" style="width:20px;height:20px;"></i>
+              </div>
+              <div>
+                <div class="footer-college-name">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</div>
+                <div class="footer-portal-subtitle">SSGMCE — Student Academic Portal</div>
+              </div>
+            </div>
+            <p class="footer-desc">
+              Centralized Academic &amp; Student Information System. Streamlining weekly class schedules, attendance tracking, syllabus progression, and teacher-scheduled assessments.
+            </p>
+          </div>
         </div>
-        <div class="footer-right">
-          <a href="#privacy">Privacy Policy</a>
-          <span class="footer-dot">&bull;</span>
-          <a href="#terms">Terms of Use</a>
-          <span class="footer-dot">&bull;</span>
-          <a href="#support">Help &amp; Support</a>
+
+        <div class="footer-bottom">
+          <div class="footer-copy">
+            &copy; 2026 Shri Sant Gajanan Maharaj College of Engineering, Shegaon. All rights reserved.
+          </div>
+          <div class="footer-links">
+            <span>Autonomous Curriculum</span>
+            <span class="sep">•</span>
+            <span>NAAC 'A' Grade Accredited</span>
+            <span class="sep">•</span>
+            <span>SGBAU Affiliated</span>
+          </div>
         </div>
       </footer>
-    </main>
+    </div>
   </div>
 
   <!-- ========================================================
@@ -540,7 +501,8 @@
   <script src="../js/erp-auth-guard.js"></script>
   <script src="../js/student-api.js"></script>
 
-  <!-- Student Timetable JavaScript Module -->
+  <!-- Student Timetable JavaScript Module & Supabase Realtime Engine -->
+  <script src="../js/supabaseClient.js"></script>
   <script src="../js/student_timetable.js"></script>
 
   <!-- Lucide Icon Renderer -->

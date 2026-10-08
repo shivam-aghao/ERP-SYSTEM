@@ -235,9 +235,6 @@ const TeacherApp = {
   // Dynamic Teacher Profile Management
   getLoggedInTeacher() {
     try {
-<<<<<<< HEAD
-      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_active_teacher") || sessionStorage.getItem("ssgmce_user");
-=======
       if (window.ERP_AUTH) {
         const u = window.ERP_AUTH.getCurrentUser();
         if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
@@ -247,12 +244,12 @@ const TeacherApp = {
             department: u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || 'CSE',
             title: u.designation || 'Faculty Member',
+            employeeId: u.emp_code || u.employeeId || 'EMP-CSE-1009',
             avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
           };
         }
       }
-      const stored = localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_logged_in_teacher");
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_logged_in_teacher") || sessionStorage.getItem("ssgmce_active_teacher") || sessionStorage.getItem("ssgmce_user") || sessionStorage.getItem("ssgmce_logged_in_teacher");
       if (stored) {
         const u = typeof stored === 'string' ? JSON.parse(stored) : stored;
         const empCode = u.emp_code || u.employeeId;
@@ -1367,8 +1364,12 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { TeacherApp };
 }
 
-// Initialize application when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
+// Initialize application when DOM is ready or immediately if already loaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    TeacherApp.init();
+  });
+} else {
   TeacherApp.init();
-});
+}
 

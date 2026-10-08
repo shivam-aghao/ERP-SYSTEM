@@ -6,13 +6,19 @@
  */
 
 (function () {
-  // Ensure DOM is ready before initializing Teacher ERP
-  document.addEventListener('DOMContentLoaded', function () {
+  function bootstrap() {
     if (typeof TeacherApp !== 'undefined' && typeof TeacherApp.init === 'function') {
       TeacherApp.init();
       console.log('✅ Teacher Dashboard initialized successfully.');
     }
-  });
+  }
+
+  // Ensure DOM is ready before initializing Teacher ERP
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
 
   // Global helper for programmatic access
   window.TeacherDashboard = {

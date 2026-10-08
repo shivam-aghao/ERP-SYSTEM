@@ -51,6 +51,7 @@
 
     /**
      * Clear session and return to login portal
+     */
     logout: function (redirectUrl) {
       if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
         window.ERP_AUTH.logout();
