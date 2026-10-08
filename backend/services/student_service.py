@@ -6,7 +6,7 @@ class StudentService:
     @staticmethod
     def get_profile(student_code: str, db: Session) -> Optional[Dict[str, Any]]:
         row = db.execute(
-            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
+            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"),
             {"c": student_code}
         ).fetchone()
         if not row:
@@ -24,7 +24,7 @@ class StudentService:
     def update_profile(student_code: str, updates: Dict[str, Any], db: Session) -> Optional[Dict[str, Any]]:
         for k, v in updates.items():
             if v is not None:
-                db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id = :sc"), {"val": v, "sc": student_code})
+                db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id::text = :sc"), {"val": v, "sc": student_code})
         db.commit()
         return StudentService.get_profile(student_code, db)
 

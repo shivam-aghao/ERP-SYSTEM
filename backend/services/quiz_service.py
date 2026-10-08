@@ -24,9 +24,10 @@ class QuizService:
             q_id = getattr(a, "question_id", None) or a.get("question_id")
             opt = getattr(a, "selected_option", None) or a.get("selected_option")
             txt = getattr(a, "text_answer", None) or a.get("text_answer")
+            db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": q_id})
             db.execute(text("""
-                INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-                VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+                INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+                VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
             """), {"aid": attempt_id, "qid": q_id, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
         db.commit()
 

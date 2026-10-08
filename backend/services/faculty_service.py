@@ -22,7 +22,7 @@ class FacultyService:
         """Find teacher by ID, emp_code, email, or partial name."""
         if not identifier:
             # Fallback to Prof. R. V. Deshmukh (EMP-CSE-1009) or first teacher
-            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1009' OR t.id = '5bc85d0f-ea04-406e-a319-1e5c0f1c81b0' LIMIT 1")).fetchone()
+            row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.emp_code = 'EMP-CSE-1009' OR t.id::text = '5bc85d0f-ea04-406e-a319-1e5c0f1c81b0' LIMIT 1")).fetchone()
             if not row:
                 row = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id LIMIT 1")).fetchone()
             return dict(row._mapping) if row else None
@@ -33,7 +33,7 @@ class FacultyService:
             SELECT t.*, d.name as department_name 
             FROM teachers t 
             LEFT JOIN departments d ON t.department_id = d.id 
-            WHERE t.id = :uid 
+            WHERE t.id::text = :uid 
                OR LOWER(t.emp_code) = LOWER(:uid) 
                OR LOWER(t.email) = LOWER(:uid) 
                OR LOWER(t.full_name) = LOWER(:uid)
@@ -128,7 +128,7 @@ class FacultyService:
         rows = db.execute(text("""
             SELECT id, day, slot_index, period_num, period_time, course_name, venue, class_code, is_lab, batch, status, att_label
             FROM timetable_entries
-            WHERE teacher_id = :tid OR emp_code = :emp
+            WHERE teacher_id::text = :tid OR emp_code = :emp
             ORDER BY
               CASE LOWER(day)
                 WHEN 'monday' THEN 1
@@ -246,7 +246,7 @@ class FacultyService:
             emp_code = teacher["emp_code"]
             t_rows = db.execute(text("""
                 SELECT * FROM timetable_entries 
-                WHERE (teacher_id = :tid OR emp_code = :emp) AND LOWER(day) = LOWER(:tday)
+                WHERE (teacher_id::text = :tid OR emp_code = :emp) AND LOWER(day) = LOWER(:tday)
                 ORDER BY slot_index ASC
             """), {"tid": tid, "emp": emp_code, "tday": today_name}).fetchall()
 

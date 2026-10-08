@@ -89,39 +89,10 @@
         }
       } catch (_) {}
 
-      // Step 3: Probe optional Express Teacher Backend on port 5001 if available
-      try {
-        var res3 = await fetch('http://localhost:5001/health');
-        if (res3.ok) {
-          var data3 = await res3.json();
-          if (data3.status === 'OK' || data3.status === 'healthy') {
-            API_BASE_URL = 'http://localhost:5001/api/v1';
-            return { status: 'OK', service: data3.service || 'ssgmce-teacher-dashboard-backend', port: 5001 };
-          }
-        }
-      } catch (_) {}
-
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
     login: async function (email, password) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-      var storedUser = null;
-      try {
-        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
-      } catch (e) {}
-
-      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
-      email = email || defaultIdentifier;
-      password = password || 'Faculty@123';
-=======
-      if (!email || !password) {
-        throw new Error('Email and password are required');
-      }
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
-=======
-      // If session is already authenticated via ERP_AUTH, return active user
       if (window.ERP_AUTH && window.ERP_AUTH.isAuthenticated()) {
         var u = window.ERP_AUTH.getCurrentUser();
         var tok = localStorage.getItem('ssgmce_teacher_token') || 'token_session_live';
@@ -129,16 +100,15 @@
         return { user: u, token: tok };
       }
 
-      var loginId = email || 'FAC-01';
-      var loginPass = password || 'faculty123';
->>>>>>> c3a6495353e93b6761c5e1221164e4bc5443619f
+      var loginId = email || 'EMP-CSE-1001';
+      var loginPass = password || 'Faculty@123';
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email: loginId, password: loginPass, user_id: loginId, role: 'teacher' }),
         });
         var data = res.data || res;
-        var token = (data && data.token) || res.token;
+        var token = (data && data.token) || res.token || (data && data.access_token);
         if (token) {
           this.setToken(token);
         }
@@ -151,28 +121,8 @@
         }
         return data;
       } catch (err) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        console.warn('[TeacherAPI] login attempt:', err.message);
-        var activeUser = (storedUser && storedUser.name) ? storedUser : {
-          id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
-          name: 'Dr. J. M. Patil',
-          role: 'teacher',
-          emp_code: 'EMP-CSE-1001',
-          employeeId: 'EMP-CSE-1001'
-        };
-        return {
-          user: activeUser,
-          token: this.token || 'teach_token_default'
-        };
-=======
         console.warn('[TeacherAPI] login failed:', err.message);
         throw err;
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
-=======
-        console.warn('[TeacherAPI] login note:', err.message);
-        return { user: { name: 'Faculty Member', role: 'teacher' } };
->>>>>>> c3a6495353e93b6761c5e1221164e4bc5443619f
       }
     },
 

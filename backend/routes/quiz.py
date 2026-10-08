@@ -64,11 +64,11 @@ def get_teacher_quizzes(class_id: Optional[str] = None, db: Session = Depends(ge
     clause = "WHERE 1=1"
     params = {}
     if class_id:
-        clause += " AND (q.class_id = :cid OR c.class_name = :cid)"
+        clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT count(*) FROM quiz_attempts WHERE quiz_id = q.id AND status IN ('submitted', 'auto_submitted', 'SUBMITTED')) as attempt_count
         FROM quizzes q
@@ -123,7 +123,7 @@ def create_quiz(payload: QuizCreateSchema, db: Session = Depends(get_db)):
 @router.get("/quiz/quizzes/{quiz_id}")
 def get_quiz_details(quiz_id: str, db: Session = Depends(get_db)):
     row = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
@@ -264,7 +264,7 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -275,15 +275,18 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
     sid = sm["id"]
 
     quizzes = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
-               (SELECT qa.score FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_score,
+               CASE 
+                   WHEN q.result_published = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   ELSE NULL
+               END as attempt_score,
                (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
-        WHERE q.class_id = :cid AND (q.is_published = 1 OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED'))
+        WHERE q.class_id = :cid AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
         ORDER BY q.created_at DESC
     """), {"cid": cid, "sid": sid}).fetchall()
     return success_response([dict(r._mapping) for r in quizzes])
@@ -293,12 +296,12 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
     q = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
@@ -319,7 +322,7 @@ def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Se
     st_id = payload.get("student_id") or payload.get("student_code")
     st = None
     if st_id:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -402,9 +405,10 @@ def autosave_answers(attempt_id: str, payload: Dict[str, Any] = Body(...), db: S
         qid = a.get("question_id")
         opt = a.get("selected_option")
         txt = a.get("text_answer")
+        db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": qid})
         db.execute(text("""
-            INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-            VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+            INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+            VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
         """), {"aid": attempt_id, "qid": qid, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
     db.commit()
     return success_response({"saved": len(answers)}, "Answers autosaved successfully")

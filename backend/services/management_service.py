@@ -12,8 +12,9 @@ import urllib.request
 import urllib.error
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from sqlalchemy import text
 from backend.config.settings import settings
-from backend.apply_supabase_seed_chunks import get_supabase_token, run_query
+from backend.config.database import SessionLocal
 
 logger = logging.getLogger("management_service")
 
@@ -33,17 +34,23 @@ class ManagementService:
 
     @classmethod
     def _execute_sql(cls, sql: str) -> List[Dict[str, Any]]:
-        """Executes SQL against Supabase Cloud via Management API."""
+        """Executes SQL directly against Supabase PostgreSQL via SessionLocal."""
+        db = SessionLocal()
         try:
-            token = get_supabase_token()
-            res = run_query(sql, token)
-            if not res or res.strip() == "":
+            res = db.execute(text(sql))
+            if res.returns_rows:
+                rows = res.fetchall()
+                db.commit()
+                return [dict(r._mapping) for r in rows]
+            else:
+                db.commit()
                 return []
-            parsed = json.loads(res)
-            return parsed if isinstance(parsed, list) else [parsed]
         except Exception as e:
+            db.rollback()
             logger.error("Error executing SQL in ManagementService: %s", e)
             return []
+        finally:
+            db.close()
 
     @classmethod
     def resolve_faculty_id(cls, identifier: Optional[str]) -> Optional[str]:
@@ -245,13 +252,13 @@ class ManagementService:
                     academic_record_id, student_id, subject_id, semester_number,
                     subject_code, subject_name, internal_marks, external_marks,
                     practical_marks, total_marks, maximum_marks, percentage,
-                    credits, grade, grade_points, result_status
+                    credits, grade, grade_point, result_status
                 ) VALUES (
                     '{acad_id}'::uuid, '{stud_id}'::uuid, '{subject_id}'::uuid, {semester_number},
                     '{sub_code}', '{sub_name}', {internal}, {external}, {practical},
                     {total}, {max_marks}, {pct}, 3.0, '{grade}', {round(pct / 10, 1)}, '{status}'
                 )
-                ON CONFLICT (academic_record_id, subject_code) DO UPDATE SET
+                ON CONFLICT (student_id, subject_code, semester_number, attempt_number) DO UPDATE SET
                     internal_marks = EXCLUDED.internal_marks,
                     external_marks = EXCLUDED.external_marks,
                     practical_marks = EXCLUDED.practical_marks,

@@ -28,9 +28,10 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     import uuid
     sess_id = str(uuid.uuid4())
     db.execute(text("""
-        INSERT OR REPLACE INTO attendance_sessions
+        INSERT INTO attendance_sessions
         (id, teacher_id, class_id, subject_id, session_date, period_number, session_type, status, created_at, updated_at)
         VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, :stype, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
         "sdate": payload.session_date, "pnum": payload.period_number, "stype": payload.session_type

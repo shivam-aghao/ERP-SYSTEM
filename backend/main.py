@@ -40,23 +40,17 @@ logging.basicConfig(
 logger = logging.getLogger("ssgmce_erp_backend")
 
 # ==============================================================================
-# 1. DATABASE CONFIGURATION & CONNECTIVITY
+# 1. DATABASE CONFIGURATION & CONNECTIVITY (Supabase PostgreSQL)
 # ==============================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
-DB_PATH = os.path.join(BASE_DIR, "erp.db").replace("\\", "/")
+from backend.config.settings import settings
+from backend.config.database import engine, SessionLocal, get_db, get_supabase_client
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
+# Supabase Client Singleton
+supabase_client = get_supabase_client()
 
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-# Initialize critical tables if not present
+# Initialize critical tables in Supabase PostgreSQL if not present
 try:
     with engine.connect() as _con:
         _con.execute(text("""
@@ -77,26 +71,7 @@ try:
         """))
         _con.commit()
 except Exception as _e:
-    logger.warning("Could not auto-create timetable_assessments table: %s", _e)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Supabase Client Optional Integration
-supabase_client = None
-try:
-    from supabase import create_client
-    sb_url = os.getenv("SUPABASE_URL", "https://gftqvclenyplnuoocbwe.supabase.co")
-    sb_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")
-    if sb_key:
-        supabase_client = create_client(sb_url, sb_key)
-        logger.info("Supabase client active: %s", sb_url)
-except Exception as e:
-    logger.info("Supabase direct client notice: %s", e)
+    logger.warning("Notice on timetable_assessments check: %s", _e)
 
 # Standard Response Helpers
 def success_response(data: Any = None, message: str = "Success", meta: Optional[Dict[str, Any]] = None, code: int = 200):
@@ -426,7 +401,7 @@ def get_classes(db: Session = Depends(get_db)):
 
 @api.get("/subjects", tags=["Master Data"])
 def get_subjects(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT id, department_id, code, name, semester, type, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
+    rows = db.execute(text("SELECT id, department_id, code, name, type, credits, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/students", tags=["Master Data"])
@@ -535,7 +510,7 @@ def get_teacher_profile(
             FROM teachers t 
             LEFT JOIN departments d ON t.department_id = d.id 
             WHERE LOWER(t.emp_code) = LOWER(:code) 
-               OR t.id = :code 
+               OR t.id::text = :code 
                OR LOWER(t.email) = LOWER(:code)
             LIMIT 1
         """), {"code": tid or "TEA001"}).fetchone()
@@ -683,7 +658,7 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
     enrolled_classes = set()
     if isinstance(student_code, str) and student_code.strip():
         try:
-            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
             if st_row:
                 m = dict(st_row._mapping)
                 if m.get("class_name"): enrolled_classes.add(m["class_name"].strip().lower())
@@ -866,9 +841,10 @@ def get_attendance_draft(class_id: str, subject_id: str, session_date: str, peri
 def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends(get_db)):
     sess_id = str(uuid.uuid4())
     db.execute(text("""
-        INSERT OR REPLACE INTO attendance_sessions
+        INSERT INTO attendance_sessions
         (id, teacher_id, class_id, subject_id, session_date, period_number, status, created_at, updated_at)
         VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
         "sdate": payload.session_date, "pnum": str(payload.period_number)
@@ -1001,7 +977,7 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
         SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, COALESCE(c.class_name, s.class_name) as class_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id = :cid OR c.id = :cid
+        WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id::text = :cid OR c.id::text = :cid
     """), {"cid": cid}).fetchall()
 
     sorted_rows = sorted(rows, key=lambda r: extract_numeric(r._mapping.get("roll_no")))
@@ -1039,7 +1015,7 @@ def submit_teacher_attendance_bulk(payload: Dict[str, Any] = Body(...), db: Sess
     slot = payload.get("timeSlot") or payload.get("lectureTime") or "09:00 - 10:00"
     records = payload.get("records", [])
 
-    c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR id = :c LIMIT 1"), {"c": class_code}).fetchone()
+    c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR id::text = :c LIMIT 1"), {"c": class_code}).fetchone()
     cid = c_row[0] if c_row else "0a7372d4-db33-4908-9f85-896c7009fd76"
 
     s_row = db.execute(text("SELECT id, code, name FROM subjects WHERE code = :s OR LOWER(name) LIKE LOWER(:sn) LIMIT 1"), {"s": sub_code, "sn": f"%{sub_title}%"}).fetchone()
@@ -1300,7 +1276,7 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
 def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     if student_code:
         row = db.execute(
-            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
+            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"),
             {"c": student_code}
         ).fetchone()
     else:
@@ -1326,16 +1302,16 @@ def update_student_profile(payload: StudentProfileUpdate, student_code: Optional
     updates = payload.model_dump(exclude_unset=True)
     for k, v in updates.items():
         if v is not None:
-            db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id = :sc"), {"val": v, "sc": student_code})
+            db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id::text = :sc"), {"val": v, "sc": student_code})
     db.commit()
-    upd = db.execute(text("SELECT * FROM students WHERE student_code = :sc OR id = :sc LIMIT 1"), {"sc": student_code}).fetchone()
+    upd = db.execute(text("SELECT * FROM students WHERE student_code = :sc OR id::text = :sc LIMIT 1"), {"sc": student_code}).fetchone()
     return success_response(dict(upd._mapping) if upd else {}, "Profile updated successfully")
 
 @api.get("/student/overview", tags=["Student Portal"])
 @api.get("/overview", tags=["Student Portal"])
 def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     else:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     
@@ -1649,7 +1625,7 @@ def upload_student_document(payload: Dict[str, Any] = Body(...), db: Session = D
 def get_student_notifications(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT id, class_id FROM students LIMIT 1")).fetchone()
     
@@ -1882,11 +1858,11 @@ def get_teacher_quizzes(class_id: Optional[str] = None, db: Session = Depends(ge
     clause = "WHERE 1=1"
     params = {}
     if class_id:
-        clause += " AND (q.class_id = :cid OR c.class_name = :cid)"
+        clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT count(*) FROM quiz_attempts WHERE quiz_id = q.id AND status IN ('submitted', 'auto_submitted', 'SUBMITTED')) as attempt_count
         FROM quizzes q
@@ -1942,7 +1918,7 @@ def create_quiz(payload: QuizCreateSchema, db: Session = Depends(get_db)):
 @api.get("/quiz/quizzes/{quiz_id}", tags=["Quiz Management"])
 def get_quiz_details(quiz_id: str, db: Session = Depends(get_db)):
     row = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
@@ -2162,7 +2138,7 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -2174,30 +2150,30 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 
     # ONLY quizzes assigned to this student's class
     quizzes = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.score FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_score,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_percentage,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.passed FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.result_status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_passed,
                (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN 1 
+                   WHEN q.result_published = TRUE THEN 1 
                    ELSE 0 
                END as is_result_released
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
-        WHERE q.class_id = :cid AND (q.is_published = 1 OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED'))
+        WHERE q.class_id = :cid AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
         ORDER BY q.created_at DESC
     """), {"cid": cid, "sid": sid}).fetchall()
 
@@ -2208,12 +2184,12 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
     q = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
@@ -2236,7 +2212,7 @@ def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Se
     st_id = payload.get("student_id") or payload.get("student_code")
     st = None
     if st_id:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -2405,9 +2381,10 @@ def autosave_answers(attempt_id: str, payload: Dict[str, Any] = Body(...), db: S
         qid = a.get("question_id")
         opt = a.get("selected_option")
         txt = a.get("text_answer")
+        db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": qid})
         db.execute(text("""
-            INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-            VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+            INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+            VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
         """), {"aid": attempt_id, "qid": qid, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
     db.commit()
     return success_response({"saved": len(answers)}, "Answers autosaved successfully")
@@ -2428,10 +2405,14 @@ def submit_quiz_attempt(attempt_id: str, payload: QuizSubmitRequest, db: Session
 
     # Save any final answers passed in payload
     for a in payload.answers or []:
+        qid = getattr(a, "question_id", None) or (a.get("question_id") if isinstance(a, dict) else None)
+        opt = getattr(a, "selected_option", None) or (a.get("selected_option") if isinstance(a, dict) else None)
+        txt = getattr(a, "text_answer", None) or (a.get("text_answer") if isinstance(a, dict) else None)
+        db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": qid})
         db.execute(text("""
-            INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-            VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
-        """), {"aid": attempt_id, "qid": a.question_id, "opt": a.selected_option, "txt": a.text_answer, "nid": str(uuid.uuid4())})
+            INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+            VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+        """), {"aid": attempt_id, "qid": qid, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
     db.commit()
 
     # Server-Side Evaluation
@@ -2807,15 +2788,13 @@ except Exception as e:
 # ==============================================================================
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
-STUDENT_DIR = os.path.join(ERP_ROOT, "student")
-if os.path.isdir(STUDENT_DIR):
-    app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
-    logger.info("Mounted student static assets from %s", STUDENT_DIR)
+@app.get("/student", include_in_schema=False)
+def student_route():
+    return RedirectResponse(url="/student-dashboard.html")
 
-TEACHER_DIR = os.path.join(ERP_ROOT, "Teacher_Dashboard", "frontend")
-if os.path.isdir(TEACHER_DIR):
-    app.mount("/teacher", StaticFiles(directory=TEACHER_DIR, html=True), name="teacher")
-    logger.info("Mounted teacher dashboard static assets from %s", TEACHER_DIR)
+@app.get("/teacher", include_in_schema=False)
+def teacher_route():
+    return RedirectResponse(url="/teacher-dashboard.html")
 
 # Dedicated Attendance routes mapped to Teacher Dashboard Hub
 @app.get("/attendance", include_in_schema=False)
@@ -2825,6 +2804,18 @@ def attendance_route():
 @app.get("/attendance/roster", include_in_schema=False)
 def attendance_roster_route():
     return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
+
+@app.get("/teacher_dashboard.html", include_in_schema=False)
+def teacher_dashboard_underscore():
+    return RedirectResponse(url="/teacher-dashboard.html")
+
+@app.get("/student_dashboard.html", include_in_schema=False)
+def student_dashboard_underscore():
+    return RedirectResponse(url="/student-dashboard.html")
+
+@app.get("/admin_dashboard.html", include_in_schema=False)
+def admin_dashboard_underscore():
+    return RedirectResponse(url="/admin-dashboard.html")
 
 
 if os.path.isdir(FRONTEND_DIR):

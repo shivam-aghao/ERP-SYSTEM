@@ -80,10 +80,10 @@ def get_student_attendance(student_code: Optional[str] = Query(None), db: Sessio
     except Exception:
         pass
 
-    # 2. Fallback to SQLite if Supabase was empty
+    # 2. Fallback to database if Supabase was empty
     if not sub_dicts:
         subjects = db.execute(
-            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id::text = :sc"),
             {"sc": sc}
         ).fetchall()
         if not subjects:
@@ -96,7 +96,7 @@ def get_student_attendance(student_code: Optional[str] = Query(None), db: Sessio
                 SELECT ar.*, s.session_date, s.subject_name, s.period_number, s.session_type
                 FROM attendance_records ar
                 JOIN attendance_sessions s ON ar.session_id = s.id
-                WHERE ar.student_id = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
+                WHERE ar.student_id::text = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
                 ORDER BY s.session_date DESC
                 LIMIT 30
             """), {"sc": sc}
@@ -141,7 +141,7 @@ def get_student_attendance(student_code: Optional[str] = Query(None), db: Sessio
             needed = max(1, int((0.75 * tot_lecs - tot_pres) / 0.25))
 
     return success_response({
-        "student_code": code_val,
+        "student_code": sc,
         "overall_percentage": overall_pct,
         "overallPercentage": overall_pct,
         "total_conducted": tot_lecs,

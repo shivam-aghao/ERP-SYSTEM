@@ -265,21 +265,13 @@ const TeacherApp = {
             : null;
           return {
             name: fn,
-<<<<<<< HEAD
-            department: u.department || 'Computer Science & Engineering',
-            departmentCode: u.department_code || 'CSE',
+            department: u.department || u.department_name || 'Computer Science & Engineering',
+            departmentCode: u.department_code || u.departmentCode || 'CSE',
             title: u.designation || (facObj && facObj.title) || 'Faculty Member',
             employeeId: empCode || (facObj && facObj.empCode) || 'EMP-CSE-1001',
-            avatarInitials: u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-=======
-            department: u.department_name || u.department || 'Computer Science & Engineering',
-            departmentCode: u.department_code || u.departmentCode || 'CSE',
-            title: u.designation || 'Faculty Member',
-            employeeId: u.emp_code || u.empCode || u.id || '',
             email: u.email || '',
             phone: u.phone || '',
             avatarInitials: u.avatar || u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
           };
         }
       }
@@ -312,7 +304,6 @@ const TeacherApp = {
       name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-<<<<<<< HEAD
       title: facObj.title,
       employeeId: facObj.empCode,
       avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
@@ -323,13 +314,6 @@ const TeacherApp = {
       title: "Professor & Head",
       employeeId: "EMP-CSE-1001",
       avatarInitials: "JP"
-=======
-      title: "Faculty",
-      employeeId: "",
-      email: "",
-      phone: "",
-      avatarInitials: "FM"
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
     };
   },
 

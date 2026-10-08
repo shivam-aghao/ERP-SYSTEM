@@ -99,7 +99,7 @@ class SyllabusService:
             from backend.config.database import SessionLocal
             db = SessionLocal()
 
-        clause = "WHERE subject_code = :sid OR id = :sid" if subject_id else ""
+        clause = "WHERE subject_code = :sid OR id::text = :sid" if subject_id else ""
         params = {"sid": subject_id} if subject_id else {}
         rows = db.execute(text(f"SELECT * FROM subject_syllabus {clause} ORDER BY subject_code ASC"), params).fetchall()
         result = []

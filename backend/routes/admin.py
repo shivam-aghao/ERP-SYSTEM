@@ -20,7 +20,7 @@ def get_classes(db: Session = Depends(get_db)):
 
 @router.get("/subjects")
 def get_subjects(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT id, department_id, code, name, semester, type, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
+    rows = db.execute(text("SELECT id, department_id, code, name, type, credits, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @router.get("/students")
