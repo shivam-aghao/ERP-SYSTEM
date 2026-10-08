@@ -38,24 +38,31 @@ const TeacherApp = {
     const dot = document.getElementById('backend-status-dot');
     const text = document.getElementById('backend-status-text');
 
-    const setStatus = (isOnline, latency) => {
+    const setStatus = (isOnline, latency, supabaseOnline) => {
       if (pill) {
-        pill.style.background = isOnline ? '#ECFDF5' : '#FEF2F2';
-        pill.style.borderColor = isOnline ? '#10B981' : '#EF4444';
-        pill.style.color = isOnline ? '#047857' : '#B91C1C';
+        pill.style.background = (isOnline || supabaseOnline) ? '#ECFDF5' : '#FEF2F2';
+        pill.style.borderColor = (isOnline || supabaseOnline) ? '#10B981' : '#EF4444';
+        pill.style.color = (isOnline || supabaseOnline) ? '#047857' : '#B91C1C';
       }
       if (dot) {
-        dot.style.background = isOnline ? '#10B981' : '#EF4444';
-        dot.style.boxShadow = isOnline ? '0 0 8px #10B981' : '0 0 8px #EF4444';
+        dot.style.background = (isOnline || supabaseOnline) ? '#10B981' : '#EF4444';
+        dot.style.boxShadow = (isOnline || supabaseOnline) ? '0 0 8px #10B981' : '0 0 8px #EF4444';
       }
       if (text) {
-        text.textContent = isOnline 
-          ? `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`
-          : '🔴 Backend: Offline';
+        if (isOnline && supabaseOnline) {
+          text.textContent = `🟢 Live Connected (Backend & Supabase)${latency ? ` (${latency}ms)` : ''}`;
+        } else if (isOnline) {
+          text.textContent = `🟢 Backend: Connected${latency ? ` (${latency}ms)` : ''}`;
+        } else if (supabaseOnline) {
+          text.textContent = `🟢 Supabase: Connected (Cloud)`;
+        } else {
+          text.textContent = '🔴 Backend: Offline';
+        }
       }
     };
 
     let isHealthy = false;
+    let supabaseOnline = false;
     let latency = 0;
 
     // Probe 1: Via TeacherAPI
@@ -66,6 +73,9 @@ const TeacherApp = {
         latency = Math.round(performance.now() - start);
         if (health && (health.status === 'OK' || health.status === 'healthy')) {
           isHealthy = true;
+          if (health.supabase === 'connected' || health.database === 'connected') {
+            supabaseOnline = true;
+          }
         }
       } catch (e) {
         console.warn('TeacherAPI health check failed:', e.message);
@@ -88,6 +98,9 @@ const TeacherApp = {
             const data = await res.json();
             if (data.status === 'OK' || data.status === 'healthy' || data.database === 'connected') {
               isHealthy = true;
+              if (data.supabase === 'connected' || data.database === 'connected') {
+                supabaseOnline = true;
+              }
               latency = Math.round(performance.now() - start);
               break;
             }
@@ -96,8 +109,18 @@ const TeacherApp = {
       }
     }
 
-    if (isHealthy) {
-      setStatus(true, latency);
+    // Probe 3: Direct Supabase client check
+    if (!supabaseOnline && window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('teachers').select('id').limit(1);
+        if (!error && data) {
+          supabaseOnline = true;
+        }
+      } catch (_) {}
+    }
+
+    if (isHealthy || supabaseOnline) {
+      setStatus(isHealthy, latency, supabaseOnline);
       let teacherName = (window.ERP_AUTH ? window.ERP_AUTH.getUserName() : '') || 'Faculty';
 
       if (typeof window.TeacherAPI !== 'undefined' && typeof window.TeacherAPI.login === 'function') {

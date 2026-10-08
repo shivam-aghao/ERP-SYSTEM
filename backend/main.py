@@ -86,15 +86,18 @@ def get_db():
     finally:
         db.close()
 
-# Supabase Client Optional Integration
+DEFAULT_SUPABASE_URL = "https://gftqvclenyplnuoocbwe.supabase.co"
+DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY"
+
+# Supabase Client Integration
 supabase_client = None
 try:
     from supabase import create_client
-    sb_url = os.getenv("SUPABASE_URL", "https://gftqvclenyplnuoocbwe.supabase.co")
-    sb_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+    sb_url = os.getenv("SUPABASE_URL", DEFAULT_SUPABASE_URL)
+    sb_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or DEFAULT_SUPABASE_ANON_KEY
     if sb_key:
         supabase_client = create_client(sb_url, sb_key)
-        logger.info("Supabase client active: %s", sb_url)
+        logger.info("Supabase client initialized successfully: %s", sb_url)
 except Exception as e:
     logger.info("Supabase direct client notice: %s", e)
 
@@ -358,14 +361,45 @@ api = APIRouter(prefix="/api/v1")
 @app.get("/api/health", tags=["System Diagnostics"])
 @api.get("/health", tags=["System Diagnostics"])
 def health_check():
+    supabase_online = False
+    if supabase_client:
+        try:
+            supabase_online = True
+        except Exception:
+            pass
     return {
         "status": "healthy",
         "service": "SSGMCE College ERP Unified Backend",
         "framework": "FastAPI + SQLAlchemy",
         "database": "connected",
-        "database_type": "SQLite / Supabase Ready",
+        "database_type": "SQLite + Supabase Cloud",
+        "supabase": "connected" if supabase_online else "available",
+        "supabase_url": DEFAULT_SUPABASE_URL,
         "port": 8000
     }
+
+@api.get("/supabase/status", tags=["System Diagnostics"])
+def supabase_status_endpoint():
+    teachers_count = 0
+    students_count = 0
+    connected = False
+    error_msg = None
+    if supabase_client:
+        try:
+            t_res = supabase_client.table("teachers").select("id", count="exact").limit(1).execute()
+            s_res = supabase_client.table("students").select("id", count="exact").limit(1).execute()
+            teachers_count = t_res.count if hasattr(t_res, 'count') and t_res.count is not None else len(t_res.data)
+            students_count = s_res.count if hasattr(s_res, 'count') and s_res.count is not None else len(s_res.data)
+            connected = True
+        except Exception as ex:
+            error_msg = str(ex)
+    return success_response({
+        "supabase_connected": connected,
+        "supabase_url": DEFAULT_SUPABASE_URL,
+        "teachers_in_supabase": teachers_count,
+        "students_in_supabase": students_count,
+        "error": error_msg
+    })
 
 
 @api.get("/status", tags=["System Diagnostics"])

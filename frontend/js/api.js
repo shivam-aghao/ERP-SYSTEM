@@ -85,7 +85,13 @@
             if (data.status === 'OK' || data.status === 'healthy' || data.database === 'connected') {
               var port = u.includes('5001') ? 5001 : 8000;
               API_BASE_URL = u.includes('/api/v1') ? u.replace(/\/health\/?$/, '') : u.replace(/\/health\/?$/, '') + '/api/v1';
-              return { status: 'OK', service: data.service || 'ssgmce-unified-erp-backend', port: port };
+              return { 
+                status: 'OK', 
+                service: data.service || 'ssgmce-unified-erp-backend', 
+                port: port,
+                supabase: data.supabase || (data.database === 'connected' ? 'connected' : 'offline'),
+                database: data.database || 'connected'
+              };
             }
           }
         } catch (_) {}

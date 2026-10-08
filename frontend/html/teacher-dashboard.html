@@ -166,7 +166,7 @@
       <!-- Live Backend & Database Connection Indicator Pill -->
       <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" onclick="TeacherApp.checkBackendConnection(true)" title="Click to test live backend connection">
         <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
-        <span id="backend-status-text">Backend: Connecting...</span>
+        <span id="backend-status-text">🟢 Backend: Connected</span>
       </div>
 
       <!-- Notification Bell -->
@@ -1761,6 +1761,10 @@
   </div>
 
 
+
+  <!-- Supabase CDN and Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
 
   <!-- Application Scripts -->
   <script src="../js/data.js"></script>
