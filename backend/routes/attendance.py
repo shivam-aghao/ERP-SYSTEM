@@ -1,11 +1,15 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.config.database import get_db
 from backend.schemas.attendance import AttendanceDraftRequest, AttendanceSubmitRequest
 from backend.services.attendance_service import AttendanceService
 from backend.utils.helpers import success_response
+from backend.auth.dependencies import get_optional_user
+from backend.auth.models import AuthenticatedUser
+from backend.rbac.service import RBACService
+from backend.rbac.models import Permission
 
 router = APIRouter(tags=["Attendance Management"])
 
@@ -24,7 +28,23 @@ def get_attendance_draft(class_id: str, subject_id: str, session_date: str, peri
     return success_response(dict(row._mapping) if row else None)
 
 @router.post("/attendance/draft")
-def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends(get_db)):
+def save_attendance_draft(
+    payload: AttendanceDraftRequest,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user:
+        if not RBACService.has_any_permission(current_user, [Permission.ATTENDANCE_CREATE.value, Permission.ATTENDANCE_EDIT.value]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You do not have permission to create or edit attendance drafts."
+            )
+        RBACService.verify_teacher_assignment(
+            current_user=current_user,
+            class_id=payload.class_id,
+            subject_id=payload.subject_id,
+            db=db
+        )
     import uuid
     sess_id = str(uuid.uuid4())
     db.execute(text("""
@@ -40,7 +60,23 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     return success_response({"session_id": sess_id}, "Draft saved")
 
 @router.post("/attendance/submit")
-def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(get_db)):
+def submit_attendance(
+    payload: AttendanceSubmitRequest,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user:
+        if not RBACService.has_permission(current_user, Permission.ATTENDANCE_CREATE.value):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You do not have permission to submit attendance sessions."
+            )
+        RBACService.verify_teacher_assignment(
+            current_user=current_user,
+            class_id=payload.class_id,
+            subject_id=payload.subject_id,
+            db=db
+        )
     data = AttendanceService.submit_attendance(payload, db)
     return success_response(data, "Attendance submitted successfully")
 

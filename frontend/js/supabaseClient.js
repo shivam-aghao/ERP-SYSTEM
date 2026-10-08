@@ -5,8 +5,9 @@
 (function (global) {
   'use strict';
 
-  var SUPABASE_URL = (global.__SUPABASE_URL__) || 'https://gftqvclenyplnuoocbwe.supabase.co';
-  var SUPABASE_ANON_KEY = (global.__SUPABASE_ANON_KEY__) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY';
+  var erpCfg = (global.ERP_CONFIG) || {};
+  var SUPABASE_URL = (global.__SUPABASE_URL__) || erpCfg.SUPABASE_URL || 'https://gftqvclenyplnuoocbwe.supabase.co';
+  var SUPABASE_ANON_KEY = (global.__SUPABASE_ANON_KEY__) || erpCfg.SUPABASE_ANON_KEY || '';
 
   var clientPromise = null;
 

@@ -2667,22 +2667,6 @@ async function hydrateDashboardData() {
             }
           }
         } catch (_) {}
-
-        if (!upcomingTest) {
-          try {
-            const local = localStorage.getItem('ssgmce_scheduled_tests');
-            if (local) {
-              const parsed = JSON.parse(local);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const upcomingList = parsed.filter(t => (t.date || '') >= todayStr).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-                if (upcomingList.length > 0) {
-                  upcomingTest = upcomingList[0];
-                }
-              }
-            }
-          } catch (_) {}
-        }
       }
 
       if (upcomingTest) {

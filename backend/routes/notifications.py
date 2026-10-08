@@ -8,9 +8,13 @@ FastAPI Endpoints with Real-Time WebSocket and Supabase Cloud Integration
 import json
 import asyncio
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Body, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Body, HTTPException, Depends
 from backend.services.notification_service import NotificationService
 from backend.utils.helpers import success_response
+from backend.auth.dependencies import get_optional_user
+from backend.auth.models import AuthenticatedUser
+from backend.rbac.service import RBACService
+from backend.rbac.models import Permission
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -70,10 +74,19 @@ def get_user_notifications(
     notif_type: Optional[str] = Query(None, alias="type"),
     priority: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
 ):
     """Retrieves paginated notifications for the specified student or faculty member."""
-    target_id = user_id or "308637"
+    if current_user:
+        if not RBACService.has_permission(current_user, Permission.NOTIFICATIONS_VIEW.value):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not possess permission 'notifications.view'."
+            )
+        target_id = RBACService.verify_student_self(current_user, user_id)
+    else:
+        target_id = user_id or "308637"
     notifs = NotificationService.get_user_notifications(
         user_id_or_code=target_id,
         status=status,
@@ -148,11 +161,20 @@ def dismiss_notification(
 
 
 @router.post("/create")
-async def create_notification(payload: Dict[str, Any] = Body(...)):
+async def create_notification(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """
     Creates a new targeted notification (Faculty/Admin).
     Fans out to users in target group and emits to live WebSocket hub.
     """
+    if current_user and not RBACService.has_permission(current_user, Permission.NOTIFICATIONS_MANAGE.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'notifications.manage' to create notifications."
+        )
+
     notif_type = payload.get("notification_type", "announcement")
     title = payload.get("title", "Campus Notice")
     message = payload.get("message", "")
@@ -160,7 +182,7 @@ async def create_notification(payload: Dict[str, Any] = Body(...)):
     target_type = payload.get("target_type", "user")
     target_id = payload.get("target_id")
     action_url = payload.get("action_url")
-    sender_id = payload.get("sender_id")
+    sender_id = payload.get("sender_id") or (current_user.identifier if current_user else None)
 
     notif_id = NotificationService.create_notification(
         notification_type=notif_type,
@@ -194,8 +216,17 @@ async def create_notification(payload: Dict[str, Any] = Body(...)):
 
 
 @router.post("/broadcast")
-async def broadcast_announcement(payload: Dict[str, Any] = Body(...)):
+async def broadcast_announcement(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Broadcasts a high-priority announcement across college, department, or roles."""
+    if current_user and not RBACService.has_permission(current_user, Permission.NOTIFICATIONS_MANAGE.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'notifications.manage' to broadcast announcements."
+        )
+
     title = payload.get("title", "Important Announcement")
     message = payload.get("message", "")
     priority = payload.get("priority", "normal")

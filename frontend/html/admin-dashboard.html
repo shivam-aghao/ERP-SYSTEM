@@ -16,18 +16,11 @@
   
   <!-- Authentication Guard -->
   <script src="../js/config.js"></script>
+  <script src="../common/auth/auth-client.js"></script>
+  <script src="../common/auth/auth-guard.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
-      if (!window.ERP_AUTH.isAuthenticated()) {
-        window.ERP_AUTH.setSession({
-          id: 'b319e831-c312-402f-89a7-d273c86f18c4',
-          name: 'System Administrator',
-          role: 'admin',
-          email: 'admin@ssgmce.ac.in',
-          username: 'admin'
-        }, 'admin_token_b319e831-c312-402f-89a7-d273c86f18c4');
-      }
       window.ERP_AUTH.requireAuth('admin');
     }
   </script>

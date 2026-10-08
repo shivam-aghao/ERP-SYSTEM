@@ -103,19 +103,11 @@
   <script src="../js/toast.js"></script>
   <!-- Authentication Guard -->
   <script src="../js/config.js"></script>
+  <script src="../common/auth/auth-client.js"></script>
+  <script src="../common/auth/auth-guard.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
-      if (!window.ERP_AUTH.isAuthenticated()) {
-        window.ERP_AUTH.setSession({
-          id: '8f913c70-85ed-4261-bbd0-f2d3b42f4af1',
-          name: 'Dr. J. M. Patil',
-          role: 'teacher',
-          email: 'jmpatil@ssgmce.ac.in',
-          emp_code: 'EMP-CSE-1001',
-          department_id: '945f3faf-8b04-45d8-a274-a96908abb7d9'
-        }, 'teach_token_8f913c70-85ed-4261-bbd0-f2d3b42f4af1');
-      }
       window.ERP_AUTH.requireAuth('teacher');
     }
   </script>

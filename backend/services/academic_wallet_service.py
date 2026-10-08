@@ -330,11 +330,19 @@ class AcademicWalletService:
         performed_by: Optional[str] = None,
         reason: str = "Scheduled Publication"
     ) -> Dict[str, Any]:
-        """Publishes academic result(s) making them visible to students with audit logging."""
+        # Ensure performed_by is a valid UUID for PostgreSQL RPC parameter
+        pby_uuid = "b319e831-c312-402f-89a7-d273c86f18c4"
+        if performed_by:
+            try:
+                import uuid as _uuid
+                pby_uuid = str(_uuid.UUID(str(performed_by)))
+            except (ValueError, AttributeError):
+                pby_uuid = "b319e831-c312-402f-89a7-d273c86f18c4"
+
         if record_id:
             return cls._supabase_rpc("publish_academic_result", {
                 "p_record_id": record_id,
-                "p_performed_by": performed_by,
+                "p_performed_by": pby_uuid,
                 "p_reason": reason
             })
         
@@ -346,7 +354,7 @@ class AcademicWalletService:
                 if recs:
                     return cls._supabase_rpc("publish_academic_result", {
                         "p_record_id": recs[0]["id"],
-                        "p_performed_by": performed_by,
+                        "p_performed_by": pby_uuid,
                         "p_reason": reason
                     })
         
@@ -360,7 +368,7 @@ class AcademicWalletService:
                     try:
                         cls._supabase_rpc("publish_academic_result", {
                             "p_record_id": recs[0]["id"],
-                            "p_performed_by": performed_by,
+                            "p_performed_by": pby_uuid,
                             "p_reason": reason
                         })
                         count += 1
@@ -387,10 +395,18 @@ class AcademicWalletService:
         reason: str = "Under Faculty Review"
     ) -> Dict[str, Any]:
         """Unpublishes academic result(s) (withholds from student view) with audit logging."""
+        pby_uuid = "b319e831-c312-402f-89a7-d273c86f18c4"
+        if performed_by:
+            try:
+                import uuid as _uuid
+                pby_uuid = str(_uuid.UUID(str(performed_by)))
+            except (ValueError, AttributeError):
+                pby_uuid = "b319e831-c312-402f-89a7-d273c86f18c4"
+
         if record_id:
             return cls._supabase_rpc("unpublish_academic_result", {
                 "p_record_id": record_id,
-                "p_performed_by": performed_by,
+                "p_performed_by": pby_uuid,
                 "p_reason": reason
             })
         

@@ -33,15 +33,8 @@ const TeacherTimetableApp = {
   },
 
   loadCachedTests() {
-    try {
-      const local = localStorage.getItem('ssgmce_scheduled_tests');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
-        }
-      }
-    } catch (_) {}
+    // Strict zero-localStorage policy for business data: Database is the single source of truth.
+    this.tests = [];
   },
 
   getApiBase() {
@@ -121,7 +114,7 @@ const TeacherTimetableApp = {
   async loadTests() {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const res = await fetch(`${this.getApiBase()}/timetable/tests`, {
         headers: this.getAuthHeaders(),
         signal: controller.signal
@@ -131,9 +124,6 @@ const TeacherTimetableApp = {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
           this.tests = json.data.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
-          try {
-            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-          } catch (_) {}
           return;
         }
       }
@@ -141,7 +131,7 @@ const TeacherTimetableApp = {
       console.warn("Could not load tests from backend API:", e);
     }
 
-    // Try direct Supabase client if already ready without blocking
+    // Direct Supabase query as authenticated database fallback
     try {
       if (window.supabaseClient) {
         const { data, error } = await window.supabaseClient
@@ -150,7 +140,7 @@ const TeacherTimetableApp = {
           .order('date', { ascending: true })
           .order('start_time', { ascending: true });
         
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           this.tests = data
             .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
             .map(t => ({
@@ -165,23 +155,16 @@ const TeacherTimetableApp = {
               link: t.link || '',
               class_code: t.class_code || '2R1'
             }));
-          try {
-            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-          } catch (_) {}
           return;
         }
       }
     } catch (_) {}
 
-    // Fallback to localStorage cache
-    this.loadCachedTests();
+    this.tests = [];
   },
 
   saveTests() {
-    try {
-      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-      window.dispatchEvent(new CustomEvent('tests:updated', { detail: { tests: this.tests } }));
-    } catch (_) {}
+    window.dispatchEvent(new CustomEvent('tests:updated', { detail: { tests: this.tests } }));
   },
 
   bindEvents() {
@@ -627,43 +610,13 @@ const TeacherTimetableApp = {
         this.closeTestFormModal();
         this.renderTimetableView();
       } else {
-        const testObj = {
-          id: id || payload.id || ("test-" + Date.now()),
-          ...payload,
-          start: payload.start_time,
-          end: payload.end_time
-        };
-        const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
-        if (existingIdx >= 0) {
-          this.tests[existingIdx] = testObj;
-        } else {
-          this.tests.push(testObj);
-        }
-        this.saveTests();
-        this.showToast(successMsg, "success");
-        this.closeTestFormModal();
-        this.renderTimetableView();
+        const errJson = await res.json().catch(() => ({}));
+        const errMsg = errJson.detail || errJson.message || `Failed to save assessment (HTTP ${res.status})`;
+        this.showToast(errMsg, "error");
       }
     } catch (err) {
       console.error("Backend save error:", err);
-      const typeLabel = type === "Assignment" ? "Assignment" : (type === "TEC" ? "TEC" : (type === "Quiz" ? "Quiz" : (type || "Test")));
-      const successMsg = id ? `${typeLabel} updated successfully` : `${typeLabel} scheduled successfully`;
-      const testObj = {
-        id: id || payload.id || ("test-" + Date.now()),
-        ...payload,
-        start: payload.start_time,
-        end: payload.end_time
-      };
-      const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
-      if (existingIdx >= 0) {
-        this.tests[existingIdx] = testObj;
-      } else {
-        this.tests.push(testObj);
-      }
-      this.saveTests();
-      this.showToast(successMsg, "success");
-      this.closeTestFormModal();
-      this.renderTimetableView();
+      this.showToast("Network error: Unable to save assessment to server. Please check connection.", "error");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       if (submitText) submitText.textContent = originalText;
@@ -833,19 +786,22 @@ const TeacherTimetableApp = {
     const testId = this.activeDeleteTestId;
 
     try {
-      await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
+      const res = await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
         method: "DELETE",
         headers: this.getAuthHeaders()
       });
+      if (!res.ok) {
+        throw new Error(`Delete failed (HTTP ${res.status})`);
+      }
       this.showToast("Assessment deleted from database", "success");
+      const idx = this.tests.findIndex(t => t.id === testId);
+      if (idx !== -1) {
+        this.tests.splice(idx, 1);
+        this.saveTests();
+      }
     } catch (err) {
-      console.warn("Backend delete notice:", err);
-    }
-
-    const idx = this.tests.findIndex(t => t.id === testId);
-    if (idx !== -1) {
-      this.tests.splice(idx, 1);
-      this.saveTests();
+      console.error("Backend delete error:", err);
+      this.showToast("Failed to delete assessment from server. Please retry.", "error");
     }
 
     this.closeDeleteConfirmModal();

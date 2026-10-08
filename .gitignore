@@ -1,11 +1,13 @@
+# Secrets & Environment Variables
+.env
+.env.*
+!.env.example
+supabase_keys.json
+secrets/
+*.secret
+
 # Node dependencies
 **/node_modules/
-
-# Environment variables
-**/.env
-**/.env.local
-**/.env.*.local
-!**/.env.example
 
 # Logs
 **/*.log
@@ -19,11 +21,14 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Python cache & virtual environments
 __pycache__/
-*.pyc
-
-# Local Python environments and generated databases
-**/venv/
 **/__pycache__/
 *.pyc
+**/venv/
 *.db
+
+# Temporary & backup directories
+.temp/
+**/.temp/
+supabase/.temp/

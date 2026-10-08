@@ -173,83 +173,75 @@ function closeEditProfileModal() {
     }
 }
 
-function saveProfileChanges() {
+async function saveProfileChanges() {
     const mobile = document.getElementById('inputMobile')?.value.trim();
     const email = document.getElementById('inputEmail')?.value.trim();
     const blood = document.getElementById('inputBloodGroup')?.value.trim();
     const emergency = document.getElementById('inputEmergency')?.value.trim();
     const address = document.getElementById('inputAddress')?.value.trim();
 
-    const data = { mobile, email, blood, emergency, address };
-
-    // Update UI elements
-    if (mobile) {
-        const el1 = document.getElementById('valMobile');
-        const el2 = document.getElementById('valCardMobile');
-        if (el1) el1.textContent = mobile;
-        if (el2) el2.textContent = mobile;
-    }
-    if (email) {
-        const el1 = document.getElementById('valEmail');
-        const el2 = document.getElementById('valCardEmail');
-        if (el1) el1.textContent = email;
-        if (el2) el2.textContent = email;
-    }
-    if (blood) {
-        const el = document.getElementById('valBloodGroup');
-        if (el) el.textContent = blood;
-    }
-    if (emergency) {
-        const el = document.getElementById('valEmergency');
-        if (el) el.textContent = emergency;
-    }
-    if (address) {
-        const el = document.getElementById('valAddress');
-        if (el) el.textContent = address;
-    }
+    const payload = {};
+    if (mobile) payload.phone = mobile;
+    if (email) payload.email = email;
+    if (blood) payload.blood_group = blood;
+    if (emergency) payload.emergency_contact = emergency;
+    if (address) payload.address = address;
 
     try {
-        localStorage.setItem('ssgmce_student_profile_data', JSON.stringify(data));
-    } catch (e) {
-        console.warn('Profile data could not be saved to localStorage:', e);
-    }
+        let res = null;
+        if (typeof window.StudentApi !== 'undefined' && typeof window.StudentApi.updateProfile === 'function') {
+            res = await window.StudentApi.updateProfile(payload);
+        } else {
+            const apiBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || '/api/v1';
+            const fetchFn = (window.AuthClient && window.AuthClient.fetchWithAuth) ? window.AuthClient.fetchWithAuth : fetch;
+            const r = await fetchFn(`${apiBase}/student/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) {
+                const errJson = await r.json().catch(() => ({}));
+                throw new Error(errJson.detail || errJson.message || 'Server returned an error');
+            }
+            res = await r.json();
+        }
 
-    closeEditProfileModal();
-    showToast('Profile information updated successfully!', 'success');
+        // Update UI elements only on success
+        if (mobile) {
+            const el1 = document.getElementById('valMobile');
+            const el2 = document.getElementById('valCardMobile');
+            if (el1) el1.textContent = mobile;
+            if (el2) el2.textContent = mobile;
+        }
+        if (email) {
+            const el1 = document.getElementById('valEmail');
+            const el2 = document.getElementById('valCardEmail');
+            if (el1) el1.textContent = email;
+            if (el2) el2.textContent = email;
+        }
+        if (blood) {
+            const el = document.getElementById('valBloodGroup');
+            if (el) el.textContent = blood;
+        }
+        if (emergency) {
+            const el = document.getElementById('valEmergency');
+            if (el) el.textContent = emergency;
+        }
+        if (address) {
+            const el = document.getElementById('valAddress');
+            if (el) el.textContent = address;
+        }
+
+        closeEditProfileModal();
+        showToast('Profile information updated successfully!', 'success');
+    } catch (e) {
+        console.error('Error saving profile changes to database:', e);
+        showToast('Failed to save profile: ' + (e.message || 'Database error'), 'error');
+    }
 }
 
 function loadSavedProfileData() {
-    try {
-        const raw = localStorage.getItem('ssgmce_student_profile_data');
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (data.mobile) {
-            const el1 = document.getElementById('valMobile');
-            const el2 = document.getElementById('valCardMobile');
-            if (el1) el1.textContent = data.mobile;
-            if (el2) el2.textContent = data.mobile;
-        }
-        if (data.email) {
-            const el1 = document.getElementById('valEmail');
-            const el2 = document.getElementById('valCardEmail');
-            if (el1) el1.textContent = data.email;
-            if (el2) el2.textContent = data.email;
-        }
-        if (data.blood) {
-            const el = document.getElementById('valBloodGroup');
-            if (el) el.textContent = data.blood;
-        }
-        if (data.emergency) {
-            const el = document.getElementById('valEmergency');
-            if (el) el.textContent = data.emergency;
-        }
-        if (data.address) {
-            const el = document.getElementById('valAddress');
-            if (el) el.textContent = data.address;
-        }
-    } catch (e) {
-        console.warn('Error reading saved profile data:', e);
-    }
+    // Database is authoritative; live profile data is hydrated via fetchAndHydrateLiveProfile()
 }
 
 /* ==========================================================================

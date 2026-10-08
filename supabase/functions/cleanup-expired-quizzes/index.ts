@@ -19,8 +19,11 @@ serve(async (req: Request) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://gftqvclenyplnuoocbwe.supabase.co";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDQ4NzcyNiwiZXhwIjoyMTA2MDYzNzI2fQ.0CNTyl3HMiyYVhSPdQEhq_4LUYUVOY29aAAOLHwxEt4";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured in environment variables.");
+    }
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Current time in Asia/Kolkata (UTC+5:30)

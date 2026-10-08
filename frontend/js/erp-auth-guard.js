@@ -109,59 +109,28 @@
      * @param {'student'|'faculty'|'teacher'|'admin'|'any'} requiredRole 
      */
     guard: function (requiredRole = 'any') {
+      if (window.AuthGuard && typeof window.AuthGuard.guardPage === 'function') {
+        const roles = (requiredRole === 'any') ? ['student', 'teacher', 'admin', 'hod', 'super_admin'] : [requiredRole];
+        window.AuthGuard.guardPage(roles);
+        return this.getSession();
+      }
+
       if (window.ERP_AUTH && typeof window.ERP_AUTH.requireAuth === 'function') {
         window.ERP_AUTH.requireAuth(requiredRole);
         return this.getSession();
       }
 
       const session = this.getSession();
-      const path = (window.location.pathname || '').toLowerCase();
-      const isStudentPage = (requiredRole === 'student') || path.includes('student');
-      const isTeacherPage = (requiredRole === 'teacher' || requiredRole === 'faculty') || (path.includes('teacher') || path.includes('faculty'));
-
-      if (!session) {
-        if (isStudentPage) {
-          console.info('[ERPAuth Guard] Student page opened. Setting student session context.');
-          const defaultStudent = {
-            id: '308637',
-            student_code: '308637',
-            studentCode: '308637',
-            fullName: 'Student',
-            shortName: 'Student',
-            initials: 'ST',
-            role: 'student',
-            className: '3R',
-            rollNo: '01',
-            department: 'Computer Science & Engineering',
-            departmentCode: 'CSE'
-          };
-          this.setSession(defaultStudent, true);
-          return defaultStudent;
-        }
-
-        if (isTeacherPage) {
-          console.info('[ERPAuth Guard] Teacher page opened. Setting faculty session context.');
-          const defaultFaculty = {
-            id: 'FAC-01',
-            emp_code: 'FAC-01',
-            empCode: 'FAC-01',
-            fullName: 'Faculty Member',
-            name: 'Faculty Member',
-            shortName: 'Faculty',
-            initials: 'FM',
-            role: 'teacher',
-            designation: 'Associate Professor',
-            department: 'Computer Science & Engineering',
-            departmentCode: 'CSE'
-          };
-          this.setSession(defaultFaculty, true);
-          return defaultFaculty;
-        }
-
-        console.warn('[ERPAuth] Access denied: No active session. Redirecting to login.');
-        window.location.href = 'login.html';
+      const token = localStorage.getItem('ssgmce_access_token') || 
+                    sessionStorage.getItem('ssgmce_access_token') || 
+                    localStorage.getItem('ssgmce_token');
+      if (!session || !token) {
+        console.warn('[ERPAuth] Access denied: No active authenticated session. Redirecting to login.');
+        var curPath = window.location.pathname.split('/').pop() || 'index.html';
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(curPath);
         return null;
       }
+
       var role = (session.role || '').toLowerCase();
       if (role === 'faculty') role = 'teacher';
 
@@ -169,21 +138,11 @@
         var req = requiredRole.toLowerCase();
         if (req === 'faculty') req = 'teacher';
 
-        if (role !== req) {
-          console.warn(`[ERPAuth] Note: page role is ${req}, active session role is ${role}`);
-          if ((req === 'teacher' || req === 'faculty') && (role === 'teacher' || role === 'faculty')) {
-            return session;
-          }
-          if (req === 'student') {
-            session.role = 'student';
-            this.setSession(session, true);
-            return session;
-          }
-          if (req === 'teacher') {
-            session.role = 'teacher';
-            this.setSession(session, true);
-            return session;
-          }
+        if (role !== req && role !== 'super_admin' && !(role === 'admin' && req === 'teacher')) {
+          console.warn(`[ERPAuth] Forbidden: Required role '${req}', active session role is '${role}'`);
+          alert('Access Denied: You do not have permission to access this page.');
+          window.location.href = (role === 'teacher') ? 'teacher-dashboard.html' : 'student-dashboard.html';
+          return null;
         }
       }
       return session;

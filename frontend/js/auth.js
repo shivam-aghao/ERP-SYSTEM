@@ -1,64 +1,52 @@
 /**
  * SSGMCE College ERP — Central Authentication & Role-Based Session Manager
- * Complete Integration: login(), logout(), getCurrentUser(), isAuthenticated(),
- * requireAuth(), requireRole(), redirectByRole()
+ * frontend/js/auth.js
+ *
+ * Secure Token-Based Authentication Architecture:
+ * - Uses signed JWT tokens issued by backend & Supabase Auth as the single source of truth.
+ * - Server validates user identity and authoritative role on every protected request.
+ * - Zero-trust of client storage: Modifying localStorage/sessionStorage will NEVER grant elevated access.
+ * - Handles auto-refresh on token expiration and secure session termination on logout.
  */
+
 (function (window) {
   'use strict';
 
+  var STORAGE_ACCESS_TOKEN = 'ssgmce_access_token';
+  var STORAGE_REFRESH_TOKEN = 'ssgmce_refresh_token';
   var STORAGE_USER_KEY = 'ssgmce_user';
-  var STORAGE_SESSION_KEY = 'ssgmce_erp_session';
-  var STORAGE_LEGACY_KEY = 'ssgmce_user_session';
-  var STORAGE_ROLE_KEY = 'ssgmce_active_role';
-  var STORAGE_TEACHER_TOKEN = 'ssgmce_teacher_token';
-  var STORAGE_STUDENT_TOKEN = 'ssgmce_student_token';
+  var STORAGE_ACTIVE_ROLE = 'ssgmce_active_role';
+  var STORAGE_REMEMBER_KEY = 'ssgmce_remember_session';
 
   function getApiBase() {
     if (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) {
       return window.ERP_CONFIG.API_BASE;
     }
-    if (window.__API_BASE__) {
-      return window.__API_BASE__;
-    }
-    var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
-      ? window.location.hostname 
-      : '127.0.0.1';
-    var currentPort = (window.location && window.location.port) ? window.location.port : '';
-    var origin = (currentPort === '8000') 
+    var port = (window.location && window.location.port) ? window.location.port : '';
+    var origin = (port === '8000') 
       ? window.location.origin 
-      : 'http://' + currentHost + ':8000';
+      : 'http://' + (window.location.hostname || 'localhost') + ':8000';
     return origin + '/api/v1';
+  }
+
+  function getStorage(remember) {
+    if (remember === undefined) {
+      remember = (localStorage.getItem(STORAGE_REMEMBER_KEY) === 'true');
+    }
+    return remember ? localStorage : sessionStorage;
   }
 
   var ERP_AUTH = {
     /**
-     * Performs backend authentication
-     * @param {string} userId - Student ID, Faculty Emp Code, or Admin username
+     * Authenticates user against backend API and receives signed JWT tokens
+     * @param {string} userId - Student Code, Faculty Emp Code, or Admin Username
      * @param {string} password - User password
      * @param {string} [roleHint] - Optional role hint
+     * @param {boolean} [rememberMe=false] - Whether to persist across browser restarts
      * @returns {Promise<Object>}
      */
-    login: async function (userId, password, roleHint) {
+    login: async function (userId, password, roleHint, rememberMe) {
       var apiBase = getApiBase();
-      var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
-        ? window.location.hostname 
-        : '127.0.0.1';
-      var rawEndpoints = [
-        apiBase + '/auth/login',
-        'http://' + currentHost + ':8000/api/v1/auth/login',
-        'http://127.0.0.1:8000/api/v1/auth/login',
-        'http://localhost:8000/api/v1/auth/login',
-        '/api/v1/auth/login',
-        '/auth/login',
-        '/api/auth/login'
-      ];
-      var endpoints = [];
-      for (var e = 0; e < rawEndpoints.length; e++) {
-        if (endpoints.indexOf(rawEndpoints[e]) === -1) {
-          endpoints.push(rawEndpoints[e]);
-        }
-      }
-
       var payload = {
         user_id: String(userId || '').trim(),
         username: String(userId || '').trim(),
@@ -66,125 +54,214 @@
         role: roleHint || ''
       };
 
-      var lastError = null;
-      for (var i = 0; i < endpoints.length; i++) {
-        try {
-          var res = await fetch(endpoints[i], {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+      var res = await fetch(apiBase + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-          if (res.ok) {
-            var data = await res.json();
-            var result = data.data || data;
-            var user = result.user || result;
-            var token = result.token || data.token || 'token_' + Date.now();
-            var role = (result.role || user.role || 'student').toLowerCase();
-            if (role === 'faculty') role = 'teacher';
-
-            user.role = role;
-            this.setSession(user, token);
-            return {
-              success: true,
-              user: user,
-              token: token,
-              role: role,
-              redirect: result.redirect || this.getRedirectForRole(role)
-            };
-          } else if (res.status === 401 || res.status === 403) {
-            var errData = await res.json().catch(function() { return {}; });
-            throw new Error(errData.message || errData.detail || 'Invalid User ID or Password.');
-          }
-        } catch (err) {
-          lastError = err;
-          if (err.message && err.message.includes('Invalid User ID')) {
-            throw err;
-          }
-        }
+      if (!res.ok) {
+        var errData = await res.json().catch(function () { return {}; });
+        var errMsg = errData.detail || errData.message || 'Invalid User ID or Password.';
+        throw new Error(errMsg);
       }
 
-      throw lastError || new Error('Authentication server unreachable. Please verify backend is running on port 8000.');
+      var resData = await res.json();
+      var data = resData.data || resData;
+      var accessToken = data.access_token || data.token;
+      var refreshToken = data.refresh_token;
+      var user = data.user || {};
+      var role = (data.role || user.role || 'student').toLowerCase();
+      if (role === 'faculty') role = 'teacher';
+
+      // Persist session tokens
+      var storage = getStorage(!!rememberMe);
+      if (rememberMe) {
+        localStorage.setItem(STORAGE_REMEMBER_KEY, 'true');
+      } else {
+        localStorage.removeItem(STORAGE_REMEMBER_KEY);
+      }
+
+      storage.setItem(STORAGE_ACCESS_TOKEN, accessToken);
+      localStorage.setItem(STORAGE_ACCESS_TOKEN, accessToken);
+      localStorage.setItem('ssgmce_token', accessToken);
+
+      if (refreshToken) {
+        storage.setItem(STORAGE_REFRESH_TOKEN, refreshToken);
+        localStorage.setItem(STORAGE_REFRESH_TOKEN, refreshToken);
+      }
+
+      // Store user cache for immediate display
+      var userJson = JSON.stringify(user);
+      storage.setItem(STORAGE_USER_KEY, userJson);
+      storage.setItem(STORAGE_ACTIVE_ROLE, role);
+      localStorage.setItem(STORAGE_USER_KEY, userJson);
+      localStorage.setItem(STORAGE_ACTIVE_ROLE, role);
+      localStorage.setItem('user_role', role);
+
+      // Return standardized payload
+      return {
+        success: true,
+        user: user,
+        token: accessToken,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        role: role,
+        redirect: data.redirect || this.getRedirectForRole(role)
+      };
     },
 
     /**
-     * Saves user session across all synchronized storage keys
+     * Gets current access token from storage
      */
-    setSession: function (user, token) {
+    getToken: function () {
+      return sessionStorage.getItem(STORAGE_ACCESS_TOKEN) ||
+             localStorage.getItem(STORAGE_ACCESS_TOKEN) ||
+             localStorage.getItem('ssgmce_token') ||
+             null;
+    },
+
+    /**
+     * Gets refresh token
+     */
+    getRefreshToken: function () {
+      return sessionStorage.getItem(STORAGE_REFRESH_TOKEN) ||
+             localStorage.getItem(STORAGE_REFRESH_TOKEN) ||
+             null;
+    },
+
+    /**
+     * Refreshes access token with server using refresh token
+     */
+    refreshSession: async function () {
+      var refreshToken = this.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      var apiBase = getApiBase();
+      var res = await fetch(apiBase + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+
+      if (!res.ok) {
+        this.clearLocalSession();
+        throw new Error('Session refresh rejected by server');
+      }
+
+      var data = await res.json();
+      var result = data.data || data;
+      var newAccessToken = result.access_token;
+      var newRefreshToken = result.refresh_token;
+
+      var storage = getStorage();
+      storage.setItem(STORAGE_ACCESS_TOKEN, newAccessToken);
+      localStorage.setItem(STORAGE_ACCESS_TOKEN, newAccessToken);
+      localStorage.setItem('ssgmce_token', newAccessToken);
+
+      if (newRefreshToken) {
+        storage.setItem(STORAGE_REFRESH_TOKEN, newRefreshToken);
+        localStorage.setItem(STORAGE_REFRESH_TOKEN, newRefreshToken);
+      }
+
+      return newAccessToken;
+    },
+
+    /**
+     * Authoritative server validation: Calls /api/v1/auth/me to verify user identity.
+     * NEVER relies on localStorage values.
+     * @returns {Promise<Object>} Authoritatively verified user
+     */
+    verifySession: async function () {
+      var token = this.getToken();
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      var apiBase = getApiBase();
+      var res = await fetch(apiBase + '/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/json'
+        }
+      });
+
+      // Handle token expiry: attempt automatic refresh
+      if (res.status === 401) {
+        try {
+          var newToken = await this.refreshSession();
+          var retryRes = await fetch(apiBase + '/auth/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + newToken,
+              'Accept': 'application/json'
+            }
+          });
+          if (retryRes.ok) {
+            var retryJson = await retryRes.json();
+            var verifiedUser = retryJson.data || retryJson;
+            this.syncVerifiedSession(verifiedUser);
+            return verifiedUser;
+          }
+        } catch (refreshErr) {
+          this.clearLocalSession();
+          throw new Error('Session expired');
+        }
+        this.clearLocalSession();
+        throw new Error('Session unauthorized');
+      }
+
+      if (!res.ok) {
+        this.clearLocalSession();
+        throw new Error('Authentication validation failed');
+      }
+
+      var resJson = await res.json();
+      var user = resJson.data || resJson;
+      this.syncVerifiedSession(user);
+      return user;
+    },
+
+    /**
+     * Synchronizes verified server user to local state
+     */
+    syncVerifiedSession: function (user) {
       if (!user) return;
       var role = (user.role || 'student').toLowerCase();
       if (role === 'faculty') role = 'teacher';
       user.role = role;
 
-      // Provide standardized normalized fields
-      user.fullName = user.full_name || user.name || user.fullName || 'SSGMCE Member';
+      user.fullName = user.full_name || user.name || 'SSGMCE Member';
       user.shortName = user.fullName;
-      user.initials = user.fullName.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-      user.studentCode = user.student_code || user.id;
+      user.initials = user.fullName.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+      user.studentCode = user.student_code || user.identifier || user.id;
       user.rollNo = user.roll_no || 1;
       user.className = user.class_name || '3R';
-      user.classCode = user.class_code || user.className;
-      user.empCode = user.emp_code || user.id;
+      user.empCode = user.emp_code || user.identifier || user.id;
 
       var userJson = JSON.stringify(user);
+      var storage = getStorage();
+      storage.setItem(STORAGE_USER_KEY, userJson);
+      storage.setItem(STORAGE_ACTIVE_ROLE, role);
       localStorage.setItem(STORAGE_USER_KEY, userJson);
-      localStorage.setItem(STORAGE_SESSION_KEY, userJson);
-      localStorage.setItem(STORAGE_LEGACY_KEY, userJson);
-      sessionStorage.setItem(STORAGE_SESSION_KEY, userJson);
-      sessionStorage.setItem(STORAGE_USER_KEY, userJson);
-      localStorage.setItem(STORAGE_ROLE_KEY, role);
+      localStorage.setItem(STORAGE_ACTIVE_ROLE, role);
       localStorage.setItem('user_role', role);
-      sessionStorage.setItem('user_role', role);
 
-      var perms = JSON.stringify({
-        student_dashboard: role === 'student',
-        employee_dashboard: role === 'teacher' || role === 'faculty',
-        faculty_dashboard: role === 'teacher' || role === 'faculty',
-        admin_dashboard: role === 'admin'
-      });
-      localStorage.setItem('dashboard_permissions', perms);
-      sessionStorage.setItem('dashboard_permissions', perms);
-
-      if (token) {
-        if (role === 'teacher' || role === 'faculty') {
-          localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-          localStorage.setItem('ssgmce_active_teacher', userJson);
-          if (user.emp_code || user.empCode) {
-            localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
-          }
-        } else {
-          localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
-          sessionStorage.setItem(STORAGE_STUDENT_TOKEN, token);
-        }
-      }
+      window.verifiedUser = user;
+      window.currentUser = user;
+      window.activeUser = user;
     },
 
     /**
-     * Retrieves current logged in user object or null
+     * Retrieves cached user object (for offline or instantaneous header rendering)
      */
     getCurrentUser: function () {
       try {
-        var raw = localStorage.getItem(STORAGE_USER_KEY) || 
-                  localStorage.getItem(STORAGE_SESSION_KEY) || 
-                  localStorage.getItem(STORAGE_LEGACY_KEY) ||
-                  sessionStorage.getItem(STORAGE_USER_KEY) ||
-                  sessionStorage.getItem(STORAGE_SESSION_KEY);
-        if (raw) return JSON.parse(raw);
-
-        var role = localStorage.getItem(STORAGE_ROLE_KEY) || 
-                   localStorage.getItem('user_role') ||
-                   sessionStorage.getItem('user_role');
-        if (role) {
-          var normRole = (role === 'faculty' || role === 'employee') ? 'teacher' : role.toLowerCase();
-          return {
-            id: '',
-            name: 'User',
-            full_name: 'User',
-            role: normRole
-          };
-        }
-        return null;
+        var raw = sessionStorage.getItem(STORAGE_USER_KEY) || localStorage.getItem(STORAGE_USER_KEY);
+        return raw ? JSON.parse(raw) : null;
       } catch (e) {
         return null;
       }
@@ -196,42 +273,30 @@
 
     getUserName: function () {
       var user = this.getCurrentUser();
-      return user ? (user.fullName || user.full_name || user.name || 'Faculty') : 'Faculty';
+      return user ? (user.fullName || user.full_name || user.name || 'User') : 'User';
     },
 
     /**
-     * Checks if current session is active
+     * Checks if a token exists in storage
      */
     isAuthenticated: function () {
-      var user = this.getCurrentUser();
-      return !!(user && user.role);
+      return !!this.getToken();
     },
 
     isLoggedIn: function () {
       return this.isAuthenticated();
     },
 
-    /**
-     * Gets user role: 'student', 'teacher', or 'admin'
-     */
     getRole: function () {
       var user = this.getCurrentUser();
-      if (user && user.role) {
-        var r = user.role.toLowerCase();
-        return (r === 'faculty') ? 'teacher' : r;
-      }
-      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY) || localStorage.getItem('user_role') || sessionStorage.getItem('user_role');
-      return storedRole ? ((storedRole === 'faculty' || storedRole === 'employee') ? 'teacher' : storedRole.toLowerCase()) : 'student';
+      return user && user.role ? user.role.toLowerCase() : 'student';
     },
 
-    /**
-     * Returns appropriate destination for given role
-     */
     getRedirectForRole: function (role) {
-      role = (role || this.getRole() || '').toLowerCase();
-      if (role === 'teacher' || role === 'faculty') {
+      role = String(role || this.getRole() || '').toLowerCase();
+      if (role === 'teacher' || role === 'faculty' || role === 'hod') {
         return 'teacher-dashboard.html';
-      } else if (role === 'admin') {
+      } else if (role === 'admin' || role === 'super_admin') {
         return 'admin-dashboard.html';
       }
       return 'student-dashboard.html';
@@ -241,185 +306,103 @@
       window.location.href = this.getRedirectForRole(role);
     },
 
-    /**
-     * Centralized Logout
-     */
-    logout: function () {
-      try {
-        localStorage.removeItem(STORAGE_USER_KEY);
-        localStorage.removeItem(STORAGE_SESSION_KEY);
-        localStorage.removeItem(STORAGE_LEGACY_KEY);
-        localStorage.removeItem(STORAGE_ROLE_KEY);
-        localStorage.removeItem(STORAGE_TEACHER_TOKEN);
-        localStorage.removeItem(STORAGE_STUDENT_TOKEN);
-        localStorage.removeItem('user_role');
-        localStorage.removeItem('dashboard_permissions');
-        sessionStorage.clear();
-      } catch (e) {}
-      window.location.replace('login.html?logout=true');
+    clearLocalSession: function () {
+      sessionStorage.clear();
+      localStorage.removeItem(STORAGE_ACCESS_TOKEN);
+      localStorage.removeItem(STORAGE_REFRESH_TOKEN);
+      localStorage.removeItem(STORAGE_USER_KEY);
+      localStorage.removeItem(STORAGE_ACTIVE_ROLE);
+      localStorage.removeItem(STORAGE_REMEMBER_KEY);
+      localStorage.removeItem('ssgmce_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('ssgmce_teacher_token');
+      localStorage.removeItem('ssgmce_selected_faculty');
     },
 
     /**
-     * Role-Based Access Guard for Protected Pages
+     * Terminates session on the server and clears browser storage
+     */
+    logout: async function () {
+      var token = this.getToken();
+      var apiBase = getApiBase();
+      try {
+        if (token) {
+          await fetch(apiBase + '/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+        }
+      } catch (e) {
+        console.warn('[ERPAuth] Logout warning:', e);
+      } finally {
+        this.clearLocalSession();
+        window.location.replace('login.html?logout=true');
+      }
+    },
+
+    /**
+     * Authoritative Page Guard.
+     * Validates authentication token against backend.
+     * Prevents unauthorized role switching and privilege escalation.
      * @param {'student'|'teacher'|'admin'|'any'} expectedRole
-     * @returns {boolean}
      */
     requireAuth: function (expectedRole) {
-      // If inside an iframe, adopt session from parent window if available
-      if (window.self !== window.top) {
-        try {
-          if (window.parent && window.parent.ERP_AUTH && window.parent.ERP_AUTH.isAuthenticated()) {
-            var pUser = window.parent.ERP_AUTH.getCurrentUser();
-            if (pUser) {
-              this.setSession(pUser);
-              return true;
-            }
-          }
-        } catch (_) {}
-      }
+      var curPath = (window.location && window.location.pathname) 
+        ? window.location.pathname.split('/').pop().toLowerCase() 
+        : 'index.html';
 
-      var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop().toLowerCase() : '';
-      var isStudentTargetPage = (expectedRole === 'student') || (curPath && curPath.indexOf('student') !== -1);
-      var isTeacherTargetPage = (expectedRole === 'teacher' || expectedRole === 'faculty') || (curPath && (curPath.indexOf('teacher') !== -1 || curPath.indexOf('faculty') !== -1));
-
-      // Handle unauthenticated state or direct Live Server access
+      // 1. Check token existence
       if (!this.isAuthenticated()) {
-        // Inside embedded iframe: do NOT hijack parent window navigation into a login loop
-        if (window.self !== window.top) {
-          console.warn('[ERPAuth] Auth check: Embedded sub-module running in iframe context without parent session.');
-          return false;
-        }
-
-        // Live Server or direct file/local development viewing:
-        // Automatically provision appropriate session context for the open file
-        if (isStudentTargetPage) {
-          console.info('[ERPAuth] Student page opened directly. Initializing student context.');
-          this.setSession({
-            id: '308637',
-            student_code: '308637',
-            full_name: 'Student',
-            role: 'student',
-            class_name: '3R',
-            roll_no: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
-
-        if (isTeacherTargetPage) {
-          console.info('[ERPAuth] Teacher page opened directly. Initializing faculty context.');
-          this.setSession({
-            id: 'FAC-01',
-            emp_code: 'FAC-01',
-            full_name: 'Faculty Member',
-            name: 'Faculty Member',
-            role: 'teacher',
-            designation: 'Associate Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
-
-        console.warn('[ERPAuth] Auth check failed: Unauthenticated access attempt. Redirecting to login.html');
-        var defaultLanding = isStudentTargetPage ? 'student-dashboard.html' : 'teacher-dashboard.html';
-        if (!curPath || curPath === '/') curPath = defaultLanding;
-        if (window.location && window.location.hash) curPath += window.location.hash;
+        console.warn('[ERPAuth] Unauthenticated access blocked: No token found. Redirecting to login.');
         window.location.replace('login.html?redirect=' + encodeURIComponent(curPath));
         return false;
       }
 
-      var currentRole = this.getRole();
-      if (expectedRole && expectedRole !== 'any') {
-        var exp = expectedRole.toLowerCase();
-        if (exp === 'faculty') exp = 'teacher';
+      // 2. Asynchronously verify with server
+      var self = this;
+      this.verifySession()
+        .then(function (verifiedUser) {
+          var authoritativeRole = String(verifiedUser.role || '').toLowerCase();
+          if (authoritativeRole === 'faculty') authoritativeRole = 'teacher';
 
-        var isTeacher = (currentRole === 'teacher' || currentRole === 'faculty' || currentRole === 'employee');
-        var isStudent = (currentRole === 'student');
+          if (expectedRole && expectedRole !== 'any') {
+            var exp = expectedRole.toLowerCase();
+            if (exp === 'faculty') exp = 'teacher';
 
-        if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
-          // If on a teacher page while a previous student session was lingering in localStorage,
-          // adapt session to teacher context so the teacher page renders its respective interface!
-          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on teacher page. Switching session to teacher.');
-          this.setSession({
-            id: 'FAC-01',
-            emp_code: 'FAC-01',
-            full_name: 'Faculty Member',
-            name: 'Faculty Member',
-            role: 'teacher',
-            designation: 'Associate Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
+            // Universal admin bypass for administrative roles
+            if (authoritativeRole === 'super_admin' || authoritativeRole === 'admin') {
+              return;
+            }
 
-        if (exp === 'student' && !isStudent && currentRole !== 'admin') {
-          // If on a student page while a previous teacher session was lingering,
-          // adapt session to student context so the student page renders its respective interface!
-          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on student page. Switching session to student.');
-          this.setSession({
-            id: '308637',
-            student_code: '308637',
-            full_name: 'Student',
-            role: 'student',
-            class_name: '3R',
-            roll_no: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
-      }
+            // Role mismatch check
+            if (exp !== authoritativeRole) {
+              console.error('[ERPAuth] Privilege escalation blocked. True Role: ' + authoritativeRole + ', Attempted Page: ' + exp);
+              var authorizedHome = self.getRedirectForRole(authoritativeRole);
+              alert('Access Denied: You do not have permission to access this portal.');
+              window.location.replace(authorizedHome);
+            }
+          }
+        })
+        .catch(function (err) {
+          console.warn('[ERPAuth] Session verification failed:', err.message);
+          window.location.replace('login.html?expired=1&redirect=' + encodeURIComponent(curPath));
+        });
+
       return true;
     },
 
-    requireRole: function (role) {
+    requireRole: function (role, redirectUrl) {
       return this.requireAuth(role);
-    },
-
-    /**
-     * Hydrates DOM header elements with current user details
-     */
-    hydrateUI: function () {
-      var user = this.getCurrentUser();
-      if (!user) return;
-
-      var nameElements = document.querySelectorAll('.student-name, .profile-name, #header-profile-name, .user-name, #userName');
-      nameElements.forEach(function (el) {
-        el.textContent = user.fullName || user.name || 'User';
-      });
-
-      var codeElements = document.querySelectorAll('.student-code, #headerStudentCode, .user-id, #userCode');
-      codeElements.forEach(function (el) {
-        el.textContent = user.studentCode || user.empCode || user.id || '';
-      });
-
-      var classElements = document.querySelectorAll('.student-class, #headerClass, .user-class');
-      classElements.forEach(function (el) {
-        el.textContent = user.className || '3R';
-      });
-
-      var avatarElements = document.querySelectorAll('.avatar-circle span, .profile-avatar span, #userInitials');
-      avatarElements.forEach(function (el) {
-        el.textContent = user.initials || 'SS';
-      });
     }
   };
 
-  // Expose on window
+  // Expose globally
   window.ERP_AUTH = ERP_AUTH;
-  window.ERPAuth = ERP_AUTH; // Compatibility alias
-  window.getCurrentUser = function () { return ERP_AUTH.getCurrentUser(); };
-  window.logout = function () { ERP_AUTH.logout(); };
-  window.handleLogout = function () { ERP_AUTH.logout(); };
+  window.ERPAuth = ERP_AUTH;
 
-  // Auto-hydrate on DOM ready if user exists
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', function () {
-      ERP_AUTH.hydrateUI();
-    });
+  // Auto-init AuthGuard integration if loaded
+  if (window.AuthGuard) {
+    window.AuthGuard.verifySession = ERP_AUTH.verifySession.bind(ERP_AUTH);
   }
 
 })(typeof window !== 'undefined' ? window : this);

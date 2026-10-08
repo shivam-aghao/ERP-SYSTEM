@@ -46,6 +46,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
 from backend.config.settings import settings
 from backend.config.database import engine, SessionLocal, get_db, get_supabase_client
+from backend.auth.dependencies import get_optional_user
+from backend.auth.models import AuthenticatedUser
+from backend.rbac.service import RBACService
+from backend.rbac.models import Permission
 
 # Supabase Client Singleton
 supabase_client = get_supabase_client()
@@ -210,7 +214,7 @@ class TimetableAssessmentUpdate(BaseModel):
     class_code: Optional[str] = None
 
 def verify_faculty_or_admin(request: Request):
-    """Enforces strict role permissions: students are read-only; only faculty/admin can schedule."""
+    """Enforces strict role permissions: students and accountants are read-only; only faculty/admin can schedule."""
     headers = {k.lower(): v for k, v in request.headers.items()} if hasattr(request.headers, "items") else {}
     auth_header = headers.get("authorization", "")
     token = ""
@@ -221,12 +225,27 @@ def verify_faculty_or_admin(request: Request):
 
     role_header = headers.get("x-user-role", "").lower()
 
-    # Reject student role attempts with 403 Forbidden
-    if token.startswith("st_token_") or role_header == "student" or token == "demo-student-token-ssgmce-2026":
+    # Reject student and accountant role attempts with 403 Forbidden
+    if token.startswith("st_token_") or role_header in ("student", "accountant") or token == "demo-student-token-ssgmce-2026":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Students have read-only access. Only faculty can schedule, edit, or manage assessments."
+            detail="Forbidden: Students and accountants have read-only access. Only faculty and admins can manage assessments."
         )
+
+    if token and not token.startswith("teach_token_") and not token.startswith("admin_token_"):
+        try:
+            from backend.auth.jwt_handler import decode_token
+            payload = decode_token(token, verify_exp=False)
+            token_role = (payload.get("role") or "").lower()
+            if token_role in ("student", "accountant"):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Forbidden: Role '{token_role}' cannot manage timetable assessments."
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
 
     return {"role": "faculty", "token": token}
 
@@ -344,9 +363,9 @@ def health_check():
         "service": "SSGMCE College ERP Unified Backend",
         "framework": "FastAPI + SQLAlchemy",
         "database": "connected",
-        "database_type": "SQLite + Supabase Cloud",
+        "database_type": "Cloud Supabase PostgreSQL",
         "supabase": "connected" if supabase_online else "available",
-        "supabase_url": DEFAULT_SUPABASE_URL,
+        "supabase_url": settings.SUPABASE_URL,
         "port": 8000
     }
 
@@ -367,10 +386,24 @@ def supabase_status_endpoint():
             error_msg = str(ex)
     return success_response({
         "supabase_connected": connected,
-        "supabase_url": DEFAULT_SUPABASE_URL,
+        "supabase_url": settings.SUPABASE_URL,
         "teachers_in_supabase": teachers_count,
         "students_in_supabase": students_count,
         "error": error_msg
+    })
+
+
+@api.get("/system/config", tags=["System Diagnostics"])
+def get_public_system_config():
+    """
+    Returns public client configuration for frontend initialization.
+    NEVER exposes database passwords, service-role keys, or server secrets.
+    """
+    return success_response({
+        "supabase_url": settings.SUPABASE_URL,
+        "supabase_anon_key": settings.SUPABASE_ANON_KEY,
+        "project_name": settings.PROJECT_NAME,
+        "version": settings.VERSION
     })
 
 
@@ -389,33 +422,58 @@ def status_check(db: Session = Depends(get_db)):
 # ==============================================================================
 # 5. AUTHENTICATION MODULE
 # ==============================================================================
-from backend.services.auth_service import AuthService
+# 5. AUTHENTICATION MODULE
+# ==============================================================================
+from backend.auth import (
+    AuthenticationService,
+    AuthenticatedUser,
+    LoginPayload,
+    RefreshTokenRequest,
+    get_current_user,
+    get_optional_user,
+    require_student,
+    require_teacher,
+    require_admin
+)
+from backend.auth.dependencies import get_token_from_request
 
 @app.post("/api/v1/auth/login", tags=["Authentication"])
 @app.post("/api/auth/login", tags=["Authentication"])
 @app.post("/auth/login", tags=["Authentication"])
 @api.post("/auth/login", tags=["Authentication"])
-def auth_login(payload: LoginRequest, db: Session = Depends(get_db)):
-    result = AuthService.authenticate_user(payload, db)
-    resp = success_response(result, "Authenticated successfully")
-    resp["user"] = result.get("user")
-    resp["token"] = result.get("token")
-    resp["role"] = result.get("role")
-    resp["redirect"] = result.get("redirect")
+def auth_login(payload: LoginPayload, db: Session = Depends(get_db)):
+    result = AuthenticationService.authenticate(payload, db)
+    resp = success_response(result.model_dump(), "Authenticated successfully")
+    resp["user"] = result.user
+    resp["token"] = result.access_token
+    resp["access_token"] = result.access_token
+    resp["refresh_token"] = result.refresh_token
+    resp["role"] = result.role
+    resp["redirect"] = result.redirect
     return resp
 
 
+@app.post("/api/v1/auth/refresh", tags=["Authentication"])
+@api.post("/auth/refresh", tags=["Authentication"])
+def auth_refresh(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
+    result = AuthenticationService.refresh_access_token(payload.refresh_token, db)
+    return success_response(result, "Session refreshed successfully")
+
+
+@app.post("/api/v1/auth/logout", tags=["Authentication"])
+@app.post("/auth/logout", tags=["Authentication"])
 @api.post("/auth/logout", tags=["Authentication"])
-def auth_logout():
+def auth_logout(token: Optional[str] = Depends(get_token_from_request)):
+    if token:
+        AuthenticationService.revoke_token(token)
     return success_response({"logged_out": True}, "Session terminated successfully")
 
+
+@app.get("/api/v1/auth/me", tags=["Authentication"])
+@app.get("/auth/me", tags=["Authentication"])
 @api.get("/auth/me", tags=["Authentication"])
-def auth_me(role: str = Query("student"), db: Session = Depends(get_db)):
-    if role == "student":
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
-        return success_response(dict(st._mapping) if st else {})
-    t = db.execute(text("SELECT * FROM teachers LIMIT 1")).fetchone()
-    return success_response(dict(t._mapping) if t else {})
+def auth_me(current_user: AuthenticatedUser = Depends(get_current_user)):
+    return success_response(current_user.model_dump(), "User identity verified")
 
 # ==============================================================================
 # 6. MASTER DATA MODULE (CLASSES, SUBJECTS, DEPARTMENTS)
@@ -871,12 +929,28 @@ def get_attendance_draft(class_id: str, subject_id: str, session_date: str, peri
     return success_response(dict(row._mapping))
 
 @api.post("/attendance/draft", tags=["Attendance Marking"])
-def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends(get_db)):
+def save_attendance_draft(
+    payload: AttendanceDraftRequest,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user:
+        if not RBACService.has_any_permission(current_user, [Permission.ATTENDANCE_CREATE.value, Permission.ATTENDANCE_EDIT.value]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You do not have permission to create or edit attendance drafts."
+            )
+        RBACService.verify_teacher_assignment(
+            current_user=current_user,
+            class_id=payload.class_id,
+            subject_id=payload.subject_id,
+            db=db
+        )
     sess_id = str(uuid.uuid4())
     db.execute(text("""
         INSERT INTO attendance_sessions
         (id, teacher_id, class_id, subject_id, session_date, period_number, status, created_at, updated_at)
-        VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        VALUES (:id, (SELECT id FROM teachers LIMIT 1), (SELECT id FROM classes WHERE id::text = :cid OR class_name = :cid LIMIT 1), (SELECT id FROM subjects WHERE id::text = :sid OR code = :sid LIMIT 1), :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT (id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
@@ -886,7 +960,23 @@ def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends
     return success_response({"session_id": sess_id}, "Attendance draft saved")
 
 @api.post("/attendance/submit", tags=["Attendance Marking"])
-def submit_attendance(payload: AttendanceSubmitRequest, db: Session = Depends(get_db)):
+def submit_attendance(
+    payload: AttendanceSubmitRequest,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user:
+        if not RBACService.has_permission(current_user, Permission.ATTENDANCE_CREATE.value):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You do not have permission to submit attendance sessions."
+            )
+        RBACService.verify_teacher_assignment(
+            current_user=current_user,
+            class_id=payload.class_id,
+            subject_id=payload.subject_id,
+            db=db
+        )
     data = AttendanceService.submit_attendance(payload, db)
     return success_response(data, "Attendance recorded successfully")
 
@@ -1306,9 +1396,29 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
 # 8. STUDENT PORTAL MODULE (ACADEMICS, TIMETABLE, SYLLABUS, ETC.)
 # Dual routes: both /student/... and root /api/v1/...
 # ==============================================================================
+def resolve_student_code_helper(student_code: Optional[str], current_user: Optional[AuthenticatedUser]) -> Optional[str]:
+    if current_user:
+        role = (current_user.role or "").lower()
+        if role == "student":
+            user_code = current_user.identifier
+            if student_code and student_code.strip() not in (user_code, current_user.user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: Students are only permitted to access their own academic records."
+                )
+            return user_code
+        if student_code:
+            return student_code.strip()
+    return student_code.strip() if student_code else None
+
 @api.get("/student/profile", tags=["Student Portal"])
 @api.get("/profile", tags=["Student Portal"])
-def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def get_student_profile(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    student_code = resolve_student_code_helper(student_code, current_user)
     if student_code:
         row = db.execute(
             text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"),
@@ -1330,7 +1440,13 @@ def get_student_profile(student_code: Optional[str] = Query(None), db: Session =
 @api.put("/profile", tags=["Student Portal"])
 @api.post("/student/profile/update", tags=["Student Portal"])
 @api.post("/profile/update", tags=["Student Portal"])
-def update_student_profile(payload: StudentProfileUpdate, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def update_student_profile(
+    payload: StudentProfileUpdate,
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    student_code = resolve_student_code_helper(student_code, current_user)
     if not student_code:
         st_first = db.execute(text("SELECT student_code FROM students LIMIT 1")).fetchone()
         student_code = st_first[0] if st_first else ""
@@ -1344,7 +1460,12 @@ def update_student_profile(payload: StudentProfileUpdate, student_code: Optional
 
 @api.get("/student/overview", tags=["Student Portal"])
 @api.get("/overview", tags=["Student Portal"])
-def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def get_student_overview(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    student_code = resolve_student_code_helper(student_code, current_user)
     if student_code:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     else:
@@ -1545,7 +1666,7 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
     # 2. Fallback to SQLite if Supabase was empty
     if not sub_dicts:
         subjects = db.execute(
-            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id = :sc"),
+            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id::text = :sc"),
             {"sc": student_code}
         ).fetchall()
         if not subjects:
@@ -1558,7 +1679,7 @@ def get_student_attendance_summary(student_code: str = Query("308637"), db: Sess
                 SELECT ar.*, s.session_date, s.subject_name, s.period_number, s.session_type
                 FROM attendance_records ar
                 JOIN attendance_sessions s ON ar.session_id = s.id
-                WHERE ar.student_id = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
+                WHERE ar.student_id::text = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
                 ORDER BY s.session_date DESC
                 LIMIT 30
             """), {"sc": student_code}
@@ -1689,8 +1810,21 @@ def mark_notification_read(id: str, db: Session = Depends(get_db)):
 @api.get("/student/fees", tags=["Student Portal", "Fee Wallet"])
 @api.get("/fees", tags=["Student Portal", "Fee Wallet"])
 @api.get("/student/fee-wallet", tags=["Student Portal", "Fee Wallet"])
-def get_student_fees(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    sc = student_code or "308637"
+def get_student_fees(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user:
+        if not RBACService.has_permission(current_user, Permission.FEES_VIEW.value):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not possess the required permission 'fees.view'."
+            )
+        sc = RBACService.verify_student_self(current_user, student_code)
+    else:
+        sc = student_code or "308637"
+
     try:
         from backend.services.academic_wallet_service import AcademicWalletService
         wallet = AcademicWalletService.get_student_fee_wallet(sc)
@@ -1707,8 +1841,19 @@ def get_student_fees(student_code: Optional[str] = Query(None), db: Session = De
 
 @api.post("/student/fees/pay", tags=["Student Portal", "Fee Wallet"])
 @api.post("/fees/pay", tags=["Student Portal", "Fee Wallet"])
-def pay_student_fees(payload: Dict[str, Any] = Body(...)):
+def pay_student_fees(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     sc = payload.get("student_code") or "308637"
+    if current_user:
+        if not RBACService.has_permission(current_user, Permission.FEES_CREATE.value):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not possess the required permission 'fees.create'."
+            )
+        sc = RBACService.verify_student_self(current_user, sc)
+
     amount = float(payload.get("amount") or 5000.0)
     method = payload.get("payment_method") or payload.get("paymode") or "upi"
     gateway = payload.get("gateway") or "BillDesk"
@@ -1783,30 +1928,43 @@ def get_student_examination(student_code: Optional[str] = Query(None), db: Sessi
 
 # Step 6 Dedicated Academic & Wallet Endpoints
 @api.get("/student/academic-dashboard", tags=["Student Portal", "Academic Records"])
-def get_student_academic_dashboard_route(student_code: Optional[str] = Query(None)):
+def get_student_academic_dashboard_route(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    sc = RBACService.verify_student_self(current_user, student_code) if current_user else (student_code or "308637")
     from backend.services.academic_wallet_service import AcademicWalletService
-    sc = student_code or "308637"
     data = AcademicWalletService.get_student_academic_dashboard(sc)
     return success_response(data or {})
 
 @api.get("/student/semester-results", tags=["Student Portal", "Academic Records"])
-def get_student_semester_results_route(student_code: Optional[str] = Query(None), semester: Optional[int] = Query(None)):
+def get_student_semester_results_route(
+    student_code: Optional[str] = Query(None),
+    semester: Optional[int] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    sc = RBACService.verify_student_self(current_user, student_code) if current_user else (student_code or "308637")
     from backend.services.academic_wallet_service import AcademicWalletService
-    sc = student_code or "308637"
     results = AcademicWalletService.get_student_semester_results(sc, semester)
     return success_response(results)
 
 @api.get("/student/academic-history", tags=["Student Portal", "Academic Records"])
-def get_student_academic_history_route(student_code: Optional[str] = Query(None)):
+def get_student_academic_history_route(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    sc = RBACService.verify_student_self(current_user, student_code) if current_user else (student_code or "308637")
     from backend.services.academic_wallet_service import AcademicWalletService
-    sc = student_code or "308637"
     history = AcademicWalletService.get_student_academic_history(sc)
     return success_response(history)
 
 @api.get("/student/certificates", tags=["Student Portal", "Certificates"])
-def get_student_certificates_route(student_code: Optional[str] = Query(None)):
+def get_student_certificates_route(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    sc = RBACService.verify_student_self(current_user, student_code) if current_user else (student_code or "308637")
     from backend.services.academic_wallet_service import AcademicWalletService
-    sc = student_code or "308637"
     certs = AcademicWalletService.get_student_certificates(sc)
     return success_response(certs)
 
@@ -1818,22 +1976,52 @@ def verify_certificate_route(verification_code: str):
 
 @api.post("/academic/results/publish", tags=["Academic Records", "Teacher"])
 @api.post("/teacher/results/publish", tags=["Academic Records", "Teacher"])
-def publish_result_route(payload: Dict[str, Any] = Body(...)):
+def publish_result_route(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    if current_user and not RBACService.has_permission(current_user, Permission.MARKS_PUBLISH.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess the required permission 'marks.publish' to publish results."
+        )
     from backend.services.academic_wallet_service import AcademicWalletService
     rid = payload.get("record_id")
-    pby = payload.get("performed_by")
+    pby = payload.get("performed_by") or (current_user.identifier if current_user else None)
     rsn = payload.get("reason", "Official Academic Result Publication")
-    res = AcademicWalletService.publish_result(rid, pby, rsn)
+    res = AcademicWalletService.publish_result(
+        record_id=rid,
+        student_code=payload.get("student_code"),
+        class_name=payload.get("class_name"),
+        semester=int(payload.get("semester", 5)),
+        performed_by=pby,
+        reason=rsn
+    )
     return success_response(res, "Result published")
 
 @api.post("/academic/results/unpublish", tags=["Academic Records", "Teacher"])
 @api.post("/teacher/results/unpublish", tags=["Academic Records", "Teacher"])
-def unpublish_result_route(payload: Dict[str, Any] = Body(...)):
+def unpublish_result_route(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    if current_user and not RBACService.has_any_permission(current_user, [Permission.MARKS_PUBLISH.value, Permission.MARKS_EDIT.value]):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission to unpublish or withhold results."
+        )
     from backend.services.academic_wallet_service import AcademicWalletService
     rid = payload.get("record_id")
-    pby = payload.get("performed_by")
+    pby = payload.get("performed_by") or (current_user.identifier if current_user else None)
     rsn = payload.get("reason", "Withheld for review")
-    res = AcademicWalletService.unpublish_result(rid, pby, rsn)
+    res = AcademicWalletService.unpublish_result(
+        record_id=rid,
+        student_code=payload.get("student_code"),
+        class_name=payload.get("class_name"),
+        semester=int(payload.get("semester", 5)),
+        performed_by=pby,
+        reason=rsn
+    )
     return success_response(res, "Result unpublished")
 
 # ==============================================================================
@@ -1912,7 +2100,16 @@ def get_teacher_quizzes(class_id: Optional[str] = None, db: Session = Depends(ge
 @api.post("/quizzes", tags=["Quiz Management"])
 @api.post("/quiz/teacher/quizzes", tags=["Quiz Management"])
 @api.post("/quiz/quizzes", tags=["Quiz Management"])
-def create_quiz(payload: QuizCreateSchema, db: Session = Depends(get_db)):
+def create_quiz(
+    payload: QuizCreateSchema,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_CREATE.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'quiz.create' to create quizzes."
+        )
     # Verify class exists
     target_class = db.execute(text("SELECT id, class_name FROM classes WHERE id = :cid OR class_name = :cid LIMIT 1"), {"cid": payload.class_id}).fetchone()
     if not target_class:
@@ -1985,7 +2182,16 @@ def get_quiz_details(quiz_id: str, db: Session = Depends(get_db)):
 @api.post("/teacher/quizzes/{quiz_id}/publish", tags=["Quiz Management"])
 @api.put("/quiz/quizzes/{quiz_id}/publish", tags=["Quiz Management"])
 @api.post("/quiz/quizzes/{quiz_id}/publish", tags=["Quiz Management"])
-def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
+def publish_quiz(
+    quiz_id: str,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_PUBLISH.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'quiz.publish' to publish quizzes."
+        )
     q = db.execute(text("SELECT * FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
     if not q:
         raise HTTPException(status_code=404, detail="Quiz not found")
@@ -2103,7 +2309,16 @@ def toggle_quiz_release_results(quiz_id: str, payload: Dict[str, Any] = Body(def
 @api.delete("/quizzes/{quiz_id}", tags=["Quiz Management"])
 @api.delete("/teacher/quizzes/{quiz_id}", tags=["Quiz Management"])
 @api.delete("/quiz/quizzes/{quiz_id}", tags=["Quiz Management"])
-def delete_quiz(quiz_id: str, db: Session = Depends(get_db)):
+def delete_quiz(
+    quiz_id: str,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_DELETE.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'quiz.delete' to delete quizzes."
+        )
     db.execute(text("DELETE FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id})
     db.execute(text("DELETE FROM quiz_attempts WHERE quiz_id = :id"), {"id": quiz_id})
     db.execute(text("DELETE FROM timetable_assessments WHERE id = :tid"), {"tid": f"quiz-tt-{quiz_id}"})
@@ -2675,6 +2890,7 @@ def export_quiz_results(
     quiz_id: str,
     format: str = Query("csv", description="Export format: 'csv', 'xlsx', 'json'"),
     filter: str = Query("all", description="Filter: 'all', 'attempted', 'not_attempted', 'passed', 'failed'"),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -2682,6 +2898,11 @@ def export_quiz_results(
     Generates complete target-class student list, joining ALL enrolled students
     in the targeted class with their quiz attempt, including students who have NOT attempted.
     """
+    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_EXPORT.value):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not possess permission 'quiz.export' to export quiz data."
+        )
     quiz = db.execute(text("SELECT q.*, c.class_name FROM quizzes q LEFT JOIN classes c ON q.class_id = c.id WHERE q.id = :id"), {"id": quiz_id}).fetchone()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
@@ -2795,6 +3016,7 @@ app.include_router(api)
 
 # Include modular routers under /api/v1
 try:
+    from backend.routes.auth import router as auth_router
     from backend.routes.admin import router as admin_router
     from backend.routes.faculty import router as faculty_router
     from backend.routes.attendance import router as attendance_router
@@ -2804,6 +3026,7 @@ try:
     from backend.routes.notifications import router as notifications_router
     from backend.routes.academic_wallet import router as academic_wallet_router
     from backend.routes.management import router as management_router
+    app.include_router(auth_router, prefix="/api/v1")
     app.include_router(admin_router, prefix="/api/v1")
     app.include_router(faculty_router, prefix="/api/v1")
     app.include_router(attendance_router, prefix="/api/v1")
@@ -2813,7 +3036,7 @@ try:
     app.include_router(notifications_router, prefix="/api/v1")
     app.include_router(academic_wallet_router, prefix="/api/v1")
     app.include_router(management_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet, management) included under /api/v1")
+    logger.info("Modular routers (auth, admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet, management) included under /api/v1")
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 

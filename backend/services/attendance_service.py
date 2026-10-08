@@ -23,10 +23,10 @@ class AttendanceService:
         rate = round((present_count / total_count * 100), 2) if total_count > 0 else 0.0
 
         # Look up class_name and subject info
-        c_row = db.execute(text("SELECT class_name FROM classes WHERE id = :cid OR class_name = :cid LIMIT 1"), {"cid": payload.class_id}).fetchone()
+        c_row = db.execute(text("SELECT class_name FROM classes WHERE id::text = :cid OR class_name = :cid LIMIT 1"), {"cid": payload.class_id}).fetchone()
         class_name = c_row[0] if c_row else payload.class_id
 
-        s_row = db.execute(text("SELECT code, name FROM subjects WHERE id = :sid OR code = :sid LIMIT 1"), {"sid": payload.subject_id}).fetchone()
+        s_row = db.execute(text("SELECT code, name FROM subjects WHERE id::text = :sid OR code = :sid LIMIT 1"), {"sid": payload.subject_id}).fetchone()
         subject_code = s_row[0] if s_row else payload.subject_id
         subject_name = s_row[1] if s_row else "Course"
 

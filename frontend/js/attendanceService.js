@@ -84,13 +84,25 @@
         // Direct Cloud Supabase Fallback
         if (!attData && (typeof window !== 'undefined')) {
           try {
-            const sbUrl = 'https://gftqvclenyplnuoocbwe.supabase.co/rest/v1';
-            const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY';
-            let userCode = '308637';
-            try {
-              const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
-              userCode = stored.student_code || stored.studentCode || stored.enrollmentNo || '308637';
-            } catch (e) {}
+            const cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
+            const sbBase = cfg.SUPABASE_URL || 'https://gftqvclenyplnuoocbwe.supabase.co';
+            const sbUrl = sbBase.replace(/\/+$/, '') + '/rest/v1';
+            const sbKey = cfg.SUPABASE_ANON_KEY || (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || '';
+            let userCode = '';
+            if (typeof window !== 'undefined' && window.verifiedUser) {
+              userCode = window.verifiedUser.user_id || window.verifiedUser.student_code || '';
+            }
+            if (!userCode && typeof window !== 'undefined' && window.AuthClient && window.AuthClient.getCurrentUser) {
+              const u = window.AuthClient.getCurrentUser();
+              if (u) userCode = u.user_id || u.student_code || '';
+            }
+            if (!userCode) {
+              try {
+                const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+                userCode = stored.student_code || stored.studentCode || stored.enrollmentNo || stored.user_id || '';
+              } catch (e) {}
+            }
+            if (!userCode) throw new Error('No authenticated student code found');
 
             const sRes = await fetch(`${sbUrl}/student_attendance_subjects?student_code=eq.${encodeURIComponent(userCode)}&order=subject_code`, {
               headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` }

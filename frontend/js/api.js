@@ -109,45 +109,27 @@
         return { user: u, token: tok };
       }
 
-      var storedUser = null;
-      try {
-        storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
-      } catch (e) {}
-
-      var loginId = email || (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'FAC-01';
-      var loginPass = password || 'faculty123';
-      try {
-        var res = await this.request('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: loginId, password: loginPass, user_id: loginId, role: 'teacher' }),
-        });
-        var data = res.data || res;
-        var token = (data && data.token) || res.token || (data && data.access_token);
-        if (token) {
-          this.setToken(token);
-        }
-        if (data && data.user) {
-          localStorage.setItem('ssgmce_user', JSON.stringify(data.user));
-          localStorage.setItem('ssgmce_active_teacher', JSON.stringify(data.user));
-          if (data.user.emp_code) {
-            localStorage.setItem('ssgmce_selected_faculty', data.user.emp_code);
-          }
-        }
-        return data;
-      } catch (err) {
-        console.warn('[TeacherAPI] login note:', err.message);
-        var activeUser = (storedUser && storedUser.name) ? storedUser : {
-          id: '1f33bd6c-cab3-4205-8daa-1ac23b4d3552',
-          name: 'Faculty Member',
-          role: 'teacher',
-          emp_code: 'FAC-01',
-          employeeId: 'FAC-01'
-        };
-        return {
-          user: activeUser,
-          token: this.token || 'teach_token_default'
-        };
+      if (!email || !password) {
+        throw new Error('Email/User ID and password are required');
       }
+
+      var res = await this.request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: email, password: password, user_id: email, role: 'teacher' }),
+      });
+      var data = res.data || res;
+      var token = (data && data.token) || res.token || (data && data.access_token);
+      if (token) {
+        this.setToken(token);
+      }
+      if (data && data.user) {
+        localStorage.setItem('ssgmce_user', JSON.stringify(data.user));
+        localStorage.setItem('ssgmce_active_teacher', JSON.stringify(data.user));
+        if (data.user.emp_code) {
+          localStorage.setItem('ssgmce_selected_faculty', data.user.emp_code);
+        }
+      }
+      return data;
     },
 
     getProfile: async function () {
@@ -235,8 +217,9 @@
             var code = teacherId;
             if (!code) {
               var stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
-              code = stored.emp_code || 'EMP-CSE-1001';
+              code = stored.emp_code || '';
             }
+            if (!code) throw err;
             var resp = await fetch(sUrl + '/rest/v1/timetable_entries?emp_code=eq.' + encodeURIComponent(code) + '&order=slot_index.asc', {
               headers: { 'apikey': sKey, 'Authorization': 'Bearer ' + sKey }
             });

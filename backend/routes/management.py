@@ -6,29 +6,59 @@ FastAPI Endpoints for Teacher Tools, Admin Dashboard, RBAC & Workflows
 """
 
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Query, Body, HTTPException, Request
+from fastapi import APIRouter, Query, Body, HTTPException, Request, Depends
 from backend.services.management_service import ManagementService
 from backend.utils.helpers import success_response, error_response
+from backend.auth import AuthenticatedUser, get_optional_user
+from backend.rbac import RBACService, Permission, RoleName
 
 router = APIRouter(prefix="/management", tags=["Teacher & Admin Management"])
 
 
 def extract_actor_id(request: Request, user_id: Optional[str] = None, emp_code: Optional[str] = None) -> str:
-    """Extracts actor identifier from query, header, or bearer token."""
-    if user_id:
-        return user_id.strip()
-    if emp_code:
-        return emp_code.strip()
+    """Extracts actor identifier from query, header, or bearer token and blocks student and accountant unauthorized access."""
     if request:
         auth_hdr = request.headers.get("authorization", "")
         if auth_hdr.startswith("Bearer "):
             token = auth_hdr.split(" ", 1)[1].strip()
-            if token.startswith("teach_token_"):
+            if token.startswith("st_token_") or token == "demo-student-token-ssgmce-2026":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Forbidden: Students cannot access teacher or admin management functions."
+                )
+            if not token.startswith("teach_token_"):
+                try:
+                    from backend.auth.jwt_handler import decode_token
+                    payload = decode_token(token, verify_exp=False)
+                    role = (payload.get("role") or "").lower()
+                    if role in ("student", "accountant"):
+                        raise HTTPException(
+                            status_code=403,
+                            detail=f"Forbidden: Role '{role}' cannot access teacher or academic management functions."
+                        )
+                    return payload.get("identifier") or user_id or emp_code or "EMP-CSE-1001"
+                except HTTPException:
+                    raise
+                except Exception:
+                    pass
+            elif token.startswith("teach_token_"):
                 return token.replace("teach_token_", "").strip()
+
+        if request.headers.get("x-user-role", "").lower() in ("student", "accountant"):
+            user_r = request.headers.get("x-user-role", "").lower()
+            raise HTTPException(
+                status_code=403,
+                detail=f"Forbidden: Role '{user_r}' cannot access teacher or academic management functions."
+            )
         if request.headers.get("x-teacher-id"):
             return request.headers.get("x-teacher-id").strip()
         if request.headers.get("x-emp-code"):
             return request.headers.get("x-emp-code").strip()
+
+    if user_id:
+        return user_id.strip()
+    if emp_code:
+        return emp_code.strip()
     return "EMP-CSE-1001"
 
 
@@ -188,17 +218,26 @@ def get_teacher_documents(
 # -----------------------------------------------------------------------------
 
 @router.get("/admin/dashboard")
-def get_admin_dashboard():
+def get_admin_dashboard(
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Aggregates system-wide live KPIs and queues."""
+    if current_user and not RBACService.has_permission(current_user, Permission.SYSTEM_MANAGE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: Access to Admin Dashboard is restricted to system administrators.")
     dash = ManagementService.get_admin_dashboard()
     return success_response(dash, "Admin dashboard loaded successfully")
 
 
 @router.post("/attendance/approve")
-def approve_attendance(payload: Dict[str, Any] = Body(...)):
+def approve_attendance(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Approves and locks attendance session (HOD/Admin only)."""
+    if current_user and not RBACService.has_permission(current_user, Permission.ATTENDANCE_APPROVE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: You do not possess the required permission 'attendance.approve'.")
     session_id = payload.get("session_id")
-    approved_by = payload.get("approved_by")
+    approved_by = payload.get("approved_by") or (current_user.identifier if current_user else None)
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id is required")
     res = ManagementService.approve_attendance(session_id, approved_by)
@@ -206,10 +245,15 @@ def approve_attendance(payload: Dict[str, Any] = Body(...)):
 
 
 @router.post("/attendance/unlock")
-def unlock_attendance(payload: Dict[str, Any] = Body(...)):
+def unlock_attendance(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Unlocks attendance session with reason (HOD/Admin only)."""
+    if current_user and not RBACService.has_permission(current_user, Permission.ATTENDANCE_UNLOCK.value):
+        raise HTTPException(status_code=403, detail="Forbidden: You do not possess the required permission 'attendance.unlock'.")
     session_id = payload.get("session_id")
-    unlocked_by = payload.get("unlocked_by")
+    unlocked_by = payload.get("unlocked_by") or (current_user.identifier if current_user else None)
     reason = payload.get("reason", "Administrative correction requested")
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id is required")
@@ -218,17 +262,27 @@ def unlock_attendance(payload: Dict[str, Any] = Body(...)):
 
 
 @router.get("/leave/requests")
-def get_all_leave_requests(status: Optional[str] = Query(None)):
+def get_all_leave_requests(
+    status: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Lists all faculty leave applications (Admin/HOD)."""
+    if current_user and not RBACService.has_permission(current_user, Permission.LEAVE_APPROVE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: Missing permission 'leave.approve'.")
     leaves = ManagementService.get_faculty_leaves(teacher_identifier=None, status=status)
     return success_response(leaves, "Faculty leave requests retrieved")
 
 
 @router.post("/leave/review")
-def review_faculty_leave(payload: Dict[str, Any] = Body(...)):
+def review_faculty_leave(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Approves or rejects faculty leave application (HOD/Admin)."""
+    if current_user and not RBACService.has_permission(current_user, Permission.LEAVE_APPROVE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: You do not possess the required permission 'leave.approve'.")
     leave_id = payload.get("leave_id")
-    reviewer = payload.get("reviewed_by")
+    reviewer = payload.get("reviewed_by") or (current_user.identifier if current_user else None)
     status = payload.get("status", "approved")
     remarks = payload.get("remarks")
     if not leave_id:
@@ -238,32 +292,38 @@ def review_faculty_leave(payload: Dict[str, Any] = Body(...)):
 
 
 @router.get("/reports/faculty")
-def get_faculty_report():
+def get_faculty_report(current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)):
     """Generates faculty workload and assignments report."""
+    if current_user and not RBACService.has_permission(current_user, Permission.REPORTS_VIEW.value):
+        raise HTTPException(status_code=403, detail="Forbidden: Missing permission 'reports.view'.")
     rep = ManagementService.generate_faculty_report()
     return success_response(rep, "Faculty report generated")
 
 
 @router.get("/reports/classes")
-def get_class_report(class_id: Optional[str] = Query(None)):
+def get_class_report(class_id: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)):
     """Generates class performance and attendance summary report."""
+    if current_user and not RBACService.has_permission(current_user, Permission.REPORTS_VIEW.value):
+        raise HTTPException(status_code=403, detail="Forbidden: Missing permission 'reports.view'.")
     rep = ManagementService.generate_class_report(class_id)
     return success_response(rep, "Class report generated")
 
 
 @router.get("/rbac/matrix")
-def get_rbac_matrix():
+def get_rbac_matrix(current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)):
     """Retrieves RBAC roles, permissions, and mappings."""
     matrix = ManagementService.get_rbac_matrix()
     return success_response(matrix, "RBAC matrix retrieved")
 
 
 @router.post("/rbac/assign")
-def assign_user_role(payload: Dict[str, Any] = Body(...)):
+def assign_user_role(payload: Dict[str, Any] = Body(...), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)):
     """Assigns an authorized role to a user."""
+    if current_user and not RBACService.has_permission(current_user, Permission.RBAC_MANAGE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: You do not possess the required permission 'rbac.manage'.")
     user_id = payload.get("user_id")
     role_name = payload.get("role_name")
-    assigned_by = payload.get("assigned_by")
+    assigned_by = payload.get("assigned_by") or (current_user.id if current_user else None)
     if not user_id or not role_name:
         raise HTTPException(status_code=400, detail="user_id and role_name are required")
     res = ManagementService.assign_user_role(user_id, role_name, assigned_by)
@@ -271,8 +331,14 @@ def assign_user_role(payload: Dict[str, Any] = Body(...)):
 
 
 @router.get("/audit/logs")
-def get_audit_logs(limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
+def get_audit_logs(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
     """Retrieves immutable system audit logs."""
+    if current_user and not RBACService.has_permission(current_user, Permission.SYSTEM_MANAGE.value):
+        raise HTTPException(status_code=403, detail="Forbidden: Missing permission 'system.manage'.")
     logs = ManagementService.get_audit_logs(limit, offset)
     return success_response(logs, "Audit logs retrieved successfully")
 

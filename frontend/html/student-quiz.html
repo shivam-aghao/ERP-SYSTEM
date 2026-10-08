@@ -36,6 +36,8 @@
 
   <!-- Central Config & Auth Guard -->
   <script src="../js/config.js"></script>
+  <script src="../common/auth/auth-client.js"></script>
+  <script src="../common/auth/auth-guard.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
@@ -1518,29 +1520,14 @@
 
 
 
-      // 2. Check login session from localStorage / sessionStorage
-
-      let loginData = null;
-
-      try {
-
-        const raw = sessionStorage.getItem('loginData') || localStorage.getItem('loginData');
-
-        if (raw) loginData = JSON.parse(raw);
-
-      } catch (e) {}
-
-
-
-      let profileData = null;
-
-      try {
-
-        const raw = localStorage.getItem('ssgmce_student_profile_data');
-
-        if (raw) profileData = JSON.parse(raw);
-
-      } catch (e) {}
+      // 2. Check authenticated session from AuthClient / window.verifiedUser
+      let authUser = (typeof window.AuthClient !== 'undefined' && window.AuthClient.getCurrentUser()) || window.verifiedUser || null;
+      if (!authUser) {
+        try {
+          const raw = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+          if (raw) authUser = JSON.parse(raw);
+        } catch (e) {}
+      }
 
 
 
@@ -1550,7 +1537,9 @@
 
       try {
 
-        const res = await fetch('http://localhost:8000/api/v1/student/profile');
+        const apiBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || '/api/v1';
+        const fetchFn = (window.AuthClient && window.AuthClient.fetchWithAuth) ? window.AuthClient.fetchWithAuth : fetch;
+        const res = await fetchFn(`${apiBase}/student/profile`);
 
         if (res.ok) {
 
@@ -1565,9 +1554,8 @@
 
 
       const candidateCode = urlCode || 
-        (loginData && (loginData.roll_number || loginData.user_id || loginData.student_code)) || 
-        (profileData && profileData.studentCode) || 
-        (backendStudent && backendStudent.studentCode) || 
+        (authUser && (authUser.user_id || authUser.student_code || authUser.studentCode || authUser.roll_no)) || 
+        (backendStudent && (backendStudent.studentCode || backendStudent.student_code || backendStudent.rollNo)) || 
         '';
 
       // 4. Resolve authoritative student record from Quiz API

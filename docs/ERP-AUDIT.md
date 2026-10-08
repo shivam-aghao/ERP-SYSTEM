@@ -324,9 +324,9 @@ flowchart TD
 
 ### 9.1 Secrets & Credential Exposure (CRITICAL)
 1. **Full `service_role` Secret Stored in Plaintext:**
-   - File: `supabase_keys.json` (line 12):
-     `"api_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...0CNTyl3HMiyYVhSPdQEhq_4LUYUVOY29aAAOLHwxEt4"`
-   - The Supabase `service_role` key grants administrative access to the entire database, bypassing Row Level Security (RLS). This file is unencrypted in the repository root.
+   - File: `supabase_keys.json`:
+     `"api_key": "[REDACTED_SERVICE_ROLE_KEY]"`
+   - The Supabase `service_role` key grants administrative access to the entire database, bypassing Row Level Security (RLS). This file has been removed and git-ignored.
 2. **Anonymous Key in Client Code:**
    - Files: `frontend/js/config.js` (line 36), `frontend/js/supabaseClient.js`, `backend/.env`.
    - While `anon` keys are meant for public client access, direct frontend PostgREST queries must be protected by strict RLS policies.

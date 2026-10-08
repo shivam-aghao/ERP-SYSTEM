@@ -7,10 +7,11 @@
 (function (window) {
   'use strict';
 
-  const API_BASE = 'http://localhost:8000/api/v1/quiz';
+  const cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
+  const API_BASE = cfg.QUIZ_API_BASE || 'http://localhost:8000/api/v1/quiz';
   const SUPABASE_CONFIG = {
-    url: 'https://gftqvclenyplnuoocbwe.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
+    url: cfg.SUPABASE_URL || (typeof window !== 'undefined' && window.__SUPABASE_URL__) || 'https://gftqvclenyplnuoocbwe.supabase.co',
+    anonKey: cfg.SUPABASE_ANON_KEY || (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || ''
   };
 
   // Direct Supabase Client Instance
