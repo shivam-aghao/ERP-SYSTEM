@@ -188,14 +188,7 @@ In `frontend/js/auth.js` (lines 150–158):
 ```javascript
 if (role === 'teacher' || role === 'faculty') {
   localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-<<<<<<< HEAD
-  localStorage.setItem('ssgmce_active_teacher', userJson);
-  if (user.emp_code || user.empCode) {
-    localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
-  }
-=======
   sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 }
 ```
 This syntax breaks JS execution in browsers that parse `auth.js` strictly, resulting in failed teacher login state initialization.

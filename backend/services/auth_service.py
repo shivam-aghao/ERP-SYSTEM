@@ -16,11 +16,11 @@ class AuthService:
             admin_row = None
             try:
                 admin_row = db.execute(
-                    text("SELECT * FROM admins WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR id = :uid LIMIT 1"),
+                    text("SELECT * FROM admins WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR id::text = :uid LIMIT 1"),
                     {"uid": uid}
                 ).fetchone()
             except Exception:
-                pass
+                db.rollback()
             admin_id = str(admin_row._mapping.get("id")) if admin_row else "admin-root-001"
             admin_name = admin_row._mapping.get("name") if admin_row else "System Administrator"
             return {
@@ -46,14 +46,14 @@ class AuthService:
                     LEFT JOIN departments d ON t.department_id = d.id
                     WHERE LOWER(t.emp_code) = LOWER(:uid) 
                        OR LOWER(t.email) = LOWER(:uid) 
-                       OR t.id = :uid 
+                       OR t.id::text = :uid 
                        OR LOWER(t.full_name) LIKE LOWER(:uid_pattern)
                     LIMIT 1
                 """),
                 {"uid": uid, "uid_pattern": f"%{uid}%"}
             ).fetchone()
         except Exception:
-            pass
+            db.rollback()
 
         if not teacher_row and (
             uid.lower() in ("teacher", "faculty", "fac", "prof", "employee", "staff")
@@ -71,7 +71,7 @@ class AuthService:
                     LIMIT 1
                 """)).fetchone()
             except Exception:
-                pass
+                db.rollback()
 
         if teacher_row:
             m = teacher_row._mapping
@@ -81,7 +81,7 @@ class AuthService:
             return {
                 "token": f"teach_token_{m.get('id', uid)}",
                 "user": {
-                    "id": m.get("id", uid),
+                    "id": str(m.get("id", uid)),
                     "name": t_name,
                     "full_name": t_name,
                     "email": m.get("email", ""),
@@ -89,7 +89,7 @@ class AuthService:
                     "empCode": m.get("emp_code", uid),
                     "designation": m.get("designation") or "Associate Professor",
                     "department": dept_name,
-                    "department_id": m.get("department_id", ""),
+                    "department_id": str(m.get("department_id", "")),
                     "department_name": dept_name,
                     "department_code": dept_code,
                     "phone": m.get("phone", ""),
@@ -114,16 +114,15 @@ class AuthService:
                         FROM students s
                         LEFT JOIN classes c ON s.class_id = c.id
                         WHERE LOWER(s.student_code) = LOWER(:uid) 
-                           OR LOWER(s.sis_id) = LOWER(:uid) 
                            OR LOWER(s.email) = LOWER(:uid) 
-                           OR s.id = :uid 
-                           OR s.roll_no = :uid
+                           OR s.id::text = :uid 
+                           OR LOWER(s.roll_no) = LOWER(:uid)
                         LIMIT 1
                     """),
                     {"uid": uid}
                 ).fetchone()
         except Exception:
-            pass
+            db.rollback()
 
         if student_row:
             m = student_row._mapping

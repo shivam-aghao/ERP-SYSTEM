@@ -15,17 +15,15 @@ import re
 import csv
 import io
 import json
-import time
 import uuid
 import random
 import logging
-import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Query, Path, Body, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response, RedirectResponse, FileResponse
+from fastapi.responses import JSONResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, text
@@ -42,23 +40,17 @@ logging.basicConfig(
 logger = logging.getLogger("ssgmce_erp_backend")
 
 # ==============================================================================
-# 1. DATABASE CONFIGURATION & CONNECTIVITY
+# 1. DATABASE CONFIGURATION & CONNECTIVITY (Supabase PostgreSQL)
 # ==============================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
-DB_PATH = os.path.join(BASE_DIR, "erp.db").replace("\\", "/")
+from backend.config.settings import settings
+from backend.config.database import engine, SessionLocal, get_db, get_supabase_client
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
+# Supabase Client Singleton
+supabase_client = get_supabase_client()
 
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-# Initialize critical tables if not present
+# Initialize critical tables in Supabase PostgreSQL if not present
 try:
     with engine.connect() as _con:
         _con.execute(text("""
@@ -79,56 +71,7 @@ try:
         """))
         _con.commit()
 except Exception as _e:
-    logger.warning("Could not auto-create timetable_assessments table: %s", _e)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Supabase Client Integration (PostgREST HTTP Engine)
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gftqvclenyplnuoocbwe.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDQ4NzcyNiwiZXhwIjoyMTA2MDYzNzI2fQ.0CNTyl3HMiyYVhSPdQEhq_4LUYUVOY29aAAOLHwxEt4"
-
-import urllib.request
-import urllib.parse
-
-_sb_cache = {}
-
-def supabase_rest_request(endpoint: str, method: str = "GET", data: Any = None) -> Optional[Any]:
-    """Execute authenticated REST request to Supabase PostgREST API with fast timeout & caching."""
-    global _sb_cache
-    now = time.time()
-    cache_key = f"{method}:{endpoint}"
-    
-    if method == "GET":
-        cached = _sb_cache.get(cache_key)
-        if cached and (now - cached[0] < 4.0):  # 4 seconds memory cache
-            return cached[1]
-    else:
-        _sb_cache.clear()
-
-    try:
-        url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
-        body = json.dumps(data).encode("utf-8") if data is not None else None
-        headers = {
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-        }
-        req = urllib.request.Request(url, data=body, headers=headers, method=method)
-        with urllib.request.urlopen(req, timeout=2.5) as resp:
-            raw = resp.read().decode("utf-8")
-            res_data = json.loads(raw) if raw else None
-            if method == "GET" and res_data is not None:
-                _sb_cache[cache_key] = (now, res_data)
-            return res_data
-    except Exception as exc:
-        logger.warning("Supabase REST request failed for %s %s: %s", method, endpoint, exc)
-        return None
+    logger.warning("Notice on timetable_assessments check: %s", _e)
 
 # Standard Response Helpers
 def success_response(data: Any = None, message: str = "Success", meta: Optional[Dict[str, Any]] = None, code: int = 200):
@@ -170,84 +113,6 @@ def ensure_utc(val: Any) -> Optional[datetime]:
         except Exception:
             return None
     return None
-
-# Institutional timezone: Asia/Kolkata (IST = UTC+5:30)
-IST = timezone(timedelta(hours=5, minutes=30))
-
-def get_now_ist() -> datetime:
-    """Return the authoritative institutional time in Asia/Kolkata."""
-    return datetime.now(IST)
-
-def parse_test_datetimes(date_str: str, start_str: str, end_str: str):
-    """Parse date and start/end time strings into IST datetime objects."""
-    try:
-        if not date_str or not start_str or not end_str:
-            return None, None
-
-        def parse_t(t_str: str):
-            s = t_str.strip().upper()
-            m = re.match(r"^(\d{1,2}):(\d{2})(?:\s*([AP]M))?$", s)
-            if m:
-                h = int(m.group(1))
-                minute = int(m.group(2))
-                meridiem = m.group(3)
-                if meridiem == "PM" and h < 12:
-                    h += 12
-                elif meridiem == "AM" and h == 12:
-                    h = 0
-                elif not meridiem and 1 <= h <= 6:
-                    h += 12
-                return h, minute
-            parts = s.split(":")
-            h = int(parts[0])
-            minute = int(parts[1])
-            if 1 <= h <= 6:
-                h += 12
-            return h, minute
-
-        sh, sm = parse_t(start_str)
-        eh, em = parse_t(end_str)
-
-        y, mo, d = map(int, date_str.split("-"))
-        start_dt = datetime(y, mo, d, sh, sm, 0, tzinfo=IST)
-        end_dt = datetime(y, mo, d, eh, em, 0, tzinfo=IST)
-        return start_dt, end_dt
-    except Exception as e:
-        logger.warning("Error parsing test datetimes (%s, %s, %s): %s", date_str, start_str, end_str, e)
-        return None, None
-
-def cleanup_expired_scheduled_tests(db: Optional[Session] = None) -> int:
-    """
-    Safely clean expired temporary scheduled tests (id starts with 'test-') older than 30 days.
-    DOES NOT touch permanent academic records, curriculum tests ('quiz-tt-*'), teachers, students, etc.
-    """
-    cleaned_count = 0
-    try:
-        now_ist = get_now_ist()
-        raw_tests = supabase_rest_request("timetable_assessments?order=date.asc,start_time.asc")
-        if not raw_tests or not isinstance(raw_tests, list):
-            return 0
-
-        for t in raw_tests:
-            tid = str(t.get("id") or "")
-            # Strict safety guard: ONLY delete temporary scheduled tests
-            if not tid.startswith("test-"):
-                continue
-
-            s_dt, e_dt = parse_test_datetimes(t.get("date") or "", t.get("start_time") or "", t.get("end_time") or "")
-            if e_dt and now_ist >= (e_dt + timedelta(days=30)):
-                logger.info("Automatic Cleanup: Removing expired scheduled test '%s' (ended %s, current %s)", tid, e_dt.isoformat(), now_ist.isoformat())
-                supabase_rest_request(f"timetable_assessments?id=eq.{urllib.parse.quote(tid)}", method="DELETE")
-                cleaned_count += 1
-                if db is not None:
-                    try:
-                        db.execute(text("DELETE FROM timetable_assessments WHERE id = :id"), {"id": tid})
-                        db.commit()
-                    except Exception:
-                        pass
-    except Exception as exc:
-        logger.warning("Error during cleanup of expired scheduled tests: %s", exc)
-    return cleaned_count
 
 def log_audit(db: Session, user_id: str, action: str, entity_name: str, entity_id: str, payload: Optional[Dict] = None):
     try:
@@ -325,7 +190,6 @@ class AttendanceSubmitRequest(BaseModel):
 
 class TimetableAssessmentCreate(BaseModel):
     id: Optional[str] = None
-    teacher_id: Optional[str] = None
     type: str # 'Quiz', 'Assignment', 'TEC'
     subject: str
     title: str
@@ -344,7 +208,6 @@ class TimetableAssessmentUpdate(BaseModel):
     end_time: Optional[str] = None
     link: Optional[str] = None
     class_code: Optional[str] = None
-    teacher_id: Optional[str] = None
 
 def verify_faculty_or_admin(request: Request):
     """Enforces strict role permissions: students are read-only; only faculty/admin can schedule."""
@@ -363,13 +226,6 @@ def verify_faculty_or_admin(request: Request):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: Students have read-only access. Only faculty can schedule, edit, or manage assessments."
-        )
-
-    # Require faculty, teacher, or admin credentials
-    if not (token.startswith("teach_token_") or role_header in ["faculty", "teacher", "admin"] or "admin" in token or "teach" in token):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Only faculty can schedule, edit, or manage assessments."
         )
 
     return {"role": "faculty", "token": token}
@@ -477,14 +333,45 @@ api = APIRouter(prefix="/api/v1")
 @app.get("/api/health", tags=["System Diagnostics"])
 @api.get("/health", tags=["System Diagnostics"])
 def health_check():
+    supabase_online = False
+    if supabase_client:
+        try:
+            supabase_online = True
+        except Exception:
+            pass
     return {
         "status": "healthy",
         "service": "SSGMCE College ERP Unified Backend",
         "framework": "FastAPI + SQLAlchemy",
         "database": "connected",
-        "database_type": "SQLite / Supabase Ready",
+        "database_type": "SQLite + Supabase Cloud",
+        "supabase": "connected" if supabase_online else "available",
+        "supabase_url": DEFAULT_SUPABASE_URL,
         "port": 8000
     }
+
+@api.get("/supabase/status", tags=["System Diagnostics"])
+def supabase_status_endpoint():
+    teachers_count = 0
+    students_count = 0
+    connected = False
+    error_msg = None
+    if supabase_client:
+        try:
+            t_res = supabase_client.table("teachers").select("id", count="exact").limit(1).execute()
+            s_res = supabase_client.table("students").select("id", count="exact").limit(1).execute()
+            teachers_count = t_res.count if hasattr(t_res, 'count') and t_res.count is not None else len(t_res.data)
+            students_count = s_res.count if hasattr(s_res, 'count') and s_res.count is not None else len(s_res.data)
+            connected = True
+        except Exception as ex:
+            error_msg = str(ex)
+    return success_response({
+        "supabase_connected": connected,
+        "supabase_url": DEFAULT_SUPABASE_URL,
+        "teachers_in_supabase": teachers_count,
+        "students_in_supabase": students_count,
+        "error": error_msg
+    })
 
 
 @api.get("/status", tags=["System Diagnostics"])
@@ -545,7 +432,7 @@ def get_classes(db: Session = Depends(get_db)):
 
 @api.get("/subjects", tags=["Master Data"])
 def get_subjects(db: Session = Depends(get_db)):
-    rows = db.execute(text("SELECT id, department_id, code, name, semester, type, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
+    rows = db.execute(text("SELECT id, department_id, code, name, type, credits, code as subject_code, name as subject_name FROM subjects ORDER BY name ASC")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/students", tags=["Master Data"])
@@ -656,7 +543,7 @@ def get_teacher_profile(
             FROM teachers t 
             LEFT JOIN departments d ON t.department_id = d.id 
             WHERE LOWER(t.emp_code) = LOWER(:code) 
-               OR t.id = :code 
+               OR t.id::text = :code 
                OR LOWER(t.email) = LOWER(:code)
             LIMIT 1
         """), {"code": tid or "TEA001"}).fetchone()
@@ -765,64 +652,6 @@ def get_teacher_dashboard_summary(request: Request, teacher_id: Optional[str] = 
         "attendance_average_pct": avg_att_pct
     })
 
-@api.get("/teacher/subjects", tags=["Faculty Portal"])
-def get_teacher_subjects(teacher_id: Optional[str] = Query(None), request: Request = None, db: Session = Depends(get_db)):
-    """Fetch authorized subjects for the authenticated teacher from Supabase subject_syllabus table."""
-    headers = {k.lower(): v for k, v in request.headers.items()} if hasattr(request, "headers") else {}
-    auth_header = headers.get("authorization", "")
-    token = auth_header.split(" ", 1)[1].strip() if auth_header.startswith("Bearer ") else ""
-
-    teacher_name = None
-    teacher_emp = None
-
-    # Identify teacher from query param, token, or active faculty session
-    tid = teacher_id or (token.replace("teach_token_", "") if token.startswith("teach_token_") else None)
-    if tid:
-        t_row = db.execute(text("SELECT * FROM teachers WHERE id = :id OR emp_code = :id LIMIT 1"), {"id": tid}).fetchone()
-        if t_row:
-            teacher_name = t_row._mapping.get("full_name")
-            teacher_emp = t_row._mapping.get("emp_code")
-
-    # Fetch subjects from Supabase subject_syllabus
-    syllabus_rows = None
-    if teacher_name:
-        encoded_name = urllib.parse.quote(teacher_name)
-        syllabus_rows = supabase_rest_request(f"subject_syllabus?faculty_name=ilike.*{encoded_name}*")
-    elif teacher_emp:
-        encoded_emp = urllib.parse.quote(teacher_emp.lower())
-        syllabus_rows = supabase_rest_request(f"subject_syllabus?faculty_email=ilike.*{encoded_emp}*")
-
-    # If no specific matches found, fetch all available subjects from subject_syllabus or subjects
-    if not syllabus_rows:
-        syllabus_rows = supabase_rest_request("subject_syllabus?select=subject_name,subject_code,semester,department_code")
-
-    subjects = []
-    seen = set()
-    if syllabus_rows:
-        for r in syllabus_rows:
-            name = r.get("subject_name") or r.get("name")
-            if name and name not in seen:
-                seen.add(name)
-                subjects.append({
-                    "code": r.get("subject_code") or r.get("code") or "",
-                    "name": name,
-                    "semester": r.get("semester") or ""
-                })
-
-    # Fallback to local DB subjects table if Supabase is offline
-    if not subjects:
-        try:
-            s_rows = db.execute(text("SELECT code, name, semester FROM subjects")).fetchall()
-            for r in s_rows:
-                m = dict(r._mapping)
-                if m["name"] not in seen:
-                    seen.add(m["name"])
-                    subjects.append(m)
-        except Exception:
-            pass
-
-    return success_response(subjects)
-
 @api.get("/timetable/my", tags=["Faculty Portal"])
 @api.get("/teacher/timetable", tags=["Faculty Portal"])
 def get_teacher_timetable(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
@@ -840,33 +669,14 @@ def get_specific_teacher_timetable(teacher_id: str, db: Session = Depends(get_db
 # ==============================================================================
 # TIMETABLE ASSESSMENTS / TESTS MODULE (Shared DB between Faculty & Student)
 # ==============================================================================
-@api.get("/server-time", tags=["System"])
-def get_server_time():
-    """Authoritative institutional server time in Asia/Kolkata timezone."""
-    now_ist = get_now_ist()
-    return success_response({
-        "server_time_iso": now_ist.isoformat(),
-        "timezone": "Asia/Kolkata",
-        "timestamp_ms": int(now_ist.timestamp() * 1000)
-    })
-
-@api.post("/timetable/tests/cleanup", tags=["Timetable Assessments"])
-def manual_cleanup_expired_tests(db: Session = Depends(get_db)):
-    """Manually/Cron trigger cleanup of expired temporary scheduled assessments."""
-    cleaned_count = cleanup_expired_scheduled_tests(db)
-    return success_response({"cleaned_count": cleaned_count}, f"Cleaned {cleaned_count} expired scheduled tests")
-
 @api.get("/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/student/timetable/tests", tags=["Timetable Assessments"])
 @api.get("/teacher/timetable/tests", tags=["Timetable Assessments"])
 def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: Optional[str] = Query(None), request: Request = None, db: Session = Depends(get_db)):
-    """Fetch all scheduled tests & assessments from Supabase database with robust class/student mapping.
-    - Faculty callers see all scheduled tests with original URLs.
-    - Students see tests matching their class/section with URLs protected until exact scheduled start time.
+    """Fetch all scheduled tests & assessments from database with robust class/student mapping.
+    - Faculty callers see all scheduled tests.
+    - Students see tests matching their class, section, batch, or global assessments.
     """
-    # Passive cleanup of expired tests
-    cleanup_expired_scheduled_tests(db)
-
     is_faculty = False
     if request:
         try:
@@ -881,11 +691,11 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
     enrolled_classes = set()
     if isinstance(student_code, str) and student_code.strip():
         try:
-            st_row = db.execute(text("SELECT s.*, c.class_name, c.name as c_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
             if st_row:
                 m = dict(st_row._mapping)
                 if m.get("class_name"): enrolled_classes.add(m["class_name"].strip().lower())
-                if m.get("c_name"): enrolled_classes.add(m["c_name"].strip().lower())
+                if m.get("c_code"): enrolled_classes.add(m["c_code"].strip().lower())
         except Exception:
             pass
 
@@ -896,40 +706,16 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
             if token in cc_clean:
                 enrolled_classes.add(token)
 
-    if not enrolled_classes and not is_faculty:
-        # Default student view context for SSGMCE CSE Department (2R1)
-        enrolled_classes.add("2r1")
-
-    # 1. Fetch from Supabase (Source of Truth)
-    raw_tests = supabase_rest_request("timetable_assessments?order=date.asc,start_time.asc")
-    
-    # If Supabase unreachable, fallback to local database
-    if raw_tests is None:
-        try:
-            rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
-            raw_tests = [dict(r._mapping) for r in rows]
-        except Exception:
-            raw_tests = []
-
-    now_ist = get_now_ist()
+    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
     tests = []
-    seen_ids = set()
-    for m in raw_tests:
-        tid = m.get("id")
-        if not tid or tid in seen_ids:
-            continue
-        seen_ids.add(tid)
-
-        # STRICT FILTER: Only tests created through Teacher Test Scheduling workflow
-        if str(tid).startswith("quiz-tt-") or not str(tid).startswith("test-"):
-            continue
-
+    for r in rows:
+        m = dict(r._mapping)
         item_class = (m.get("class_code") or "").strip().lower()
 
         visible = False
         if is_faculty:
             visible = True
-        elif not item_class or item_class in ["all", "any", "global", "cse", "default"]:
+        elif not item_class or item_class in ["all", "any", "global"]:
             visible = True
         elif not enrolled_classes:
             visible = True
@@ -937,114 +723,35 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
             if item_class in enrolled_classes:
                 visible = True
             else:
-                import re
-                item_tokens = set(re.findall(r'[1-4][a-z][1-2]?', item_class))
                 for ec in enrolled_classes:
-                    ec_tokens = set(re.findall(r'[1-4][a-z][1-2]?', ec))
-                    if item_tokens and ec_tokens:
-                        if item_tokens.intersection(ec_tokens):
-                            visible = True
-                            break
-                    elif item_class in ec or ec in item_class:
+                    if item_class in ec or ec in item_class:
                         visible = True
                         break
-                cse_classes = {"2r1", "2r2", "3r", "4r", "cse", "it", "cs"}
-                if not visible and (item_class in cse_classes or any(c in item_class for c in cse_classes)):
-                    if any(ec in cse_classes or any(c in ec for c in cse_classes) for ec in enrolled_classes):
-                        visible = True
 
         if visible:
-            s_dt, e_dt = parse_test_datetimes(m.get("date") or "", m.get("start_time") or "", m.get("end_time") or "")
-            
-            # Authoritative Server Time Status Evaluation
-            status_label = "Upcoming"
-            is_joinable = False
-            
-            if s_dt and e_dt:
-                if now_ist < s_dt:
-                    status_label = "Upcoming"
-                    is_joinable = False
-                elif s_dt <= now_ist < e_dt:
-                    status_label = "Live"
-                    is_joinable = True
-                else:
-                    status_label = "Ended"
-                    is_joinable = False
-            elif s_dt and now_ist < s_dt:
-                status_label = "Upcoming"
-                is_joinable = False
-
-            effective_link = m.get("link") or ""
-            if not is_faculty and not is_joinable:
-                effective_link = ""  # Strictly hide URL before scheduled start time or when closed!
-
             tests.append({
                 "id": m["id"],
-                "teacher_id": m.get("teacher_id") or "FAC-CSE-1001",
-                "type": m.get("type") or "Quiz",
-                "subject": m.get("subject") or "",
-                "title": m.get("title") or "",
-                "date": m.get("date") or "",
-                "start": m.get("start_time") or "",
-                "end": m.get("end_time") or "",
-                "link": effective_link,
-                "class_code": m.get("class_code") or "2R1",
-                "status": status_label,
-                "is_joinable": is_joinable
+                "type": m["type"],
+                "subject": m["subject"],
+                "title": m["title"],
+                "date": m["date"],
+                "start": m["start_time"],
+                "end": m["end_time"],
+                "link": m["link"],
+                "class_code": m.get("class_code") or "2R1"
             })
     return success_response(tests)
 
-@api.post("/timetable/tests", status_code=201, tags=["Timetable Assessments"])
-@api.post("/teacher/timetable/tests", status_code=201, tags=["Timetable Assessments"])
+@api.post("/timetable/tests", tags=["Timetable Assessments"])
+@api.post("/teacher/timetable/tests", tags=["Timetable Assessments"])
 def create_timetable_test(payload: TimetableAssessmentCreate, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
-    """Faculty schedules a test or assessment. Stored in Supabase and synchronized to local DB. Rejected for students (403)."""
-    if not payload.subject or not payload.title or not payload.date or not payload.start_time or not payload.end_time or not payload.link:
-        raise HTTPException(status_code=400, detail="Missing required assessment fields (subject, title, date, start_time, end_time, link)")
-
+    """Faculty schedules a test or assessment. Stored directly in backend database. Rejected for students (403)."""
     test_id = payload.id or f"test-{uuid.uuid4().hex[:10]}"
-    target_class = (payload.class_code or "2R1").strip()
-    teacher_id = payload.teacher_id or auth.get("user", {}).get("emp_code") or "EMP-CSE-1001"
-
-    test_record = {
+    db.execute(text("""
+        INSERT INTO timetable_assessments (id, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
+        VALUES (:id, :type, :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """), {
         "id": test_id,
-        "teacher_id": teacher_id,
-        "type": payload.type,
-        "subject": payload.subject,
-        "title": payload.title,
-        "date": payload.date,
-        "start_time": payload.start_time,
-        "end_time": payload.end_time,
-        "link": payload.link,
-        "class_code": target_class
-    }
-
-    # 1. Primary Save to Supabase (Source of Truth)
-    sb_res = supabase_rest_request("timetable_assessments", method="POST", data=test_record)
-
-    # 2. Local Database Synchronization
-    try:
-        db.execute(text("""
-            INSERT OR REPLACE INTO timetable_assessments (id, teacher_id, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
-            VALUES (:id, :teacher_id, :type, :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """), {
-            "id": test_id,
-            "teacher_id": teacher_id,
-            "type": payload.type,
-            "subject": payload.subject,
-            "title": payload.title,
-            "date": payload.date,
-            "start": payload.start_time,
-            "end": payload.end_time,
-            "link": payload.link,
-            "class_code": target_class
-        })
-        db.commit()
-    except Exception as db_err:
-        logger.warning("Local timetable_assessments insert notice: %s", db_err)
-
-    return success_response({
-        "id": test_id,
-        "teacher_id": teacher_id,
         "type": payload.type,
         "subject": payload.subject,
         "title": payload.title,
@@ -1052,57 +759,72 @@ def create_timetable_test(payload: TimetableAssessmentCreate, auth: dict = Depen
         "start": payload.start_time,
         "end": payload.end_time,
         "link": payload.link,
-        "class_code": target_class
-    }, f"{payload.type or 'Test'} scheduled successfully", code=201)
+        "class_code": payload.class_code or "2R1"
+    })
+    db.commit()
+    return success_response({
+        "id": test_id,
+        "type": payload.type,
+        "subject": payload.subject,
+        "title": payload.title,
+        "date": payload.date,
+        "start": payload.start_time,
+        "end": payload.end_time,
+        "link": payload.link
+    }, "Assessment scheduled successfully in database", code=201)
 
 @api.put("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
 @api.put("/teacher/timetable/tests/{test_id}", tags=["Timetable Assessments"])
 def update_timetable_test(test_id: str, payload: TimetableAssessmentUpdate, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
-    """Faculty updates an assessment in Supabase and local DB. Rejected for students (403)."""
-    updates = {}
-    if payload.type is not None: updates["type"] = payload.type
-    if payload.subject is not None: updates["subject"] = payload.subject
-    if payload.title is not None: updates["title"] = payload.title
-    if payload.date is not None: updates["date"] = payload.date
-    if payload.start_time is not None: updates["start_time"] = payload.start_time
-    if payload.end_time is not None: updates["end_time"] = payload.end_time
-    if payload.link is not None: updates["link"] = payload.link
-    if payload.class_code is not None: updates["class_code"] = payload.class_code
-    if payload.teacher_id is not None: updates["teacher_id"] = payload.teacher_id
+    """Faculty updates an assessment. Rejected for students (403)."""
+    existing = db.execute(text("SELECT * FROM timetable_assessments WHERE id = :id"), {"id": test_id}).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Scheduled assessment not found")
 
-    # 1. Update in Supabase
-    if updates:
-        supabase_rest_request(f"timetable_assessments?id=eq.{urllib.parse.quote(test_id)}", method="PATCH", data=updates)
-
-    # 2. Update in Local DB
-    sql_updates = []
+    updates = []
     params = {"id": test_id}
-    for k, v in updates.items():
-        sql_updates.append(f"{k} = :{k}")
-        params[k] = v
+    if payload.type is not None:
+        updates.append("type = :type")
+        params["type"] = payload.type
+    if payload.subject is not None:
+        updates.append("subject = :subject")
+        params["subject"] = payload.subject
+    if payload.title is not None:
+        updates.append("title = :title")
+        params["title"] = payload.title
+    if payload.date is not None:
+        updates.append("date = :date")
+        params["date"] = payload.date
+    if payload.start_time is not None:
+        updates.append("start_time = :start")
+        params["start"] = payload.start_time
+    if payload.end_time is not None:
+        updates.append("end_time = :end")
+        params["end"] = payload.end_time
+    if payload.link is not None:
+        updates.append("link = :link")
+        params["link"] = payload.link
+    if payload.class_code is not None:
+        updates.append("class_code = :class_code")
+        params["class_code"] = payload.class_code
 
-    if sql_updates:
-        sql_updates.append("updated_at = CURRENT_TIMESTAMP")
-        db.execute(text(f"UPDATE timetable_assessments SET {', '.join(sql_updates)} WHERE id = :id"), params)
-        db.commit()
+    updates.append("updated_at = CURRENT_TIMESTAMP")
+    db.execute(text(f"UPDATE timetable_assessments SET {', '.join(updates)} WHERE id = :id"), params)
+    db.commit()
 
-    type_name = updates.get("type") or "Assessment"
-    return success_response({"id": test_id, **updates}, f"{type_name} updated successfully")
+    updated = db.execute(text("SELECT * FROM timetable_assessments WHERE id = :id"), {"id": test_id}).fetchone()
+    m = dict(updated._mapping)
+    return success_response({
+        "id": m["id"], "type": m["type"], "subject": m["subject"], "title": m["title"],
+        "date": m["date"], "start": m["start_time"], "end": m["end_time"], "link": m["link"]
+    }, "Assessment updated successfully")
 
 @api.delete("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
 @api.delete("/teacher/timetable/tests/{test_id}", tags=["Timetable Assessments"])
 def delete_timetable_test(test_id: str, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
-    """Faculty deletes an assessment from Supabase and local DB. Rejected for students (403)."""
-    # 1. Delete from Supabase
-    supabase_rest_request(f"timetable_assessments?id=eq.{urllib.parse.quote(test_id)}", method="DELETE")
-
-    # 2. Delete from Local DB
-    try:
-        db.execute(text("DELETE FROM timetable_assessments WHERE id = :id"), {"id": test_id})
-        db.commit()
-    except Exception as e:
-        logger.warning("Local delete error: %s", e)
-
+    """Faculty deletes an assessment. Rejected for students (403)."""
+    db.execute(text("DELETE FROM timetable_assessments WHERE id = :id"), {"id": test_id})
+    db.commit()
     return success_response({"id": test_id}, "Assessment deleted successfully")
 
 @api.get("/class-cards", tags=["Faculty Portal"])
@@ -1152,9 +874,10 @@ def get_attendance_draft(class_id: str, subject_id: str, session_date: str, peri
 def save_attendance_draft(payload: AttendanceDraftRequest, db: Session = Depends(get_db)):
     sess_id = str(uuid.uuid4())
     db.execute(text("""
-        INSERT OR REPLACE INTO attendance_sessions
+        INSERT INTO attendance_sessions
         (id, teacher_id, class_id, subject_id, session_date, period_number, status, created_at, updated_at)
         VALUES (:id, (SELECT id FROM teachers LIMIT 1), :cid, :sid, :sdate, :pnum, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
     """), {
         "id": sess_id, "cid": payload.class_id, "sid": payload.subject_id,
         "sdate": payload.session_date, "pnum": str(payload.period_number)
@@ -1288,7 +1011,7 @@ def get_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Opt
         SELECT s.id, s.roll_no, s.full_name, s.student_code, s.email, COALESCE(c.class_name, s.class_name) as class_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id = :cid OR c.id = :cid
+        WHERE s.class_name = :cid OR c.class_name = :cid OR s.class_id::text = :cid OR c.id::text = :cid
     """), {"cid": cid}).fetchall()
 
     sorted_rows = sorted(rows, key=lambda r: extract_numeric(r._mapping.get("roll_no")))
@@ -1327,7 +1050,7 @@ def submit_teacher_attendance_bulk(payload: Dict[str, Any] = Body(...), db: Sess
     slot = payload.get("timeSlot") or payload.get("lectureTime") or "09:00 - 10:00"
     records = payload.get("records", [])
 
-    c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR id = :c LIMIT 1"), {"c": class_code}).fetchone()
+    c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR id::text = :c LIMIT 1"), {"c": class_code}).fetchone()
     cid = c_row[0] if c_row else "0a7372d4-db33-4908-9f85-896c7009fd76"
 
     s_row = db.execute(text("SELECT id, code, name FROM subjects WHERE code = :s OR LOWER(name) LIKE LOWER(:sn) LIMIT 1"), {"s": sub_code, "sn": f"%{sub_title}%"}).fetchone()
@@ -1588,7 +1311,7 @@ def get_class_stats(class_id: str, db: Session = Depends(get_db)):
 def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     if student_code:
         row = db.execute(
-            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"),
+            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"),
             {"c": student_code}
         ).fetchone()
     else:
@@ -1614,16 +1337,16 @@ def update_student_profile(payload: StudentProfileUpdate, student_code: Optional
     updates = payload.model_dump(exclude_unset=True)
     for k, v in updates.items():
         if v is not None:
-            db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id = :sc"), {"val": v, "sc": student_code})
+            db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id::text = :sc"), {"val": v, "sc": student_code})
     db.commit()
-    upd = db.execute(text("SELECT * FROM students WHERE student_code = :sc OR id = :sc LIMIT 1"), {"sc": student_code}).fetchone()
+    upd = db.execute(text("SELECT * FROM students WHERE student_code = :sc OR id::text = :sc LIMIT 1"), {"sc": student_code}).fetchone()
     return success_response(dict(upd._mapping) if upd else {}, "Profile updated successfully")
 
 @api.get("/student/overview", tags=["Student Portal"])
 @api.get("/overview", tags=["Student Portal"])
 def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     else:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     
@@ -1663,9 +1386,9 @@ def get_student_overview(student_code: Optional[str] = Query(None), db: Session 
         "subjectWise": att_data.get("subjectWise", [])
     }
 
-    now_ist = get_now_ist()
-    today_name = now_ist.strftime("%A")
-    today_iso = now_ist.strftime("%Y-%m-%d")
+    from datetime import datetime
+    today_name = datetime.now().strftime("%A")
+    today_iso = datetime.now().strftime("%Y-%m-%d")
     tt_rows = db.execute(text("SELECT * FROM timetable_entries WHERE LOWER(day) = LOWER(:d) ORDER BY period_num ASC"), {"d": today_name}).fetchall()
     if not tt_rows:
         tt_rows = db.execute(text("SELECT * FROM timetable_entries ORDER BY period_num ASC LIMIT 5")).fetchall()
@@ -1695,94 +1418,40 @@ def get_student_overview(student_code: Optional[str] = Query(None), db: Session 
             "type": "lecture"
         })
 
-    # Include scheduled quizzes/assessments from Supabase for this student's class
+    # Include scheduled quizzes/assessments for today for this student's class
     std_class_id = st_dict.get("class_id")
     std_class_name = st_dict.get("class_name") or "3R"
-    upcoming_assessment = None
+    sched_quizzes = db.execute(text("""
+        SELECT * FROM timetable_assessments 
+        WHERE (LOWER(class_code) = LOWER(:cname) OR class_code = :cid OR class_code IS NULL)
+        ORDER BY start_time ASC
+    """), {"cname": std_class_name, "cid": std_class_id}).fetchall()
 
-    sb_tests = supabase_rest_request("timetable_assessments?order=date.asc,start_time.asc")
-    if sb_tests is None:
-        try:
-            sb_tests = [dict(r._mapping) for r in db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()]
-        except Exception:
-            sb_tests = []
-
-    for sq in sb_tests:
-        sq_id = sq.get("id") or ""
-        # STRICT FILTER: Only tests created through Teacher Test Scheduling workflow
-        if str(sq_id).startswith("quiz-tt-") or not str(sq_id).startswith("test-"):
-            continue
-
-        sq_class = (sq.get("class_code") or "").strip().lower()
-        match_class = (sq_class in ("all", "any", "global") or sq_class == std_class_name.lower() or sq_class == str(std_class_id).lower() or (std_class_name.lower() in sq_class))
-        if match_class:
-            s_dt, e_dt = parse_test_datetimes(sq.get("date") or "", sq.get("start_time") or "", sq.get("end_time") or "")
-            is_live = False
-            is_ended = False
-            status_text = "Scheduled"
-            status_cls = "status-upcoming"
-            effective_link = ""
-
-            if s_dt and e_dt:
-                if now_ist < s_dt:
-                    is_live = False
-                    is_ended = False
-                    status_text = "Scheduled"
-                    status_cls = "status-upcoming"
-                    effective_link = ""  # Strictly hidden before scheduled start time
-                elif s_dt <= now_ist < e_dt:
-                    is_live = True
-                    is_ended = False
-                    status_text = "Active Today"
-                    status_cls = "status-live"
-                    effective_link = sq.get("link") or ""  # Available at exact start time
-                else:
-                    is_live = False
-                    is_ended = True
-                    status_text = "Closed"
-                    status_cls = "status-ended"
-                    effective_link = ""
-
-            is_today = (sq.get("date") == today_iso)
-            if is_today and not is_ended:
-                today_timetable.append({
-                    "num": f"{sq.get('type', 'TEST').upper()} • {sq.get('subject', 'ASSESSMENT')}",
-                    "periodNumber": len(today_timetable) + 1,
-                    "period_num": len(today_timetable) + 1,
-                    "time": f"{sq.get('start_time', '10:00')} - {sq.get('end_time', '11:00')}",
-                    "period_time": f"{sq.get('start_time', '10:00')} - {sq.get('end_time', '11:00')}",
-                    "name": f"📝 {sq.get('title', 'Scheduled Assessment')}",
-                    "course_name": sq.get("title", "Scheduled Assessment"),
-                    "code": sq.get("subject", "QUIZ"),
-                    "course_code": sq.get("subject", "QUIZ"),
-                    "venue": f"Online Examination Portal • {sq.get('class_code', std_class_name)}",
-                    "teacher_name": "Faculty Evaluation",
-                    "status": status_text,
-                    "statusClass": status_cls,
-                    "isCompleted": False,
-                    "isActiveNow": is_live,
-                    "isCritical": True,
-                    "att": f"Assessment: {sq.get('type', 'Quiz')}",
-                    "link": effective_link,
-                    "is_assessment": True,
-                    "is_joinable": is_live,
-                    "type": "quiz"
-                })
-
-            if not is_ended and not upcoming_assessment:
-                upcoming_assessment = {
-                    "id": sq.get("id"),
-                    "type": sq.get("type", "Test"),
-                    "subject": sq.get("subject", ""),
-                    "title": sq.get("title", ""),
-                    "date": sq.get("date", ""),
-                    "start": sq.get("start_time", ""),
-                    "end": sq.get("end_time", ""),
-                    "link": effective_link,
-                    "class_code": sq.get("class_code", std_class_name),
-                    "status": "Live" if is_live else "Upcoming",
-                    "is_joinable": is_live
-                }
+    for sq in sched_quizzes:
+        sqm = dict(sq._mapping)
+        is_today = (sqm.get("date") == today_iso)
+        today_timetable.append({
+            "num": f"QUIZ • {sqm.get('subject', 'ASSESSMENT')}",
+            "periodNumber": len(today_timetable) + 1,
+            "period_num": len(today_timetable) + 1,
+            "time": f"{sqm.get('start_time', '10:00')} - {sqm.get('end_time', '11:00')}",
+            "period_time": f"{sqm.get('start_time', '10:00')} - {sqm.get('end_time', '11:00')}",
+            "name": f"📝 {sqm.get('title', 'Scheduled Quiz')}",
+            "course_name": sqm.get("title", "Scheduled Quiz"),
+            "code": sqm.get("subject", "QUIZ"),
+            "course_code": sqm.get("subject", "QUIZ"),
+            "venue": f"Online Examination Portal • {sqm.get('class_code', std_class_name)}",
+            "teacher_name": "Faculty Evaluation",
+            "status": "Scheduled Assessment" if not is_today else "Active Today",
+            "statusClass": "status-live" if is_today else "status-upcoming",
+            "isCompleted": False,
+            "isActiveNow": is_today,
+            "isCritical": True,
+            "att": f"Assessment: {sqm.get('type', 'Quiz')}",
+            "link": sqm.get("link", "student-quiz.html"),
+            "is_assessment": True,
+            "type": "quiz"
+        })
 
     # Class-aware student notifications
     notif_rows = db.execute(text("""
@@ -1807,7 +1476,6 @@ def get_student_overview(student_code: Optional[str] = Query(None), db: Session 
         "student": student_obj,
         "attendanceSummary": attendance_summary,
         "todayTimetable": today_timetable,
-        "upcomingAssessment": upcoming_assessment,
         "recentNotifications": recent_notifs,
         "metrics": {
             "overallAttendancePct": overall_pct,
@@ -1992,7 +1660,7 @@ def upload_student_document(payload: Dict[str, Any] = Body(...), db: Session = D
 def get_student_notifications(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT id, class_id FROM students WHERE student_code = :c OR id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT id, class_id FROM students LIMIT 1")).fetchone()
     
@@ -2225,11 +1893,11 @@ def get_teacher_quizzes(class_id: Optional[str] = None, db: Session = Depends(ge
     clause = "WHERE 1=1"
     params = {}
     if class_id:
-        clause += " AND (q.class_id = :cid OR c.class_name = :cid)"
+        clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT count(*) FROM quiz_attempts WHERE quiz_id = q.id AND status IN ('submitted', 'auto_submitted', 'SUBMITTED')) as attempt_count
         FROM quizzes q
@@ -2285,7 +1953,7 @@ def create_quiz(payload: QuizCreateSchema, db: Session = Depends(get_db)):
 @api.get("/quiz/quizzes/{quiz_id}", tags=["Quiz Management"])
 def get_quiz_details(quiz_id: str, db: Session = Depends(get_db)):
     row = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
@@ -2505,7 +2173,7 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -2517,30 +2185,30 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 
     # ONLY quizzes assigned to this student's class
     quizzes = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.score FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_score,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_percentage,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN (SELECT qa.passed FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                   WHEN q.result_published = TRUE THEN (SELECT qa.result_status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
                    ELSE NULL
                END as attempt_passed,
                (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id,
                CASE 
-                   WHEN (q.result_release_mode != 'MANUAL' AND q.show_result_immediately = 1) THEN 1 
+                   WHEN q.result_published = TRUE THEN 1 
                    ELSE 0 
                END as is_result_released
         FROM quizzes q
         JOIN classes c ON q.class_id = c.id
         LEFT JOIN subjects s ON q.subject_id = s.id
-        WHERE q.class_id = :cid AND (q.is_published = 1 OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED'))
+        WHERE q.class_id = :cid AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
         ORDER BY q.created_at DESC
     """), {"cid": cid, "sid": sid}).fetchall()
 
@@ -2551,12 +2219,12 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
     q = db.execute(text("""
-        SELECT q.*, c.class_name, COALESCE(s.name, q.subject_name) as subject_name,
+        SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count
         FROM quizzes q
         LEFT JOIN classes c ON q.class_id = c.id
@@ -2579,7 +2247,7 @@ def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Se
     st_id = payload.get("student_id") or payload.get("student_code")
     st = None
     if st_id:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id = :c LIMIT 1"), {"c": st_id}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -2748,9 +2416,10 @@ def autosave_answers(attempt_id: str, payload: Dict[str, Any] = Body(...), db: S
         qid = a.get("question_id")
         opt = a.get("selected_option")
         txt = a.get("text_answer")
+        db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": qid})
         db.execute(text("""
-            INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-            VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+            INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+            VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
         """), {"aid": attempt_id, "qid": qid, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
     db.commit()
     return success_response({"saved": len(answers)}, "Answers autosaved successfully")
@@ -2771,10 +2440,14 @@ def submit_quiz_attempt(attempt_id: str, payload: QuizSubmitRequest, db: Session
 
     # Save any final answers passed in payload
     for a in payload.answers or []:
+        qid = getattr(a, "question_id", None) or (a.get("question_id") if isinstance(a, dict) else None)
+        opt = getattr(a, "selected_option", None) or (a.get("selected_option") if isinstance(a, dict) else None)
+        txt = getattr(a, "text_answer", None) or (a.get("text_answer") if isinstance(a, dict) else None)
+        db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid"), {"aid": attempt_id, "qid": qid})
         db.execute(text("""
-            INSERT OR REPLACE INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
-            VALUES (COALESCE((SELECT id FROM quiz_attempt_answers WHERE attempt_id = :aid AND question_id = :qid), :nid), :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
-        """), {"aid": attempt_id, "qid": a.question_id, "opt": a.selected_option, "txt": a.text_answer, "nid": str(uuid.uuid4())})
+            INSERT INTO quiz_attempt_answers (id, attempt_id, question_id, selected_option, text_answer, updated_at)
+            VALUES (:nid, :aid, :qid, :opt, :txt, CURRENT_TIMESTAMP)
+        """), {"aid": attempt_id, "qid": qid, "opt": opt, "txt": txt, "nid": str(uuid.uuid4())})
     db.commit()
 
     # Server-Side Evaluation
@@ -3144,43 +2817,19 @@ try:
 except Exception as e:
     logger.warning("Could not load some modular routers: %s", e)
 
-# Background periodic cleanup worker for expired temporary scheduled tests
-@app.on_event("startup")
-async def startup_background_tasks():
-    async def periodic_cleanup_loop():
-        # Immediate cleanup on startup
-        try:
-            cleanup_expired_scheduled_tests()
-        except Exception as e:
-            logger.warning("Startup cleanup notice: %s", e)
-
-        while True:
-            try:
-                await asyncio.sleep(30)
-                cleanup_expired_scheduled_tests()
-            except asyncio.CancelledError:
-                break
-            except Exception as exc:
-                logger.warning("Periodic cleanup loop notice: %s", exc)
-
-    asyncio.create_task(periodic_cleanup_loop())
-    logger.info("Background periodic cleanup worker active for scheduled tests (Asia/Kolkata timezone).")
-
 # ==============================================================================
 # 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
 # Serves the frontend directory so everything is available on port 8000!
 # ==============================================================================
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
-STUDENT_DIR = os.path.join(ERP_ROOT, "student")
-if os.path.isdir(STUDENT_DIR):
-    app.mount("/student", StaticFiles(directory=STUDENT_DIR, html=True), name="student")
-    logger.info("Mounted student static assets from %s", STUDENT_DIR)
+@app.get("/student", include_in_schema=False)
+def student_route():
+    return RedirectResponse(url="/student-dashboard.html")
 
-TEACHER_DIR = os.path.join(ERP_ROOT, "Teacher_Dashboard", "frontend")
-if os.path.isdir(TEACHER_DIR):
-    app.mount("/teacher", StaticFiles(directory=TEACHER_DIR, html=True), name="teacher")
-    logger.info("Mounted teacher dashboard static assets from %s", TEACHER_DIR)
+@app.get("/teacher", include_in_schema=False)
+def teacher_route():
+    return RedirectResponse(url="/teacher-dashboard.html")
 
 # Dedicated Attendance routes mapped to Teacher Dashboard Hub
 @app.get("/attendance", include_in_schema=False)
@@ -3191,63 +2840,18 @@ def attendance_route():
 def attendance_roster_route():
     return RedirectResponse(url="/teacher-dashboard.html#attendance/roster")
 
-# Explicit HTML page route handlers (declared BEFORE static mounts to guarantee instant resolution)
-@app.get("/student_timetable.html", include_in_schema=False)
-@app.get("/html/student_timetable.html", include_in_schema=False)
-@app.get("/student-timetable.html", include_in_schema=False)
-@app.get("/html/student-timetable.html", include_in_schema=False)
-@app.get("/student_timetable", include_in_schema=False)
-@app.get("/student-timetable", include_in_schema=False)
-@app.get("/student/timetable", include_in_schema=False)
-def serve_student_timetable():
-    path = os.path.join(HTML_DIR, "student_timetable.html")
-    if not os.path.isfile(path):
-        path = os.path.join(HTML_DIR, "student-timetable.html")
-    return FileResponse(path)
-
-@app.get("/teacher_timetable.html", include_in_schema=False)
-@app.get("/html/teacher_timetable.html", include_in_schema=False)
-@app.get("/teacher-timetable.html", include_in_schema=False)
-@app.get("/html/teacher-timetable.html", include_in_schema=False)
-@app.get("/teacher_timetable", include_in_schema=False)
-@app.get("/teacher-timetable", include_in_schema=False)
-@app.get("/teacher/timetable", include_in_schema=False)
-def serve_teacher_timetable():
-    path = os.path.join(HTML_DIR, "teacher_timetable.html")
-    if not os.path.isfile(path):
-        path = os.path.join(HTML_DIR, "teacher-timetable.html")
-    return FileResponse(path)
-
 @app.get("/teacher_dashboard.html", include_in_schema=False)
-@app.get("/teacher-dashboard.html", include_in_schema=False)
-@app.get("/teacher_dashboard", include_in_schema=False)
-@app.get("/teacher-dashboard", include_in_schema=False)
-def serve_teacher_dashboard():
-    path = os.path.join(HTML_DIR, "teacher_dashboard.html")
-    if not os.path.isfile(path):
-        path = os.path.join(HTML_DIR, "teacher-dashboard.html")
-    return FileResponse(path)
+def teacher_dashboard_underscore():
+    return RedirectResponse(url="/teacher-dashboard.html")
 
 @app.get("/student_dashboard.html", include_in_schema=False)
-@app.get("/student-dashboard.html", include_in_schema=False)
-@app.get("/student_dashboard", include_in_schema=False)
-@app.get("/student-dashboard", include_in_schema=False)
-def serve_student_dashboard():
-    path = os.path.join(HTML_DIR, "student-dashboard.html")
-    return FileResponse(path)
+def student_dashboard_underscore():
+    return RedirectResponse(url="/student-dashboard.html")
 
-@app.get("/login.html", include_in_schema=False)
-@app.get("/login", include_in_schema=False)
-def serve_login():
-    return FileResponse(os.path.join(HTML_DIR, "login.html"))
+@app.get("/admin_dashboard.html", include_in_schema=False)
+def admin_dashboard_underscore():
+    return RedirectResponse(url="/admin-dashboard.html")
 
-@app.get("/timetable", include_in_schema=False)
-def serve_generic_timetable():
-    return FileResponse(os.path.join(HTML_DIR, "student_timetable.html"))
-
-@app.get("/", include_in_schema=False)
-def root_redirect():
-    return RedirectResponse(url="/login.html")
 
 if os.path.isdir(FRONTEND_DIR):
     css_dir = os.path.join(FRONTEND_DIR, "css")

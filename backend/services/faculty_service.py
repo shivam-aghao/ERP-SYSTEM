@@ -33,7 +33,7 @@ class FacultyService:
             SELECT t.*, d.name as department_name 
             FROM teachers t 
             LEFT JOIN departments d ON t.department_id = d.id 
-            WHERE t.id = :uid 
+            WHERE t.id::text = :uid 
                OR LOWER(t.emp_code) = LOWER(:uid) 
                OR LOWER(t.email) = LOWER(:uid) 
                OR LOWER(t.full_name) = LOWER(:uid)
