@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="../css/attendance.css">
   <link rel="stylesheet" href="../css/modules.css">
   <link rel="stylesheet" href="../css/timetable.css">
+  <link rel="stylesheet" href="../css/teacher-modules.css">
   <link rel="stylesheet" href="../css/toast.css">
   <style>
     /* ========================================================
@@ -252,9 +253,9 @@
               </div>
             </li>
 
-            <!-- 2. Attendance (with chevron) -->
+            <!-- 2. Attendance (Single Entry Point via Timetable) -->
             <li class="sidebar-item">
-              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('attendance')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('timetable')" title="Mark Student Attendance via Timetable">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -263,13 +264,12 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
             </li>
 
-            <!-- 3. Timetable (with direct link) -->
+            <!-- 3. Timetable (Personal Timetable & Attendance Hub) -->
             <li class="sidebar-item">
-              <a href="teacher-timetable.html" class="nav-item sidebar-link" data-view="timetable">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="timetable" onclick="TeacherApp.switchView('timetable')" title="Faculty Personal Timetable">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -782,17 +782,17 @@
                 <span>Back to Timetable</span>
               </button>
 
-              <!-- Dynamic Breadcrumb Navigation: Attendance > Department > Class > Date > Subject -->
+              <!-- Dynamic Breadcrumb Navigation: Timetable > Subject > Class > Date -->
               <nav class="mark-page-breadcrumb" id="mark-page-breadcrumb">
-                <a onclick="AttendanceMarkingManager.backToTimetable()">Attendance</a>
+                <a onclick="AttendanceMarkingManager.backToTimetable()" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-weight:700; color:var(--primary-blue, #0B5CAD);">
+                  <i data-lucide="calendar" style="width:13px;height:13px;"></i> Timetable
+                </a>
                 <span class="bc-separator">&gt;</span>
-                <span id="bc-dept-text" style="font-weight:700;">CSE</span>
+                <span id="bc-subject-text" style="font-weight:700; color:var(--dark-navy, #0B1F3A);">Data Structures</span>
                 <span class="bc-separator">&gt;</span>
-                <span id="bc-class-text" style="font-weight:700;">2R1</span>
+                <span id="bc-class-text" style="font-weight:700; color:#0B5CAD;">2R1</span>
                 <span class="bc-separator">&gt;</span>
-                <span id="bc-date-text">17 September 2026</span>
-                <span class="bc-separator">&gt;</span>
-                <span id="bc-subject-text" class="bc-current">Data Structures</span>
+                <span id="bc-date-text" class="bc-current" style="color:var(--text-muted, #64748B);">17 September 2026</span>
               </nav>
             </div>
 

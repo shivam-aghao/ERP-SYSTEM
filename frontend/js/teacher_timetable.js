@@ -809,6 +809,17 @@ const TeacherTimetableApp = {
     this.renderTimetableView();
   },
 
+  handleSlotClick(subject, room, timeSlot, classId, date) {
+    const params = new URLSearchParams();
+    params.set('view', 'attendance-mark');
+    params.set('subject', subject);
+    params.set('room', room || 'Room 201');
+    params.set('time', timeSlot);
+    params.set('classId', classId || '2R1');
+    params.set('date', date || new Date().toISOString().split('T')[0]);
+    window.location.href = `teacher-dashboard.html?${params.toString()}`;
+  },
+
   // ----------------------------------------------------
   // MAIN TIMETABLE RENDERING
   // ----------------------------------------------------
@@ -1065,8 +1076,14 @@ const TeacherTimetableApp = {
                     // Build regular class card HTML if not free
                     let regularClassHTML = "";
                     if (!parsed.isFree) {
+                      const safeSub = parsed.subject.replace(/'/g, "\\'");
+                      const safeLoc = (parsed.location || 'Room 201').replace(/'/g, "\\'");
+                      const timeStr = timeSlots[slotIdx] ? `${timeSlots[slotIdx].range} ${timeSlots[slotIdx].period}` : "09:00 - 10:30 AM";
                       regularClassHTML = `
-                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}">
+                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}"
+                             onclick="TeacherTimetableApp.handleSlotClick('${safeSub}', '${safeLoc}', '${timeStr}', '2R1', '${selectedDate}')"
+                             style="cursor: pointer;"
+                             title="Click to mark attendance for ${parsed.subject}">
                           <div class="class-card-top">
                             <span class="class-type ${parsed.isLab ? 'type-lab' : 'type-lecture'}">
                               <i data-lucide="${parsed.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
@@ -1084,6 +1101,9 @@ const TeacherTimetableApp = {
                               <span>${parsed.location}</span>
                             </div>
                           ` : ''}
+                          <div style="margin-top: 4px; font-size: 10px; font-weight: 700; color: #0B5CAD;">
+                            Mark Attendance &rarr;
+                          </div>
                         </div>
                       `;
                     }
