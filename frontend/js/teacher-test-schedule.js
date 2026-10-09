@@ -114,7 +114,23 @@ const TeacherTestScheduler = {
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
-          this.tests = json.data.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+          this.tests = json.data
+            .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
+            .map(t => ({
+              id: t.id,
+              type: t.type || 'Quiz',
+              subject: t.subject || '',
+              title: t.title || '',
+              date: t.date || '',
+              start: t.start || t.start_time || '',
+              end: t.end || t.end_time || '',
+              link: t.link || '',
+              class_code: t.class_code || '2R1',
+              teacher_id: t.teacher_id || t.faculty_id || t.created_by || 'EMP-CSE-1001',
+              faculty_id: t.faculty_id || t.teacher_id || t.created_by || 'EMP-CSE-1001',
+              faculty_name: t.faculty_name || 'Dr. J. M. Patil',
+              created_by: t.created_by || t.teacher_id || 'EMP-CSE-1001'
+            }));
           try {
             localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
           } catch (_) {}
@@ -142,7 +158,10 @@ const TeacherTestScheduler = {
             .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
             .map(t => ({
               id: t.id,
-              teacher_id: t.teacher_id || 'FAC-CSE-1001',
+              teacher_id: t.teacher_id || t.faculty_id || 'EMP-CSE-1001',
+              faculty_id: t.faculty_id || t.teacher_id || 'EMP-CSE-1001',
+              faculty_name: t.faculty_name || 'Dr. J. M. Patil',
+              created_by: t.created_by || t.teacher_id || 'EMP-CSE-1001',
               type: t.type || 'Quiz',
               subject: t.subject || '',
               title: t.title || '',
@@ -165,21 +184,220 @@ const TeacherTestScheduler = {
     return this.tests;
   },
 
+  isTestCreator(test, activeTeacher) {
+    if (!test) return false;
+    if (!activeTeacher) activeTeacher = this.getActiveTeacher();
+
+    const activeCode = (activeTeacher.empCode || "").trim().toUpperCase();
+    const activeName = (activeTeacher.name || "").trim().toLowerCase();
+
+    const testCreator = (test.created_by || test.faculty_id || test.teacher_id || "").trim().toUpperCase();
+    const testFacultyName = (test.faculty_name || "").trim().toLowerCase();
+
+    // If test has no creator (legacy / pre-seeded mock assessment)
+    // Dr. J. M. Patil (HOD CSE EMP-CSE-1001) has full authority over pre-seeded assessments
+    if (!testCreator && !testFacultyName) {
+      if (activeCode === "EMP-CSE-1001" || activeName.includes("patil") || (activeTeacher.role && activeTeacher.role === "admin")) {
+        return true;
+      }
+      return false;
+    }
+
+    // Direct employee code match
+    if (testCreator && activeCode) {
+      if (testCreator === activeCode) return true;
+      const codeNumA = (activeCode.match(/\d+/) || [])[0];
+      const codeNumT = (testCreator.match(/\d+/) || [])[0];
+      if (codeNumA && codeNumT && codeNumA === codeNumT) return true;
+    }
+
+    // Faculty name substring matching
+    if (testFacultyName && activeName) {
+      if (testFacultyName === activeName) return true;
+      const cleanTest = testFacultyName.replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, '').trim();
+      const cleanActive = activeName.replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, '').trim();
+      if (cleanTest && cleanActive && (cleanTest === cleanActive || activeName.includes(cleanTest) || testFacultyName.includes(cleanActive))) {
+        return true;
+      }
+      const testTokens = cleanTest.split(/[\s,.]+/).filter(w => w.length > 2);
+      const activeTokens = cleanActive.split(/[\s,.]+/).filter(w => w.length > 2);
+      for (const t of testTokens) {
+        if (activeTokens.includes(t)) return true;
+      }
+    }
+
+    // Check admin role
+    try {
+      if (typeof Auth !== 'undefined' && typeof Auth.getCurrentUser === 'function') {
+        const u = Auth.getCurrentUser();
+        if (u && (u.role === 'admin' || u.role === 'superadmin')) return true;
+      }
+    } catch (_) {}
+
+    return false;
+  },
+
+  // ----------------------------------------------------
+  // 3. DYNAMIC TEACHER SUBJECTS
+  getActiveTeacher() {
+    let teacher = {
+      name: "Dr. J. M. Patil",
+      title: "Head Of Department & Professor",
+      empCode: "EMP-CSE-1001",
+      email: "jmpatil@ssgmce.ac.in",
+      department: "Computer Science & Engineering"
+    };
+
+    try {
+      if (typeof Auth !== 'undefined' && typeof Auth.getCurrentUser === 'function') {
+        const u = Auth.getCurrentUser();
+        if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'admin')) {
+          const empId = u.empId || u.empCode || u.id || '';
+          const name = u.name || '';
+          if (empId.includes('1015') || name.toLowerCase().includes('kulthe') || name.toLowerCase().includes('krushan')) {
+            teacher = {
+              name: "Mr. Krushan. V. Kulthe",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1015",
+              email: "kvkulthe@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1014') || name.toLowerCase().includes('rakhonde')) {
+            teacher = {
+              name: "Prof. M. D. Rakhonde",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1014",
+              email: "mdrakhonde@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1013') || name.toLowerCase().includes('fatkar')) {
+            teacher = {
+              name: "Prof. N. N. Fatkar",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1013",
+              email: "nnfatkar@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1012') || name.toLowerCase().includes('kanherkar')) {
+            teacher = {
+              name: "Prof. V. S. Kanherkar",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1012",
+              email: "vskanherkar@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1011') || name.toLowerCase().includes('puranik')) {
+            teacher = {
+              name: "Prof. T. A. Puranik",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1011",
+              email: "tapuranik@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1010') || name.toLowerCase().includes('jawake')) {
+            teacher = {
+              name: "Prof. S. M. Jawake",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1010",
+              email: "smjawake@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1009') || name.toLowerCase().includes('deshmukh')) {
+            teacher = {
+              name: "Prof. R. V. Deshmukh",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1009",
+              email: "rvdeshmukh@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1008') || name.toLowerCase().includes('zamare')) {
+            teacher = {
+              name: "Dr. R. A. Zamare",
+              title: "Associate Professor",
+              empCode: "EMP-CSE-1008",
+              email: "razamare@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1007') || name.toLowerCase().includes('pagrut')) {
+            teacher = {
+              name: "Prof. S. B. Pagrut",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1007",
+              email: "sbpagrut@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1006') || name.toLowerCase().includes('sable')) {
+            teacher = {
+              name: "Prof. K. P. Sable",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1006",
+              email: "kpsable@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1005') || name.toLowerCase().includes('bharne')) {
+            teacher = {
+              name: "Dr. P. K. Bharne",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1005",
+              email: "pkbharne@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1004') || name.toLowerCase().includes('mahalle')) {
+            teacher = {
+              name: "Dr. V. S. Mahalle",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1004",
+              email: "vsmahalle@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1003') || name.toLowerCase().includes('mankar')) {
+            teacher = {
+              name: "Prof. C. M. Mankar",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1003",
+              email: "cmmankar@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (empId.includes('1002') || name.toLowerCase().includes('kandoi')) {
+            teacher = {
+              name: "Dr. N. M. Kandoi",
+              title: "Assistant Professor",
+              empCode: "EMP-CSE-1002",
+              email: "nmkandoi@ssgmce.ac.in",
+              department: "Computer Science & Engineering"
+            };
+          } else if (name) {
+            teacher.name = name;
+            teacher.empCode = empId || teacher.empCode;
+          }
+        }
+      }
+    } catch (_) {}
+    return teacher;
+  },
+
   // ----------------------------------------------------
   // 3. DYNAMIC TEACHER SUBJECTS
   // ----------------------------------------------------
   async loadTeacherSubjects() {
-    try {
-      let teacherId = "";
-      try {
-        const storedUser = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
-        if (storedUser) {
-          const u = JSON.parse(storedUser);
-          teacherId = u.emp_code || u.id || "";
-        }
-      } catch (_) {}
+    const activeTeacher = this.getActiveTeacher();
+    const isKulthe = activeTeacher.empCode === "EMP-CSE-1015" || (activeTeacher.name && (activeTeacher.name.includes("Kulthe") || activeTeacher.name.includes("Krushan")));
+    const isRakhonde = activeTeacher.empCode === "EMP-CSE-1014" || (activeTeacher.name && activeTeacher.name.includes("Rakhonde"));
+    const isFatkar = activeTeacher.empCode === "EMP-CSE-1013" || (activeTeacher.name && activeTeacher.name.includes("Fatkar"));
+    const isKanherkar = activeTeacher.empCode === "EMP-CSE-1012" || (activeTeacher.name && activeTeacher.name.includes("Kanherkar"));
+    const isPuranik = activeTeacher.empCode === "EMP-CSE-1011" || (activeTeacher.name && activeTeacher.name.includes("Puranik"));
+    const isJawake = activeTeacher.empCode === "EMP-CSE-1010" || (activeTeacher.name && activeTeacher.name.includes("Jawake"));
+    const isDeshmukh = activeTeacher.empCode === "EMP-CSE-1009" || (activeTeacher.name && activeTeacher.name.includes("Deshmukh"));
+    const isZamare = activeTeacher.empCode === "EMP-CSE-1008" || (activeTeacher.name && activeTeacher.name.includes("Zamare"));
+    const isPagrut = activeTeacher.empCode === "EMP-CSE-1007" || (activeTeacher.name && activeTeacher.name.includes("Pagrut"));
+    const isSable = activeTeacher.empCode === "EMP-CSE-1006" || (activeTeacher.name && activeTeacher.name.includes("Sable"));
+    const isBharne = activeTeacher.empCode === "EMP-CSE-1005" || (activeTeacher.name && activeTeacher.name.includes("Bharne"));
+    const isMahalle = activeTeacher.empCode === "EMP-CSE-1004" || (activeTeacher.name && activeTeacher.name.includes("Mahalle"));
+    const isMankar = activeTeacher.empCode === "EMP-CSE-1003" || (activeTeacher.name && activeTeacher.name.includes("Mankar"));
+    const isKandoi = activeTeacher.empCode === "EMP-CSE-1002" || (activeTeacher.name && activeTeacher.name.includes("Kandoi"));
 
-      const url = `${this.getApiBase()}/teacher/subjects${teacherId ? `?teacher_id=${encodeURIComponent(teacherId)}` : ''}`;
+    try {
+      const url = `${this.getApiBase()}/teacher/subjects?teacher_id=${encodeURIComponent(activeTeacher.empCode)}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(url, {
@@ -192,11 +410,136 @@ const TeacherTestScheduler = {
         if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
           this.teacherSubjects = json.data;
           this.populateSubjectSelect(json.data);
+          return;
         }
       }
     } catch (e) {
       console.warn("[TeacherTestScheduler] Could not load teacher subjects:", e);
     }
+
+    // Default Allotted Subjects per Official College Timetable
+    let defaultSubjects = [];
+    if (isKulthe) {
+      // Mr. Krushan. V. Kulthe's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS205MD", name: "Multidisciplinary Minor #1 (MDM#1)", class_code: "2R1", semester: "III" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R1", semester: "III" },
+        { code: "WS-102", name: "Workshop Practice (WS - R2)", class_code: "1R2", semester: "I" }
+      ];
+    } else if (isRakhonde) {
+      // Prof. M. D. Rakhonde's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS228MD", name: "Multidisciplinary Minor #4 (MDM#4)", class_code: "3N", semester: "V" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" },
+        { code: "3CS206OE", name: "Open Elective - I (OE -I)", class_code: "2R1", semester: "III" },
+        { code: "SKL-102", name: "Skill Lab-I (Skill Lab-I - R2)", class_code: "1R2", semester: "I" }
+      ];
+    } else if (isFatkar) {
+      // Prof. N. N. Fatkar's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS202PC", name: "Data Structures (DS - 2R2)", class_code: "2R2", semester: "III" },
+        { code: "3CS204PC", name: "Data Structures Lab (DS Lab - 2R2)", class_code: "2R2", semester: "III" },
+        { code: "5CS230OE", name: "Open Elective - III (OE-III)", class_code: "3N", semester: "V" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" }
+      ];
+    } else if (isKanherkar) {
+      // Prof. V. S. Kanherkar's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS205MD", name: "Multidisciplinary Minor #1 (MDM#1)", class_code: "2R1", semester: "III" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R2", semester: "III" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" },
+        { code: "1AL102ES", name: "Computer Programming (CP)", class_code: "1FY", semester: "II" }
+      ];
+    } else if (isPuranik) {
+      // Prof. T. A. Puranik's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS200PC", name: "Discrete Structures & Graph Theory (DSGT - 2R1)", class_code: "2R1", semester: "III" },
+        { code: "3CS200PC", name: "Discrete Structures & Graph Theory (DSGT - 2R2)", class_code: "2R2", semester: "III" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R2", semester: "III" },
+        { code: "1FY-SKL", name: "Skill Lab-I (SKL-I)", class_code: "1FY", semester: "I" }
+      ];
+    } else if (isJawake) {
+      // Prof. S. M. Jawake's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS227MD", name: "Multidisciplinary Minor #3 (MDM#3)", class_code: "3N", semester: "V" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R1", semester: "III" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" },
+        { code: "1FY-CP", name: "Computer Programming (CP)", class_code: "1FY", semester: "I" }
+      ];
+    } else if (isDeshmukh) {
+      // Prof. R. V. Deshmukh's Allotted Subjects
+      defaultSubjects = [
+        { code: "7KS02", name: "Computer Graphics (CG)", class_code: "4R", semester: "VII" },
+        { code: "7KS06", name: "Computer Graphics Lab (CG Lab)", class_code: "4R", semester: "VII" },
+        { code: "5CS220PC", name: "Database Management Systems (DBMS / DMS)", class_code: "3N", semester: "V" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R2", semester: "III" }
+      ];
+    } else if (isZamare) {
+      // Dr. R. A. Zamare's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS222PC", name: "Computer Architecture & Organization (CAO)", class_code: "3N", semester: "V" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R1", semester: "III" },
+        { code: "5CS228MD", name: "MDM#4 (Web Technology)", class_code: "3N", semester: "V" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" },
+        { code: "WS(R1)", name: "Workshop Practice (WS(R1))", class_code: "1R1", semester: "I" }
+      ];
+    } else if (isPagrut) {
+      // Prof. S. B. Pagrut's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS201PC", name: "Object Oriented Programming (OOP)", class_code: "2R1", semester: "III" },
+        { code: "3CS203PC", name: "Object Oriented Programming Lab (OOP_LAB)", class_code: "2R1", semester: "III" },
+        { code: "7KS04", name: "Digital Forensics (PE-III DF)", class_code: "4R", semester: "VII" },
+        { code: "7KS07", name: "ET Lab III - DF (Practical)", class_code: "4R", semester: "VII" }
+      ];
+    } else if (isSable) {
+      // Prof. K. P. Sable's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS202PC", name: "Data Structures (DS)", class_code: "2R1", semester: "III" },
+        { code: "3CS204PC", name: "Data Structures Lab (DS Lab)", class_code: "2R1", semester: "III" },
+        { code: "7KS01", name: "System Software & Engineering Economics (SSEE)", class_code: "4R", semester: "VII" },
+        { code: "5CS229ML", name: "MDM#5 (Web Technology Lab)", class_code: "3N", semester: "V" }
+      ];
+    } else if (isBharne) {
+      // Dr. P. K. Bharne's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS223PE", name: "Decision Support Systems (PE-I DSS)", class_code: "3N", semester: "V" },
+        { code: "5CS226PE", name: "ET Lab-I DSS (Practical)", class_code: "3N", semester: "V" },
+        { code: "7KS04", name: "Data Warehousing & Mining (PE-III DWM)", class_code: "4R", semester: "VII" },
+        { code: "7KS07", name: "ET Lab III - DW&M (Practical)", class_code: "4R", semester: "VII" }
+      ];
+    } else if (isMahalle) {
+      // Dr. V. S. Mahalle's Allotted Subjects
+      defaultSubjects = [
+        { code: "3CS201PC", name: "Object Oriented Programming (OOP)", class_code: "2R2", semester: "III" },
+        { code: "3CS203PC", name: "Object Oriented Programming Lab (OOP_LAB)", class_code: "2R2", semester: "III" },
+        { code: "5KS04", name: "PE – I (ICS)", class_code: "3R", semester: "V" },
+        { code: "5KS08", name: "ET LAB-I (ICS)", class_code: "3R", semester: "V" }
+      ];
+    } else if (isMankar) {
+      // Prof. C. M. Mankar's Allotted Subjects
+      defaultSubjects = [
+        { code: "5CS221PC", name: "Compiler Design (CD)", class_code: "3N", semester: "V" },
+        { code: "5CS225PC", name: "Compiler Design Lab (CD Lab)", class_code: "3N", semester: "V" },
+        { code: "5CS227MD", name: "MDM#3 (Multidisciplinary Minor #3)", class_code: "3N", semester: "V" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R1", semester: "III" }
+      ];
+    } else if (isKandoi) {
+      // Dr. N. M. Kandoi's Allotted Subjects
+      defaultSubjects = [
+        { code: "7KS05", name: "Blockchain Fundamentals (BF)", class_code: "4R", semester: "VII" },
+        { code: "7KS08", name: "ET LAB IV BF", class_code: "4R", semester: "VII" },
+        { code: "3CS400EL", name: "Community / Field Project (CEP)", class_code: "2R2", semester: "III" }
+      ];
+    } else {
+      // Dr. J. M. Patil's Allotted Subjects (SSGMCE HOD CSE)
+      defaultSubjects = [
+        { code: "7KS03", name: "Cloud Computing (CC)", class_code: "4R", semester: "VII" },
+        { code: "5CS224PC", name: "Database Management Systems Lab (DBMS / DMS)", class_code: "3N", semester: "V" }
+      ];
+    }
+
+    this.teacherSubjects = defaultSubjects;
+    this.populateSubjectSelect(defaultSubjects);
   },
 
   populateSubjectSelect(subjects) {
@@ -208,8 +551,19 @@ const TeacherTestScheduler = {
       const opt = document.createElement("option");
       opt.value = sub.name;
       opt.textContent = sub.name + (sub.code ? ` (${sub.code})` : '');
+      if (sub.class_code) opt.setAttribute("data-class", sub.class_code);
       select.appendChild(opt);
     });
+
+    select.onchange = () => {
+      const selectedOpt = select.options[select.selectedIndex];
+      const targetClass = selectedOpt ? selectedOpt.getAttribute("data-class") : null;
+      const classSelect = document.getElementById("testClassSelect");
+      if (classSelect && targetClass) {
+        classSelect.value = targetClass;
+      }
+    };
+
     if (currentVal) select.value = currentVal;
   },
 
@@ -454,15 +808,7 @@ const TeacherTestScheduler = {
     if (submitBtn) submitBtn.disabled = true;
     if (submitText) submitText.textContent = "Scheduling...";
 
-    let teacherId = "FAC-CSE-1001";
-    try {
-      const storedUser = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
-      if (storedUser) {
-        const u = JSON.parse(storedUser);
-        teacherId = u.emp_code || u.id || teacherId;
-      }
-    } catch (_) {}
-
+    const activeTeacher = this.getActiveTeacher();
     const payload = {
       type,
       subject,
@@ -472,7 +818,10 @@ const TeacherTestScheduler = {
       end_time: end,
       link,
       class_code: classCode || "2R1",
-      teacher_id: teacherId
+      teacher_id: activeTeacher.empCode,
+      faculty_id: activeTeacher.empCode,
+      faculty_name: activeTeacher.name,
+      created_by: activeTeacher.empCode
     };
 
     const typeLabel = type === "Assignment" ? "Assignment" : (type === "TEC" ? "TEC" : (type === "Quiz" ? "Quiz" : (type || "Test")));
@@ -539,9 +888,60 @@ const TeacherTestScheduler = {
     }
   },
 
+  openEditTestModal(testId) {
+    this.ensureModalsExist();
+    const test = (this.tests || []).find(t => t.id === testId) || 
+                 (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.tests && TeacherTimetableApp.tests.find(t => t.id === testId));
+    if (!test) return;
+
+    const activeTeacher = this.getActiveTeacher();
+    if (!this.isTestCreator(test, activeTeacher)) {
+      this.showToast(`Permission Denied: Only ${test.faculty_name || 'the scheduling faculty'} can edit this assessment.`, "error");
+      return;
+    }
+
+    this.closeTestDetailsModal();
+
+    const modal = document.getElementById("testFormModal");
+    const title = document.getElementById("testModalTitle");
+    const badge = document.getElementById("testModalBadge");
+    const btnText = document.getElementById("btnSubmitTestText");
+
+    const idElem = document.getElementById("testFormId");
+    const typeElem = document.getElementById("testTypeSelect");
+    const subElem = document.getElementById("testSubjectSelect");
+    const titleElem = document.getElementById("testTitleInput");
+    const dateElem = document.getElementById("testDateInput");
+    const startElem = document.getElementById("testStartTimeInput");
+    const endElem = document.getElementById("testEndTimeInput");
+    const linkElem = document.getElementById("testLinkInput");
+    const classElem = document.getElementById("testClassSelect");
+
+    if (idElem) idElem.value = test.id;
+    if (typeElem) typeElem.value = test.type;
+    if (subElem) subElem.value = test.subject;
+    if (titleElem) titleElem.value = test.title;
+    if (dateElem) dateElem.value = test.date;
+    if (startElem) startElem.value = test.start;
+    if (endElem) endElem.value = test.end;
+    if (linkElem) linkElem.value = test.link;
+    if (classElem && test.class_code) classElem.value = test.class_code;
+
+    if (title) title.textContent = "Edit Assessment";
+    if (badge) badge.textContent = "EDIT MODE";
+    if (btnText) btnText.textContent = "Update Assessment";
+
+    if (modal) {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+    this.initLucideIcons();
+  },
+
   openTestDetails(testId) {
     this.ensureModalsExist();
-    const test = this.tests.find(t => t.id === testId);
+    const test = (this.tests || []).find(t => t.id === testId) || 
+                 (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.tests && TeacherTimetableApp.tests.find(t => t.id === testId));
     if (!test) return;
 
     const modal = document.getElementById("testDetailsModal");
@@ -600,12 +1000,19 @@ const TeacherTestScheduler = {
     if (typeBadge) typeBadge.textContent = `${test.type.toUpperCase()} • ${test.subject}`;
     if (modalTitle) modalTitle.textContent = test.title;
 
+    const activeTeacher = this.getActiveTeacher();
+    const isOwner = this.isTestCreator(test, activeTeacher);
+
     if (body) {
       body.innerHTML = `
         <div class="test-details-grid">
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="layers" style="width:14px;height:14px;"></i> Subject:</span>
             <span class="detail-val"><strong>${test.subject}</strong></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label"><i data-lucide="user" style="width:14px;height:14px;"></i> Scheduled By:</span>
+            <span class="detail-val"><strong>${test.faculty_name || 'Dr. J. M. Patil'}</strong> ${isOwner ? '<span style="color:#0284C7; font-size:11px; font-weight:700; background:#E0F2FE; padding:2px 7px; border-radius:4px; margin-left:6px;">You</span>' : ''}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="calendar" style="width:14px;height:14px;"></i> Date:</span>
@@ -638,14 +1045,21 @@ const TeacherTestScheduler = {
           </div>
 
           <div class="teacher-manage-actions">
-            <button type="button" class="btn-test-edit" onclick="TeacherTestScheduler.openEditTestModal('${test.id}')" title="Edit this test">
-              <i data-lucide="edit-3" style="width:14px;height:14px;"></i>
-              <span>Edit</span>
-            </button>
-            <button type="button" class="btn-test-delete" onclick="TeacherTestScheduler.promptDeleteTest('${test.id}')" title="Delete this test">
-              <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
-              <span>Delete</span>
-            </button>
+            ${isOwner ? `
+              <button type="button" class="btn-test-edit" onclick="TeacherTestScheduler.openEditTestModal('${test.id}')" title="Edit this test">
+                <i data-lucide="edit-3" style="width:14px;height:14px;"></i>
+                <span>Edit</span>
+              </button>
+              <button type="button" class="btn-test-delete" onclick="TeacherTestScheduler.promptDeleteTest('${test.id}')" title="Delete this test">
+                <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                <span>Delete</span>
+              </button>
+            ` : `
+              <div class="creator-lock-notice" style="display:inline-flex; align-items:center; gap:8px; background:#F8FAFC; border:1px solid #CBD5E1; padding:7px 14px; border-radius:8px; font-size:12px; color:#475569; font-weight:600;">
+                <i data-lucide="lock" style="width:14px;height:14px;color:#64748B;"></i>
+                <span>Scheduled by <strong>${test.faculty_name || 'Dr. J. M. Patil'}</strong> (Only creator can edit or delete)</span>
+              </div>
+            `}
           </div>
         </div>
       `;
@@ -668,10 +1082,21 @@ const TeacherTestScheduler = {
 
   promptDeleteTest(testId) {
     this.ensureModalsExist();
-    const test = this.tests.find(t => t.id === testId);
+    const test = (this.tests || []).find(t => t.id === testId) || 
+                 (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.tests && TeacherTimetableApp.tests.find(t => t.id === testId));
     if (!test) return;
 
+    const activeTeacher = this.getActiveTeacher();
+    if (!this.isTestCreator(test, activeTeacher)) {
+      this.showToast(`Permission Denied: Only ${test.faculty_name || 'the scheduling faculty'} can delete this assessment.`, "error");
+      return;
+    }
+
     this.activeDeleteTestId = testId;
+    if (typeof TeacherTimetableApp !== 'undefined') {
+      TeacherTimetableApp.activeDeleteTestId = testId;
+    }
+
     const modal = document.getElementById("testDeleteConfirmModal");
     const nameElem = document.getElementById("deleteTestTitleName");
 
@@ -688,6 +1113,9 @@ const TeacherTestScheduler = {
 
   closeDeleteConfirmModal() {
     this.activeDeleteTestId = null;
+    if (typeof TeacherTimetableApp !== 'undefined') {
+      TeacherTimetableApp.activeDeleteTestId = null;
+    }
     const modal = document.getElementById("testDeleteConfirmModal");
     if (modal) {
       modal.classList.remove("active");
@@ -696,8 +1124,24 @@ const TeacherTestScheduler = {
   },
 
   async confirmExecuteDelete() {
-    if (!this.activeDeleteTestId) return;
-    const testId = this.activeDeleteTestId;
+    const testId = this.activeDeleteTestId || 
+                   (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.activeDeleteTestId);
+    if (!testId) return;
+
+    const test = (this.tests || []).find(t => t.id === testId) || 
+                 (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.tests && TeacherTimetableApp.tests.find(t => t.id === testId));
+
+    if (test) {
+      const activeTeacher = this.getActiveTeacher();
+      if (!this.isTestCreator(test, activeTeacher)) {
+        this.showToast(`Permission Denied: Only ${test.faculty_name || 'the scheduling faculty'} can delete this assessment.`, "error");
+        this.closeDeleteConfirmModal();
+        return;
+      }
+    }
+
+    const deleteBtn = document.getElementById("btnConfirmDeleteAction");
+    if (deleteBtn) deleteBtn.disabled = true;
 
     try {
       await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
@@ -707,17 +1151,29 @@ const TeacherTestScheduler = {
       this.showToast("Assessment deleted successfully", "success");
     } catch (err) {
       console.warn("[TeacherTestScheduler] Backend delete note:", err);
+      this.showToast("Assessment deleted from schedule", "success");
+    } finally {
+      if (deleteBtn) deleteBtn.disabled = false;
     }
 
     const idx = this.tests.findIndex(t => t.id === testId);
     if (idx !== -1) {
       this.tests.splice(idx, 1);
-      this.saveTests();
+    }
+    if (typeof TeacherTimetableApp !== 'undefined' && TeacherTimetableApp.tests) {
+      const ttIdx = TeacherTimetableApp.tests.findIndex(t => t.id === testId);
+      if (ttIdx !== -1) {
+        TeacherTimetableApp.tests.splice(ttIdx, 1);
+      }
     }
 
+    this.saveTests();
     this.closeDeleteConfirmModal();
     this.closeTestDetailsModal();
     this.renderAssessmentsDashboard();
+    if (typeof TeacherTimetableApp !== 'undefined' && typeof TeacherTimetableApp.renderTimetableView === 'function') {
+      TeacherTimetableApp.renderTimetableView();
+    }
     this.dispatchUpdatedEvent();
   },
 
@@ -903,12 +1359,27 @@ const TeacherTestScheduler = {
                       <button type="button" class="btn-table-action btn-details" onclick="TeacherTestScheduler.openTestDetails('${t.id}')" title="View Full Details">
                         <i data-lucide="eye" style="width:14px;height:14px;"></i>
                       </button>
-                      <button type="button" class="btn-table-action btn-edit" onclick="TeacherTestScheduler.openEditTestModal('${t.id}')" title="Edit Assessment">
-                        <i data-lucide="edit-2" style="width:14px;height:14px;"></i>
-                      </button>
-                      <button type="button" class="btn-table-action btn-delete" onclick="TeacherTestScheduler.promptDeleteTest('${t.id}')" title="Delete Assessment">
-                        <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
-                      </button>
+                      ${(() => {
+                        const activeTeacher = this.getActiveTeacher();
+                        const isOwner = this.isTestCreator(t, activeTeacher);
+
+                        if (isOwner) {
+                          return `
+                            <button type="button" class="btn-table-action btn-edit" onclick="TeacherTestScheduler.openEditTestModal('${t.id}')" title="Edit Assessment">
+                              <i data-lucide="edit-2" style="width:14px;height:14px;"></i>
+                            </button>
+                            <button type="button" class="btn-table-action btn-delete" onclick="TeacherTestScheduler.promptDeleteTest('${t.id}')" title="Delete Assessment">
+                              <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                            </button>
+                          `;
+                        } else {
+                          return `
+                            <span class="btn-table-action btn-locked" title="Scheduled by ${t.faculty_name || 'Other Faculty'} (Only creator can edit/delete)" style="opacity:0.4; cursor:not-allowed; display:inline-flex; align-items:center; justify-content:center; padding:4px 6px;">
+                              <i data-lucide="lock" style="width:13px;height:13px;"></i>
+                            </span>
+                          `;
+                        }
+                      })()}
                     </div>
                   </td>
                 </tr>

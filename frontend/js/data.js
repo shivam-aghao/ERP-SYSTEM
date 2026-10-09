@@ -373,7 +373,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 3,
+          "slot": 5,
           "subject": "BF Lab (Batch A)",
           "class": "4R",
           "venue": "ET Lab IV",
@@ -381,7 +381,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": "A"
         },
         {
-          "slot": 4,
+          "slot": 6,
           "subject": "BF Lab (Batch A)",
           "class": "4R",
           "venue": "ET Lab IV",
@@ -677,7 +677,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "ICS",
           "class": "3R",
           "venue": "DBMS Lab",
@@ -711,7 +711,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "ICS",
           "class": "3R",
           "venue": "DBMS Lab",
@@ -753,7 +753,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": "H"
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "OOP",
           "class": "2R2",
           "venue": "B007",
@@ -809,7 +809,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "PE-I DSS",
         "theory": 3,
         "practical": 6,
-        "total": 18
+        "total": 9
       },
       {
         "semester": "VII",
@@ -983,11 +983,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "III",
-        "code": "3CS202PC",
+        "code": "3CS202PC / 3CS204PC",
         "abbr": "DS",
         "theory": 4,
         "practical": 8,
-        "total": 17
+        "total": 12
       },
       {
         "semester": "VII",
@@ -1166,7 +1166,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "OOP",
         "theory": 4,
         "practical": 8,
-        "total": 17
+        "total": 12
       },
       {
         "semester": "VII",
@@ -1336,7 +1336,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "CAO",
         "theory": 3,
         "practical": 0,
-        "total": 17
+        "total": 3
       },
       {
         "semester": "III",
@@ -1475,7 +1475,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "CG (Computer Graphics)",
         "theory": 3,
         "practical": 8,
-        "total": 18
+        "total": 11
       },
       {
         "semester": "V",
@@ -1657,18 +1657,34 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "I",
-        "code": "CP-101",
-        "abbr": "CP (Computer Prog)",
+        "code": "1FY-CP",
+        "abbr": "CP (Computer Programming)",
         "theory": 4,
         "practical": 6,
-        "total": 18
+        "total": 10
       },
       {
         "semester": "V",
         "code": "5CS227MD",
-        "abbr": "DBMS",
+        "abbr": "MDM#3",
         "theory": 2,
         "practical": 0,
+        "total": 2
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "MDM#5 (Web Tech Lab)",
+        "theory": 0,
+        "practical": 2,
         "total": 2
       }
     ],
@@ -1677,7 +1693,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#3",
-          "class": "3R",
+          "class": "3N",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1687,7 +1703,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#3",
-          "class": "3R",
+          "class": "3N",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1698,7 +1714,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1706,7 +1722,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1716,7 +1732,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1724,7 +1740,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1734,7 +1750,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 3,
           "subject": "MDM (WT-B2)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B2"
@@ -1742,7 +1758,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM (WT-B2)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B2"
@@ -1759,7 +1775,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "DSGT-R1",
         "theory": 4,
         "practical": 0,
-        "total": 19
+        "total": 4
       },
       {
         "semester": "III",
@@ -1771,7 +1787,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
       },
       {
         "semester": "I",
-        "code": "SKL-101",
+        "code": "1FY-SKL",
         "abbr": "Skill lab-I",
         "theory": 1,
         "practical": 6,
@@ -1792,7 +1808,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1800,7 +1816,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1836,7 +1852,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1844,7 +1860,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1901,11 +1917,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "II",
-        "code": "1AL102ES",
+        "code": "1AL102ES / 1AL105ES",
         "abbr": "CP",
         "theory": 4,
         "practical": 6,
-        "total": 18
+        "total": 10
       },
       {
         "semester": "III",
@@ -1937,7 +1953,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM#1",
-          "class": "3R",
+          "class": "2R1",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1948,7 +1964,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1956,14 +1972,14 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
         {
           "slot": 4,
           "subject": "MDM#1",
-          "class": "3R",
+          "class": "2R1",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1974,7 +1990,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1982,7 +1998,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1993,16 +2009,16 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B3)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B3"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B3)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B3"
         }
@@ -2014,11 +2030,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "III",
-        "code": "3CS202PC",
+        "code": "3CS202PC / 3CS204PC",
         "abbr": "DS-R2",
         "theory": 4,
         "practical": 8,
-        "total": 18
+        "total": 12
       },
       {
         "semester": "V",
@@ -2043,7 +2059,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "A"
         },
@@ -2051,7 +2067,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "A"
         }
@@ -2061,7 +2077,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch C)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "C"
         },
@@ -2069,7 +2085,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch C)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "C"
         },
@@ -2087,7 +2103,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch D)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "D"
         },
@@ -2095,7 +2111,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch D)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "D"
         },
@@ -2110,7 +2126,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 6,
           "subject": "OE-III",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2121,7 +2137,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B"
         },
@@ -2129,7 +2145,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B"
         },
@@ -2144,7 +2160,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 6,
           "subject": "OE-III",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2164,23 +2180,23 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B6)",
-          "class": "3R",
-          "venue": "Lab 01",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B6"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B6)",
-          "class": "3R",
-          "venue": "Lab 01",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B6"
         },
         {
           "slot": 3,
           "subject": "MDM (WT-B7)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B7"
@@ -2188,7 +2204,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM (WT-B7)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B7"
@@ -2205,7 +2221,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "(MDM#4)",
         "theory": 2,
         "practical": 0,
-        "total": 16
+        "total": 2
       },
       {
         "semester": "V",
@@ -2247,7 +2263,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#4",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2265,7 +2281,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#4",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2285,34 +2301,34 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B5)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B5"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B5)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B5"
         },
         {
           "slot": 3,
           "subject": "MDM (WT-8)",
-          "class": "3R",
-          "venue": "Lab 04",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
-          "batch": "WT-8"
+          "batch": "B8"
         },
         {
           "slot": 4,
           "subject": "MDM (WT-8)",
-          "class": "3R",
-          "venue": "Lab 04",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
-          "batch": "WT-8"
+          "batch": "B8"
         }
       ]
     }
@@ -2326,7 +2342,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "WS(R2)",
         "theory": 1,
         "practical": 6,
-        "total": 13
+        "total": 7
       },
       {
         "semester": "III",
@@ -2369,7 +2385,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         },
@@ -2377,7 +2393,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         }
@@ -2389,7 +2405,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         },
@@ -2397,7 +2413,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         }

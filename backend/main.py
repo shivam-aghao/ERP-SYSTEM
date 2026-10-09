@@ -56,7 +56,10 @@ try:
         _con.execute(text("""
             CREATE TABLE IF NOT EXISTS timetable_assessments (
                 id VARCHAR(36) PRIMARY KEY,
-                teacher_id VARCHAR(36),
+                teacher_id VARCHAR(50),
+                faculty_id VARCHAR(50),
+                faculty_name VARCHAR(150),
+                created_by VARCHAR(50),
                 type VARCHAR(30) NOT NULL,
                 subject VARCHAR(150) NOT NULL,
                 title VARCHAR(250) NOT NULL,
@@ -69,6 +72,16 @@ try:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
+        for col_def in [
+            ("teacher_id", "VARCHAR(50)"),
+            ("faculty_id", "VARCHAR(50)"),
+            ("faculty_name", "VARCHAR(150)"),
+            ("created_by", "VARCHAR(50)")
+        ]:
+            try:
+                _con.execute(text(f"ALTER TABLE timetable_assessments ADD COLUMN {col_def[0]} {col_def[1]}"))
+            except Exception:
+                pass
         _con.commit()
 except Exception as _e:
     logger.warning("Notice on timetable_assessments check: %s", _e)
@@ -198,6 +211,10 @@ class TimetableAssessmentCreate(BaseModel):
     end_time: str # 'HH:MM'
     link: str
     class_code: Optional[str] = "2R1"
+    teacher_id: Optional[str] = None
+    faculty_id: Optional[str] = None
+    faculty_name: Optional[str] = None
+    created_by: Optional[str] = None
 
 class TimetableAssessmentUpdate(BaseModel):
     type: Optional[str] = None
@@ -208,6 +225,10 @@ class TimetableAssessmentUpdate(BaseModel):
     end_time: Optional[str] = None
     link: Optional[str] = None
     class_code: Optional[str] = None
+    teacher_id: Optional[str] = None
+    faculty_id: Optional[str] = None
+    faculty_name: Optional[str] = None
+    created_by: Optional[str] = None
 
 def verify_faculty_or_admin(request: Request):
     """Enforces strict role permissions: students are read-only; only faculty/admin can schedule."""
@@ -346,7 +367,7 @@ def health_check():
         "database": "connected",
         "database_type": "SQLite + Supabase Cloud",
         "supabase": "connected" if supabase_online else "available",
-        "supabase_url": DEFAULT_SUPABASE_URL,
+        "supabase_url": settings.SUPABASE_URL,
         "port": 8000
     }
 
@@ -367,7 +388,7 @@ def supabase_status_endpoint():
             error_msg = str(ex)
     return success_response({
         "supabase_connected": connected,
-        "supabase_url": DEFAULT_SUPABASE_URL,
+        "supabase_url": settings.SUPABASE_URL,
         "teachers_in_supabase": teachers_count,
         "students_in_supabase": students_count,
         "error": error_msg
@@ -666,6 +687,132 @@ def get_specific_teacher_timetable(teacher_id: str, db: Session = Depends(get_db
     data = FacultyService.get_personal_timetable(teacher_id, db)
     return success_response(data)
 
+@api.get("/teacher/subjects", tags=["Faculty Portal"])
+@app.get("/api/teacher/subjects", tags=["Faculty Portal"])
+def get_teacher_allotted_subjects(request: Request, teacher_id: Optional[str] = Query(None), emp_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    """Fetch allotted subjects for test scheduling according to official SSGMCE faculty timetable."""
+    tid = extract_teacher_identifier_unified(request, teacher_id, emp_code) or ""
+    tid_lower = tid.lower()
+    
+    if "1015" in tid_lower or "kulthe" in tid_lower or "krushan" in tid_lower:
+        # Mr. Krushan. V. Kulthe's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "5CS205MD", "name": "Multidisciplinary Minor #1 (MDM#1)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "A4"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Seminar Hall"},
+            {"code": "WS-102", "name": "Workshop Practice (WS - R2)", "class_code": "1R2", "semester": "I", "type": "Theory / Practical", "room": "Workshop / Lab"}
+        ]
+    elif "1014" in tid_lower or "rakhonde" in tid_lower:
+        # Prof. M. D. Rakhonde's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "5CS228MD", "name": "Multidisciplinary Minor #4 (MDM#4)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "C1"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 02"},
+            {"code": "3CS206OE", "name": "Open Elective - I (OE -I)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "A3"},
+            {"code": "SKL-102", "name": "Skill Lab-I (Skill Lab-I - R2)", "class_code": "1R2", "semester": "I", "type": "Theory / Practical", "room": "Classroom / Lab"}
+        ]
+    elif "1013" in tid_lower or "fatkar" in tid_lower:
+        # Prof. N. N. Fatkar's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS202PC", "name": "Data Structures (DS - 2R2)", "class_code": "2R2", "semester": "III", "type": "Theory", "room": "B007"},
+            {"code": "3CS204PC", "name": "Data Structures Lab (DS Lab - 2R2)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Lab 02"},
+            {"code": "5CS230OE", "name": "Open Elective - III (OE-III)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "C1"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 02"}
+        ]
+    elif "1012" in tid_lower or "kanherkar" in tid_lower:
+        # Prof. V. S. Kanherkar's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS205MD", "name": "Multidisciplinary Minor #1 (MDM#1)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "C2"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Seminar Hall"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 02"},
+            {"code": "1AL102ES", "name": "Computer Programming (CP)", "class_code": "1FY", "semester": "II", "type": "Theory / Practical", "room": "Classroom / Lab"}
+        ]
+    elif "1011" in tid_lower or "puranik" in tid_lower:
+        # Prof. T. A. Puranik's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS200PC", "name": "Discrete Structures & Graph Theory (DSGT - 2R1)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "B108"},
+            {"code": "3CS200PC", "name": "Discrete Structures & Graph Theory (DSGT - 2R2)", "class_code": "2R2", "semester": "III", "type": "Theory", "room": "B007"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Seminar Hall"},
+            {"code": "1FY-SKL", "name": "Skill Lab-I (SKL-I)", "class_code": "1FY", "semester": "I", "type": "Theory / Practical", "room": "Lab"}
+        ]
+    elif "1010" in tid_lower or "jawake" in tid_lower:
+        # Prof. S. M. Jawake's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "5CS227MD", "name": "Multidisciplinary Minor #3 (MDM#3)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "C2"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Seminar Hall"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 02"},
+            {"code": "1FY-CP", "name": "Computer Programming (CP)", "class_code": "1FY", "semester": "I", "type": "Theory / Practical", "room": "Classroom / Lab"}
+        ]
+    elif "1009" in tid_lower or "deshmukh" in tid_lower:
+        # Prof. R. V. Deshmukh's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "7KS02", "name": "Computer Graphics (CG)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "B206"},
+            {"code": "7KS06", "name": "Computer Graphics Lab (CG Lab)", "class_code": "4R", "semester": "VII", "type": "Practical", "room": "Graphics Lab"},
+            {"code": "5CS220PC", "name": "Database Management Systems (DBMS / DMS)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "B206"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Seminar Hall"}
+        ]
+    elif "1008" in tid_lower or "zamare" in tid_lower:
+        # Dr. R. A. Zamare's Allotted Subjects (Associate Professor, CSE)
+        subjects = [
+            {"code": "5CS222PC", "name": "Computer Architecture & Organization (CAO)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "B206"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Seminar Hall"},
+            {"code": "5CS228MD", "name": "MDM#4 (Web Technology)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "C2"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 01"},
+            {"code": "WS(R1)", "name": "Workshop Practice (WS(R1))", "class_code": "1R1", "semester": "I", "type": "Practical", "room": "Workshop"}
+        ]
+    elif "1007" in tid_lower or "pagrut" in tid_lower:
+        # Prof. S. B. Pagrut's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS201PC", "name": "Object Oriented Programming (OOP)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "B108"},
+            {"code": "3CS203PC", "name": "Object Oriented Programming Lab (OOP_LAB)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Lab"},
+            {"code": "7KS04", "name": "Digital Forensics (PE-III DF)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "Room 402"},
+            {"code": "7KS07", "name": "ET Lab III – DF", "class_code": "4R", "semester": "VII", "type": "Practical", "room": "ET Lab III"}
+        ]
+    elif "1006" in tid_lower or "sable" in tid_lower:
+        # Prof. K. P. Sable's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS202PC", "name": "Data Structures (DS)", "class_code": "2R1", "semester": "III", "type": "Theory", "room": "B108"},
+            {"code": "3CS204PC", "name": "Data Structures Lab (DS Lab)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Lab"},
+            {"code": "7KS01", "name": "System Software & Engineering Economics (SSEE)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "B108"},
+            {"code": "5CS229ML", "name": "MDM#5 (Web Technology Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab 04"}
+        ]
+    elif "1005" in tid_lower or "bharne" in tid_lower:
+        # Dr. P. K. Bharne's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "5CS223PE", "name": "Decision Support Systems (PE-I DSS)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "B206"},
+            {"code": "5CS226PE", "name": "ET Lab-I DSS", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab"},
+            {"code": "7KS04", "name": "Data Warehousing & Mining (PE-III DWM)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "B206"},
+            {"code": "7KS07", "name": "ET Lab III - DW&M", "class_code": "4R", "semester": "VII", "type": "Practical", "room": "Lab"}
+        ]
+    elif "1004" in tid_lower or "mahalle" in tid_lower:
+        # Dr. V. S. Mahalle's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "3CS201PC", "name": "Object Oriented Programming (OOP)", "class_code": "2R2", "semester": "III", "type": "Theory", "room": "B007"},
+            {"code": "3CS203PC", "name": "Object Oriented Programming Lab (OOP_LAB)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Lab"},
+            {"code": "5KS04", "name": "PE – I (ICS)", "class_code": "3R", "semester": "V", "type": "Theory", "room": "DBMS Lab"},
+            {"code": "5KS08", "name": "ET LAB-I (ICS)", "class_code": "3R", "semester": "V", "type": "Practical", "room": "ET Lab I"}
+        ]
+    elif "1003" in tid_lower or "mankar" in tid_lower:
+        # Prof. C. M. Mankar's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "5CS221PC", "name": "Compiler Design (CD)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "B206"},
+            {"code": "5CS225PC", "name": "Compiler Design Lab (CD Lab)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Lab"},
+            {"code": "5CS227MD", "name": "MDM#3 (Multidisciplinary Minor #3)", "class_code": "3N", "semester": "V", "type": "Theory", "room": "C1"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R1", "semester": "III", "type": "Practical", "room": "Seminar Hall"}
+        ]
+    elif "1002" in tid_lower or "kandoi" in tid_lower:
+        # Dr. N. M. Kandoi's Allotted Subjects (Assistant Professor, CSE)
+        subjects = [
+            {"code": "7KS05", "name": "Blockchain Fundamentals (BF)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "B007"},
+            {"code": "7KS08", "name": "ET LAB IV BF", "class_code": "4R", "semester": "VII", "type": "Practical", "room": "ET Lab IV"},
+            {"code": "3CS400EL", "name": "Community / Field Project (CEP)", "class_code": "2R2", "semester": "III", "type": "Practical", "room": "Seminar Hall"}
+        ]
+    else:
+        # Dr. J. M. Patil's Allotted Subjects (HOD & Professor, CSE)
+        subjects = [
+            {"code": "7KS03", "name": "Cloud Computing (CC)", "class_code": "4R", "semester": "VII", "type": "Theory", "room": "B007"},
+            {"code": "5CS224PC", "name": "Database Management Systems Lab (DBMS / DMS)", "class_code": "3N", "semester": "V", "type": "Practical", "room": "Adv Systems Lab"}
+        ]
+    return success_response(subjects)
+
 # ==============================================================================
 # TIMETABLE ASSESSMENTS / TESTS MODULE (Shared DB between Faculty & Student)
 # ==============================================================================
@@ -738,7 +885,11 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
                 "start": m["start_time"],
                 "end": m["end_time"],
                 "link": m["link"],
-                "class_code": m.get("class_code") or "2R1"
+                "class_code": m.get("class_code") or "2R1",
+                "teacher_id": m.get("teacher_id") or m.get("faculty_id") or "EMP-CSE-1001",
+                "faculty_id": m.get("faculty_id") or m.get("teacher_id") or "EMP-CSE-1001",
+                "faculty_name": m.get("faculty_name") or "Dr. J. M. Patil",
+                "created_by": m.get("created_by") or m.get("teacher_id") or "EMP-CSE-1001"
             })
     return success_response(tests)
 
@@ -747,11 +898,34 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
 def create_timetable_test(payload: TimetableAssessmentCreate, auth: dict = Depends(verify_faculty_or_admin), db: Session = Depends(get_db)):
     """Faculty schedules a test or assessment. Stored directly in backend database. Rejected for students (403)."""
     test_id = payload.id or f"test-{uuid.uuid4().hex[:10]}"
+    teacher_id = payload.teacher_id or payload.faculty_id or payload.created_by or "EMP-CSE-1001"
+    faculty_id = payload.faculty_id or teacher_id
+    faculty_name = payload.faculty_name or "Dr. J. M. Patil"
+    created_by = payload.created_by or teacher_id
+
     db.execute(text("""
-        INSERT INTO timetable_assessments (id, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
-        VALUES (:id, :type, :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO timetable_assessments (id, teacher_id, faculty_id, faculty_name, created_by, type, subject, title, date, start_time, end_time, link, class_code, created_at, updated_at)
+        VALUES (:id, :teacher_id, :faculty_id, :faculty_name, :created_by, :type, :subject, :title, :date, :start, :end, :link, :class_code, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+            type = excluded.type,
+            subject = excluded.subject,
+            title = excluded.title,
+            date = excluded.date,
+            start_time = excluded.start_time,
+            end_time = excluded.end_time,
+            link = excluded.link,
+            class_code = excluded.class_code,
+            teacher_id = COALESCE(excluded.teacher_id, timetable_assessments.teacher_id),
+            faculty_id = COALESCE(excluded.faculty_id, timetable_assessments.faculty_id),
+            faculty_name = COALESCE(excluded.faculty_name, timetable_assessments.faculty_name),
+            created_by = COALESCE(excluded.created_by, timetable_assessments.created_by),
+            updated_at = CURRENT_TIMESTAMP
     """), {
         "id": test_id,
+        "teacher_id": teacher_id,
+        "faculty_id": faculty_id,
+        "faculty_name": faculty_name,
+        "created_by": created_by,
         "type": payload.type,
         "subject": payload.subject,
         "title": payload.title,
@@ -764,13 +938,18 @@ def create_timetable_test(payload: TimetableAssessmentCreate, auth: dict = Depen
     db.commit()
     return success_response({
         "id": test_id,
+        "teacher_id": teacher_id,
+        "faculty_id": faculty_id,
+        "faculty_name": faculty_name,
+        "created_by": created_by,
         "type": payload.type,
         "subject": payload.subject,
         "title": payload.title,
         "date": payload.date,
         "start": payload.start_time,
         "end": payload.end_time,
-        "link": payload.link
+        "link": payload.link,
+        "class_code": payload.class_code or "2R1"
     }, "Assessment scheduled successfully in database", code=201)
 
 @api.put("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
@@ -807,6 +986,18 @@ def update_timetable_test(test_id: str, payload: TimetableAssessmentUpdate, auth
     if payload.class_code is not None:
         updates.append("class_code = :class_code")
         params["class_code"] = payload.class_code
+    if payload.teacher_id is not None:
+        updates.append("teacher_id = :teacher_id")
+        params["teacher_id"] = payload.teacher_id
+    if payload.faculty_id is not None:
+        updates.append("faculty_id = :faculty_id")
+        params["faculty_id"] = payload.faculty_id
+    if payload.faculty_name is not None:
+        updates.append("faculty_name = :faculty_name")
+        params["faculty_name"] = payload.faculty_name
+    if payload.created_by is not None:
+        updates.append("created_by = :created_by")
+        params["created_by"] = payload.created_by
 
     updates.append("updated_at = CURRENT_TIMESTAMP")
     db.execute(text(f"UPDATE timetable_assessments SET {', '.join(updates)} WHERE id = :id"), params)
@@ -816,7 +1007,12 @@ def update_timetable_test(test_id: str, payload: TimetableAssessmentUpdate, auth
     m = dict(updated._mapping)
     return success_response({
         "id": m["id"], "type": m["type"], "subject": m["subject"], "title": m["title"],
-        "date": m["date"], "start": m["start_time"], "end": m["end_time"], "link": m["link"]
+        "date": m["date"], "start": m["start_time"], "end": m["end_time"], "link": m["link"],
+        "class_code": m.get("class_code") or "2R1",
+        "teacher_id": m.get("teacher_id") or "EMP-CSE-1001",
+        "faculty_id": m.get("faculty_id") or "EMP-CSE-1001",
+        "faculty_name": m.get("faculty_name") or "Dr. J. M. Patil",
+        "created_by": m.get("created_by") or "EMP-CSE-1001"
     }, "Assessment updated successfully")
 
 @api.delete("/timetable/tests/{test_id}", tags=["Timetable Assessments"])
@@ -2851,6 +3047,22 @@ def student_dashboard_underscore():
 @app.get("/admin_dashboard.html", include_in_schema=False)
 def admin_dashboard_underscore():
     return RedirectResponse(url="/admin-dashboard.html")
+
+@app.get("/teacher-test-schedule", include_in_schema=False)
+@app.get("/teacher_test_schedule", include_in_schema=False)
+@app.get("/test-schedule", include_in_schema=False)
+def teacher_test_schedule_route():
+    return RedirectResponse(url="/teacher-test-schedule.html")
+
+@app.get("/teacher-timetable", include_in_schema=False)
+@app.get("/teacher_timetable", include_in_schema=False)
+def teacher_timetable_route():
+    return RedirectResponse(url="/teacher-timetable.html")
+
+@app.get("/student-timetable", include_in_schema=False)
+@app.get("/student_timetable", include_in_schema=False)
+def student_timetable_route():
+    return RedirectResponse(url="/student-timetable.html")
 
 
 if os.path.isdir(FRONTEND_DIR):

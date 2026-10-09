@@ -418,7 +418,7 @@ const StudentTimetableApp = {
   // ----------------------------------------------------
   timeToMinutes(timeStr) {
     if (!timeStr) return 0;
-    const str = timeStr.trim();
+    const str = String(timeStr).trim().replace('.', ':');
     const match = str.match(/^(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?$/);
     if (match) {
       let h = parseInt(match[1], 10);
@@ -426,13 +426,13 @@ const StudentTimetableApp = {
       const meridiem = match[3] ? match[3].toUpperCase() : null;
       if (meridiem === "PM" && h < 12) h += 12;
       else if (meridiem === "AM" && h === 12) h = 0;
-      else if (!meridiem && h >= 1 && h <= 6) h += 12; // Standard college academic afternoon (1:00 - 6:59 -> PM)
+      else if (!meridiem && h >= 1 && h <= 7) h += 12; // College academic afternoon (1:00 - 7:59 -> PM)
       return h * 60 + m;
     }
     const parts = str.split(":");
     let hours = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
-    if (hours >= 1 && hours <= 6) hours += 12;
+    if (hours >= 1 && hours <= 7) hours += 12;
     return hours * 60 + mins;
   },
 
@@ -470,16 +470,23 @@ const StudentTimetableApp = {
     return false;
   },
 
-  getSlotIndexForTime(timeStr) {
-    // 0: 09:00 - 10:30 (center ~ 585 mins)
-    // 1: 11:00 - 12:30 (center ~ 705 mins)
-    // 2: 13:30 - 15:00 (center ~ 855 mins)
-    // 3: 15:30 - 17:00 (center ~ 975 mins)
+  getSlotIndexForTime(timeStr, isSat = false) {
     const mins = this.timeToMinutes(timeStr);
-    if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
-    if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
-    if (mins < 915) return 2;       // < 03:15 PM -> Slot 3
-    return 3;                       // >= 03:15 PM -> Slot 4
+    if (isSat) {
+      if (mins < 570) return 0; // < 09:30 AM -> Sat Slot 1 (8:30 - 9:30)
+      if (mins < 645) return 1; // < 10:45 AM -> Sat Slot 2 (9:30 - 10:30)
+      if (mins < 705) return 2; // < 11:45 AM -> Sat Slot 3 (10:45 - 11:45)
+      if (mins < 765) return 3; // < 12:45 PM -> Sat Slot 4 (11:45 - 12:45)
+      if (mins < 945) return 4;
+      return 5;
+    }
+    // Weekday 6-Slot System (11:00 AM - 05:45 PM)
+    if (mins < 720) return 0;   // < 12:00 PM -> Slot 1 (11.00 am - 12.00 pm)
+    if (mins < 795) return 1;   // < 01:15 PM -> Slot 2 (12.00 pm - 01.00 pm)
+    if (mins < 855) return 2;   // < 02:15 PM -> Slot 3 (01.15 pm - 02.15 pm)
+    if (mins < 945) return 3;   // < 03:45 PM -> Slot 4 (02.15 pm - 03.15 pm)
+    if (mins < 1005) return 4;  // < 04:45 PM -> Slot 5 (03.45 pm - 04.45 pm)
+    return 5;                   // >= 04:45 PM -> Slot 6 (04.45 pm - 05.45 pm)
   },
 
   getTestStatus(test) {
@@ -526,6 +533,24 @@ const StudentTimetableApp = {
     }
   },
 
+  isTargetedForCurrentStudent(test) {
+    if (!test) return false;
+    const rawClass = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode || '2R1')) || '2R1';
+    const studentClass = rawClass.trim().toLowerCase();
+    const targetClass = (test.class_code || test.class || '').trim().toLowerCase();
+
+    if (!targetClass || targetClass === 'all' || targetClass === 'any' || targetClass === 'global') return true;
+    if (targetClass === studentClass) return true;
+
+    const extractToken = (s) => (s.match(/[1-4][a-z][1-2]?/g) || []);
+    const tTokens = extractToken(targetClass);
+    const sTokens = extractToken(studentClass);
+    if (tTokens.length > 0 && sTokens.length > 0) {
+      return tTokens.some(t => sTokens.includes(t));
+    }
+    return targetClass.includes(studentClass) || studentClass.includes(targetClass);
+  },
+
   // ----------------------------------------------------
   // REAL-TIME SUPABASE SUBSCRIPTION & LIVE STATUS TICKER
   // ----------------------------------------------------
@@ -543,9 +568,6 @@ const StudentTimetableApp = {
         try { client.removeChannel(this.realtimeChannel); } catch (_) {}
       }
 
-      const rawClass = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode || '2R1')) || '2R1';
-      const studentClass = rawClass.trim().toLowerCase();
-
       this.realtimeChannel = client
         .channel('realtime:student_timetable_assessments')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'timetable_assessments' }, async (payload) => {
@@ -556,20 +578,7 @@ const StudentTimetableApp = {
           // Strictly ignore permanent quizzes or non-scheduled records
           if (!tid.startsWith('test-')) return;
 
-          const targetClass = (record.class_code || '').trim().toLowerCase();
-          
-          // Section match with token isolation
-          const isTargeted = (() => {
-            if (!targetClass || targetClass === 'all' || targetClass === 'any' || targetClass === 'global') return true;
-            if (targetClass === studentClass) return true;
-            const extractToken = (s) => (s.match(/[1-4][a-z][1-2]?/g) || []);
-            const tTokens = extractToken(targetClass);
-            const sTokens = extractToken(studentClass);
-            if (tTokens.length > 0 && sTokens.length > 0) {
-              return tTokens.some(t => sTokens.includes(t));
-            }
-            return targetClass.includes(studentClass) || studentClass.includes(targetClass);
-          })();
+          const isTargeted = this.isTargetedForCurrentStudent(record);
 
           if (payload.eventType === 'DELETE') {
             this.tests = this.tests.filter(t => t.id !== record.id);
@@ -761,17 +770,6 @@ const StudentTimetableApp = {
     const container = document.getElementById("timetable-content");
     if (!container) return;
 
-    const timeSlots = [
-      { range: "09:00 – 10:30", period: "AM", label: "Slot 1" },
-      { range: "11:00 – 12:30", period: "PM", label: "Slot 2" },
-      { range: "01:30 – 03:00", period: "PM", label: "Slot 3" },
-      { range: "03:30 – 05:00", period: "PM", label: "Slot 4" }
-    ];
-
-    const term = (typeof AcademicDateUtils !== 'undefined')
-      ? AcademicDateUtils.getCurrentAcademicTerm()
-      : { academicYear: "2026-2027", semesterType: "Odd" };
-
     const selectedDate = this.selectedTimetableDate || (
       (typeof AcademicDateUtils !== 'undefined')
         ? AcademicDateUtils.getTodayISO()
@@ -793,122 +791,424 @@ const StudentTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Default 4-Slot Student Schedule (CSE 2R1)
-    const defaultStudentTimetable = [
+    // Check if Sunday has scheduled tests
+    const hasSundayTest = (this.tests || []).some(t => {
+      if (!t.date) return false;
+      const [y, m, d] = t.date.split("-").map(Number);
+      const dayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+      return dayName.toLowerCase() === "sunday";
+    });
+    const includeSunday = hasSundayTest || currentDayName.toLowerCase() === "sunday";
+
+    // Official 3N Timetable Dataset from SSGMCE Academic Department
+    const scheduleRows = [
       {
         day: "Monday",
-        slots: [
-          "Operating Systems (LH-301)",
-          "Data Structures & Algorithms (LH-204)",
-          "Database Management Systems (LH-112)",
-          "Computer Networks (LH-108)"
+        dayShort: "Mon",
+        part1: [
+          { subject: "DSS LAB(D)", faculty: "AGS", batch: "Batch D", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "DBMS(A)/DSS(B)/OS(C)", faculty: "FIK/AGS/SNK", batch: "Batches A, B, C", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM-III", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "DSS", faculty: "AGS", batch: "B4", isLab: false, colspan: 1, slotIndices: [5] }
         ]
       },
       {
         day: "Tuesday",
-        slots: [
-          "Java Programming & OOP (LH-201)",
-          "Computer Networks (LH-108)",
-          "Data Structures (LH-204)",
-          "Java Lab (Batch 2R1) (Adv Systems Lab 3)"
+        dayShort: "Tue",
+        part1: [
+          { subject: "OS", faculty: "SNK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DSS", faculty: "AGS", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS(B)/DSS(C)/OS(D)", faculty: "FIK/AGS/SNK", batch: "Batches B, C, D", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM-III", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "DBMS", faculty: "FIK", batch: "B4", isLab: false, colspan: 1, slotIndices: [5] }
         ]
       },
       {
         day: "Wednesday",
-        slots: [
-          "Database Management Systems (LH-112)",
-          "Operating Systems (LH-301)",
-          "Java Programming (LH-201)",
-          "Computer Networks (LH-108)"
+        dayShort: "Wed",
+        part1: [
+          { subject: "OS", faculty: "SNK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "TOC", faculty: "SSM", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS(C)/OS (A)", faculty: "FIK/SNK", batch: "Batches C, A", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM-IV", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "OE-III", faculty: "", batch: "Open Elective", isLab: false, colspan: 1, slotIndices: [5] }
         ]
       },
       {
         day: "Thursday",
-        slots: [
-          "Data Structures (LH-204)",
-          "Java Programming Lab (Adv Systems Lab 3)",
-          "Database Systems (LH-112)",
-          "Computer Networks (LH-108)"
+        dayShort: "Thu",
+        part1: [
+          { subject: "DBMS", faculty: "FIK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "TOC", faculty: "SSM", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS(D)/OS Lab(B)", faculty: "FIK/SNK", batch: "Batches D, B", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM-IV", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "OE-III", faculty: "", batch: "Open Elective", isLab: false, colspan: 1, slotIndices: [5] }
         ]
       },
       {
         day: "Friday",
-        slots: [
-          "Operating Systems (LH-301)",
-          "Data Structures (LH-204)",
-          "Java Programming (LH-201)",
-          "OS Linux Kernel Lab (Systems Lab 1)"
+        dayShort: "Fri",
+        part1: [
+          { subject: "DBMS", faculty: "FIK", batch: "B4", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DSS", faculty: "AGS", batch: "B4", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "TOC", faculty: "SSM", batch: "B4", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OS", faculty: "SNK", batch: "B4", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "DSS LAB(A)", faculty: "AGS", batch: "Batch A", isLab: true, colspan: 2, slotIndices: [4, 5] }
         ]
       }
     ];
 
-    let timetableData = defaultStudentTimetable;
+    const saturdayRow = {
+      day: "Saturday",
+      dayShort: "Sat",
+      part1: [
+        { subject: "MDM Lab -I (OOP Lab)", faculty: "", batch: "M-I (A), M-I (B)", isLab: true, colspan: 2, slotIndices: [0, 1] }
+      ],
+      part2: [
+        { subject: "MDM Lab -I (C(OOP Lab))", faculty: "", batch: "M-I (C), M-I (D)", isLab: true, colspan: 2, slotIndices: [2, 3] }
+      ],
+      part3: [
+        { subject: "Off / Prep", faculty: "", batch: "", isFree: true, colspan: 2, slotIndices: [4, 5] }
+      ]
+    };
 
-    if (this.timetableEntries && this.timetableEntries.length > 0) {
-      timetableData = daysList.map(dayName => {
-        const dayRows = this.timetableEntries.filter(
-          e => e.day && e.day.toLowerCase() === dayName.toLowerCase()
-        ).sort((a, b) => {
-          const numA = parseInt((a.period_num || '').replace(/\D/g, ''), 10) || 0;
-          const numB = parseInt((b.period_num || '').replace(/\D/g, ''), 10) || 0;
-          return numA - numB;
-        });
+    // Compute upcoming assessments for alert strip
+    const upcomingTests = (this.tests || []).filter(t => {
+      if (!t.date) return false;
+      if (!this.isTargetedForCurrentStudent(t)) return false;
+      const st = this.getTestStatus(t);
+      if (st.status === "Ended") return false;
 
-        const slots = [];
-        for (let sIdx = 0; sIdx < 4; sIdx++) {
-          const entry = dayRows[sIdx];
-          if (entry && entry.course_name) {
-            const loc = entry.venue ? ` (${entry.venue})` : '';
-            slots.push(`${entry.course_name}${loc}`);
-          } else {
-            slots.push("Free Slot");
-          }
+      const [ty, tm, td] = t.date.split("-").map(Number);
+      const [cy, cm, cd] = todayISO.split("-").map(Number);
+      const tDt = new Date(ty, tm - 1, td);
+      const cDt = new Date(cy, cm - 1, cd);
+      const diffTime = tDt.getTime() - cDt.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+      return diffDays >= 0 || st.status === "Live";
+    }).sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.start || "").localeCompare(b.start || "");
+    });
+
+    let upcomingAlertStripHTML = "";
+    if (upcomingTests.length > 0) {
+      const alertCardsHTML = upcomingTests.map(t => {
+        const st = this.getTestStatus(t);
+        const start12 = this.formatTime12Hour(t.start);
+        const end12 = this.formatTime12Hour(t.end);
+
+        const [ty, tm, td] = t.date.split("-").map(Number);
+        const [cy, cm, cd] = todayISO.split("-").map(Number);
+        const tDt = new Date(ty, tm - 1, td);
+        const cDt = new Date(cy, cm - 1, cd);
+        const diffDays = Math.round((tDt - cDt) / (1000 * 3600 * 24));
+
+        let badgeClass = "in-days";
+        let countdownText = `In ${diffDays} Days`;
+
+        if (st.status === "Live") {
+          badgeClass = "today-badge";
+          countdownText = "LIVE NOW";
+        } else if (diffDays === 0) {
+          badgeClass = "today-badge";
+          countdownText = "TODAY";
+        } else if (diffDays === 1) {
+          badgeClass = "tomorrow";
+          countdownText = "TOMORROW";
+        } else if (diffDays === 2) {
+          badgeClass = "in-days";
+          countdownText = "IN 2 DAYS";
         }
-        return { day: dayName, slots };
-      });
+
+        let readableTestDate = t.date;
+        try {
+          readableTestDate = tDt.toLocaleDateString("en-IN", {
+            weekday: "short",
+            day: "numeric",
+            month: "short"
+          });
+        } catch (_) {}
+
+        return `
+          <div class="upcoming-alert-item-card"
+               onclick="StudentTimetableApp.openTestDetails('${t.id}')"
+               role="button"
+               tabindex="0"
+               aria-label="Upcoming Assessment: ${t.title}"
+               onkeydown="if(event.key==='Enter') StudentTimetableApp.openTestDetails('${t.id}')">
+            <div class="upcoming-item-left">
+              <div class="upcoming-item-top">
+                <span class="upcoming-countdown-badge ${badgeClass}">
+                  <i data-lucide="${diffDays === 0 || st.status === 'Live' ? 'zap' : 'clock'}" style="width:10px;height:10px;"></i>
+                  ${countdownText}
+                </span>
+                <span class="test-type-badge ${t.type.toLowerCase()}-type" style="font-size:10px; padding:1px 6px;">
+                  ${t.type.toUpperCase()}
+                </span>
+                <span class="upcoming-item-subject">${t.subject}</span>
+              </div>
+              <div class="upcoming-item-title-meta">
+                <strong>${t.title}</strong>
+                <span style="opacity:0.6;">•</span>
+                <span><i data-lucide="calendar" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${readableTestDate}</span>
+                <span style="opacity:0.6;">•</span>
+                <span><i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${start12} – ${end12}</span>
+              </div>
+            </div>
+            <div class="upcoming-item-right">
+              <button type="button" class="btn-view-upcoming-detail" onclick="event.stopPropagation(); StudentTimetableApp.openTestDetails('${t.id}')">
+                <span>View Details</span>
+                <i data-lucide="arrow-right" style="width:12px;height:12px;"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      upcomingAlertStripHTML = `
+        <div class="upcoming-assessments-alert-strip">
+          <div class="upcoming-alert-header">
+            <div class="upcoming-alert-title-wrap">
+              <span class="upcoming-pulse-icon">
+                <i data-lucide="bell-ring" style="width:13px;height:13px;"></i>
+              </span>
+              <span>Upcoming Assessments &amp; Tests Notice (${upcomingTests.length})</span>
+            </div>
+            <span style="font-size:11.5px; color:#92400E; font-weight:600;">Advance Notice</span>
+          </div>
+          <div class="upcoming-items-grid">
+            ${alertCardsHTML}
+          </div>
+        </div>
+      `;
     }
 
-    // Helper: Parse slot text into lecture/lab details
-    const parseSlotInfo = (slotText) => {
-      if (!slotText || slotText === "Free Slot") {
-        return { isFree: true };
+    // Helper: Render block cell (supports single slot or colspan 2 labs or scheduled tests)
+    const renderBlockHTML = (block, dayName, isSat = false) => {
+      // Find tests scheduled for this day & slot from backend data
+      const slotTests = (this.tests || []).filter(t => {
+        if (!t.date || !t.start) return false;
+        if (!this.isTargetedForCurrentStudent(t)) return false;
+        const [y, m, d] = t.date.split("-").map(Number);
+        const testDateObj = new Date(y, m - 1, d, 12, 0, 0);
+        const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
+        if (testDayName.toLowerCase() !== dayName.toLowerCase()) return false;
+
+        const testSlotIdx = this.getSlotIndexForTime(t.start, isSat);
+        return block.slotIndices.includes(testSlotIdx);
+      });
+
+      if (slotTests.length > 0) {
+        const testsHTML = slotTests.map(t => {
+          const st = this.getTestStatus(t);
+          const start12 = this.formatTime12Hour(t.start);
+          const end12 = this.formatTime12Hour(t.end);
+
+          return `
+            <div class="test-card ${t.type.toLowerCase()}-card"
+                 onclick="StudentTimetableApp.openTestDetails('${t.id}')"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Assessment: ${t.title}"
+                 onkeydown="if(event.key==='Enter') StudentTimetableApp.openTestDetails('${t.id}')">
+              <div class="test-card-top">
+                <span class="test-type-badge ${t.type.toLowerCase()}-type">
+                  <i data-lucide="file-text" style="width:11px;height:11px;"></i>
+                  ${t.type.toUpperCase()}
+                </span>
+                <span class="test-status-pill ${st.badgeClass}">
+                  ${st.label}
+                </span>
+              </div>
+              <div class="test-subject">${t.subject}</div>
+              <div class="test-title" title="${t.title}">${t.title}</div>
+              <div class="test-time">
+                <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                <span>${t.date}</span>
+                <span style="margin: 0 4px; opacity:0.5;">•</span>
+                <i data-lucide="clock" style="width:11px;height:11px;"></i>
+                <span>${start12} – ${end12}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <td class="schedule-cell" colspan="${block.colspan || 1}">
+            <div class="cell-stack-container">
+              ${testsHTML}
+            </div>
+          </td>
+        `;
       }
 
-      const isLab = slotText.toLowerCase().includes("lab");
-      let subject = slotText;
-      let location = "";
-
-      const parenMatch = slotText.match(/^(.*?)\s*\((.*?)\)$/);
-      if (parenMatch) {
-        subject = parenMatch[1].trim();
-        location = parenMatch[2].trim();
+      if (block.isFree) {
+        return `
+          <td class="schedule-cell off-prep-cell" colspan="${block.colspan || 1}">
+            <div class="off-prep">
+              <span class="off-prep-pill">
+                <i data-lucide="coffee" style="width:12px;height:12px;"></i>
+                OFF / PREP
+              </span>
+              <span class="off-prep-caption">No Class Scheduled</span>
+            </div>
+          </td>
+        `;
       }
 
-      return {
-        isFree: false,
-        isLab,
-        subject,
-        location,
-        typeLabel: isLab ? "LAB SESSION" : "LECTURE"
-      };
+      const isHighlightRow = (dayName.toLowerCase() === currentDayName.toLowerCase());
+
+      return `
+        <td class="schedule-cell" colspan="${block.colspan || 1}">
+          <div class="class-card ${block.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}">
+            <div class="class-card-top">
+              <span class="class-type ${block.isLab ? 'type-lab' : 'type-lecture'}">
+                <i data-lucide="${block.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
+                ${block.isLab ? 'LAB SESSION' : 'LECTURE'}
+              </span>
+            </div>
+            
+            <div class="class-subject-title" title="${block.subject}">
+              ${block.subject}
+            </div>
+
+            <div class="class-card-meta">
+              ${block.faculty ? `<span class="class-faculty-pill"><i data-lucide="user" style="width:10px;height:10px;display:inline;vertical-align:-1px;"></i> ${block.faculty}</span>` : ''}
+              ${block.batch ? `<span class="class-batch-pill">${block.batch}</span>` : ''}
+            </div>
+          </div>
+        </td>
+      `;
     };
+
+    // Helper: Render full schedule row
+    const renderRowHTML = (row, isSat = false) => {
+      const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
+
+      return `
+        <tr class="schedule-row ${isHighlightRow ? 'active-day-row' : ''}" role="row">
+          <!-- Day Cell -->
+          <td class="day-cell ${isHighlightRow ? 'active-day-cell' : ''}" scope="row">
+            <div class="day-cell-inner">
+              <span class="day-label">${row.dayShort || row.day.substring(0, 3)}</span>
+              ${isHighlightRow ? `
+                <span class="today-badge ${isToday ? 'today-badge-current' : 'today-badge-active'}">
+                  ${isToday ? 'TODAY' : 'ACTIVE'}
+                </span>
+              ` : ''}
+            </div>
+          </td>
+
+          <!-- Part 1: Slots 1 & 2 (11.00 - 01.00 / Sat: 8.30 - 10.30) -->
+          ${row.part1.map(b => renderBlockHTML(b, row.day, isSat)).join('')}
+
+          <!-- BREAK Column (15 Mins) -->
+          <td class="timetable-break-cell body-break">
+            <div class="break-vertical-text">
+              <span>B</span><span>R</span><span>E</span><span>A</span><span>K</span>
+            </div>
+          </td>
+
+          <!-- Part 2: Slots 3 & 4 (01.15 - 03.15 / Sat: 10.45 - 12.45) -->
+          ${row.part2.map(b => renderBlockHTML(b, row.day, isSat)).join('')}
+
+          <!-- RECESS Column (30 Mins) -->
+          <td class="timetable-recess-cell body-recess">
+            <div class="recess-vertical-text">
+              <span>R</span><span>E</span><span>C</span><span>E</span><span>S</span><span>S</span>
+            </div>
+          </td>
+
+          <!-- Part 3: Slots 5 & 6 (03.45 - 05.45 / Sat: Afternoon) -->
+          ${row.part3.map(b => renderBlockHTML(b, row.day, isSat)).join('')}
+        </tr>
+      `;
+    };
+
+    const saturdayHeaderRowHTML = `
+      <tr class="saturday-time-header-row" role="row">
+        <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy); text-align:center;">Day</th>
+        <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy);">8.30 am - 9.30 am</th>
+        <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy);">9.30 am - 10.30 am</th>
+        <th scope="col" class="timetable-break-cell header-break">15 Mins</th>
+        <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy);">10.45 am - 11.45 am</th>
+        <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy);">11.45 am - 12.45 pm</th>
+        <th scope="col" class="timetable-recess-cell header-recess">30 Mins</th>
+        <th scope="col" colspan="2" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy); text-align:center;">Afternoon (Off / Prep)</th>
+      </tr>
+    `;
+
+    let sundayRowHTML = "";
+    if (includeSunday) {
+      const sundayRow = {
+        day: "Sunday",
+        dayShort: "Sun",
+        part1: [{ subject: "Off / Prep", faculty: "", batch: "", isFree: true, colspan: 2, slotIndices: [0, 1] }],
+        part2: [{ subject: "Off / Prep", faculty: "", batch: "", isFree: true, colspan: 2, slotIndices: [2, 3] }],
+        part3: [{ subject: "Off / Prep", faculty: "", batch: "", isFree: true, colspan: 2, slotIndices: [4, 5] }]
+      };
+      sundayRowHTML = renderRowHTML(sundayRow, false);
+    }
 
     container.innerHTML = `
       <div class="timetable-card">
         
-        <!-- ==================== HEADER & TOOLBAR ==================== -->
+        <!-- ==================== OFFICIAL SSGMCE HEADER ==================== -->
         <div class="timetable-header">
-          <div class="timetable-header-content">
+          <div class="official-timetable-header-card">
+            <div class="official-tt-top">
+              <div class="official-college-branding">
+                <div class="official-college-info">
+                  <h4 class="inst-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h4>
+                  <p class="inst-dept">Department of Computer Science &amp; Engineering • Autonomous Curriculum</p>
+                </div>
+              </div>
+              <div class="official-tt-session-wrap">
+                <span class="session-badge-text">Session: 2026-2027 (Autumn)</span>
+                <h2 class="official-main-heading">TIME-TABLE</h2>
+              </div>
+            </div>
+            <div class="official-tt-submeta">
+              <div class="submeta-left">
+                <span>Class: <span class="class-tag">3N</span></span>
+              </div>
+              <div class="submeta-right">
+                <span>w.e.f.: <span class="wef-tag">21/07/2026</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schedule Controls Toolbar -->
+          <div class="timetable-header-content" style="margin-top:14px; margin-bottom:12px;">
             <div class="schedule-meta">
               <span class="schedule-term-badge">
                 <i data-lucide="graduation-cap" style="width:13px;height:13px;"></i>
-                Academic Term: ${term.academicYear} • ${term.semesterType} Semester
+                Academic Term: 2026-2027 • Autumn Semester
               </span>
-              <h3 class="schedule-main-title">Weekly Lecture &amp; Lab Schedule</h3>
-              <p class="schedule-subtitle">Department of Computer Science &amp; Engineering • Autonomous Curriculum</p>
             </div>
 
-            <!-- Schedule Controls (Student view: View Date, Today, Print. NO Test Schedule Button) -->
             <div class="schedule-controls">
               <div class="date-control">
                 <label for="student-timetable-date-input" class="date-control-label">
@@ -954,11 +1254,14 @@ const StudentTimetableApp = {
             </div>
             <div class="status-hint">
               ${isWeekend
-                ? '<i data-lucide="info" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> <em>Weekend — regular weekday instruction matrix shown below</em>'
+                ? '<i data-lucide="info" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> <em>Weekend schedule highlighted below</em>'
                 : `<i data-lucide="check" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> Highlighting <strong>${currentDayName}</strong> in the schedule`
               }
             </div>
           </div>
+
+          <!-- Advance Alert Strip for Upcoming Tests (e.g. In 2 Days, Tomorrow, Today) -->
+          ${upcomingAlertStripHTML}
         </div>
 
         <!-- ==================== TIMETABLE GRID TABLE ==================== -->
@@ -972,182 +1275,91 @@ const StudentTimetableApp = {
                     <span>Day</span>
                   </div>
                 </th>
-                ${timeSlots.map((slot) => `
-                  <th class="timetable-header-cell time-slot-header" scope="col">
-                    <div class="th-time-slot">
-                      <span class="th-slot-num">${slot.label}</span>
-                      <div class="th-time-range">
-                        <i data-lucide="clock" style="width:12px;height:12px;"></i>
-                        <span>${slot.range}</span>
-                        <span class="th-ampm">${slot.period}</span>
-                      </div>
-                    </div>
-                  </th>
-                `).join('')}
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 1</span>
+                    <div class="th-time-range"><span>11.00 am - 12.00 pm</span></div>
+                  </div>
+                </th>
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 2</span>
+                    <div class="th-time-range"><span>12.00 pm - 01.00 pm</span></div>
+                  </div>
+                </th>
+                <th class="timetable-break-cell header-break" scope="col">
+                  <span>15 Mins</span>
+                </th>
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 3</span>
+                    <div class="th-time-range"><span>01.15 pm - 02.15 pm</span></div>
+                  </div>
+                </th>
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 4</span>
+                    <div class="th-time-range"><span>02.15 pm - 03.15 pm</span></div>
+                  </div>
+                </th>
+                <th class="timetable-recess-cell header-recess" scope="col">
+                  <span>30 Mins</span>
+                </th>
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 5</span>
+                    <div class="th-time-range"><span>03.45 pm - 04.45 pm</span></div>
+                  </div>
+                </th>
+                <th class="timetable-header-cell time-slot-header" scope="col">
+                  <div class="th-time-slot">
+                    <span class="th-slot-num">Slot 6</span>
+                    <div class="th-time-range"><span>04.45 pm - 05.45 pm</span></div>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
-              ${timetableData.map(row => {
-                const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
-                return `
-                <tr class="schedule-row ${isHighlightRow ? 'active-day-row' : ''}" role="row">
-                  
-                  <!-- Day Cell -->
-                  <td class="day-cell ${isHighlightRow ? 'active-day-cell' : ''}" scope="row">
-                    <div class="day-cell-inner">
-                      <span class="day-label">${row.day.toUpperCase()}</span>
-                      ${isHighlightRow ? `
-                        <span class="today-badge ${isToday ? 'today-badge-current' : 'today-badge-active'}">
-                          ${isToday ? 'TODAY' : 'ACTIVE'}
-                        </span>
-                      ` : ''}
-                    </div>
-                  </td>
-
-                  <!-- Subject Slots -->
-                  ${row.slots.map((slotText, slotIdx) => {
-                    const parsed = parseSlotInfo(slotText);
-
-                    // Find tests scheduled for this day & slot from backend data
-                    const slotTests = this.tests.filter(t => {
-                      if (!t.date || !t.start) return false;
-                      const [y, m, d] = t.date.split("-").map(Number);
-                      // Use noon local time to avoid midnight timezone day rollback
-                      const testDateObj = new Date(y, m - 1, d, 12, 0, 0);
-                      const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
-                      if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
-
-                      // Associate test with slot strictly by its scheduled time slot
-                      const timeSlotMatch = (this.getSlotIndexForTime(t.start) === slotIdx);
-                      return timeSlotMatch;
-                    });
-
-                    // Build regular class card HTML if not free
-                    let regularClassHTML = "";
-                    if (!parsed.isFree) {
-                      regularClassHTML = `
-                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}">
-                          <div class="class-card-top">
-                            <span class="class-type ${parsed.isLab ? 'type-lab' : 'type-lecture'}">
-                              <i data-lucide="${parsed.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
-                              ${parsed.typeLabel}
-                            </span>
-                          </div>
-                          
-                          <div class="class-title" title="${parsed.subject}">
-                            ${parsed.subject}
-                          </div>
-
-                          ${parsed.location ? `
-                            <div class="class-location">
-                              <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
-                              <span>${parsed.location}</span>
-                            </div>
-                          ` : ''}
-                        </div>
-                      `;
-                    }
-
-                    // Build scheduled test cards HTML (student can click to view details)
-                    const testsHTML = slotTests.map(t => {
-                      const st = this.getTestStatus(t);
-                      const start12 = this.formatTime12Hour(t.start);
-                      const end12 = this.formatTime12Hour(t.end);
-
-                      return `
-                        <div class="test-card ${t.type.toLowerCase()}-card"
-                             onclick="StudentTimetableApp.openTestDetails('${t.id}')"
-                             role="button"
-                             tabindex="0"
-                             aria-label="Assessment: ${t.title}"
-                             onkeydown="if(event.key==='Enter') StudentTimetableApp.openTestDetails('${t.id}')">
-                          <div class="test-card-top">
-                            <span class="test-type-badge ${t.type.toLowerCase()}-type">
-                              <i data-lucide="file-text" style="width:11px;height:11px;"></i>
-                              ${t.type.toUpperCase()}
-                            </span>
-                            <span class="test-status-pill ${st.badgeClass}">
-                              ${st.label}
-                            </span>
-                          </div>
-                          <div class="test-subject">${t.subject}</div>
-                          <div class="test-title" title="${t.title}">${t.title}</div>
-                          <div class="test-time">
-                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
-                            <span>${t.date}</span>
-                            <span style="margin: 0 4px; opacity:0.5;">•</span>
-                            <i data-lucide="clock" style="width:11px;height:11px;"></i>
-                            <span>${start12} – ${end12}</span>
-                          </div>
-                        </div>
-                      `;
-                    }).join('');
-
-                    // If test(s) are scheduled for this slot, show test card (replaces regular lecture)
-                    if (slotTests.length > 0) {
-                      return `
-                        <td class="schedule-cell">
-                          <div class="cell-stack-container">
-                            ${testsHTML}
-                          </div>
-                        </td>
-                      `;
-                    }
-
-                    // Free slot without any test
-                    if (parsed.isFree) {
-                      return `
-                        <td class="schedule-cell off-prep-cell">
-                          <div class="off-prep">
-                            <span class="off-prep-pill">
-                              <i data-lucide="coffee" style="width:12px;height:12px;"></i>
-                              OFF / PREP
-                            </span>
-                            <span class="off-prep-caption">No Class Scheduled</span>
-                          </div>
-                        </td>
-                      `;
-                    }
-
-                    return `
-                      <td class="schedule-cell">
-                        <div class="cell-stack-container">
-                          ${regularClassHTML}
-                        </div>
-                      </td>
-                    `;
-                  }).join('')}
-                </tr>
-              `;
-              }).join('')}
+              ${scheduleRows.map(r => renderRowHTML(r, false)).join('')}
+              ${saturdayHeaderRowHTML}
+              ${renderRowHTML(saturdayRow, true)}
+              ${sundayRowHTML}
             </tbody>
           </table>
         </div>
 
-        <!-- ==================== LEGEND & FOOTNOTE ==================== -->
-        <div class="timetable-legend-bar">
-          <div class="legend-items">
-            <span class="legend-title">Legend:</span>
-            <div class="legend-item">
-              <span class="legend-dot lecture-dot"></span>
-              <span>Theory Lecture</span>
+        <!-- ==================== OFFICIAL FOOTER & LEGEND ==================== -->
+        <div class="official-legend-container">
+          <div class="official-legend-grid">
+            <div class="legend-box faculty-legend">
+              <h5 class="legend-box-title"><i data-lucide="users" style="width:13px;height:13px;"></i> Faculty Key:</h5>
+              <div class="legend-tag-list">
+                <span class="faculty-tag"><strong>AGS:</strong> Prof. A. G. Sharma</span>
+                <span class="faculty-tag"><strong>FIK:</strong> Prof. F. I. Khan</span>
+                <span class="faculty-tag"><strong>SNK:</strong> Prof. S. N. Kale</span>
+                <span class="faculty-tag"><strong>SSM:</strong> Prof. S. S. Mohod</span>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-dot lab-dot"></span>
-              <span>Practical Lab Session</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot test-dot"></span>
-              <span>Scheduled Test / Assessment</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot off-dot"></span>
-              <span>Off / Prep Period</span>
+            <div class="legend-box subject-legend">
+              <h5 class="legend-box-title"><i data-lucide="book-open" style="width:13px;height:13px;"></i> Subject Key:</h5>
+              <div class="legend-tag-list">
+                <span class="subject-tag"><strong>OS:</strong> Operating Systems</span>
+                <span class="subject-tag"><strong>DSS:</strong> Decision Support Systems</span>
+                <span class="subject-tag"><strong>DBMS:</strong> Database Management Systems</span>
+                <span class="subject-tag"><strong>TOC:</strong> Theory of Computation</span>
+                <span class="subject-tag"><strong>MDM:</strong> Multidisciplinary Minor (MDM-III, MDM-IV, OOP Lab)</span>
+                <span class="subject-tag"><strong>OE:</strong> Open Elective III</span>
+              </div>
             </div>
           </div>
-          <div class="legend-note">
-            <i data-lucide="clock-4" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
-            <span>All sessions are 90 minutes. 30-minute recess between slots 2 &amp; 3. Tests are scheduled by course faculty.</span>
+          <div class="timetable-legend-bar" style="border-top:1px solid #E2E8F0; padding-top:10px;">
+            <div class="legend-items">
+              <span class="legend-title">Legend:</span>
+              <div class="legend-item"><span class="legend-dot lecture-dot"></span><span>Theory Lecture (1 Hr)</span></div>
+              <div class="legend-item"><span class="legend-dot lab-dot"></span><span>Practical Lab Session (2 Hrs)</span></div>
+              <div class="legend-item"><span class="legend-dot test-dot"></span><span>Scheduled Test / Assessment</span></div>
+              <div class="legend-item"><span class="legend-dot off-dot"></span><span>Break / Recess / Prep</span></div>
+            </div>
           </div>
         </div>
 
