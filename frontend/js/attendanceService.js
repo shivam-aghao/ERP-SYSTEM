@@ -131,22 +131,28 @@
           }
         }
 
-        if (attData && attData.subjectWise && attData.subjectWise.length > 0) {
-          const list = attData.subjectWise.map((item, idx) => {
-            const attended = item.attended !== undefined ? item.attended : (item.present || 0);
-            const total = item.total !== undefined ? item.total : 0;
-            const pct = item.percentage !== undefined ? Number(item.percentage) : (total > 0 ? Number(((attended / total) * 100).toFixed(2)) : 0);
+        const subjectArray = (attData && (attData.subjects || attData.subjectWise || attData.subject_wise)) || [];
+        if (subjectArray && subjectArray.length > 0) {
+          const list = subjectArray.map((item, idx) => {
+            const attended = item.attended !== undefined ? item.attended : (item.present_periods !== undefined ? item.present_periods : (item.present !== undefined ? item.present : 0));
+            const total = item.total !== undefined ? item.total : (item.total_periods !== undefined ? item.total_periods : 0);
+            const pct = item.percentage !== undefined ? Number(item.percentage) : (item.attendance_percentage !== undefined ? Number(item.attendance_percentage) : (total > 0 ? Number(((attended / total) * 100).toFixed(2)) : 0));
             const status = calc.getStatus ? calc.getStatus(pct) : {
               label: pct >= 75 ? 'Safe Zone' : 'Critical (<75%)',
               badgeClass: pct >= 75 ? 'att-badge-good' : 'att-badge-danger'
             };
 
+            const rawType = (item.type || item.subject_type || '').toUpperCase();
+            const isPrac = rawType.includes('PR') || rawType.includes('LAB');
+            const normType = isPrac ? 'PR' : 'TH';
+            const normTypeName = isPrac ? 'Practical' : 'Theory';
+
             return {
               id: item.id || `sub-${idx}`,
               code: item.code || item.subjectCode || item.subject_code || '',
               name: item.name || item.subjectName || item.subject_name || '',
-              type: item.type || (item.code && item.code.includes('LAB') ? 'PR' : 'TH'),
-              typeName: item.typeName || (item.type === 'PR' ? 'Practical' : 'Theory'),
+              type: normType,
+              typeName: item.typeName || normTypeName,
               faculty: item.faculty || item.faculty_name || '',
               classroom: item.classroom || item.room || '',
               present: attended,

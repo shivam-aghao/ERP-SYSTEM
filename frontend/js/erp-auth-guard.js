@@ -153,6 +153,31 @@
           el.textContent = `${session.designation} • ${session.departmentCode}`;
         }
       });
+
+      if (session.role === 'student') {
+        const updatePills = (pct) => {
+          if (!pct && pct !== 0) return;
+          const pctStr = `${pct}%`;
+          document.querySelectorAll('.nav-badge-pill.pct-pill, #sidebarAttendanceBadge, #dropdownAttPct, .header-att-pct').forEach(el => {
+            el.textContent = pctStr;
+          });
+        };
+        if (session.attendance_pct || session.attendancePct) {
+          updatePills(session.attendance_pct || session.attendancePct);
+        } else {
+          const sc = session.studentCode || session.student_code || session.id || '308637';
+          fetch(`/api/v1/attendance/student?student_code=${encodeURIComponent(sc)}`)
+            .then(res => res.json())
+            .then(resData => {
+              const d = resData && resData.data;
+              if (d && d.overall_percentage !== undefined) {
+                session.attendance_pct = d.overall_percentage;
+                updatePills(d.overall_percentage);
+              }
+            })
+            .catch(() => {});
+        }
+      }
     },
 
     /**

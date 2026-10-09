@@ -151,7 +151,7 @@
             </a>
             <a href="student-attendance.html" class="p-link-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              Subject-wise Attendance (82%)
+              Subject-wise Attendance (<span class="header-att-pct">--%</span>)
             </a>
             <a href="javascript:void(0)" onclick="if(window.openStudentModule){openStudentModule('settings')}else{alert('Settings available in Dashboard.');}" class="p-link-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -227,7 +227,7 @@
                   <polyline points="9 16 11 18 15 14"></polyline>
                 </svg>
                 <span class="nav-label">Attendance</span>
-                <span class="nav-badge-pill pct-pill">82%</span>
+                <span class="nav-badge-pill pct-pill" id="sidebarAttendanceBadge">--%</span>
               </a>
             </li>
 
@@ -536,8 +536,8 @@
               <div class="att-donut-canvas-box">
                 <canvas id="attendanceDonutChart" width="170" height="170" aria-label="Attendance Doughnut Chart"></canvas>
                 <div class="att-donut-center-text">
-                  <div class="att-donut-pct" id="donutCenterPct">35.14%</div>
-                  <div class="att-donut-sub">Present</div>
+                  <div class="att-donut-pct" id="donutCenterPct">--%</div>
+                  <div class="att-donut-sub" id="donutCenterSub">Present</div>
                 </div>
               </div>
               <div class="att-donut-legend">
@@ -546,21 +546,21 @@
                     <span class="att-legend-dot" style="background:#0B5CAD;"></span>
                     <span>Present Periods</span>
                   </div>
-                  <strong style="color:var(--navy);">26 Periods (35.1%)</strong>
+                  <strong style="color:var(--navy);" id="donutLegendPresent">-- Periods (--%)</strong>
                 </div>
                 <div class="att-legend-item">
                   <div style="display:flex; align-items:center;">
                     <span class="att-legend-dot" style="background:#EF4444;"></span>
                     <span>Absent Periods</span>
                   </div>
-                  <strong style="color:#EF4444;">48 Periods (64.9%)</strong>
+                  <strong style="color:#EF4444;" id="donutLegendAbsent">-- Periods (--%)</strong>
                 </div>
                 <div class="att-legend-item" style="background:#F1F5F9;">
                   <div style="display:flex; align-items:center;">
                     <span class="att-legend-dot" style="background:#00A6D6;"></span>
                     <span>Total Conducted</span>
                   </div>
-                  <strong>74 Periods (100%)</strong>
+                  <strong id="donutLegendTotal">-- Periods (100%)</strong>
                 </div>
               </div>
             </div>
