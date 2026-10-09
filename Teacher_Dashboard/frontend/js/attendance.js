@@ -1898,13 +1898,11 @@ const AttendanceMarkingManager = {
 
   async init() {
     // 1. Fetch previously marked sessions from backend
-    try {
-<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
-      const res = await fetch(`${apiHost}/api/teacher/attendance/sessions`);
-=======
-      const res = await fetch('/api/v1/teacher/attendance/sessions');
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+      let res = await fetch(`${apiHost}/api/v1/teacher/attendance/sessions`).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`${apiHost}/api/teacher/attendance/sessions`).catch(() => null);
+      }
       if (res.ok) {
         const json = await res.json();
         if (json.data && json.data.sessions) {
@@ -2124,12 +2122,11 @@ const AttendanceMarkingManager = {
     // Fetch class roster
     let studentsList = [];
     try {
-<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
-      const res = await fetch(`${apiHost}/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
-=======
-      const res = await fetch(`/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+      let res = await fetch(`${apiHost}/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`${apiHost}/api/teacher/class-roster?classId=${encodeURIComponent(classCode)}`).catch(() => null);
+      }
       if (res.ok) {
         const json = await res.json();
         studentsList = json.data?.students || [];
@@ -2772,17 +2769,19 @@ const AttendanceMarkingManager = {
     };
 
     let savedSession = null;
-    try {
-<<<<<<< HEAD
       const apiHost = (window.TeacherAPI ? window.TeacherAPI.getBaseUrl().replace(/\/api\/v1\/?$/, '') : 'http://localhost:8000');
-      const res = await fetch(`${apiHost}/api/teacher/attendance/bulk`, {
-=======
-      const res = await fetch('/api/v1/teacher/attendance/bulk', {
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+      let res = await fetch(`${apiHost}/api/v1/teacher/attendance/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
+      }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`${apiHost}/api/teacher/attendance/bulk`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => null);
+      }
       if (res.ok) {
         const json = await res.json();
         savedSession = json.data;

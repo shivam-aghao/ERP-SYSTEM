@@ -4,8 +4,8 @@
  */
 
 (function () {
-  var preferredBase = (window.ERP_CONFIG && window.ERP_CONFIG.TEACHER_API_BASE) || 'http://localhost:5001/api/v1';
-  var fallbackBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  var preferredBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  var fallbackBase = (window.ERP_CONFIG && window.ERP_CONFIG.TEACHER_API_BASE) || 'http://localhost:5001/api/v1';
   var API_BASE_URL = preferredBase;
 
   var TeacherAPI = {
@@ -64,54 +64,47 @@
 
     // 1. Healthcheck
     checkHealth: async function () {
-      // Step 1: Probe dedicated Express Teacher Backend on port 5001
-      try {
-        var base5001 = preferredBase.replace(/\/api\/v1\/?$/, '');
-        var res1 = await fetch(base5001 + '/health');
-        if (res1.ok) {
-          var data1 = await res1.json();
-          if (data1.status === 'OK' || data1.status === 'healthy') {
-            API_BASE_URL = preferredBase;
-            return { status: 'OK', service: data1.service || 'ssgmce-teacher-dashboard-backend', port: 5001 };
-          }
-        }
-      } catch (err1) {
-        // Fall through to port 8000
-      }
+      var endpoints = [
+        'http://localhost:8000/health',
+        'http://127.0.0.1:8000/health',
+        'http://localhost:8000/api/v1/health',
+        'http://127.0.0.1:8000/api/v1/health',
+        preferredBase.replace(/\/api\/v1\/?$/, '') + '/health',
+        'http://localhost:5001/health'
+      ];
 
-      // Step 2: Probe FastAPI Unified Backend on port 8000
-      try {
-        var base8000 = fallbackBase.replace(/\/api\/v1\/?$/, '');
-        var res2 = await fetch(base8000 + '/health');
-        if (res2.ok) {
-          var data2 = await res2.json();
-          if (data2.status === 'OK' || data2.status === 'healthy') {
-            API_BASE_URL = fallbackBase;
-            return { status: 'OK', service: data2.service || 'ssgmce-unified-erp-backend', port: 8000 };
+      for (var i = 0; i < endpoints.length; i++) {
+        var ep = endpoints[i];
+        try {
+          var res = await fetch(ep, { signal: AbortSignal.timeout(1500) });
+          if (res.ok) {
+            var data = await res.json();
+            if (data.status === 'OK' || data.status === 'healthy' || data.database === 'connected') {
+              API_BASE_URL = ep.includes('5001') ? fallbackBase : 'http://localhost:8000/api/v1';
+              return { 
+                status: 'OK', 
+                service: data.service || 'ssgmce-unified-erp-backend', 
+                port: ep.includes('5001') ? 5001 : 8000,
+                supabase: data.supabase || (data.database === 'connected' ? 'connected' : 'offline'),
+                database: data.database || 'connected'
+              };
+            }
           }
-        }
-      } catch (err2) {
-        // Both unreachable
+        } catch (_) {}
       }
 
       return { status: 'OFFLINE', error: 'No backend responding' };
     },
 
     login: async function (email, password) {
-<<<<<<< HEAD
       var storedUser = null;
       try {
         storedUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
       } catch (e) {}
 
-      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1009';
+      var defaultIdentifier = (storedUser && (storedUser.email || storedUser.emp_code || storedUser.username)) || 'EMP-CSE-1001';
       email = email || defaultIdentifier;
       password = password || 'Faculty@123';
-=======
-      if (!email || !password) {
-        throw new Error('Email and password are required');
-      }
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       try {
         var res = await this.request('/auth/login', {
           method: 'POST',
@@ -128,21 +121,16 @@
         }
         return data;
       } catch (err) {
-<<<<<<< HEAD
         console.warn('[TeacherAPI] login attempt:', err.message);
         return {
           user: storedUser && storedUser.name ? storedUser : {
-            id: '5bc85d0f-ea04-406e-a319-1e5c0f1c81b0',
-            name: 'Prof. R. V. Deshmukh',
+            id: '8f913c70-85ed-4261-bbd0-f2d3b42f4af1',
+            name: 'Prof. J. M. Patil',
             role: 'faculty',
-            employeeId: 'EMP-CSE-1009'
+            employeeId: 'EMP-CSE-1001'
           },
           token: this.token || 'teach_token_default'
         };
-=======
-        console.warn('[TeacherAPI] login failed:', err.message);
-        throw err;
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
       }
     },
 

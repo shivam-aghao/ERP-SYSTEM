@@ -227,10 +227,10 @@ const TeacherApp = {
           ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
           : null;
         return {
-          name: u.full_name || u.name || (facObj && facObj.name) || "Dr. J. M. Patil",
+          name: u.full_name || u.name || (facObj && facObj.name) || "Prof. J. M. Patil",
           department: "Computer Science & Engineering",
           departmentCode: "CSE",
-          title: u.designation || (facObj && facObj.title) || "Professor & Head",
+          title: u.designation || (facObj && facObj.title) || "Head Of Department",
           employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1001",
           avatarInitials: (u.name || (facObj && facObj.name) || "JP").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
         };
@@ -248,14 +248,14 @@ const TeacherApp = {
       name: facObj.name,
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      title: facObj.title,
+      title: facObj.title || "Head Of Department",
       employeeId: facObj.empCode,
       avatarInitials: facObj.name.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
     } : {
-      name: "Dr. J. M. Patil",
+      name: "Prof. J. M. Patil",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      title: "Professor & Head",
+      title: "Head Of Department",
       employeeId: "EMP-CSE-1001",
       avatarInitials: "JP"
     };
@@ -448,11 +448,19 @@ const TeacherApp = {
         setHeaderBadge("Teacher Attendance Hub");
         this.initIntegratedAttendance(subView);
         break;
-      case 'attendance-mark':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        this.switchAttendanceSubView('marking');
+      case 'attendance-mark': {
+        const markPage = document.getElementById("attendance-marking-page");
+        if (markPage) {
+          markPage.style.display = "block";
+          markPage.classList.add("active");
+          setHeaderBadge("Mark Attendance - Swipe Deck");
+        } else {
+          document.getElementById("attendance-module").style.display = "block";
+          setHeaderBadge("Teacher Attendance Hub");
+          this.switchAttendanceSubView('marking');
+        }
         break;
+      }
       case 'attendance-roster':
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance Hub");
@@ -722,13 +730,75 @@ const TeacherApp = {
     this.switchView('attendance', subView);
   },
 
-  openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance', 'marking');
-    const frame = document.getElementById('attendance-integrated-frame');
-    if (frame) {
-      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
-      frame.src = q;
+  navigateToAttendance(params = {}) {
+    let { classCode, subject, date, timeSlot, room, batch } = params;
+
+    // Resolve classCode if missing or infer from subject
+    if (!classCode && subject) {
+      const s = subject.toUpperCase();
+      if (s.includes('CC') || s.includes('CLOUD') || s.includes('4R')) classCode = '4R';
+      else if (s.includes('DBMS') || s.includes('DATABASE') || s.includes('3R')) classCode = '3R';
+      else if (s.includes('2R2')) classCode = '2R2';
+      else if (s.includes('2R1') || s.includes('OOP') || s.includes('DS') || s.includes('DATA STRUCTURES')) classCode = '2R1';
+      else classCode = '3R';
+    } else if (classCode) {
+      classCode = classCode.toUpperCase();
     }
+
+    // Explicit requirement mapping:
+    // CC (4R lecture) -> open swipe deck of 4R students
+    // DBMS (3R lecture) -> open swipe deck of 3R students
+    if (subject) {
+      const s = subject.toUpperCase();
+      if (s.includes('CC') || s.includes('CLOUD')) classCode = '4R';
+      if (s.includes('DBMS') || s.includes('DATABASE')) classCode = '3R';
+    }
+
+    // Extract batch if present in subject (e.g. Batch A, Batch B, Batch C, Batch D)
+    if (!batch && subject) {
+      const m = subject.match(/Batch\s*([A-D0-9]+)/i);
+      if (m) batch = m[1].toUpperCase();
+    }
+
+    const dateVal = date || (typeof AcademicDateUtils !== 'undefined' ? AcademicDateUtils.getTodayISO() : new Date().toISOString().split('T')[0]);
+
+    const frame = document.getElementById('attendance-integrated-frame');
+    const queryParams = new URLSearchParams({
+      embedded: 'true',
+      class: classCode || '3R',
+      subject: subject || 'Lecture',
+      date: dateVal,
+      slot: timeSlot || '',
+      room: room || '',
+      batch: batch || ''
+    });
+    const targetUrl = `teacher-attendance.html?${queryParams.toString()}`;
+
+    // Store active class and batch globally so roster tab and module match opened deck
+    this.currentActiveRosterClass = classCode;
+    window.currentActiveRosterClass = classCode;
+    this.currentActiveRosterBatch = batch || null;
+    window.currentActiveRosterBatch = batch || null;
+
+    // Switch view to attendance
+    this.switchView('attendance', 'marking');
+
+    if (frame) {
+      try {
+        const frameWin = frame.contentWindow;
+        const app = frameWin && (frameWin.TeacherAttendanceApp || frameWin.CollegeERPApp || frameWin.App);
+        if (app && typeof app.handleDirectClassLaunch === 'function') {
+          app.handleDirectClassLaunch(classCode, subject, dateVal, timeSlot, batch);
+          return;
+        }
+      } catch (_) {}
+
+      frame.src = targetUrl;
+    }
+  },
+
+  openAttendanceForClass(classCode, subject) {
+    this.navigateToAttendance({ classCode, subject });
   },
 
   initIntegratedAttendance(subView) {
@@ -791,9 +861,16 @@ const TeacherApp = {
       }
     }
 
+    const activeClass = this.currentActiveRosterClass || window.currentActiveRosterClass || '3R';
+    const activeBatch = this.currentActiveRosterBatch || window.currentActiveRosterBatch || '';
+    const qParams = new URLSearchParams({
+      embedded: 'true',
+      class: activeClass
+    });
+    if (activeBatch) qParams.set('batch', activeBatch);
     const targetSrc = (mode === 'roster') 
-      ? 'teacher-attendance-roster.html?embedded=true&class=3R' 
-      : 'teacher-attendance.html?embedded=true&class=3R';
+      ? `teacher-attendance-roster.html?${qParams.toString()}` 
+      : `teacher-attendance.html?${qParams.toString()}`;
 
 
     if (frame) {
@@ -870,9 +947,13 @@ const TeacherApp = {
   },
 
   openAttendanceStandalone() {
+    const activeClass = this.currentActiveRosterClass || window.currentActiveRosterClass || '3R';
+    const activeBatch = this.currentActiveRosterBatch || window.currentActiveRosterBatch || '';
+    const qParams = new URLSearchParams({ class: activeClass });
+    if (activeBatch) qParams.set('batch', activeBatch);
     const url = (this.currentAttendanceSubView === 'roster')
-      ? 'teacher-attendance-roster.html?class=3R'
-      : 'teacher-attendance.html?class=3R';
+      ? `teacher-attendance-roster.html?${qParams.toString()}`
+      : `teacher-attendance.html?${qParams.toString()}`;
     window.open(url, '_blank');
   },
 

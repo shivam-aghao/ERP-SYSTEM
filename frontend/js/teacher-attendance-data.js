@@ -31,13 +31,13 @@ const ERP_DATA = {
       }
       if (authUser) {
         this.teacher = {
-          name: authUser.fullName || authUser.name || "Faculty",
-          id: authUser.empCode || authUser.emp_code || authUser.id || "",
-          designation: authUser.designation || "Faculty",
+          name: authUser.fullName || authUser.name || "Prof. J. M. Patil",
+          id: authUser.empCode || authUser.emp_code || authUser.id || "EMP-CSE-1001",
+          designation: authUser.designation || "Head Of Department",
           department: authUser.department || authUser.departmentName || "CSE",
           program: authUser.department || authUser.departmentName || "CSE",
-          email: authUser.email || "",
-          avatar: authUser.initials || (authUser.name ? authUser.name.substring(0, 2).toUpperCase() : "FA"),
+          email: authUser.email || "jmpatil@ssgmce.ac.in",
+          avatar: authUser.initials || "JM",
           unreadNotifications: 0
         };
         this.employee = this.teacher;
@@ -48,13 +48,13 @@ const ERP_DATA = {
         const prof = await window.ErpApi.getProfile();
         if (prof) {
           this.teacher = {
-            name: prof.fullName,
-            id: prof.empCode,
-            designation: prof.designation,
-            department: prof.departmentName || prof.department,
-            program: prof.departmentName || prof.department,
-            email: prof.email,
-            avatar: prof.avatar || "JP",
+            name: prof.fullName || "Prof. J. M. Patil",
+            id: prof.empCode || "EMP-CSE-1001",
+            designation: prof.designation || "Head Of Department",
+            department: prof.departmentName || prof.department || "CSE",
+            program: prof.departmentName || prof.department || "CSE",
+            email: prof.email || "jmpatil@ssgmce.ac.in",
+            avatar: prof.avatar || "JM",
             unreadNotifications: 3
           };
           this.employee = this.teacher;
@@ -108,15 +108,28 @@ const ERP_DATA = {
         const students = await window.ErpApi.getStudents(deptCode, classId);
         if (students && students.length > 0) {
           return students.map((s, index) => {
-            const roll = s.rollNo || (index + 1);
-            const rollStr = roll < 10 ? `0${roll}` : `${roll}`;
+            const rawRoll = s.rollNo || (index + 1);
+            let rollNum = typeof rawRoll === 'number' ? rawRoll : null;
+            if (!rollNum) {
+              const m = String(rawRoll).match(/(\d+)$/);
+              rollNum = m ? parseInt(m[1], 10) : (index + 1);
+            }
+            const rollStr = String(rollNum).padStart(2, '0');
             return {
               id: s.id,
-              roll: roll,
+              roll: rollNum,
+              rollNo: rollNum,
               rollFormatted: `ROLL ${rollStr}`,
+              rollCode: `${classId}${rollNum}`,
+              cardId: `CARD-${classId}-${rollNum}`,
               name: s.name,
-              prn: s.studentCode || `PRN-${roll}`,
-              isProvisional: s.isProvisional || false,
+              prn: s.studentCode || s.enrollmentNo || `PRN-${rollStr}`,
+              studentCode: s.studentCode || s.enrollmentNo || `PRN-${rollStr}`,
+              enrollmentNo: s.enrollmentNo || s.studentCode || `PRN-${rollStr}`,
+              classCode: classId,
+              className: classId,
+              departmentCode: deptCode || "CSE",
+              isProvisional: Boolean(s.isProvisional),
               status: null,
               recentHistory: s.recentHistory || []
             };

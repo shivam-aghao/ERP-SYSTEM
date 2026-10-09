@@ -2063,17 +2063,40 @@ const AttendanceMarkingManager = {
     }
   },
 
-  async openFromSlot(subject, room, timeslot, classCode, date) {
+  async openFromSlot(subject, room, timeslot, classCode, date, batch) {
+    // Forward directly to dedicated Attendance Module
+    if (typeof window.TeacherApp !== 'undefined' && typeof window.TeacherApp.navigateToAttendance === 'function') {
+      window.TeacherApp.navigateToAttendance({ classCode, subject, room, timeSlot: timeslot, date, batch });
+      return;
+    }
+
+    // 1. Strict subject-to-class mapping: CC -> 4R, DBMS -> 3R
+    const upperSub = (subject || '').toUpperCase();
+    if (upperSub.includes('CC') || upperSub.includes('CLOUD')) {
+      classCode = '4R';
+    } else if (upperSub.includes('DBMS') || upperSub.includes('DATABASE')) {
+      classCode = '3R';
+    } else if (!classCode) {
+      classCode = '2R1';
+    }
+
+    // 2. Extract batch if not passed
+    if (!batch) {
+      const bMatch = (subject || '').match(/Batch\s*([A-D0-9]+)/i);
+      if (bMatch) batch = bMatch[1].toUpperCase();
+    }
+
     let dept = 'CSE';
     if (classCode.includes('IT')) dept = 'IT';
     else if (classCode.includes('EE')) dept = 'EE';
 
     this.activeContext = {
       subject,
-      room: room || 'Room 201',
-      timeslot: timeslot || '09:00 - 10:30 AM',
-      classCode: classCode || '2R1',
+      room: room || 'B007',
+      timeslot: timeslot || '11:00 AM - 12:00 PM',
+      classCode: classCode || '3R',
       date: date || new Date().toISOString().split('T')[0],
+      batch: batch || null,
       department: dept
     };
 
@@ -2086,13 +2109,15 @@ const AttendanceMarkingManager = {
       }
     } catch (_) {}
 
+    const batchLabel = batch ? ` (Batch ${batch})` : '';
+
     // Populate Breadcrumbs
     const bcDept = document.getElementById('bc-dept-text');
     const bcClass = document.getElementById('bc-class-text');
     const bcDate = document.getElementById('bc-date-text');
     const bcSub = document.getElementById('bc-subject-text');
     if (bcDept) bcDept.textContent = dept;
-    if (bcClass) bcClass.textContent = classCode;
+    if (bcClass) bcClass.textContent = `${classCode}${batchLabel}`;
     if (bcDate) bcDate.textContent = formattedDate;
     if (bcSub) bcSub.textContent = subject;
 
@@ -2106,7 +2131,7 @@ const AttendanceMarkingManager = {
     const headLogged = document.getElementById('mark-header-logged-badge');
 
     if (headDept) headDept.textContent = `${dept} Department`;
-    if (headClass) headClass.textContent = `Class ${classCode}`;
+    if (headClass) headClass.textContent = `Class ${classCode}${batch ? ' • Batch ' + batch : ''}`;
     if (headSub) headSub.textContent = subject;
     if (headDate) headDate.textContent = formattedDate;
     if (headSlot) headSlot.textContent = timeslot;
@@ -2116,32 +2141,76 @@ const AttendanceMarkingManager = {
     const existing = this.markedSessions[sessionKey];
     if (headLogged) headLogged.style.display = existing ? 'inline-block' : 'none';
 
-    // Fetch class roster
+    // Fetch class roster from backend / cloud Supabase
     let studentsList = [];
-    try {
-      const res = await fetch(`/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`);
-      if (res.ok) {
-        const json = await res.json();
-        studentsList = json.data?.students || [];
+    const endpoints = [
+      `/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`,
+      `http://localhost:8000/api/v1/teacher/class-roster?classId=${encodeURIComponent(classCode)}`,
+      `https://gftqvclenyplnuoocbwe.supabase.co/rest/v1/students?class_name=eq.${encodeURIComponent(classCode)}&select=id,roll_no,full_name,student_code,email,class_name`
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const headers = {};
+        if (ep.includes('supabase.co')) {
+          headers['apikey'] = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY';
+          headers['Authorization'] = 'Bearer ' + headers['apikey'];
+        }
+        const res = await fetch(ep, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          let rawList = json.data?.students || json.data || json.students || (Array.isArray(json) ? json : null);
+          if (Array.isArray(rawList) && rawList.length > 0) {
+            studentsList = rawList.map((st, idx) => {
+              const roll = typeof st.rollNo === 'number' ? st.rollNo : (typeof st.roll_no === 'number' ? st.roll_no : (idx + 1));
+              return {
+                id: st.id || `stu-${classCode}-${roll}`,
+                rollNo: roll,
+                rollFormatted: st.rollFormatted || `${classCode}-${roll}`,
+                name: st.name || st.full_name || `Student ${roll}`,
+                studentCode: st.studentCode || st.student_code || st.enrollmentNo || `EN24CSE${String(roll).padStart(3, '0')}`,
+                enrollmentNo: st.enrollmentNo || st.student_code || `EN24CSE${String(roll).padStart(3, '0')}`,
+                cardId: st.cardId || `CARD-${classCode}-${roll}`,
+                classCode: classCode,
+                recentHistory: st.recentHistory || ['P','P','P','P','P','P','P','P','P','P'],
+                isProvisional: Boolean(st.isProvisional || st.is_provisional)
+              };
+            });
+            break;
+          }
+        }
+      } catch (e) {
+        // try next
       }
-    } catch (e) {
-      console.warn('API error fetching class roster:', e);
     }
 
     if (!studentsList || studentsList.length === 0) {
       if (typeof TeacherERPData !== 'undefined' && TeacherERPData.getStudentsForClass) {
         studentsList = TeacherERPData.getStudentsForClass(classCode);
-      } else {
-        studentsList = Array.from({ length: 30 }, (_, i) => ({
-          id: `b0000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`,
-          rollNo: i + 1,
-          rollFormatted: `${classCode}-${String(i + 1).padStart(2, '0')}`,
-          name: `Student ${i + 1}`,
-          enrollmentNo: `EN24CSE${String(i + 1).padStart(3, '0')}`,
-          cardId: `CARD-${classCode}-${String(i + 1).padStart(3, '0')}`,
-          classCode
-        }));
       }
+    }
+
+    // Sort students strictly by rollNo ascending
+    studentsList.sort((a, b) => (a.rollNo || 0) - (b.rollNo || 0));
+
+    // Batch filtering (Batch A: 1-20, Batch B: 21-40, Batch C: 41-60, Batch D: 61-80)
+    if (batch) {
+      const bUpper = String(batch).toUpperCase();
+      let minRoll = 1;
+      let maxRoll = 80;
+      if (bUpper === 'A' || bUpper === '1') { minRoll = 1; maxRoll = 20; }
+      else if (bUpper === 'B' || bUpper === '2') { minRoll = 21; maxRoll = 40; }
+      else if (bUpper === 'C' || bUpper === '3') { minRoll = 41; maxRoll = 60; }
+      else if (bUpper === 'D' || bUpper === '4') { minRoll = 61; maxRoll = 80; }
+
+      studentsList = studentsList.filter(s => {
+        let num = s.rollNo;
+        if (typeof num !== 'number') {
+          const m = String(num || '').match(/\d+/);
+          num = m ? parseInt(m[0], 10) : 0;
+        }
+        return num >= minRoll && num <= maxRoll;
+      });
     }
 
     this.students = studentsList;
@@ -2160,13 +2229,20 @@ const AttendanceMarkingManager = {
       };
     });
 
-    // Navigate to dedicated view pane
-    if (typeof TeacherApp !== 'undefined' && TeacherApp.switchView) {
-      TeacherApp.switchView('attendance-mark');
-    } else {
-      document.querySelectorAll('.view-section-pane').forEach(p => p.style.display = 'none');
-      const p = document.getElementById('attendance-marking-page');
-      if (p) p.style.display = 'block';
+    // Make dedicated marking page visible directly!
+    document.querySelectorAll('.view-section-pane').forEach(p => {
+      p.style.display = 'none';
+      p.classList.remove('active');
+    });
+    const markPage = document.getElementById('attendance-marking-page');
+    if (markPage) {
+      markPage.style.display = 'block';
+      markPage.classList.add('active');
+    }
+    if (typeof TeacherApp !== 'undefined') {
+      TeacherApp.currentView = 'attendance-mark';
+      const hdr = document.getElementById('active-module-title') || document.querySelector('.header-title h2');
+      if (hdr) hdr.textContent = `Mark Attendance - Swipe Deck (${classCode}${batch ? ' Batch ' + batch : ''})`;
     }
 
     // Default to Swipe Card Mode
@@ -2176,6 +2252,7 @@ const AttendanceMarkingManager = {
     this.updateLiveStats();
 
     if (window.lucide) lucide.createIcons();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   backToTimetable() {
@@ -2244,7 +2321,7 @@ const AttendanceMarkingManager = {
     if (rollBadge) rollBadge.textContent = `ROLL ${currentStudent.rollNo}`;
     if (nameEl) nameEl.textContent = currentStudent.name.toUpperCase();
     if (enrollEl) enrollEl.textContent = currentStudent.enrollmentNo || `EN24CSE${String(currentStudent.rollNo).padStart(3, '0')}`;
-    if (classBadge) classBadge.textContent = `CLASS ${this.activeContext?.classCode || '2R1'}`;
+    if (classBadge) classBadge.textContent = `CLASS ${this.activeContext?.classCode || '2R1'}${this.activeContext?.batch ? ' (Batch ' + this.activeContext.batch + ')' : ''}`;
     if (subName) subName.textContent = this.activeContext?.subject || 'Data Structures';
     if (indexInd) indexInd.textContent = `#${this.currentIndex + 1}`;
 

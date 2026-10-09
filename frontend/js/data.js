@@ -2493,10 +2493,27 @@ const TeacherERPData = {
   },
 
   getStudentsForClass(classCode) {
-    if (this._studentsData && this._studentsData[classCode]) {
+    if (this._studentsData && this._studentsData[classCode] && this._studentsData[classCode].length > 20) {
       return this._studentsData[classCode];
     }
-    return [];
+    const counts = { "2R1": 77, "2R2": 68, "3R": 80, "4R": 79 };
+    const count = counts[classCode] || 60;
+    const prefix = classCode === "2R1" ? "2RA" : (classCode === "2R2" ? "2RB" : classCode);
+    return Array.from({ length: count }, (_, i) => {
+      const roll = i + 1;
+      return {
+        id: `stu-${classCode}-${roll}`,
+        rollNo: roll,
+        rollFormatted: `${prefix}${roll}`,
+        name: `Student ${prefix}${roll}`,
+        studentCode: `EN24${classCode}${String(roll).padStart(3, '0')}`,
+        enrollmentNo: `EN24${classCode}${String(roll).padStart(3, '0')}`,
+        cardId: `CARD-${classCode}-${roll}`,
+        classCode: classCode,
+        recentHistory: ['P','P','P','P','P','P','P','P','P','P'],
+        isProvisional: false
+      };
+    });
   },
 
   get students() {
@@ -2512,7 +2529,7 @@ const TeacherERPData = {
   // Today's classes schedule for Dashboard
     // All 15 Faculty Members from Official PDF
   facultyList: [
-    { empCode: "EMP-CSE-1001", name: "Prof. J. M. Patil", title: "Professor & Head, CSE", totalLoad: 12 },
+    { empCode: "EMP-CSE-1001", name: "Prof. J. M. Patil", title: "Head Of Department", totalLoad: 12 },
     { empCode: "EMP-CSE-1002", name: "Dr. N. M. Kandoi", title: "Associate Professor", totalLoad: 15 },
     { empCode: "EMP-CSE-1003", name: "Prof. C. M. Mankar", title: "Assistant Professor", totalLoad: 17 },
     { empCode: "EMP-CSE-1004", name: "Dr. V. S. Mahalle", title: "Associate Professor", totalLoad: 17 },

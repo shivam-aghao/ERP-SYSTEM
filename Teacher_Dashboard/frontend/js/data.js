@@ -137,8 +137,6 @@ if (typeof window !== 'undefined') {
 /* ========================================================
    TEACHER ERP DATA STORE - EXPANDED ACADEMIC MODEL
    ======================================================== */
-
-<<<<<<< HEAD
 /* ========================================================
    OFFICIAL SSGMCE CSE FACULTY PERSONAL TIMETABLES
    Extracted directly from DATA/Personal Timtable for teacher.pdf
@@ -2412,25 +2410,21 @@ if (typeof window !== 'undefined') {
   window.SSGMCE_FACULTY_TIMETABLES = SSGMCE_FACULTY_TIMETABLES;
 }
 
-const TeacherERPData = {
-  faculty: {
-    name: "Dr. Rohan Deshmukh",
-=======
 const getSessionFaculty = () => {
   try {
     if (typeof window !== 'undefined' && window.ERP_AUTH) {
       const u = window.ERP_AUTH.getCurrentUser();
       if (u && (u.role === 'teacher' || u.role === 'faculty')) {
         return {
-          name: u.fullName || u.name || "Faculty Member",
+          name: u.fullName || u.name || "Prof. J. M. Patil",
           prefix: "Prof.",
-          title: u.designation || "Faculty Member",
+          title: u.designation || "Head Of Department",
           department: u.department || "Computer Science & Engineering",
           departmentCode: u.departmentCode || "CSE",
-          employeeId: u.empCode || u.emp_code || "",
-          email: u.email || "",
+          employeeId: u.empCode || u.emp_code || "EMP-CSE-1001",
+          email: u.email || "jmpatil@ssgmce.ac.in",
           phone: u.phone || "",
-          avatarInitials: u.initials || "FA",
+          avatarInitials: u.initials || "JP",
           academicYear: AcademicDateUtils.getCurrentAcademicTerm().academicYear,
           currentSemester: AcademicDateUtils.getCurrentAcademicTerm().semesterName
         };
@@ -2438,8 +2432,7 @@ const getSessionFaculty = () => {
     }
   } catch (_) {}
   return {
-    name: "Faculty Member",
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
+    name: "Prof. J. M. Patil",
     prefix: "Prof.",
     title: "Faculty Member",
     department: "Computer Science & Engineering",
@@ -2479,13 +2472,12 @@ const TeacherERPData = {
   subjects: {},
 
   getStudentsForClass(classCode) {
-    if (this.students && this.students[classCode]) {
-      return this.students[classCode];
+    if (this._classStudents && this._classStudents[classCode]) {
+      return this._classStudents[classCode];
     }
     return [];
   },
 
-<<<<<<< HEAD
   // Directory students roster getter
   get students() {
     return {
@@ -2783,15 +2775,6 @@ const TeacherERPData = {
       icon: "book-open"
     }
   ]
-=======
-  students: {},
-  todayClasses: [],
-  timetable: [],
-  assignedClasses: [],
-  syllabus: [],
-  recentActivities: [],
-  notifications: []
->>>>>>> fd7760bf814784b37a85b715e43aae31ce38985e
 };
 
 if (typeof window !== 'undefined') {

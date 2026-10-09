@@ -116,14 +116,19 @@ const AttendanceState = {
         const res = await window.TeacherAPI.getStudents(code);
         const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
         if (list && list.length > 0) {
-          this.students = list.map(s => {
-            const rollInt = typeof s.roll_no === 'number' ? s.roll_no : (parseInt(s.rollNo, 10) || 1);
-            const rollFmt = s.rollFormatted || (rollInt < 10 ? `0${rollInt}` : `${rollInt}`);
+          this.students = list.map((s, idx) => {
+            let rollInt = typeof s.roll_no === 'number' ? s.roll_no : (typeof s.rollNo === 'number' ? s.rollNo : null);
+            if (!rollInt) {
+              const str = String(s.rollNo || s.roll_no || "");
+              const m = str.match(/(\d+)$/);
+              rollInt = m ? parseInt(m[1], 10) : (idx + 1);
+            }
+            const rollFmt = String(rollInt).padStart(2, '0');
             return {
               rollNo: rollInt,
-              rollFormatted: rollFmt,
+              rollFormatted: `ROLL ${rollFmt}`,
               name: s.name || s.full_name || 'Student',
-              enrollmentNo: s.enrollmentNo || `EN2024CSE${rollFmt}`,
+              enrollmentNo: s.enrollmentNo || s.studentCode || `EN2024CSE${rollFmt}`,
               division: code,
               department: this.selectedDepartment ? this.selectedDepartment.code : 'CSE',
               defaultAttendance: s.defaultAttendance || 'present'
