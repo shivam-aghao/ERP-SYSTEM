@@ -65,6 +65,18 @@
       <a class="nav-item" data-tab="tab-reports">
         <i data-lucide="bar-chart-3"></i> Institutional Reports
       </a>
+      <a class="nav-item" data-tab="tab-results">
+        <i data-lucide="award"></i> Results &amp; Marks Governance
+      </a>
+
+      <div class="sidebar-category">Finance &amp; Documents</div>
+      <a class="nav-item" data-tab="tab-fees">
+        <i data-lucide="credit-card"></i> Fee Accounts &amp; Dues
+      </a>
+      <a class="nav-item" data-tab="tab-documents">
+        <i data-lucide="file-check"></i> Document Verification
+        <span id="badgePendingDocs" class="badge badge-warning" style="margin-left: auto; display: none;">0</span>
+      </a>
 
       <div class="sidebar-category">Security &amp; Audit</div>
       <a class="nav-item" data-tab="tab-rbac">
@@ -425,6 +437,307 @@
       </section>
 
       <!-- ====================================================
+           TAB: RESULTS & ACADEMIC RECORDS GOVERNANCE
+           ==================================================== -->
+      <section id="tab-results" class="tab-pane">
+        <!-- Section 1: Verification & Publishing Header -->
+        <div class="admin-card-box" style="margin-bottom: 20px;">
+          <div class="box-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2>Examination Cell &amp; Results Publication Governance</h2>
+              <span style="font-size: 12px; color: var(--admin-muted);">Verify faculty marks submissions, publish authoritative grade cards, and manage result withholding</span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="AdminController.openUnlockMarksModal()">
+                <i data-lucide="unlock" style="width:14px;height:14px;"></i> Unlock Submission
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="AdminController.verifyMarksSubmission()" style="background:#0284c7; border-color:#0284c7;">
+                <i data-lucide="shield-check" style="width:14px;height:14px;"></i> Verify Marks
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="AdminController.publishResults()" style="background:#059669; border-color:#059669;">
+                <i data-lucide="check-circle" style="width:14px;height:14px;"></i> Publish Results
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="AdminController.unpublishResults()" style="color:#dc2626; border-color:#dc2626;">
+                <i data-lucide="eye-off" style="width:14px;height:14px;"></i> Withhold Results
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="AdminController.exportResultsGazette()">
+                <i data-lucide="file-spreadsheet" style="width:14px;height:14px;"></i> Export Gazette (CSV)
+              </button>
+            </div>
+          </div>
+
+          <!-- Class & Semester Selection Filter -->
+          <div style="display: flex; gap: 16px; align-items: flex-end; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--admin-muted); text-transform: uppercase; display: block; margin-bottom: 4px;">Class Cohort</label>
+              <select id="adminResultsClassSelect" class="form-control" style="width: 140px; padding: 6px 10px; font-weight: 600;">
+                <option value="3R" selected>3R (Third Year)</option>
+                <option value="2R">2R (Second Year)</option>
+                <option value="4R">4R (Final Year)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--admin-muted); text-transform: uppercase; display: block; margin-bottom: 4px;">Semester</label>
+              <select id="adminResultsSemSelect" class="form-control" style="width: 130px; padding: 6px 10px; font-weight: 600;">
+                <option value="5" selected>Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--admin-muted); text-transform: uppercase; display: block; margin-bottom: 4px;">Subject</label>
+              <select id="adminResultsSubSelect" class="form-control" style="width: 250px; padding: 6px 10px; font-weight: 600;">
+                <option value="CS501" selected>CS501 - Database Management</option>
+                <option value="CS502">CS502 - Computer Networks</option>
+                <option value="CS503">CS503 - Theory of Computation</option>
+                <option value="CS504">CS504 - Software Engineering</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="AdminController.loadResultsGovernance()" style="padding: 7px 16px; font-weight: 600;">
+              Load Academic Status
+            </button>
+          </div>
+
+          <!-- Academic Status Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px;">
+            <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+              <div id="adminStatEnrolled" style="font-size: 22px; font-weight: 800; color: var(--admin-primary);">80</div>
+              <div style="font-size: 11px; color: var(--admin-muted); font-weight: 600; text-transform: uppercase;">Candidates Enrolled</div>
+            </div>
+            <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+              <div id="adminStatGraded" style="font-size: 22px; font-weight: 800; color: #0284c7;">80</div>
+              <div style="font-size: 11px; color: var(--admin-muted); font-weight: 600; text-transform: uppercase;">Marks Recorded</div>
+            </div>
+            <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+              <div id="adminStatPassRate" style="font-size: 22px; font-weight: 800; color: #059669;">100%</div>
+              <div style="font-size: 11px; color: var(--admin-muted); font-weight: 600; text-transform: uppercase;">Pass Percentage</div>
+            </div>
+            <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+              <div id="adminStatLockStatus" style="font-size: 18px; font-weight: 800; color: #10b981; line-height: 28px;">LOCKED 🔒</div>
+              <div style="font-size: 11px; color: var(--admin-muted); font-weight: 600; text-transform: uppercase;">Governance Lock</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Revaluation Requests Management Desk -->
+        <div class="admin-card-box" style="margin-bottom: 20px;">
+          <div class="box-header">
+            <div>
+              <h3>Revaluation &amp; Answer Script Verification Desk</h3>
+              <span style="font-size: 12px; color: var(--admin-muted);">Process student revaluation appeals, update verified marks, and auto-recalculate SGPA/CGPA</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="AdminController.loadRevaluationDesk()">Refresh List</button>
+          </div>
+          <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>App ID</th>
+                  <th>Student Code</th>
+                  <th>Subject</th>
+                  <th>Semester</th>
+                  <th>Original ESE</th>
+                  <th>Revised ESE</th>
+                  <th>Status</th>
+                  <th>Reason</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminRevalTbody">
+                <tr><td colspan="9" style="text-align: center;">Loading revaluation applications...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 3: Institutional Performance Analytics -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="admin-card-box">
+            <div class="box-header">
+              <h3>Class Academic Performance Report</h3>
+              <span id="classReportBadge" class="badge badge-info">Sem V</span>
+            </div>
+            <div id="classReportContainer" style="padding: 12px; font-size: 13px; line-height: 1.6;">
+              Loading class performance analytics...
+            </div>
+          </div>
+
+          <div class="admin-card-box">
+            <div class="box-header">
+              <h3>Institutional Backlog Summary</h3>
+              <span class="badge badge-warning">Autonomous Standing</span>
+            </div>
+            <div id="backlogReportContainer" style="padding: 12px; font-size: 13px; line-height: 1.6;">
+              Loading backlog status...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           TAB: FEES & FINANCIAL GOVERNANCE
+           ==================================================== -->
+      <section id="tab-fees" class="tab-pane">
+        <!-- KPI Header -->
+        <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <div class="kpi-card" style="background: #fff; padding: 18px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Pending Dues</div>
+            <div id="kpiPendingFees" style="font-size: 24px; font-weight: 700; color: #dc2626; margin-top: 6px;">₹0</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Across all active cohorts</div>
+          </div>
+          <div class="kpi-card" style="background: #fff; padding: 18px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Collected Fees</div>
+            <div id="kpiCollectedFees" style="font-size: 24px; font-weight: 700; color: #059669; margin-top: 6px;">₹0</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Current academic session</div>
+          </div>
+          <div class="kpi-card" style="background: #fff; padding: 18px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase;">Fee Defaulters</div>
+            <div id="kpiDefaultersCount" style="font-size: 24px; font-weight: 700; color: #d97706; margin-top: 6px;">0</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Students with pending balance</div>
+          </div>
+        </div>
+
+        <!-- Action Control Bar -->
+        <div class="admin-card-box" style="margin-bottom: 20px;">
+          <div class="box-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2>Institutional Fee Management &amp; Dues Control</h2>
+              <span style="font-size: 12px; color: var(--admin-muted);">Generate institutional invoices, record offline manual payments, and monitor collection rates</span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="AdminController.openCreateInvoiceModal()">
+                <i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Create Fee Invoice
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="AdminController.openRecordPaymentModal()" style="background:#0284c7; border-color:#0284c7;">
+                <i data-lucide="credit-card" style="width:14px;height:14px;"></i> Record Offline Payment
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="AdminController.exportFeeReport()">
+                <i data-lucide="file-spreadsheet" style="width:14px;height:14px;"></i> Export Ledger (CSV)
+              </button>
+            </div>
+          </div>
+
+          <!-- Class-wise Collection Summary -->
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--admin-text); margin: 16px 0 10px;">Class-wise Fee Collection Ledger</h3>
+          <div class="table-responsive">
+            <table class="data-table" id="classFeeCollectionTable">
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th>Total Enrolled</th>
+                  <th>Expected Revenue</th>
+                  <th>Total Collected</th>
+                  <th>Total Pending</th>
+                  <th>Collection Rate</th>
+                </tr>
+              </thead>
+              <tbody id="classFeeCollectionTbody">
+                <tr><td colspan="6" style="text-align: center; color: var(--admin-muted); padding: 20px;">Loading collection statistics...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Student-wise Pending Dues Report -->
+        <div class="admin-card-box">
+          <div class="box-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2>Outstanding Student Dues &amp; Defaulters List</h2>
+              <span style="font-size: 12px; color: var(--admin-muted);">Real-time tracking of students with pending fee installments</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--admin-muted);">Class Filter:</label>
+              <select id="adminFeeClassFilter" class="form-control" style="width: 130px; padding: 6px 10px;" onchange="AdminController.loadPendingFees()">
+                <option value="">All Classes</option>
+                <option value="3R">3R</option>
+                <option value="3S">3S</option>
+                <option value="2R">2R</option>
+                <option value="4R">4R</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="AdminController.loadPendingFees()">Refresh</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="pendingFeesTable">
+              <thead>
+                <tr>
+                  <th>PRN / Code</th>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Invoice No</th>
+                  <th>Total Fee</th>
+                  <th>Paid</th>
+                  <th>Outstanding</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="pendingFeesTbody">
+                <tr><td colspan="10" style="text-align: center; color: var(--admin-muted); padding: 20px;">Loading pending dues...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           TAB: DIGITAL DOCUMENT VERIFICATION DESK
+           ==================================================== -->
+      <section id="tab-documents" class="tab-pane">
+        <div class="admin-card-box">
+          <div class="box-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2>Institutional Digital Document Verification Desk</h2>
+              <span style="font-size: 12px; color: var(--admin-muted);">Audit, verify, and govern student certificates and uploaded credentials in private Supabase Storage</span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+              <select id="adminDocStatusFilter" class="form-control" style="width: 170px; padding: 6px 10px;" onchange="AdminController.loadDocumentDesk()">
+                <option value="">All Statuses</option>
+                <option value="pending_verification" selected>Pending Verification</option>
+                <option value="verified">Verified Official</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select id="adminDocClassFilter" class="form-control" style="width: 120px; padding: 6px 10px;" onchange="AdminController.loadDocumentDesk()">
+                <option value="">All Classes</option>
+                <option value="3R">3R</option>
+                <option value="3S">3S</option>
+                <option value="2R">2R</option>
+                <option value="4R">4R</option>
+              </select>
+              <input type="text" id="adminDocSearchInput" class="form-control" placeholder="Search PRN..." style="width: 140px; padding: 6px 10px;" onkeyup="if(event.key==='Enter') AdminController.loadDocumentDesk()">
+              <button class="btn btn-outline btn-sm" onclick="AdminController.loadDocumentDesk()">
+                <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh Desk
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="adminDocumentsTable">
+              <thead>
+                <tr>
+                  <th>PRN</th>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Document Type</th>
+                  <th>Document Title</th>
+                  <th>File Size</th>
+                  <th>Uploaded Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminDocumentsTbody">
+                <tr><td colspan="9" style="text-align: center; color: var(--admin-muted); padding: 20px;">Loading student document vault...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
            TAB 8: RBAC MATRIX
            ==================================================== -->
       <section id="tab-rbac" class="tab-pane">
@@ -519,6 +832,181 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="AdminController.closeModal('leaveReviewModal')">Cancel</button>
         <button class="btn btn-primary" id="modalLeaveSubmitBtn" onclick="AdminController.submitLeaveReview()">Confirm Decision</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: REVALUATION REVIEW DECISION
+       ======================================================== -->
+  <div class="modal-overlay" id="revalReviewModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Examination Board — Revaluation Review</h3>
+        <button class="modal-close" onclick="AdminController.closeModal('revalReviewModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalRevalId">
+        <div id="modalRevalInfoBox" style="padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; margin-bottom: 16px;"></div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Revised External Marks ESE (0 - 70):</label>
+          <input type="number" id="modalRevalNewMarks" class="form-control" min="0" max="70" step="0.5" placeholder="Enter updated mark if approved" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+        <div class="form-group">
+          <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Board Evaluation Remarks / Justification:</label>
+          <textarea id="modalRevalRemarks" class="form-control" rows="3" placeholder="e.g. Scrutiny completed; Question 4 re-evaluated by external referee." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="AdminController.closeModal('revalReviewModal')">Cancel</button>
+        <button class="btn btn-outline" style="color: #dc2626; border-color: #dc2626;" onclick="AdminController.submitRevalDecision('REJECTED')">Reject Application</button>
+        <button class="btn btn-primary" style="background: #059669; border-color: #059669;" onclick="AdminController.submitRevalDecision('APPROVED')">Approve &amp; Recalculate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: ADMINISTRATIVE UNLOCK MARKS SUBMISSION
+       ======================================================== -->
+  <div class="modal-overlay" id="adminUnlockMarksModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Administrative Unlock — Marks Revision</h3>
+        <button class="modal-close" onclick="AdminController.closeModal('adminUnlockMarksModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--admin-text); line-height: 1.5; margin-bottom: 14px;">
+          Unlocking this submission allows faculty to edit marks previously locked. A <strong>mandatory audit trail</strong> will be recorded into the institutional ledger.
+        </p>
+        <div class="form-group">
+          <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Mandatory Unlock Justification Reason:</label>
+          <textarea id="modalUnlockReason" class="form-control" rows="3" placeholder="e.g. Approved by Examination Cell for re-checking Question 2 totaling error." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="AdminController.closeModal('adminUnlockMarksModal')">Cancel</button>
+        <button class="btn btn-primary" style="background: #dc2626; border-color: #dc2626;" onclick="AdminController.submitUnlockMarks()">Unlock for Revision</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CREATE FEE INVOICE
+       ======================================================== -->
+  <div class="modal-overlay" id="adminCreateInvoiceModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>Institutional Fee Assessment — New Invoice</h3>
+        <button class="modal-close" onclick="AdminController.closeModal('adminCreateInvoiceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-weight: 600; font-size: 13px;">Student PRN / Code *</label>
+          <input type="text" id="modalInvStudentCode" class="form-control" placeholder="e.g. 308637" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Academic Year</label>
+            <input type="text" id="modalInvYear" class="form-control" value="2026-27">
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Semester</label>
+            <input type="number" id="modalInvSemester" class="form-control" value="5" min="1" max="8">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Subtotal Amount (₹) *</label>
+            <input type="number" id="modalInvSubtotal" class="form-control" value="118500" min="0">
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Scholarship / Waiver (₹)</label>
+            <input type="number" id="modalInvScholarship" class="form-control" value="55000" min="0">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Special Discount (₹)</label>
+            <input type="number" id="modalInvDiscount" class="form-control" value="5000" min="0">
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Due Date</label>
+            <input type="date" id="modalInvDueDate" class="form-control" value="2026-11-30">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="AdminController.closeModal('adminCreateInvoiceModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="AdminController.submitCreateInvoice()">Create &amp; Issue Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: RECORD OFFLINE / MANUAL PAYMENT
+       ======================================================== -->
+  <div class="modal-overlay" id="adminRecordPaymentModal">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Accounts Desk — Record Offline Payment</h3>
+        <button class="modal-close" onclick="AdminController.closeModal('adminRecordPaymentModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalPayInvoiceId">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-weight: 600; font-size: 13px;">Student PRN / Code *</label>
+          <input type="text" id="modalPayStudentCode" class="form-control" placeholder="e.g. 308637" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="font-weight: 600; font-size: 13px;">Amount Paid (₹) *</label>
+          <input type="number" id="modalPayAmount" class="form-control" placeholder="e.g. 25000" min="100" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Payment Method</label>
+            <select id="modalPayMethod" class="form-control">
+              <option value="cash">Cash (Counter)</option>
+              <option value="dd">Demand Draft (DD)</option>
+              <option value="cheque">Cheque</option>
+              <option value="bank_transfer">NEFT / RTGS</option>
+              <option value="upi">UPI / QR Code</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="font-weight: 600; font-size: 13px;">Instrument / Txn Ref</label>
+            <input type="text" id="modalPayRef" class="form-control" placeholder="DD / Cheque No">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="AdminController.closeModal('adminRecordPaymentModal')">Cancel</button>
+        <button class="btn btn-primary" style="background: #0284c7; border-color: #0284c7;" onclick="AdminController.submitRecordPayment()">Confirm Payment &amp; Issue Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: REJECT DOCUMENT WITH MANDATORY REASON
+       ======================================================== -->
+  <div class="modal-overlay" id="adminRejectDocModal">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Verification Desk — Reject Document</h3>
+        <button class="modal-close" onclick="AdminController.closeModal('adminRejectDocModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalRejectDocId">
+        <p style="font-size: 13px; color: var(--admin-text); line-height: 1.5; margin-bottom: 12px;">
+          Please state the reason for rejecting <strong id="modalRejectDocTitle">this document</strong>. The student will be notified to re-upload.
+        </p>
+        <div class="form-group">
+          <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Mandatory Rejection Reason *</label>
+          <textarea id="modalRejectDocReason" class="form-control" rows="3" placeholder="e.g. Illegible scan, seal missing, or mismatch in candidate name." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="AdminController.closeModal('adminRejectDocModal')">Cancel</button>
+        <button class="btn btn-primary" style="background: #dc2626; border-color: #dc2626;" onclick="AdminController.submitRejectDocument()">Reject Document</button>
       </div>
     </div>
   </div>

@@ -131,11 +131,12 @@ class RBACService:
     @classmethod
     def verify_teacher_assignment(
         cls,
-        user: AuthenticatedUser,
+        user: Optional[AuthenticatedUser] = None,
         target_teacher_id: Optional[str] = None,
         class_id: Optional[str] = None,
         subject_id: Optional[str] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        current_user: Optional[AuthenticatedUser] = None
     ) -> bool:
         """
         Enforces strict teacher scoping (Requirement 6):
@@ -143,10 +144,11 @@ class RBACService:
         - Prevents horizontal privilege escalation where teacher A marks attendance or grades subjects for teacher B.
         - HOD and Admin have administrative oversight.
         """
-        if not user:
+        effective_user = user or current_user
+        if not effective_user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
 
-        role = (user.role or "").strip().lower()
+        role = (effective_user.role or "").strip().lower()
 
         # Super Admin and Admin have institution-wide authority
         if role in (RoleName.SUPER_ADMIN.value, RoleName.ADMIN.value):
@@ -166,7 +168,7 @@ class RBACService:
         # 1. Check teacher identity match
         if target_teacher_id:
             cleaned = target_teacher_id.strip()
-            if cleaned not in (user.identifier, user.id, getattr(user, "user_id", None)):
+            if cleaned not in (effective_user.identifier, effective_user.id, getattr(effective_user, "user_id", None)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Access denied: Faculty members can only manage their own instructional records."
@@ -183,8 +185,8 @@ class RBACService:
                       AND (:cid IS NULL OR ta.class_id::text = :cid OR ta.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
                       AND (:sid IS NULL OR ta.subject_id::text = :sid OR ta.subject_id = (SELECT id FROM subjects WHERE code = :sid LIMIT 1))
                 """), {
-                    "tid": user.id,
-                    "tcode": user.identifier,
+                    "tid": effective_user.id,
+                    "tcode": effective_user.identifier,
                     "cid": class_id,
                     "sid": subject_id
                 }).scalar()
@@ -196,12 +198,12 @@ class RBACService:
                         SELECT count(*) FROM timetable_slots ts
                         WHERE (ts.faculty_emp_code = :tcode OR ts.faculty_id::text = :tid)
                           AND (:cid IS NULL OR ts.class_id::text = :cid OR ts.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
-                    """), {"tid": user.id, "tcode": user.identifier, "cid": class_id}).scalar() or 0
+                    """), {"tid": effective_user.id, "tcode": effective_user.identifier, "cid": class_id}).scalar() or 0
                     
                     if tt_count == 0:
                         logger.warning(
                             "Teacher assignment check failed: Teacher '%s' is not assigned to class '%s' or subject '%s'",
-                            user.identifier, class_id, subject_id
+                            effective_user.identifier, class_id, subject_id
                         )
                         raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,

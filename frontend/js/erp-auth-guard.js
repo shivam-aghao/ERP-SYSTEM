@@ -12,9 +12,6 @@
 
   const STORAGE_KEY = 'ssgmce_erp_session';
 
-  // Demo fixtures removed - sessions must be authenticated via backend
-  const DEMO_PROFILES = {};
-
   const ERPAuth = {
     /**
      * Retrieve the current active session
@@ -51,6 +48,7 @@
 
     /**
      * Clear session and return to login portal
+     */
     logout: function (redirectUrl) {
       if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
         window.ERP_AUTH.logout();
@@ -71,24 +69,6 @@
      */
     getLoginUrl: function () {
       return 'login.html';
-    },
-
-    /**
-     * Quick demo login for instant testing
-     * @param {'student'|'faculty'} role 
-     * @param {boolean} redirect 
-     */
-    loginAsDemo: function (role, redirect = true) {
-      const profile = DEMO_PROFILES[role] || DEMO_PROFILES.student;
-      this.setSession(profile, true);
-      if (redirect) {
-        if (role === 'faculty') {
-          window.location.href = this.resolvePath('faculty/dashboard/index.html');
-        } else {
-          window.location.href = this.resolvePath('student/dashboard/index.html');
-        }
-      }
-      return profile;
     },
 
     /**
@@ -289,9 +269,7 @@
           }
         });
       }
-    },
-
-    DEMO_PROFILES: DEMO_PROFILES
+    }
   };
 
   // Auto-expose on global window

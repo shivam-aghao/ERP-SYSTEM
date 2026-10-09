@@ -6,7 +6,7 @@
 let attendanceChartInstance = null;
 let syllabusChartInstance = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+function initDashboard() {
   initAttendanceChart();
   initSyllabusProgressChart();
   initSubjectAttendanceToggle();
@@ -23,7 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dynamic API & Supabase Hydration Engine (Removes all static placeholders)
   hydrateDashboardData();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
 
 /* ==========================================================================
    1. OVERALL ATTENDANCE DOUGHNUT CHART (Chart.js + SVG Fallback)
@@ -718,7 +724,6 @@ document.addEventListener('click', (e) => {
 /* ==========================================================================
    13. TIMETABLE DAY SWITCHER TABS (MONDAY - SATURDAY FULL SCHEDULE)
    ========================================================================== */
-const timetableScheduleData = {
 function initTimetableDayTabs() {
   const dayTabBtns = document.querySelectorAll('.day-tab-btn');
   const badge = document.getElementById('scheduleDayBadge');

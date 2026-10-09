@@ -1368,8 +1368,23 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // RESULTS VIEW & PUBLICATION PORTAL (STEP 6)
+  // RESULTS VIEW & MARKS EVALUATION CONSOLE (STEP 6)
   // ----------------------------------------------------
+  getAuthHeaders() {
+    const token = localStorage.getItem('ssgmce_teacher_token') ||
+                  localStorage.getItem('ssgmce_access_token') ||
+                  localStorage.getItem('ssgmce_token') ||
+                  sessionStorage.getItem('ssgmce_access_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const stored = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_active_teacher') || '{}');
+      if (stored && stored.id) headers['X-Teacher-Id'] = stored.id;
+      if (stored && stored.emp_code) headers['X-Emp-Code'] = stored.emp_code;
+    } catch (e) {}
+    return headers;
+  },
+
   renderResultsView() {
     const container = document.getElementById("results-content");
     if (!container) return;
@@ -1378,91 +1393,106 @@ const TeacherApp = {
       <div class="card" style="padding:24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
           <div>
-            <h3 style="font-size:17px; color:var(--dark-navy); font-weight:700;">Semester Academic Records &amp; Result Publication Portal</h3>
-            <p style="font-size:12.5px; color:var(--text-muted);">Class 3R (B.Tech Computer Science &amp; Engg.) • Semester V • Controller of Examinations Autonomous Cell</p>
+            <h3 style="font-size:18px; color:var(--dark-navy); font-weight:700; margin:0 0 4px 0;">Autonomous Marks Entry &amp; Academic Grading Console</h3>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Continuous Internal Evaluation (CIE: Max 30) &amp; End-Semester Examination (ESE: Max 70)</p>
           </div>
-          <div style="display:flex; gap:10px;">
-            <button class="quick-action-btn primary" onclick="TeacherApp.publishClassResults('3R', 5)" style="background:#059669; border-color:#059669; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
-              <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Publish Results to Student Portal
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="quick-action-btn" onclick="TeacherApp.saveMarksRoster(true)" id="btnSaveMarksDraft" style="background:#475569; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="save" style="width:15px;height:15px;"></i> Save Draft
             </button>
-            <button class="quick-action-btn" onclick="TeacherApp.unpublishClassResults('3R', 5)" style="background:#dc2626; border-color:#dc2626; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
-              <i data-lucide="lock" style="width:15px;height:15px;"></i> Withhold / Unpublish
+            <button class="quick-action-btn primary" onclick="TeacherApp.saveMarksRoster(false)" id="btnSubmitMarks" style="background:#0b5cad; border-color:#0b5cad; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="send" style="width:15px;height:15px;"></i> Submit Marks
+            </button>
+            <button class="quick-action-btn" onclick="TeacherApp.lockMarksRoster()" id="btnLockMarks" style="background:#b91c1c; border-color:#b91c1c; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="lock" style="width:15px;height:15px;"></i> Lock Submission
+            </button>
+            <button class="quick-action-btn" onclick="TeacherApp.exportGazetteCsv()" style="background:#059669; border-color:#059669; color:#fff; display:flex; align-items:center; gap:6px; font-weight:600; padding:8px 16px; border-radius:8px;">
+              <i data-lucide="download" style="width:15px;height:15px;"></i> Export Gazette
             </button>
           </div>
         </div>
 
-        <div class="results-grid-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px;">
-          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div style="font-size:24px; font-weight:800; color:var(--primary-blue);">80 / 80</div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Students Evaluated</div>
+        <!-- Filter & Control Toolbar -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:20px; display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Class</label>
+            <select id="teacherMarksClassSelect" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:600; background:#fff; min-width:140px;">
+              <option value="3R" selected>3R (Third Year CSE)</option>
+              <option value="2R">2R (Second Year CSE)</option>
+              <option value="4R">4R (Final Year CSE)</option>
+            </select>
           </div>
-          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div style="font-size:24px; font-weight:800; color:#059669;">8.62</div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Class Average SGPA</div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Subject</label>
+            <select id="teacherMarksSubjectSelect" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:600; background:#fff; min-width:260px;">
+              <option value="CS501" selected>CS501 - Database Management Systems</option>
+              <option value="CS502">CS502 - Computer Networks &amp; Protocols</option>
+              <option value="CS503">CS503 - Theory of Computation</option>
+              <option value="CS504">CS504 - Software Engineering</option>
+            </select>
           </div>
-          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div style="font-size:24px; font-weight:800; color:#0284c7;">100%</div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Clear Passing Rate</div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Semester</label>
+            <select id="teacherMarksSemesterSelect" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:600; background:#fff; min-width:120px;">
+              <option value="5" selected>Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+            </select>
           </div>
-          <div class="result-stat-box" style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div style="font-size:24px; font-weight:800; color:#10b981;">PUBLISHED</div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Portal Visibility Status</div>
+          <button class="btn btn-primary" onclick="TeacherApp.loadMarksRoster()" style="padding:8px 18px; border-radius:6px; font-weight:600; cursor:pointer;">
+            Load Class Roster
+          </button>
+        </div>
+
+        <!-- Lock Warning Notice -->
+        <div id="teacherLockAlert" style="display:none; padding:14px 18px; margin-bottom:20px; background:#fef2f2; border:1px solid #fee2e2; border-radius:8px; color:#991b1b; font-size:13px; align-items:center; gap:10px;">
+          <span style="font-size:18px;">🔒</span>
+          <div>
+            <strong>Submission Locked:</strong> This grading sheet is locked against further faculty modifications.
+            <span id="teacherLockReasonText" style="margin-left:6px; font-style:italic; color:#7f1d1d;"></span>
           </div>
         </div>
 
+        <!-- Metrics Summary Cards -->
+        <div class="results-grid-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div id="statTotalStudents" style="font-size:22px; font-weight:800; color:var(--primary-blue);">0</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Enrolled Students</div>
+          </div>
+          <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div id="statGradedCount" style="font-size:22px; font-weight:800; color:#0284c7;">0</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Graded Entries</div>
+          </div>
+          <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">—</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Class Average Marks</div>
+          </div>
+          <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
+            <div id="statLockStatus" style="font-size:18px; font-weight:800; color:#10b981; line-height:28px;">NEW</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Lock Status</div>
+          </div>
+        </div>
+
+        <!-- Grading Table -->
         <div class="table-responsive-wrapper" style="overflow-x:auto;">
           <table class="attendance-data-table" style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
               <tr style="background:#f1f5f9; text-align:left; border-bottom:2px solid #cbd5e1;">
-                <th style="padding:10px 12px;">Roll No</th>
+                <th style="padding:10px 12px; width:80px;">Roll No</th>
                 <th style="padding:10px 12px;">Student Name</th>
-                <th style="padding:10px 12px;">Student Code</th>
-                <th style="padding:10px 12px;">Sem V SGPA</th>
-                <th style="padding:10px 12px;">Cumulative CGPA</th>
-                <th style="padding:10px 12px;">Credits</th>
-                <th style="padding:10px 12px;">Standing</th>
-                <th style="padding:10px 12px;">Status</th>
-                <th style="padding:10px 12px; text-align:right;">Action</th>
+                <th style="padding:10px 12px; width:100px;">Student Code</th>
+                <th style="padding:10px 12px; width:130px;">Internal (Max 30)</th>
+                <th style="padding:10px 12px; width:130px;">External (Max 70)</th>
+                <th style="padding:10px 12px; width:110px;">Total (100)</th>
+                <th style="padding:10px 12px; width:110px;">Grade &amp; GP</th>
+                <th style="padding:10px 12px; width:90px;">Status</th>
               </tr>
             </thead>
             <tbody id="teacherResultsTableBody">
-              <tr style="border-bottom:1px solid #e2e8f0;">
-                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R71</td>
-                <td style="padding:10px 12px; font-weight:600;">Aghao Shivam Sanjay</td>
-                <td style="padding:10px 12px; color:var(--text-muted);">308637</td>
-                <td style="padding:10px 12px; font-weight:700; color:#059669;">9.25</td>
-                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.87</td>
-                <td style="padding:10px 12px;">24 / 24</td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
-                <td style="padding:10px 12px; text-align:right;">
-                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R71...', 'info')">Grade Card</button>
-                </td>
-              </tr>
-              <tr style="border-bottom:1px solid #e2e8f0;">
-                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R01</td>
-                <td style="padding:10px 12px; font-weight:600;">Ahire Prathamesh Vijay</td>
-                <td style="padding:10px 12px; color:var(--text-muted);">308601</td>
-                <td style="padding:10px 12px; font-weight:700; color:#059669;">8.75</td>
-                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.42</td>
-                <td style="padding:10px 12px;">24 / 24</td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
-                <td style="padding:10px 12px; text-align:right;">
-                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R01...', 'info')">Grade Card</button>
-                </td>
-              </tr>
-              <tr style="border-bottom:1px solid #e2e8f0;">
-                <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">3R02</td>
-                <td style="padding:10px 12px; font-weight:600;">Ambhore Snehal Ramesh</td>
-                <td style="padding:10px 12px; color:var(--text-muted);">308602</td>
-                <td style="padding:10px 12px; font-weight:700; color:#059669;">8.92</td>
-                <td style="padding:10px 12px; font-weight:700; color:#0284c7;">8.65</td>
-                <td style="padding:10px 12px;">24 / 24</td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#ecfdf5; color:#065f46; font-weight:600; padding:2px 8px; border-radius:4px;">Distinction</span></td>
-                <td style="padding:10px 12px;"><span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:2px 8px; border-radius:4px;">Published ✓</span></td>
-                <td style="padding:10px 12px; text-align:right;">
-                  <button class="btn btn-sm btn-outline-primary" onclick="TeacherApp.showToast('Generating official provisional grade sheet for 3R02...', 'info')">Grade Card</button>
+              <tr>
+                <td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">
+                  Click "Load Class Roster" to fetch active student grading list from Supabase.
                 </td>
               </tr>
             </tbody>
@@ -1470,43 +1500,298 @@ const TeacherApp = {
         </div>
       </div>
     `;
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    // Automatically trigger initial load
+    setTimeout(() => this.loadMarksRoster(), 50);
   },
 
-  async publishClassResults(className, semester) {
-    TeacherApp.showToast(`Publishing Semester ${semester} results for Class ${className}...`, 'info');
+  async loadMarksRoster() {
+    const classId = document.getElementById('teacherMarksClassSelect')?.value || '3R';
+    const subjectId = document.getElementById('teacherMarksSubjectSelect')?.value || 'CS501';
+    const semester = parseInt(document.getElementById('teacherMarksSemesterSelect')?.value || 5);
+
+    const tbody = document.getElementById('teacherResultsTableBody');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Fetching students roster and marks from Supabase...</td></tr>`;
+    }
+
     try {
-      const res = await fetch('/api/v1/teacher/results/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_name: className, semester: semester, reason: 'Department Assessment Approval' })
+      const res = await fetch(`/api/v1/results/marks/roster?class_id=${encodeURIComponent(classId)}&subject_id=${encodeURIComponent(subjectId)}&semester=${semester}`, {
+        headers: this.getAuthHeaders()
       }).then(r => r.json());
-      if (res && res.success) {
-        TeacherApp.showToast(`Results for Class ${className} Semester ${semester} are now LIVE on student portals!`, 'success');
-      } else {
-        TeacherApp.showToast(res.message || 'Error publishing results', 'error');
+
+      if (!res || !res.success || !res.data) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#ef4444;">${(res && res.error && res.error.message) || 'Error loading roster.'}</td></tr>`;
+        return;
       }
-    } catch (e) {
-      TeacherApp.showToast(`Publication error: ${e.message}`, 'error');
+
+      const data = res.data;
+      const students = data.students || [];
+      const isLocked = Boolean(data.is_locked);
+      const statusVal = data.status || 'NEW';
+
+      // Update Lock Alert & Buttons
+      const lockAlert = document.getElementById('teacherLockAlert');
+      const lockReasonText = document.getElementById('teacherLockReasonText');
+      const btnSave = document.getElementById('btnSaveMarksDraft');
+      const btnSubmit = document.getElementById('btnSubmitMarks');
+      const btnLock = document.getElementById('btnLockMarks');
+      const statLock = document.getElementById('statLockStatus');
+
+      if (statLock) {
+        statLock.textContent = statusVal;
+        statLock.style.color = isLocked ? '#dc2626' : (statusVal === 'SUBMITTED' ? '#0b5cad' : '#059669');
+      }
+
+      if (isLocked) {
+        if (lockAlert) {
+          lockAlert.style.display = 'flex';
+          if (lockReasonText) lockReasonText.textContent = data.lock_reason ? `(${data.lock_reason})` : '';
+        }
+        if (btnSave) btnSave.disabled = true;
+        if (btnSubmit) btnSubmit.disabled = true;
+        if (btnLock) {
+          btnLock.disabled = true;
+          btnLock.innerHTML = `<i data-lucide="lock" style="width:15px;height:15px;"></i> Locked`;
+        }
+      } else {
+        if (lockAlert) lockAlert.style.display = 'none';
+        if (btnSave) btnSave.disabled = false;
+        if (btnSubmit) btnSubmit.disabled = false;
+        if (btnLock) {
+          btnLock.disabled = false;
+          btnLock.innerHTML = `<i data-lucide="lock" style="width:15px;height:15px;"></i> Lock Submission`;
+        }
+      }
+
+      // Update Stats
+      let gradedCount = 0;
+      let totalMarksSum = 0;
+      students.forEach(s => {
+        if (s.total_marks !== null) {
+          gradedCount++;
+          totalMarksSum += s.total_marks;
+        }
+      });
+
+      document.getElementById('statTotalStudents').textContent = students.length;
+      document.getElementById('statGradedCount').textContent = gradedCount;
+      document.getElementById('statAvgMarks').textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '—';
+
+      // Render Rows
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">No enrolled students found for class ${classId}.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => {
+        const intVal = s.internal_marks !== null ? s.internal_marks : '';
+        const extVal = s.external_marks !== null ? s.external_marks : '';
+        const totVal = s.total_marks !== null ? s.total_marks : '—';
+        const gradeVal = s.grade || '—';
+        const gpVal = s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '—';
+        const stVal = s.result_status || '—';
+        const disabledAttr = isLocked ? 'disabled' : '';
+
+        return `
+          <tr style="border-bottom:1px solid #e2e8f0;" data-student-id="${s.student_id}" data-student-code="${s.student_code}">
+            <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '—'}</td>
+            <td style="padding:10px 12px; font-weight:600;">${s.full_name || 'Student'}</td>
+            <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${s.student_code}</td>
+            <td style="padding:8px 12px;">
+              <input type="number" min="0" max="30" step="0.5" class="roster-int-mark" 
+                     value="${intVal}" ${disabledAttr} placeholder="0-30"
+                     style="width:90px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px;"
+                     oninput="TeacherApp.calcRosterRow(this)">
+            </td>
+            <td style="padding:8px 12px;">
+              <input type="number" min="0" max="70" step="0.5" class="roster-ext-mark" 
+                     value="${extVal}" ${disabledAttr} placeholder="0-70"
+                     style="width:90px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px;"
+                     oninput="TeacherApp.calcRosterRow(this)">
+            </td>
+            <td style="padding:10px 12px; font-weight:700; color:var(--dark-navy);" class="roster-total-cell">
+              ${totVal !== '—' ? totVal + ' / 100' : '—'}
+            </td>
+            <td style="padding:10px 12px;" class="roster-grade-cell">
+              ${gradeVal !== '—' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-success' : (gradeVal === 'F' ? 'badge-danger' : 'badge-info')}">${gradeVal} (${gpVal})</span>` : '—'}
+            </td>
+            <td style="padding:10px 12px;" class="roster-status-cell">
+              ${stVal !== '—' ? `<span class="badge ${stVal === 'PASS' ? 'badge-status-safe' : 'badge-danger'}">${stVal}</span>` : '—'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (err) {
+      console.error('Error loading marks roster:', err);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#ef4444;">Network error communicating with results API.</td></tr>`;
     }
   },
 
-  async unpublishClassResults(className, semester) {
-    TeacherApp.showToast(`Withholding Semester ${semester} results for review...`, 'info');
-    try {
-      const res = await fetch('/api/v1/teacher/results/unpublish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_name: className, semester: semester, reason: 'Result Withheld for Faculty Review' })
-      }).then(r => r.json());
-      if (res && res.success) {
-        TeacherApp.showToast(`Results for Class ${className} Semester ${semester} have been withheld from student view.`, 'warning');
-      } else {
-        TeacherApp.showToast(res.message || 'Error unpublishing results', 'error');
-      }
-    } catch (e) {
-      TeacherApp.showToast(`Error: ${e.message}`, 'error');
+  calcRosterRow(input) {
+    const row = input.closest('tr');
+    const intInput = row.querySelector('.roster-int-mark');
+    const extInput = row.querySelector('.roster-ext-mark');
+    const totalCell = row.querySelector('.roster-total-cell');
+    const gradeCell = row.querySelector('.roster-grade-cell');
+    const statusCell = row.querySelector('.roster-status-cell');
+
+    let intVal = parseFloat(intInput.value);
+    let extVal = parseFloat(extInput.value);
+
+    // Boundary validation & visual cues
+    if (!isNaN(intVal)) {
+      if (intVal < 0) { intVal = 0; intInput.value = 0; }
+      if (intVal > 30) { intVal = 30; intInput.value = 30; }
+      intInput.style.borderColor = '#cbd5e1';
     }
+    if (!isNaN(extVal)) {
+      if (extVal < 0) { extVal = 0; extInput.value = 0; }
+      if (extVal > 70) { extVal = 70; extInput.value = 70; }
+      extInput.style.borderColor = '#cbd5e1';
+    }
+
+    if (isNaN(intVal) && isNaN(extVal)) {
+      totalCell.textContent = '—';
+      gradeCell.textContent = '—';
+      statusCell.textContent = '—';
+      return;
+    }
+
+    const total = (isNaN(intVal) ? 0 : intVal) + (isNaN(extVal) ? 0 : extVal);
+    totalCell.textContent = `${total.toFixed(1)} / 100`;
+
+    // UGC 10-Point Scale
+    let grade = 'F', gp = 0.0, status = 'FAIL';
+    if (total >= 90) { grade = 'O'; gp = 10.0; status = 'PASS'; }
+    else if (total >= 80) { grade = 'A+'; gp = 9.0; status = 'PASS'; }
+    else if (total >= 70) { grade = 'A'; gp = 8.0; status = 'PASS'; }
+    else if (total >= 60) { grade = 'B+'; gp = 7.0; status = 'PASS'; }
+    else if (total >= 50) { grade = 'B'; gp = 6.0; status = 'PASS'; }
+    else if (total >= 45) { grade = 'C'; gp = 5.0; status = 'PASS'; }
+    else if (total >= 40) { grade = 'P'; gp = 4.0; status = 'PASS'; }
+
+    gradeCell.innerHTML = `<span class="badge ${['O', 'A+', 'A'].includes(grade) ? 'badge-success' : (grade === 'F' ? 'badge-danger' : 'badge-info')}">${grade} (${gp.toFixed(1)})</span>`;
+    statusCell.innerHTML = `<span class="badge ${status === 'PASS' ? 'badge-status-safe' : 'badge-danger'}">${status}</span>`;
+  },
+
+  async saveMarksRoster(isDraft = false) {
+    const classId = document.getElementById('teacherMarksClassSelect')?.value || '3R';
+    const subjectId = document.getElementById('teacherMarksSubjectSelect')?.value || 'CS501';
+    const semester = parseInt(document.getElementById('teacherMarksSemesterSelect')?.value || 5);
+
+    const rows = document.querySelectorAll('#teacherResultsTableBody tr[data-student-code]');
+    if (!rows.length) {
+      TeacherApp.showToast('No student records found to save.', 'warning');
+      return;
+    }
+
+    const marksData = [];
+    let hasValidationError = false;
+
+    rows.forEach(r => {
+      const sCode = r.getAttribute('data-student-code');
+      const intInput = r.querySelector('.roster-int-mark');
+      const extInput = r.querySelector('.roster-ext-mark');
+
+      const intVal = parseFloat(intInput.value);
+      const extVal = parseFloat(extInput.value);
+
+      if (!isNaN(intVal) || !isNaN(extVal)) {
+        if ((!isNaN(intVal) && (intVal < 0 || intVal > 30)) || (!isNaN(extVal) && (extVal < 0 || extVal > 70))) {
+          hasValidationError = true;
+          intInput.style.borderColor = '#ef4444';
+          extInput.style.borderColor = '#ef4444';
+        }
+        marksData.push({
+          student_id: sCode,
+          internal_marks: isNaN(intVal) ? 0.0 : intVal,
+          external_marks: isNaN(extVal) ? 0.0 : extVal,
+          practical_marks: 0.0,
+          assignment_marks: 0.0
+        });
+      }
+    });
+
+    if (hasValidationError) {
+      TeacherApp.showToast('Validation Error: Internal must be 0-30 and External 0-70.', 'error');
+      return;
+    }
+
+    if (!marksData.length) {
+      TeacherApp.showToast('Please enter marks for at least one student before saving.', 'warning');
+      return;
+    }
+
+    const actionLabel = isDraft ? 'Saving marks draft...' : 'Submitting authoritative marks...';
+    TeacherApp.showToast(actionLabel, 'info');
+
+    try {
+      const res = await fetch('/api/v1/results/marks/entry', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          class_id: classId,
+          subject_id: subjectId,
+          semester: semester,
+          marks: marksData,
+          is_draft: isDraft
+        })
+      }).then(r => r.json());
+
+      if (res && res.success) {
+        TeacherApp.showToast(`✅ ${isDraft ? 'Draft saved' : 'Marks submitted'} successfully for ${marksData.length} students!`, 'success');
+        await this.loadMarksRoster();
+      } else {
+        TeacherApp.showToast((res && res.error && res.error.message) || res.message || 'Error recording marks', 'error');
+      }
+    } catch (err) {
+      TeacherApp.showToast(`Network error: ${err.message}`, 'error');
+    }
+  },
+
+  async lockMarksRoster() {
+    const classId = document.getElementById('teacherMarksClassSelect')?.value || '3R';
+    const subjectId = document.getElementById('teacherMarksSubjectSelect')?.value || 'CS501';
+    const semester = parseInt(document.getElementById('teacherMarksSemesterSelect')?.value || 5);
+
+    if (!confirm(`Are you sure you want to LOCK marks submission for Class ${classId} - ${subjectId} (Semester ${semester})?\n\nOnce locked, no further edits can be made unless unlocked by the Examination Cell.`)) {
+      return;
+    }
+
+    TeacherApp.showToast('Locking marks submission against further faculty edits...', 'info');
+
+    try {
+      const res = await fetch('/api/v1/results/marks/lock', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          class_id: classId,
+          subject_id: subjectId,
+          semester: semester,
+          reason: 'End-semester marks verified and sealed by Course Faculty'
+        })
+      }).then(r => r.json());
+
+      if (res && res.success) {
+        TeacherApp.showToast(`🔒 Marks submission successfully locked!`, 'success');
+        await this.loadMarksRoster();
+      } else {
+        TeacherApp.showToast((res && res.error && res.error.message) || res.message || 'Error locking submission', 'error');
+      }
+    } catch (err) {
+      TeacherApp.showToast(`Lock error: ${err.message}`, 'error');
+    }
+  },
+
+  exportGazetteCsv() {
+    const classId = document.getElementById('teacherMarksClassSelect')?.value || '3R';
+    const semester = parseInt(document.getElementById('teacherMarksSemesterSelect')?.value || 5);
+    TeacherApp.showToast(`Preparing Results Gazette CSV for Class ${classId} (Sem ${semester})...`, 'info');
+    window.location.href = `/api/v1/results/export?class_name=${encodeURIComponent(classId)}&semester=${semester}`;
   },
 
   // ----------------------------------------------------
@@ -1644,28 +1929,27 @@ const TeacherApp = {
     });
 
     try {
-      const activeCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
-        ? TeacherERPData.getActiveTeacherEmpCode()
-        : 'EMP-CSE-1001';
-
-      const res = await fetch('/api/v1/management/teacher/marks/bulk', {
+      const res = await fetch('/api/v1/results/marks/entry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify({
-          emp_code: activeCode,
-          class_id: 'f6f20676-7307-415f-8e4b-92bc9f347646', // 3R
-          subject_id: 'a814f14f-5f86-4b6e-9fb7-a0bf2b6b588c', // DBMS
+          class_id: '3R',
+          subject_id: 'CS501',
           semester: 5,
-          marks: marksData
+          marks: marksData,
+          is_draft: false
         })
       });
 
       const data = await res.json();
       if (data.success) {
-        this.showToast(`✅ Successfully validated and saved marks for ${data.data.processed_count} students!`, 'success');
+        this.showToast(`✅ Successfully validated and saved marks for ${marksData.length} students!`, 'success');
         document.getElementById('bulkMarksModal').style.display = 'none';
+        if (this.currentView === 'results') {
+          this.loadMarksRoster();
+        }
       } else {
-        this.showToast(data.message || 'Error saving marks', 'error');
+        this.showToast((data.error && data.error.message) || data.message || 'Error saving marks', 'error');
       }
     } catch (err) {
       this.showToast(`Error: ${err.message}`, 'error');

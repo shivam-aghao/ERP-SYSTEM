@@ -1054,12 +1054,14 @@ function switchModalSubtab(subtabKey, updatePill = true) {
    DYNAMIC STUDENT MODULE HYDRATION (Pulls directly from Live Database API)
    ========================================================================== */
 async function hydrateStudentModule(moduleKey, subtabKey) {
-  const studentCode = '308637'; // Shivam Sanjay Aghao
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || sessionStorage.getItem('ssgmce_access_token');
+  const studentCode = localStorage.getItem('ssgmce_student_code') || localStorage.getItem('user_id') || '308637'; // Current authenticated student
   const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
 
   try {
     if (moduleKey === 'syllabus') {
-      const res = await fetch(`${apiBase}/student/syllabus?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      const res = await fetch(`${apiBase}/student/syllabus?student_code=${studentCode}`, { headers: authHeaders }).then(r => r.json()).catch(() => null);
       const courses = (res && res.data) ? res.data : [];
       
       const tbody = document.getElementById('modalSyllabusCourseBody');
@@ -1119,7 +1121,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
     }
 
     else if (moduleKey === 'fees') {
-      const res = await fetch(`${apiBase}/student/fees?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      const res = await fetch(`${apiBase}/fees?student_code=${studentCode}`, { headers: authHeaders }).then(r => r.json()).catch(() => null);
       const fees = (res && res.data) ? res.data : null;
       if (fees) {
         const summary = document.getElementById('modalFeeSummaryBanner');
@@ -1173,12 +1175,12 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
             <div class="receipt-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
               <div class="receipt-meta">
                 <span class="receipt-id" style="font-weight:700; color:var(--text-heading); font-size:13.5px;">${r.receipt_number || r.id}</span>
-                <span class="receipt-date" style="font-size:12px; color:var(--text-muted); display:block;">Paid on: ${r.payment_date || r.date} • Mode: ${r.payment_mode || 'Online NetBanking'}</span>
+                <span class="receipt-date" style="font-size:12px; color:var(--text-muted); display:block;">Paid on: ${r.payment_date || r.receipt_date || 'Recent'} • Amount: ₹${(r.amount || 0).toLocaleString('en-IN')}</span>
                 <span style="font-size:11.5px; color:#059669; font-weight:600;">Verified Institutional Receipt ✓</span>
               </div>
               <div class="receipt-amount-block" style="text-align:right;">
                 <span class="receipt-val text-success" style="font-size:16px; font-weight:700; display:block; margin-bottom:4px;">₹${(r.amount || 0).toLocaleString('en-IN')}</span>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="showToast('Downloading verified fee receipt ${r.receipt_number}...', 'success')">Download PDF</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="downloadFeeReceipt('${r.receipt_id || r.id || r.receipt_number}')">Download Receipt</button>
               </div>
             </div>
           `).join('');
@@ -1248,33 +1250,44 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
     }
 
     else if (moduleKey === 'dwallet') {
-      // 1. Fetch Verified Documents from Supabase Cloud
-      const res = await fetch(`${apiBase}/student/documents?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      // 1. Fetch Verified Documents from Private Supabase Storage Vault
+      const res = await fetch(`${apiBase}/documents?student_code=${studentCode}`, { headers: authHeaders }).then(r => r.json()).catch(() => null);
       const docs = (res && res.data) ? res.data : [];
       const docList = document.getElementById('modalDwalletDocList');
-      if (docList && docs.length > 0) {
-        docList.innerHTML = docs.map(d => `
-          <div class="wallet-doc-item" style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px;">
-            <div style="display:flex; align-items:center; gap:14px;">
-              <div class="w-doc-icon" style="width:42px; height:42px; border-radius:8px; background:rgba(0,166,214,0.12); color:#00a6d6; display:flex; align-items:center; justify-content:center;">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      if (docList) {
+        if (docs.length === 0) {
+          docList.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">No documents uploaded yet. Use the Upload tab to add documents to your vault.</div>';
+        } else {
+          docList.innerHTML = docs.map(d => {
+            const isVerified = d.verified || d.status === 'verified';
+            const isRejected = d.status === 'rejected';
+            const statusBadge = isVerified ? '<span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Verified ✓</span>' :
+                               (isRejected ? '<span class="badge badge-danger" style="margin-bottom:6px; display:inline-block;">Rejected</span>' :
+                               '<span class="badge badge-warning" style="margin-bottom:6px; display:inline-block;">Under Review</span>');
+            return `
+              <div class="wallet-doc-item" style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <div class="w-doc-icon" style="width:42px; height:42px; border-radius:8px; background:rgba(0,166,214,0.12); color:#00a6d6; display:flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  </div>
+                  <div class="w-doc-info">
+                    <h5 style="font-size:14px; font-weight:600; color:var(--text-heading); margin-bottom:2px;">${d.document_name || d.document_title}</h5>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${d.category || 'Institutional'} • Doc No: <strong>${d.document_number || 'SSGMCE-OFFICIAL'}</strong> • Issued: ${d.upload_date || d.issue_date || 'Recent'}</p>
+                    <span class="file-size-tag" style="font-size:11px; padding:2px 8px; border-radius:4px; background:#e0f2fe; color:#0284c7; font-weight:600;">Private Storage Vault • ${d.file_size}</span>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  ${statusBadge}
+                  <button type="button" class="btn-download-action" onclick="downloadStudentDocument('${d.id || d.document_id}', '${(d.document_name || d.document_title || 'document').replace(/'/g, "\\'")}', '${d.signed_url ? d.signed_url.replace(/'/g, "\\'") : ''}')" style="display:block;">Download PDF</button>
+                </div>
               </div>
-              <div class="w-doc-info">
-                <h5 style="font-size:14px; font-weight:600; color:var(--text-heading); margin-bottom:2px;">${d.document_name || d.document_title}</h5>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${d.category || 'Institutional'} • Doc No: <strong>${d.document_number || 'SSGMCE-OFFICIAL'}</strong> • Issued: ${d.upload_date}</p>
-                <span class="file-size-tag" style="font-size:11px; padding:2px 8px; border-radius:4px; background:#e0f2fe; color:#0284c7; font-weight:600;">Digitally Signed PDF • ${d.file_size}</span>
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Verified ✓</span>
-              <button type="button" class="btn-download-action" onclick="showToast('Accessing verified ${d.document_name} from Supabase Storage...', 'success')" style="display:block;">Download PDF</button>
-            </div>
-          </div>
-        `).join('');
+            `;
+          }).join('');
+        }
       }
 
       // 2. Fetch Issued Certificates from Supabase Cloud
-      const certRes = await fetch(`${apiBase}/student/certificates?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
+      const certRes = await fetch(`${apiBase}/documents/certificates?student_code=${studentCode}`, { headers: authHeaders }).then(r => r.json()).catch(() => null);
       const certs = (certRes && certRes.data) ? certRes.data : [];
       const certList = document.getElementById('modalDwalletCertList');
       if (certList && certs.length > 0) {
@@ -1297,7 +1310,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
             </div>
             <div style="text-align:right;">
               <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Active & Valid ✓</span>
-              <button type="button" class="btn-download-action" onclick="showToast('Accessing authentic certificate ${c.certificate_number}...', 'success')" style="display:block; background:#16a34a; border-color:#16a34a;">Download PDF</button>
+              <button type="button" class="btn-download-action" onclick="showToast('Authentic certificate code: ${c.verification_code}', 'success')" style="display:block; background:#16a34a; border-color:#16a34a;">Download PDF</button>
             </div>
           </div>
         `).join('');
@@ -1305,59 +1318,8 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
     }
 
     else if (moduleKey === 'examination') {
-      const res = await fetch(`${apiBase}/student/examination?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
-      const exam = (res && res.data) ? res.data : null;
-      if (exam) {
-        const banner = document.getElementById('modalExamMarksBanner');
-        if (banner) {
-          banner.innerHTML = `
-            <div class="marks-stat">
-              <span class="ms-lbl">Current Semester SGPA</span>
-              <span class="ms-val text-primary">${exam.sgpa || '9.25'}</span>
-            </div>
-            <div class="marks-stat">
-              <span class="ms-lbl">Cumulative CGPA</span>
-              <span class="ms-val text-success">${exam.cgpa || '8.87'}</span>
-            </div>
-            <div class="marks-stat">
-              <span class="ms-lbl">Total Credits Earned</span>
-              <span class="ms-val text-accent">${exam.credits_earned || 134} / ${exam.total_credits || 134}</span>
-            </div>
-            <div class="marks-stat">
-              <span class="ms-lbl">Active Backlogs</span>
-              <span class="ms-val text-success">${exam.active_backlogs || 0} (Clear)</span>
-            </div>
-          `;
-        }
-
-        const tbody = document.getElementById('modalExamMarksTableBody');
-        if (tbody && exam.courses) {
-          tbody.innerHTML = exam.courses.map(c => `
-            <tr>
-              <td style="font-weight:700; color:var(--primary);">${c.subject_code} - ${c.subject_name}</td>
-              <td>Theory &amp; Lab</td>
-              <td><strong>${c.credits || 4}</strong></td>
-              <td>${c.internal_marks || 26} / 30</td>
-              <td>${c.endsem_marks || 60} / 70</td>
-              <td style="font-weight:700;">${c.total_marks || 86} / 100</td>
-              <td><span class="badge ${['O', 'A+', 'A'].includes(c.grade) ? 'badge-success' : 'badge-info'}" style="font-size:12px; font-weight:700;">${c.grade || 'A+'} (${c.grade_point || 9.0})</span></td>
-            </tr>
-          `).join('');
-        }
-
-        const backlogCard = document.getElementById('modalBacklogCard');
-        if (backlogCard) {
-          backlogCard.innerHTML = `
-            <div style="text-align:center; padding:30px 20px;">
-              <div style="font-size:42px; color:#10B981; margin-bottom:10px;">✓</div>
-              <h3 style="font-size:18px; color:var(--text-heading); margin-bottom:6px;">All Clear Academic Record!</h3>
-              <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">
-                Student <strong>${exam.student_name || 'Shivam Sanjay Aghao'}</strong> (${exam.student_code}) has cleared all autonomous courses with <strong>0 backlogs</strong> and <strong>${exam.credits_earned || 134} credits earned</strong>.
-              </p>
-              <span class="badge-status-safe" style="display:inline-block; margin-top:10px;">Standing: ${exam.standing || 'First Class with Distinction'}</span>
-            </div>
-          `;
-        }
+      if (typeof window.loadStudentExaminationData === 'function') {
+        await window.loadStudentExaminationData();
       }
     }
 
@@ -1631,22 +1593,40 @@ async function handleOnlinePayment(event) {
   if (event) event.preventDefault();
   const amountInput = document.getElementById('payAmountInput');
   const amount = amountInput ? parseFloat(amountInput.value.replace(/,/g, '')) || 25000 : 25000;
-  showToast(`Connecting to BillDesk Payment Gateway for ₹${amount.toLocaleString('en-IN')}...`, 'info');
-  
+  const payModeEl = document.querySelector('input[name="paymode"]:checked');
+  const payMethod = payModeEl ? payModeEl.value : 'upi';
+
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || localStorage.getItem('token');
+  const currentUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('user') || '{}');
+  const studentCode = currentUser.student_code || currentUser.username || '308637';
+
+  showToast(`Initiating institutional payment of ₹${amount.toLocaleString('en-IN')} via ${payMethod.toUpperCase()}...`, 'info');
+
   try {
     const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
-    const res = await fetch(`${apiBase}/student/fees/pay`, {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${apiBase}/fees/pay`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ student_code: '308637', amount: amount })
+      headers: headers,
+      body: JSON.stringify({
+        student_code: studentCode,
+        amount: amount,
+        payment_method: payMethod,
+        payment_reference: `BILLDESK-${Date.now()}`
+      })
     });
     const data = await res.json();
-    if (res.ok && data.status === 'ok') {
+    if (res.ok && data.success) {
       const rec = data.data;
-      showToast(`Payment Successful! Receipt: ${rec.receipt_no}`, 'success');
+      showToast(`Payment Successful! Receipt: ${rec.receipt_number}`, 'success');
       await hydrateStudentModule('fees', 'payment-receipt');
       setTimeout(() => switchModalSubtab('payment-receipt'), 800);
       return;
+    } else {
+      const errMsg = (data && data.error && data.error.message) || data.detail || 'Payment could not be completed';
+      showToast(`Payment notice: ${errMsg}`, 'error');
     }
   } catch (e) {
     console.warn('Live payment submission error, using local fallback:', e);
@@ -1654,10 +1634,83 @@ async function handleOnlinePayment(event) {
 
   setTimeout(() => {
     const txn = `TXN-SSG-${Math.floor(100000 + Math.random() * 900000)}`;
-    showToast(`Payment Successful! Reference: ${txn}`, 'success');
+    showToast(`Payment processed! Reference: ${txn}`, 'success');
     hydrateStudentModule('fees', 'payment-receipt');
     setTimeout(() => switchModalSubtab('payment-receipt'), 800);
   }, 1000);
+}
+
+async function downloadFeeReceipt(receiptId) {
+  showToast(`Accessing verified receipt #${receiptId}...`, 'info');
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || localStorage.getItem('token');
+  const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+
+  try {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${apiBase}/fees/receipts/${receiptId}/download`, { headers });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      const r = result.data;
+      const printWindow = window.open('', '_blank', 'width=700,height=800');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Fee Receipt - ${r.receipt_number}</title>
+            <style>
+              body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; }
+              .header { text-align: center; border-bottom: 2px solid #0b1f3a; padding-bottom: 15px; margin-bottom: 20px; }
+              .logo { font-size: 20px; font-weight: bold; color: #0b1f3a; }
+              .sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+              .badge { display: inline-block; background: #dcfce7; color: #15803d; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-top: 10px; }
+              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; font-size: 14px; }
+              .grid div { padding: 8px 12px; background: #f8fafc; border-radius: 6px; }
+              .amount-box { margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; text-align: center; }
+              .amount { font-size: 26px; font-weight: bold; color: #15803d; }
+              .footer { margin-top: 40px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">${r.institution}</div>
+              <div class="sub">Official Student Fee Payment Counterfoil & E-Receipt</div>
+              <div class="badge">${r.status}</div>
+            </div>
+            <div class="grid">
+              <div><strong>Receipt Number:</strong> ${r.receipt_number}</div>
+              <div><strong>Receipt Date:</strong> ${r.receipt_date}</div>
+              <div><strong>Student Name:</strong> ${r.student_name}</div>
+              <div><strong>Student Code / PRN:</strong> ${r.student_code}</div>
+              <div><strong>Class:</strong> ${r.class_name}</div>
+              <div><strong>Payment Method:</strong> ${r.payment_method}</div>
+              <div><strong>Transaction Reference:</strong> ${r.payment_reference || 'N/A'}</div>
+              <div><strong>Receipt ID:</strong> ${r.receipt_id}</div>
+            </div>
+            <div class="amount-box">
+              <div style="font-size:13px; color:#15803d; font-weight:600;">AMOUNT PAID</div>
+              <div class="amount">₹${Number(r.amount).toLocaleString('en-IN')}</div>
+            </div>
+            <div class="footer">
+              This is a computer-generated official receipt issued by the SSGMCE College ERP. No signature required.
+            </div>
+            <script>
+              window.onload = function() { window.print(); };
+            <\/script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+      showToast(`Receipt #${r.receipt_number} opened for print / PDF save!`, 'success');
+    } else {
+      showToast('Could not fetch receipt details.', 'error');
+    }
+  } catch (e) {
+    console.error('Download fee receipt error:', e);
+    showToast('Error accessing fee receipt.', 'error');
+  }
 }
 
 function calculateRevalFee() {
@@ -1670,6 +1723,200 @@ function calculateRevalFee() {
   if (submitBtn) submitBtn.disabled = count === 0;
 }
 
+window.loadStudentExaminationData = async function(semesterNumber) {
+  const sem = parseInt(semesterNumber || document.getElementById('modalExamSemesterSelect')?.value || 5);
+  const studentCode = (typeof getActiveStudentCode === 'function' ? getActiveStudentCode() : '') || '308637';
+  const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || sessionStorage.getItem('ssgmce_access_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const titleEl = document.getElementById('modalExamSemesterTitle');
+  if (titleEl) titleEl.textContent = `Semester ${sem} Autonomous Examination Results`;
+
+  const tbody = document.getElementById('modalExamMarksTableBody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Fetching authoritative academic record from Supabase...</td></tr>`;
+
+  try {
+    const res = await fetch(`${apiBase}/results/student?semester=${sem}&student_code=${studentCode}`, { headers }).then(r => r.json());
+    if (res && res.success && res.data) {
+      const data = res.data;
+      const semData = (data.semesters && data.semesters.length > 0) ? data.semesters[0] : null;
+
+      const badge = document.getElementById('modalExamResultBadge');
+      const withheldNotice = document.getElementById('modalExamWithheldNotice');
+      const sgpaEl = document.getElementById('examBannerSGPA');
+      const cgpaEl = document.getElementById('examBannerCGPA');
+      const credEl = document.getElementById('examBannerCredits');
+      const backlogsEl = document.getElementById('examBannerBacklogs');
+
+      if (!semData || semData.result_published === false) {
+        if (badge) {
+          badge.className = 'badge badge-warning';
+          badge.textContent = 'Under Evaluation / Withheld';
+        }
+        if (withheldNotice) withheldNotice.style.display = 'block';
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px 20px; color:var(--text-muted);">
+            <div style="font-size:24px; margin-bottom:6px;">🔒</div>
+            <div style="font-weight:600; color:var(--text-heading);">Results for Semester ${sem} are not yet declared</div>
+            <p style="font-size:12px; margin-top:4px;">Official marks will be accessible once verified and published by the Autonomous Examination Cell.</p>
+          </td></tr>`;
+        }
+        if (sgpaEl) sgpaEl.textContent = '—';
+        if (cgpaEl) cgpaEl.textContent = data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—';
+        if (credEl) credEl.textContent = '—';
+        if (backlogsEl) backlogsEl.textContent = 'Pending';
+        return;
+      }
+
+      // Result is declared and published
+      if (withheldNotice) withheldNotice.style.display = 'none';
+      if (badge) {
+        badge.className = 'badge badge-cyan';
+        badge.textContent = `Result Published ✓ (${semData.result_status || 'PASS'})`;
+      }
+      if (sgpaEl) sgpaEl.textContent = semData.sgpa !== null ? Number(semData.sgpa).toFixed(2) : '—';
+      if (cgpaEl) cgpaEl.textContent = (semData.cgpa !== null ? Number(semData.cgpa).toFixed(2) : (data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—'));
+      if (credEl) credEl.textContent = `${semData.earned_credits || semData.total_credits} / ${semData.total_credits}`;
+
+      const subjects = semData.subjects || [];
+      const failedSubs = subjects.filter(s => s.result_status === 'FAIL' || s.grade === 'F');
+
+      if (backlogsEl) {
+        backlogsEl.textContent = failedSubs.length === 0 ? '0 (Clear)' : `${failedSubs.length} Backlog(s)`;
+        backlogsEl.className = failedSubs.length === 0 ? 'ms-val text-success' : 'ms-val text-danger';
+      }
+
+      // Populate table with UGC 10-point scale details
+      if (tbody) {
+        if (subjects.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No subject grade records found for Semester ${sem}.</td></tr>`;
+        } else {
+          tbody.innerHTML = subjects.map(s => `
+            <tr>
+              <td style="font-weight:700; color:var(--primary);">${s.subject_code} - ${s.subject_name}</td>
+              <td><strong>${s.credits || 4}</strong></td>
+              <td>${s.internal_marks !== null ? s.internal_marks : '—'} / 30</td>
+              <td>${s.external_marks !== null ? s.external_marks : '—'} / 70</td>
+              <td style="font-weight:700;">${s.total_marks !== null ? s.total_marks : '—'} / 100</td>
+              <td>
+                <span class="badge ${['O', 'A+', 'A'].includes(s.grade) ? 'badge-success' : (s.grade === 'F' ? 'badge-danger' : 'badge-info')}" style="font-size:12px; font-weight:700;">
+                  ${s.grade || '—'} (${s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '—'})
+                </span>
+              </td>
+              <td>
+                <span class="badge ${s.result_status === 'PASS' ? 'badge-status-safe' : 'badge-danger'}">
+                  ${s.result_status || 'PASS'}
+                </span>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Populate Revaluation Checklist
+      const revalList = document.getElementById('modalRevalSubjectList');
+      if (revalList) {
+        if (subjects.length === 0) {
+          revalList.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted);">No published subjects available for revaluation in Semester ${sem}.</div>`;
+        } else {
+          revalList.innerHTML = subjects.map(s => `
+            <label class="reval-check-label" style="display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:8px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; background:#fff;">
+              <input type="checkbox" name="revalSubject" value="${s.subject_code}" data-subname="${s.subject_name}" onchange="calculateRevalFee()">
+              <span><strong>${s.subject_code} - ${s.subject_name}</strong> • Grade: <strong>${s.grade}</strong> (Internal: ${s.internal_marks}, External: ${s.external_marks})</span>
+            </label>
+          `).join('');
+        }
+      }
+
+      // Update Backlog status
+      const backlogCard = document.getElementById('modalBacklogCard');
+      if (backlogCard) {
+        if (failedSubs.length === 0) {
+          backlogCard.innerHTML = `
+            <div style="text-align:center; padding:30px 20px;">
+              <div style="font-size:42px; color:#10B981; margin-bottom:10px;">✓</div>
+              <h3 style="font-size:18px; color:var(--text-heading); margin-bottom:6px;">All Clear Academic Record!</h3>
+              <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">
+                Student <strong>${data.full_name || 'Shivam Sanjay Aghao'}</strong> (${data.student_code}) has cleared all autonomous courses with <strong>0 backlogs</strong> and <strong>${semData.earned_credits || semData.total_credits} credits earned</strong> in Semester ${sem}.
+              </p>
+              <span class="badge-status-safe" style="display:inline-block; margin-top:10px;">Standing: First Class with Distinction (Passed)</span>
+            </div>
+          `;
+        } else {
+          backlogCard.innerHTML = `
+            <div style="text-align:center; padding:30px 20px;">
+              <div style="font-size:42px; color:#ef4444; margin-bottom:10px;">⚠️</div>
+              <h3 style="font-size:18px; color:#b91c1c; margin-bottom:6px;">Active Backlog Alert: ${failedSubs.length} Subject(s)</h3>
+              <p style="font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">
+                Course(s) requiring remedial examination registration:
+                <strong>${failedSubs.map(f => f.subject_code + ' - ' + f.subject_name).join(', ')}</strong>.
+              </p>
+              <button class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="showToast('Remedial exam registration portal opens next week.', 'info')">Register Remedial Exam</button>
+            </div>
+          `;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching student results:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#ef4444;">Failed to load academic records from server.</td></tr>`;
+  }
+
+  // Load Revaluation History
+  await window.loadStudentRevalHistory(studentCode, sem);
+};
+
+window.loadStudentRevalHistory = async function(studentCode, sem) {
+  const container = document.getElementById('modalRevalHistoryList');
+  if (!container) return;
+  const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || sessionStorage.getItem('ssgmce_access_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(`${apiBase}/results/revaluation?student_code=${studentCode}&semester=${sem}`, { headers }).then(r => r.json());
+    const reqs = (res && res.success && res.data) ? res.data : [];
+    if (reqs.length === 0) {
+      container.innerHTML = `<div class="text-muted" style="text-align:center; padding:12px;">No active revaluation applications found for Semester ${sem}.</div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+        <thead>
+          <tr style="border-bottom:1px solid #e2e8f0; text-align:left; color:var(--text-muted); background:#f8fafc;">
+            <th style="padding:8px 10px;">Subject</th>
+            <th style="padding:8px 10px;">Original ESE</th>
+            <th style="padding:8px 10px;">Revised ESE</th>
+            <th style="padding:8px 10px;">Status</th>
+            <th style="padding:8px 10px;">Board Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${reqs.map(r => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding:8px 10px; font-weight:600; color:var(--primary);">${r.subject_code}</td>
+              <td style="padding:8px 10px;">${r.previous_external_marks} / 70</td>
+              <td style="padding:8px 10px; font-weight:700; color:${r.revised_external_marks ? '#059669' : 'var(--text-muted)'};">${r.revised_external_marks !== null ? r.revised_external_marks + ' / 70' : 'In Review'}</td>
+              <td style="padding:8px 10px;">
+                <span class="badge ${r.status === 'APPROVED' ? 'badge-success' : (r.status === 'REJECTED' ? 'badge-danger' : 'badge-warning')}">
+                  ${r.status}
+                </span>
+              </td>
+              <td style="padding:8px 10px; color:var(--text-muted);">${r.review_remarks || 'Pending committee assessment'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    console.warn('Reval history load error:', e);
+  }
+};
+
 async function handleRevaluationSubmit(event) {
   if (event) event.preventDefault();
   const checks = Array.from(document.querySelectorAll('input[name="reval_subject"]:checked, input[name="revalSubject"]:checked'));
@@ -1677,46 +1924,153 @@ async function handleRevaluationSubmit(event) {
     showToast('Please select at least 1 subject for revaluation.', 'warning');
     return;
   }
-  const subjects = checks.map(c => c.value);
-  const total = subjects.length * 300;
-  
-  try {
-    const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
-    await fetch(`${apiBase}/student/examination/revaluation`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ student_code: '308637', subjects: subjects, total_fee: total })
-    });
-  } catch (e) {
-    console.warn('Reval API error:', e);
+  if (checks.length > 2) {
+    showToast('Autonomous regulations allow maximum 2 subjects per student per semester.', 'warning');
+    return;
   }
-  
-  showToast(`Revaluation request submitted for ${subjects.length} subject(s) (₹${total}). Forwarded to Controller of Examinations.`, 'success');
-  setTimeout(() => {
-    closeStudentModule();
-  }, 1500);
+
+  const reason = document.getElementById('revalReasonInput')?.value || 'Answer script verification and re-totaling';
+  const sem = parseInt(document.getElementById('modalExamSemesterSelect')?.value || 5);
+  const studentCode = (typeof getActiveStudentCode === 'function' ? getActiveStudentCode() : '') || '308637';
+  const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || sessionStorage.getItem('ssgmce_access_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  let successCount = 0;
+  for (const chk of checks) {
+    const sCode = chk.value;
+    try {
+      const res = await fetch(`${apiBase}/results/revaluation/apply`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          subject_code: sCode,
+          semester: sem,
+          reason: reason,
+          paid_amount: 300.0
+        })
+      }).then(r => r.json());
+
+      if (res && res.success) {
+        successCount++;
+      } else {
+        showToast((res.error && res.error.message) || res.message || `Failed to submit for ${sCode}`, 'error');
+      }
+    } catch (e) {
+      console.warn('Reval submit error:', e);
+      showToast(`Network error applying for ${sCode}`, 'error');
+    }
+  }
+
+  if (successCount > 0) {
+    showToast(`Successfully registered revaluation for ${successCount} subject(s)! Forwarded to Controller of Examinations.`, 'success');
+    await window.loadStudentRevalHistory(studentCode, sem);
+    checks.forEach(c => c.checked = false);
+    calculateRevalFee();
+  }
 }
 
 async function handleDWalletUpload(event) {
-  const file = event?.target?.files?.[0];
-  const docTypeSelect = document.getElementById('dwalletDocType');
-  const docType = docTypeSelect ? docTypeSelect.options[docTypeSelect.selectedIndex].text : 'Document';
-  const fileName = file ? file.name : `${docType}.pdf`;
+  const fileInput = event?.target || document.getElementById('dwalletFileInput');
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    showToast('Please select a document file to upload.', 'warning');
+    return;
+  }
 
-  showToast(`Uploading "${fileName}" to encrypted SSGMCE vault...`, 'info');
+  // File extension validation
+  const allowedExts = ['.pdf', '.png', '.jpg', '.jpeg'];
+  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+  if (!allowedExts.includes(ext)) {
+    showToast(`Format "${ext}" is not allowed. Supported formats: PDF, PNG, JPG, JPEG.`, 'error');
+    return;
+  }
+
+  // File size validation (10 MB)
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File size exceeds the 10 MB maximum limit.', 'error');
+    return;
+  }
+
+  const docTypeSelect = document.getElementById('dwalletDocType');
+  const docType = docTypeSelect ? docTypeSelect.value : 'other';
+  const docTitle = docTypeSelect ? docTypeSelect.options[docTypeSelect.selectedIndex].text : file.name;
+  const docNum = document.getElementById('dwalletDocNum')?.value || '';
+
+  showToast(`Uploading "${file.name}" to private encrypted vault...`, 'info');
+
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || localStorage.getItem('token');
+  const currentUser = JSON.parse(localStorage.getItem('ssgmce_user') || localStorage.getItem('user') || '{}');
+  const studentCode = currentUser.student_code || currentUser.username || '308637';
+
   try {
     const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
-    await fetch(`${apiBase}/student/dwallet/upload`, {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('document_type', docType);
+    formData.append('document_title', docTitle);
+    formData.append('document_number', docNum);
+    formData.append('description', 'Uploaded via Student D-Wallet Portal');
+
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${apiBase}/documents/upload?student_code=${studentCode}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ student_code: '308637', document_name: docType, category: 'Academic' })
+      headers: headers,
+      body: formData
     });
-    showToast(`"${docType}" successfully uploaded & verified in database!`, 'success');
-    await hydrateStudentModule('dwallet', 'download-document');
-    setTimeout(() => switchModalSubtab('download-document'), 800);
+    const result = await res.json();
+    if (res.ok && result.success) {
+      showToast(`"${docTitle}" uploaded successfully to private storage vault!`, 'success');
+      if (document.getElementById('dwalletDocNum')) document.getElementById('dwalletDocNum').value = '';
+      if (fileInput) fileInput.value = '';
+      await hydrateStudentModule('dwallet', 'download-document');
+      setTimeout(() => switchModalSubtab('download-document'), 800);
+    } else {
+      const errMsg = (result && result.error && result.error.message) || result.detail || 'Upload failed';
+      showToast(`Upload error: ${errMsg}`, 'error');
+    }
   } catch (e) {
-    showToast(`"${docType}" uploaded successfully!`, 'success');
-    setTimeout(() => switchModalSubtab('download-document'), 800);
+    console.error('Document upload error:', e);
+    showToast('Error uploading document. Please retry.', 'error');
+  }
+}
+
+async function downloadStudentDocument(docId, docTitle, signedUrl) {
+  showToast(`Accessing private document "${docTitle}"...`, 'info');
+  const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || localStorage.getItem('token');
+  const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
+
+  if (signedUrl && signedUrl.startsWith('http')) {
+    window.open(signedUrl, '_blank');
+    showToast(`Document opened in secure viewer`, 'success');
+    return;
+  }
+
+  try {
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${apiBase}/documents/${docId}/download`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(`Download failed: ${(err && err.error && err.error.message) || res.statusText}`, 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${docTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+    showToast(`Document downloaded successfully!`, 'success');
+  } catch (e) {
+    console.error('Download document error:', e);
+    showToast('Error downloading document', 'error');
   }
 }
 

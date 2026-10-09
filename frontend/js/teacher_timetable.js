@@ -270,21 +270,26 @@ const TeacherTimetableApp = {
   },
 
   renderHeaderProfile() {
-    const activeEmpCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
-      ? TeacherERPData.getActiveTeacherEmpCode()
-      : 'EMP-CSE-1001';
-
-    const facList = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
-      ? TeacherERPData.facultyList
-      : [];
-
-    const f = facList.find(fac => fac.empCode === activeEmpCode) || {
-      name: "Dr. J. M. Patil",
-      title: "Professor & Head",
+    let f = {
+      name: "Dr. Rohan Deshmukh",
+      title: "Associate Professor",
       departmentCode: "CSE",
-      empCode: "EMP-CSE-1001",
-      initials: "JP"
+      empCode: "EMP-CSE-1009",
+      initials: "RD"
     };
+
+    try {
+      const stored = localStorage.getItem("ssgmce_active_teacher") || localStorage.getItem("ssgmce_user") || sessionStorage.getItem("ssgmce_active_teacher");
+      if (stored) {
+        const u = typeof stored === 'string' ? JSON.parse(stored) : stored;
+        if (u.name || u.full_name) {
+          f.name = u.full_name || u.name;
+          f.title = u.designation || f.title;
+          f.empCode = u.emp_code || u.employeeId || f.empCode;
+          f.initials = u.initials || f.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        }
+      }
+    } catch (_) {}
 
     const headerName = document.getElementById("header-profile-name");
     const headerDept = document.getElementById("header-profile-dept");
@@ -361,20 +366,15 @@ const TeacherTimetableApp = {
   },
 
   getSlotIndexForTime(timeStr) {
-    // Official SSGMCE 6 Periods from PDF:
-    // Period 1: 11:00 - 12:00 PM (mins: 660 - 720)
-    // Period 2: 12:00 - 01:00 PM (mins: 720 - 780)
-    // Period 3: 01:15 - 02:15 PM (mins: 795 - 855)
-    // Period 4: 02:15 - 03:15 PM (mins: 855 - 915)
-    // Period 5: 03:45 - 04:45 PM (mins: 945 - 1005)
-    // Period 6: 04:45 - 05:45 PM (mins: 1005 - 1065)
+    // 0: 09:00 - 10:30 (center ~ 585 mins)
+    // 1: 11:00 - 12:30 (center ~ 705 mins)
+    // 2: 13:30 - 15:00 (center ~ 855 mins)
+    // 3: 15:30 - 17:00 (center ~ 975 mins)
     const mins = this.timeToMinutes(timeStr);
-    if (mins < 720) return 0;       // < 12:00 PM -> Slot 1
-    if (mins < 795) return 1;       // < 01:15 PM -> Slot 2
-    if (mins < 855) return 2;       // < 02:15 PM -> Slot 3
-    if (mins < 945) return 3;       // < 03:45 PM -> Slot 4
-    if (mins < 1005) return 4;      // < 04:45 PM -> Slot 5
-    return 5;                       // >= 04:45 PM -> Slot 6
+    if (mins < 645) return 0;       // < 10:45 AM -> Slot 1
+    if (mins < 780) return 1;       // < 01:00 PM -> Slot 2
+    if (mins < 915) return 2;       // < 03:15 PM -> Slot 3
+    return 3;                       // >= 03:15 PM -> Slot 4
   },
 
   getTestStatus(test) {
@@ -816,14 +816,11 @@ const TeacherTimetableApp = {
     const container = document.getElementById("timetable-content");
     if (!container) return;
 
-    // Official SSGMCE 6 Periods from PDF
     const timeSlots = [
-      { range: "11:00 – 12:00", period: "PM", label: "Slot 1" },
-      { range: "12:00 – 01:00", period: "PM", label: "Slot 2" },
-      { range: "01:15 – 02:15", period: "PM", label: "Slot 3" },
-      { range: "02:15 – 03:15", period: "PM", label: "Slot 4" },
-      { range: "03:45 – 04:45", period: "PM", label: "Slot 5" },
-      { range: "04:45 – 05:45", period: "PM", label: "Slot 6" }
+      { range: "09:00 – 10:30", period: "AM", label: "Slot 1" },
+      { range: "11:00 – 12:30", period: "PM", label: "Slot 2" },
+      { range: "01:30 – 03:00", period: "PM", label: "Slot 3" },
+      { range: "03:30 – 05:00", period: "PM", label: "Slot 4" }
     ];
 
     const term = (typeof AcademicDateUtils !== 'undefined')
@@ -851,13 +848,60 @@ const TeacherTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Exact original schedule data preserved
-    const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && TeacherERPData.timetable.length > 0)
-      ? TeacherERPData.timetable
-      : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(day => ({
-        day: day,
-        slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
-      }));
+    // Standard 4-Slot Faculty Schedule
+    const defaultTeacherTimetable = [
+      {
+        day: "Monday",
+        slots: [
+          "Data Structures (Room 201)",
+          "Java Programming (Room 201)",
+          "Free Slot",
+          "Data Structures Lab (Batch 2R1) (Adv Systems Lab 3)"
+        ]
+      },
+      {
+        day: "Tuesday",
+        slots: [
+          "Free Slot",
+          "Data Structures (Room 201)",
+          "Database Systems (Room 304)",
+          "Operating Systems (Lab 04)"
+        ]
+      },
+      {
+        day: "Wednesday",
+        slots: [
+          "Operating Systems (Room 201)",
+          "Free Slot",
+          "Data Structures Lab (Lab 01)",
+          "Data Structures Lab (Lab 01)"
+        ]
+      },
+      {
+        day: "Thursday",
+        slots: [
+          "Data Structures (Room 201)",
+          "Algorithms (Room 304)",
+          "Free Slot",
+          "Project Guidance (Seminar Hall)"
+        ]
+      },
+      {
+        day: "Friday",
+        slots: [
+          "Free Slot",
+          "Operating Systems (Room 201)",
+          "Free Slot",
+          "Faculty Meeting (Dept Library)"
+        ]
+      }
+    ];
+
+    let timetableData = defaultTeacherTimetable;
+    if (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && Array.isArray(TeacherERPData.timetable)) {
+      const valid = TeacherERPData.timetable.length > 0 && TeacherERPData.timetable.every(r => r.slots && r.slots.length === 4);
+      if (valid) timetableData = TeacherERPData.timetable;
+    }
 
     // Helper: Parse slot string into title, location, and type
     const parseSlotInfo = (slotText) => {
@@ -886,37 +930,6 @@ const TeacherTimetableApp = {
 
     container.innerHTML = `
       <div class="timetable-card">
-        
-        <!-- Faculty Identity & Schedule Switcher -->
-        <div class="timetable-faculty-strip" style="background: linear-gradient(135deg, #0B1F3A 0%, #0B5CAD 100%); color: #fff; padding: 12px 18px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 38px; height: 38px; border-radius: 6px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;">
-              ${(currentFacObj.name.split('. ').pop().charAt(0)) || 'F'}
-            </div>
-            <div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <strong style="font-size: 15px;">${currentFacObj.name}</strong>
-                <span style="background: #10B981; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 4px;">${currentFacObj.empCode}</span>
-                <span style="background: rgba(255,255,255,0.2); font-size: 11px; padding: 1px 6px; border-radius: 4px;">${currentFacObj.title}</span>
-              </div>
-              <div style="font-size: 12px; color: #BAE6FD; margin-top: 2px;">
-                Personal Teaching Schedule &bull; Official Load: <strong>${currentFacObj.totalLoad} Hours</strong>
-              </div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label for="faculty-timetable-selector" style="font-size: 12px; color: #E0F2FE;">Faculty:</label>
-            <select id="faculty-timetable-selector" 
-                    style="padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); background: #ffffff; color: #0B1F3A; font-size: 12px; font-weight: 600; cursor: pointer;"
-                    onchange="TeacherTimetableApp.switchFaculty(this.value)">
-              ${facList.map(f => `
-                <option value="${f.empCode}" ${f.empCode === activeEmpCode ? 'selected' : ''}>
-                  ${f.name} (${f.empCode}) — ${f.totalLoad}h
-                </option>
-              `).join('')}
-            </select>
-          </div>
-        </div>
 
         <!-- ==================== HEADER & TOOLBAR ==================== -->
         <div class="timetable-header">
@@ -926,7 +939,7 @@ const TeacherTimetableApp = {
                 <i data-lucide="graduation-cap" style="width:13px;height:13px;"></i>
                 Academic Term: ${term.academicYear} • ${term.semesterType} Semester
               </span>
-              <h3 class="schedule-main-title">Personal Lecture &amp; Lab Schedule</h3>
+              <h3 class="schedule-main-title">Weekly Lecture &amp; Lab Schedule</h3>
               <p class="schedule-subtitle">Department of Computer Science &amp; Engineering • Autonomous Curriculum</p>
             </div>
 
@@ -1155,50 +1168,31 @@ const TeacherTimetableApp = {
         <div class="timetable-legend-bar">
           <div class="legend-items">
             <span class="legend-title">Legend:</span>
-            <span class="legend-item">
+            <div class="legend-item">
               <span class="legend-dot lecture-dot"></span>
               <span>Theory Lecture</span>
-            </span>
-            <span class="legend-item">
+            </div>
+            <div class="legend-item">
               <span class="legend-dot lab-dot"></span>
               <span>Laboratory Session</span>
-            </span>
-            <span class="legend-item">
+            </div>
+            <div class="legend-item">
               <span class="legend-dot test-dot"></span>
               <span>Assessment / Test (Amber)</span>
-            </span>
-            <span class="legend-item">
+            </div>
+            <div class="legend-item">
               <span class="legend-dot off-dot"></span>
               <span>Off / Prep Period</span>
-            </span>
-            <span class="legend-item">
+            </div>
+            <div class="legend-item">
               <span class="legend-dot active-dot"></span>
               <span>Active Date Highlight</span>
-            </span>
+            </div>
           </div>
-          <div class="legend-right">
-            <span>Break: 1:00 – 1:15 PM • Recess: 3:15 – 3:45 PM • Official Load: ${currentFacObj.totalLoad}h</span>
-          </div>
-        </div>
-
-        <!-- Allotted Teaching Load Breakdown from PDF -->
-        ${(teachingLoad && teachingLoad.length > 0) ? `
-        <div style="padding: 12px 18px; background: #FFFFFF; border-top: 1px solid #E2E8F0; border-radius: 0 0 8px 8px;">
-          <h5 style="margin: 0 0 6px 0; font-size: 12px; color: #0B1F3A; font-weight: 700; text-transform: uppercase;">
-            Allotted Teaching Load Summary (From Official PDF)
-          </h5>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            ${teachingLoad.map(item => `
-              <div style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 4px 10px; font-size: 11.5px; display: flex; gap: 6px; align-items: center;">
-                <span style="font-weight: 700; color: #0B5CAD;">Sem ${item.semester || 'V'}:</span>
-                <span style="font-weight: 600; color: #1E293B;">${item.abbr || item.code}</span>
-                <span style="color: #64748B;">(Th: ${item.theory || 0}h | Pr: ${item.practical || 0}h)</span>
-                ${item.total ? `<span style="background: #E2E8F0; padding: 1px 5px; border-radius: 4px; font-weight: 600; color: #334155;">Tot: ${item.total}h</span>` : ''}
-              </div>
-            `).join('')}
+          <div class="legend-note">
+            <span>SSGMCE Autonomous Curriculum • Integrated Test Scheduling</span>
           </div>
         </div>
-        ` : ''}
 
       </div>
     `;
@@ -1281,7 +1275,11 @@ const TeacherTimetableApp = {
 window.TeacherTimetableApp = TeacherTimetableApp;
 window.TeacherApp = window.TeacherApp || TeacherTimetableApp;
 
-// Auto initialize on DOMContentLoaded
-document.addEventListener("DOMContentLoaded", () => {
+// Auto initialize on DOM load or immediately if already ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    TeacherTimetableApp.init();
+  });
+} else {
   TeacherTimetableApp.init();
-});
+}

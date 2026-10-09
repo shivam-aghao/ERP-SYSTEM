@@ -815,9 +815,56 @@ const StudentTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Regular schedule data (from real backend database if available)
-    const daysList = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    let timetableData = [];
+    // Default 4-Slot Student Schedule (CSE 2R1)
+    const defaultStudentTimetable = [
+      {
+        day: "Monday",
+        slots: [
+          "Operating Systems (LH-301)",
+          "Data Structures & Algorithms (LH-204)",
+          "Database Management Systems (LH-112)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Tuesday",
+        slots: [
+          "Java Programming & OOP (LH-201)",
+          "Computer Networks (LH-108)",
+          "Data Structures (LH-204)",
+          "Java Lab (Batch 2R1) (Adv Systems Lab 3)"
+        ]
+      },
+      {
+        day: "Wednesday",
+        slots: [
+          "Database Management Systems (LH-112)",
+          "Operating Systems (LH-301)",
+          "Java Programming (LH-201)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Thursday",
+        slots: [
+          "Data Structures (LH-204)",
+          "Java Programming Lab (Adv Systems Lab 3)",
+          "Database Systems (LH-112)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Friday",
+        slots: [
+          "Operating Systems (LH-301)",
+          "Data Structures (LH-204)",
+          "Java Programming (LH-201)",
+          "OS Linux Kernel Lab (Systems Lab 1)"
+        ]
+      }
+    ];
+
+    let timetableData = defaultStudentTimetable;
 
     if (this.timetableEntries && this.timetableEntries.length > 0) {
       timetableData = daysList.map(dayName => {
@@ -841,11 +888,6 @@ const StudentTimetableApp = {
         }
         return { day: dayName, slots };
       });
-    } else {
-      timetableData = daysOfWeek.map(day => ({
-        day: day,
-        slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
-      }));
     }
 
     // Helper: Parse slot text into lecture/lab details
@@ -1166,7 +1208,11 @@ const StudentTimetableApp = {
 // Global expose
 window.StudentTimetableApp = StudentTimetableApp;
 
-// Auto initialize on DOM load
-document.addEventListener("DOMContentLoaded", () => {
+// Auto initialize on DOM load or immediately if already ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    StudentTimetableApp.init();
+  });
+} else {
   StudentTimetableApp.init();
-});
+}

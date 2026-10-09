@@ -1,331 +1,337 @@
 /**
- * SSGMCE College ERP — Central Quiz API & Supabase Integration Client
- * Directly interacts with FastAPI backend at http://localhost:8000/api/v1/quiz
- * and provides live Supabase PostgreSQL fallback if needed.
+ * SSGMCE College ERP — Production Central Quiz API Client
+ * Seamless integration with Canonical FastAPI Backend (/api/v1/quizzes, /api/v1/attempts)
+ * Zero-trust security, real-time autosave, server-side evaluation, anti-cheat proctoring & analytics.
  */
 
 (function (window) {
   'use strict';
 
-  const cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
-  const API_BASE = cfg.QUIZ_API_BASE || 'http://localhost:8000/api/v1/quiz';
-  const SUPABASE_CONFIG = {
-    url: cfg.SUPABASE_URL || (typeof window !== 'undefined' && window.__SUPABASE_URL__) || 'https://gftqvclenyplnuoocbwe.supabase.co',
-    anonKey: cfg.SUPABASE_ANON_KEY || (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || ''
-  };
-
-  // Direct Supabase Client Instance
-  let supabaseClient = null;
-  function getSupabaseInstance() {
-    if (!supabaseClient) {
-      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-        supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-      }
-    }
-    return supabaseClient;
+  function getApiBase() {
+    var cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
+    if (cfg.API_BASE) return cfg.API_BASE;
+    if (cfg.API_BASE_URL) return cfg.API_BASE_URL;
+    var port = (window.location && window.location.port) ? window.location.port : '';
+    var origin = (port === '8000') 
+      ? window.location.origin 
+      : 'http://' + (window.location.hostname || 'localhost') + ':8000';
+    return origin + '/api/v1';
   }
 
-  const QuizAPI = {
-    apiBase: API_BASE,
-    supabaseConfig: SUPABASE_CONFIG,
+  function getAuthToken() {
+    if (window.ERP_AUTH && typeof window.ERP_AUTH.getToken === 'function') {
+      var tok = window.ERP_AUTH.getToken();
+      if (tok) return tok;
+    }
+    return (typeof localStorage !== 'undefined' && (localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token'))) ||
+           (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ssgmce_access_token')) ||
+           null;
+  }
 
-    get supabase() {
-      return getSupabaseInstance();
+  var QuizAPI = {
+    get apiBase() {
+      return getApiBase();
     },
 
-    // Realtime Supabase Channel for Class Quiz Notifications
-    subscribeToQuizNotifications(className, onNotification) {
-      const client = getSupabaseInstance();
-      if (!client) {
-        console.warn('[QuizAPI] Supabase JS SDK not loaded, relying on REST polling for notifications.');
-        return null;
-      }
-      try {
-        const channel = client
-          .channel(`public:notifications:class:${className || 'all'}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'notifications',
-              filter: className ? `class_name=eq.${className}` : undefined
-            },
-            payload => {
-              console.log('[QuizAPI] Live Supabase notification received:', payload);
-              if (onNotification) onNotification(payload.new);
-            }
-          )
-          .subscribe();
-        return channel;
-      } catch (err) {
-        console.warn('[QuizAPI] Supabase Realtime subscription error:', err);
-        return null;
-      }
-    },
-
-    // Helper: Standard Fetch with timeout
+    // Standard Authenticated Fetch
     async _fetch(endpoint, options = {}) {
-      const url = `${this.apiBase}${endpoint}`;
+      var base = getApiBase();
+      var url = endpoint.startsWith('http') ? endpoint : (base + endpoint);
+      var token = getAuthToken();
+
+      var headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+      }
+
       try {
-        const res = await fetch(url, {
+        var res = await fetch(url, {
           ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {})
-          }
+          headers: headers
         });
+
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || errData.message || `Server returned ${res.status}`);
+          var errData = await res.json().catch(function () { return {}; });
+          var msg = (errData.error && errData.error.message) || errData.detail || errData.message || ('Server error (' + res.status + ')');
+          throw new Error(msg);
         }
-        const json = await res.json();
+
+        var json = await res.json();
         return json;
       } catch (err) {
-        console.warn(`[QuizAPI] Request failed for ${endpoint}:`, err.message);
+        console.warn('[QuizAPI] Request error for ' + endpoint + ':', err.message);
         throw err;
       }
     },
 
-    // 1. Classes List (100% Dynamic from Database)
+    // 1. Classes List
     async getClasses() {
-      const res = await this._fetch('/classes');
-      return res.data || [];
+      try {
+        var res = await this._fetch('/admin/classes');
+        return res.data || [];
+      } catch (e) {
+        var res2 = await this._fetch('/classes').catch(function () { return { data: [] }; });
+        return res2.data || [];
+      }
     },
 
-    // 1b. Students List (Dynamic from Database)
+    // 2. Students List for Class
     async getStudents(className) {
-      let query = '';
-      if (className) query = `?class_name=${encodeURIComponent(className)}`;
-      const res = await this._fetch(`/students${query}`);
+      var query = className ? ('?class_name=' + encodeURIComponent(className)) : '';
+      var res = await this._fetch('/students' + query);
       return res.data || [];
     },
 
-    // 1c. Teacher Profile (Dynamic from Database)
+    // 3. Teacher Profile
     async getTeacherProfile() {
-      const res = await this._fetch('/teacher/profile');
-      return res.data || { full_name: 'Faculty', designation: 'Faculty Member', emp_code: '' };
+      try {
+        var res = await this._fetch('/teachers/profile');
+        return res.data || { full_name: 'Faculty Member', designation: 'Faculty', emp_code: '' };
+      } catch (e) {
+        return { full_name: 'Faculty Member', designation: 'Faculty', emp_code: '' };
+      }
     },
 
-    // 1c-2. Student Profile (Dynamic Authenticated Profile)
+    // 4. Student Profile
     async getStudentProfile(studentIdOrCode) {
       try {
-        let query = '';
-        if (studentIdOrCode) query = `?student_id=${encodeURIComponent(studentIdOrCode)}`;
-        const res = await this._fetch(`/student/profile${query}`);
+        var query = studentIdOrCode ? ('?student_code=' + encodeURIComponent(studentIdOrCode)) : '';
+        var res = await this._fetch('/students/profile' + query);
         return res.data || null;
       } catch (e) {
-        console.warn('QuizAPI getStudentProfile notice:', e);
         return null;
       }
     },
 
-    // 1d. Student Performance Trend & Real Metrics (Dynamic from Database)
-    async getStudentTrend(studentId) {
-      const res = await this._fetch(`/student/${studentId}/trend`);
-      return res.data || {
-        total_attempts: 0,
-        average_score_pct: 0.0,
-        average_speed_seconds: 0,
-        overall_accuracy_pct: 0.0,
-        trend_labels: [],
-        trend_scores: []
-      };
+    // 5. Teacher: List All Quizzes
+    async getTeacherQuizzes(classId) {
+      var query = classId ? ('?class_id=' + encodeURIComponent(classId)) : '';
+      var res = await this._fetch('/quizzes' + query);
+      return res.data || [];
     },
 
-
-    // 2. Teacher: List All Quizzes
-    async getTeacherQuizzes() {
-      try {
-        const res = await this._fetch('/teacher/quizzes');
-        return res.data || [];
-      } catch (err) {
-        console.error('Failed to fetch teacher quizzes:', err);
-        return [];
-      }
-    },
-
-    // 3. Teacher: Create Quiz (Triggers automatic notifications for target class)
+    // 6. Teacher: Create Quiz with Full Configuration
     async createQuiz(payload) {
-      const res = await this._fetch('/teacher/quizzes', {
+      var res = await this._fetch('/quizzes', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
       return res.data;
     },
 
-    // 4. Teacher: Toggle Publish Status
+    // 7. Teacher: Get Quiz Details
+    async getQuizDetails(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId));
+      return res.data;
+    },
+
+    // 8. Teacher: Update Quiz Config
+    async updateQuiz(quizId, payload) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId), {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+      return res.data;
+    },
+
+    // 9. Teacher: Toggle Publish Status
     async togglePublish(quizId) {
-      const res = await this._fetch(`/teacher/quizzes/${quizId}/publish`, {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/publish', {
         method: 'PUT'
       });
       return res.data;
     },
 
-    // 5. Teacher: Delete Quiz
+    // 10. Teacher: Close Quiz
+    async closeQuiz(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/close', {
+        method: 'POST'
+      });
+      return res.data;
+    },
+
+    // 11. Teacher: Delete Quiz
     async deleteQuiz(quizId) {
-      const res = await this._fetch(`/teacher/quizzes/${quizId}`, {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId), {
         method: 'DELETE'
       });
       return res.data;
     },
 
-    // 6. Teacher: Get Quiz Questions
+    // 12. Teacher: Get Questions for Quiz
     async getQuizQuestions(quizId) {
-      const res = await this._fetch(`/teacher/quizzes/${quizId}/questions`);
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions');
       return res.data || [];
     },
 
-    // 7. Teacher: Add Single Question
+    // 13. Teacher: Add Single Question
     async addQuestion(quizId, questionData) {
-      const res = await this._fetch(`/teacher/quizzes/${quizId}/questions`, {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions', {
         method: 'POST',
         body: JSON.stringify(questionData)
       });
       return res.data;
     },
 
-    // 8. Teacher: Delete Question
+    // 14. Teacher: Delete Question
     async deleteQuestion(quizId, questionId) {
-      const res = await this._fetch(`/teacher/quizzes/${quizId}/questions/${questionId}`, {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions/' + encodeURIComponent(questionId), {
         method: 'DELETE'
       });
       return res.data;
     },
 
-    // 9. Student: Get Class-Restricted Quizzes
+    // 15. Student: Get Available Quizzes for Enrolled Class
     async getStudentQuizzes(className, studentId) {
-      let query = `?class_name=${encodeURIComponent(className || '1R1')}`;
-      if (studentId) query += `&student_id=${encodeURIComponent(studentId)}`;
-      try {
-        const res = await this._fetch(`/student/quizzes${query}`);
-        if (Array.isArray(res.data)) return res.data;
-        if (res.data && Array.isArray(res.data.quizzes)) return res.data.quizzes;
-        return [];
-      } catch (err) {
-        console.error('Failed to fetch student quizzes:', err);
-        return [];
-      }
+      var query = '';
+      if (className) query += '?class_id=' + encodeURIComponent(className);
+      if (studentId) query += (query ? '&' : '?') + 'student_code=' + encodeURIComponent(studentId);
+      var res = await this._fetch('/quizzes' + query);
+      return res.data || [];
     },
 
-    // 10. Student: Get Class-Targeted Notifications
-    async getNotifications(className) {
-      let query = '';
-      if (className) query = `?class_name=${encodeURIComponent(className)}`;
-      try {
-        const res = await this._fetch(`/notifications${query}`);
-        return res.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch quiz notifications:', err);
-        return [];
-      }
-    },
-
-    // 11. Student: Start Quiz Attempt (Answer keys stripped for security)
-    async startQuizAttempt(quizId, studentId, studentName, className) {
-      const res = await this._fetch(`/student/quizzes/${quizId}/start`, {
+    // 16. Student: Start Quiz Attempt (Server Timers & Sanitized Questions)
+    async startQuizAttempt(quizId, studentId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/start', {
         method: 'POST',
-        body: JSON.stringify({
-          student_id: studentId || 'demo-student-id',
-          student_name: studentName || 'Student',
-          class_name: className
-        })
+        body: JSON.stringify({ student_id: studentId })
       });
       return res.data;
     },
 
-    // 12. Student: Submit Quiz Attempt (Server-Side Evaluation & Scoring)
-    async submitQuizAttempt(attemptId, answers) {
-      const res = await this._fetch(`/student/attempts/${attemptId}/submit`, {
-        method: 'POST',
-        body: JSON.stringify({
-          attempt_id: attemptId,
-          answers: answers
-        })
-      });
-      return res.data;
-    },
-
-    // 13. Analytics: Question Difficulty & Metrics
-    async getQuizAnalytics(quizId) {
-      try {
-        const res = await this._fetch(`/quizzes/${quizId}/analytics`);
-        return res.data;
-      } catch (err) {
-        console.warn('Failed to fetch quiz analytics:', err);
-        return null;
-      }
-    },
-
-    // 14. Leaderboard: Class-wide Rankings
-    async getQuizLeaderboard(quizId) {
-      try {
-        const res = await this._fetch(`/quizzes/${quizId}/leaderboard`);
-        return res.data || [];
-      } catch (err) {
-        console.warn('Failed to fetch leaderboard:', err);
-        return [];
-      }
-    },
-
-    // 15. Student: Autosave Answers Periodic / On Change
+    // 17. Student: Autosave Answers in Real-Time
     async saveAttemptAnswers(attemptId, answers) {
       try {
-        const res = await this._fetch(`/attempts/${attemptId}/answers`, {
+        var res = await this._fetch('/attempts/' + encodeURIComponent(attemptId) + '/answers', {
           method: 'PUT',
-          body: JSON.stringify({ answers })
+          body: JSON.stringify({ answers: answers })
         });
         return res.data;
       } catch (err) {
-        console.warn('Autosave notice:', err);
+        console.warn('[QuizAPI] Autosave warning:', err.message);
         return null;
       }
     },
 
-    // 16. Teacher: Full Class Results & Participation Roster (All Enrolled Students)
-    async getQuizResults(quizId, filter = 'all') {
+    // 18. Student: Submit Quiz Attempt (Authoritative Server Evaluation)
+    async submitQuizAttempt(attemptId, answers, isAutoSubmit = false, reason = null) {
+      var res = await this._fetch('/attempts/' + encodeURIComponent(attemptId) + '/submit', {
+        method: 'POST',
+        body: JSON.stringify({
+          answers: answers,
+          is_auto_submit: Boolean(isAutoSubmit),
+          submission_reason: reason
+        })
+      });
+      return res.data;
+    },
+
+    // 19. Student: Get Scorecard & Detailed Breakdown
+    async getAttemptResult(attemptId) {
+      var res = await this._fetch('/attempts/' + encodeURIComponent(attemptId) + '/result');
+      return res.data;
+    },
+
+    // 20. Student / Proctoring: Record Security Anomaly Event
+    async recordSecurityEvent(attemptId, eventType, metadata = {}) {
       try {
-        const res = await this._fetch(`/quizzes/${quizId}/results?filter=${encodeURIComponent(filter)}`);
+        var res = await this._fetch('/attempts/' + encodeURIComponent(attemptId) + '/security-event', {
+          method: 'POST',
+          body: JSON.stringify({
+            event_type: eventType,
+            metadata: metadata
+          })
+        });
         return res.data;
       } catch (err) {
-        console.error('Failed to fetch quiz results:', err);
+        console.warn('[QuizAPI] Security event logging warning:', err.message);
         return null;
       }
     },
 
-    // 17. Teacher: Direct Export URL Generator (CSV & JSON)
-    getExportUrl(quizId, filter = 'all', format = 'csv') {
-      return `${this.apiBase}/quizzes/${quizId}/export?filter=${encodeURIComponent(filter)}&format=${encodeURIComponent(format)}`;
+    // 21. Teacher: Comprehensive Performance Analytics
+    async getQuizAnalytics(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/analytics');
+      return res.data;
     },
 
-    // 18. Teacher: Toggle Release Results to Students
+    // 22. Teacher / Student: Class Leaderboard
+    async getQuizLeaderboard(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/leaderboard');
+      return res.data || [];
+    },
+
+    // 23. Teacher: Toggle Release Results to Students
     async toggleReleaseResults(quizId, shouldRelease = null) {
-      const payload = shouldRelease !== null ? { release: shouldRelease } : {};
-      const res = await this._fetch(`/quizzes/${quizId}/toggle-release-results`, {
+      var payload = shouldRelease !== null ? { release: shouldRelease } : {};
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/toggle-release-results', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
       return res.data;
     },
 
-    // 19. Student: Get Detailed Attempt Result
-    async getAttemptResult(attemptId) {
-      const res = await this._fetch(`/attempts/${attemptId}/result`);
-      return res.data;
+    // 24. Teacher: Direct Export URL (CSV, Excel)
+    getExportUrl(quizId, filter = 'all', format = 'csv') {
+      return getApiBase() + '/quizzes/' + encodeURIComponent(quizId) + '/export?filter=' + encodeURIComponent(filter) + '&format=' + encodeURIComponent(format);
     },
 
-    // 20. Student: Anti-Cheating & Proctoring Event (Tab switch, fullscreen exit, blur)
-    async recordSecurityEvent(attemptId, eventType, metadata = {}) {
-      try {
-        const res = await this._fetch(`/attempts/${attemptId}/security-event`, {
-          method: 'POST',
-          body: JSON.stringify({ event_type: eventType, metadata })
-        });
-        return res.data;
-      } catch (err) {
-        console.warn('Security event logging:', err);
-        return null;
+    // 25. Teacher: Security Events Log
+    async getQuizSecurityEvents(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/security-events');
+      return res.data || [];
+    },
+
+    // 26. Client-Side Anti-Cheating Proctoring Watchdog
+    initProctoringWatchdog(attemptId, onAnomalyCallback) {
+      if (!attemptId) return null;
+
+      var tabSwitchCount = 0;
+      var blurCount = 0;
+
+      function handleVisibilityChange() {
+        if (document.hidden) {
+          tabSwitchCount++;
+          QuizAPI.recordSecurityEvent(attemptId, 'tab_switch', { count: tabSwitchCount, timestamp: new Date().toISOString() });
+          if (onAnomalyCallback) onAnomalyCallback('tab_switch', tabSwitchCount);
+        }
       }
+
+      function handleWindowBlur() {
+        blurCount++;
+        QuizAPI.recordSecurityEvent(attemptId, 'window_blur', { count: blurCount, timestamp: new Date().toISOString() });
+        if (onAnomalyCallback) onAnomalyCallback('window_blur', blurCount);
+      }
+
+      function handleFullscreenChange() {
+        if (!document.fullscreenElement) {
+          QuizAPI.recordSecurityEvent(attemptId, 'fullscreen_exit', { timestamp: new Date().toISOString() });
+          if (onAnomalyCallback) onAnomalyCallback('fullscreen_exit', 1);
+        }
+      }
+
+      function handleContextMenu(e) {
+        e.preventDefault();
+        QuizAPI.recordSecurityEvent(attemptId, 'right_click', { timestamp: new Date().toISOString() });
+        return false;
+      }
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('blur', handleWindowBlur);
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('contextmenu', handleContextMenu);
+
+      return {
+        stop: function () {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          window.removeEventListener('blur', handleWindowBlur);
+          document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          document.removeEventListener('contextmenu', handleContextMenu);
+        }
+      };
     }
   };
 

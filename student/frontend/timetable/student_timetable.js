@@ -10,28 +10,63 @@ const StudentTimetableApp = {
   tests: [],
   timetableEntries: [],
   studentSession: null,
+  serverTimeOffsetMs: 0,
+  realtimeChannel: null,
+  _tickerInterval: null,
 
   init() {
     this.loadStudentSession();
     this.bindEvents();
     this.renderHeaderProfile();
-    // 1. Instant local render (0ms - zero delay)
+    // 1. Instant local render (0ms response time - zero blank delay)
     this.loadCachedTests();
     this.renderTimetableView();
     this.initLucideIcons();
 
     // 2. Background async refresh (Stale-While-Revalidate)
     Promise.allSettled([
+      this.syncServerTime(),
       this.loadTimetable(),
       this.loadTests()
     ]).then(() => {
       this.renderTimetableView();
       this.initLucideIcons();
     });
+
+    this.initRealtimeSubscription();
+    this.startLiveStatusTicker();
   },
 
   loadCachedTests() {
-    // Tests are loaded authoritatively from database API
+    try {
+      const local = localStorage.getItem('ssgmce_scheduled_tests');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+        }
+      }
+    } catch (_) {}
+  },
+
+  async syncServerTime() {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
+      const res = await fetch(`${this.getApiBase()}/server-time`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.data && json.data.timestamp_ms) {
+          this.serverTimeOffsetMs = json.data.timestamp_ms - Date.now();
+        }
+      }
+    } catch (_) {}
+  },
+
+  getServerNow() {
+    const serverTimestamp = Date.now() + (this.serverTimeOffsetMs || 0);
+    return new Date(serverTimestamp);
   },
 
   getApiBase() {
@@ -79,56 +114,12 @@ const StudentTimetableApp = {
   // AUTHENTICATED STUDENT SESSION
   // ----------------------------------------------------
   loadStudentSession() {
-    if (window.verifiedUser) {
-      const u = window.verifiedUser;
-      this.studentSession = {
-        fullName: u.name || u.full_name || u.fullName || "Student",
-        shortName: (u.name || u.full_name || u.fullName || "Student").split(" ")[0],
-        initials: ((u.name || u.full_name || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
-        rollNo: u.roll_no || u.rollNo || "",
-        studentCode: u.user_id || u.student_id || u.student_code || u.studentCode || "",
-        className: u.class_name || u.className || u.class_code || u.classCode || "2R1",
-        department: u.department || "Computer Science & Engineering",
-        departmentCode: u.department_code || "CSE",
-        email: u.email || ""
-      };
-      return;
-    }
-
-    if (window.AuthClient && typeof window.AuthClient.getCurrentUser === 'function') {
-      const u = window.AuthClient.getCurrentUser();
-      if (u) {
-        this.studentSession = {
-          fullName: u.name || u.full_name || u.fullName || "Student",
-          shortName: (u.name || u.full_name || u.fullName || "Student").split(" ")[0],
-          initials: ((u.name || u.full_name || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
-          rollNo: u.roll_no || u.rollNo || "",
-          studentCode: u.user_id || u.student_id || u.student_code || u.studentCode || "",
-          className: u.class_name || u.className || u.class_code || u.classCode || "2R1",
-          department: u.department || "Computer Science & Engineering",
-          departmentCode: u.department_code || "CSE",
-          email: u.email || ""
-        };
-        return;
-      }
-    }
-
     try {
-      const stored = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+      const stored = localStorage.getItem('ssgmce_erp_session') || localStorage.getItem('ssgmce_user');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.role === 'student' || parsed.studentCode || parsed.rollNo) {
-          this.studentSession = {
-            fullName: parsed.name || parsed.fullName || "Student",
-            shortName: (parsed.name || parsed.fullName || "Student").split(" ")[0],
-            initials: ((parsed.name || parsed.fullName || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
-            rollNo: parsed.roll_no || parsed.rollNo || "",
-            studentCode: parsed.user_id || parsed.student_id || parsed.student_code || parsed.studentCode || "",
-            className: parsed.class_name || parsed.className || parsed.class_code || parsed.classCode || "2R1",
-            department: parsed.department || "Computer Science & Engineering",
-            departmentCode: parsed.department_code || "CSE",
-            email: parsed.email || ""
-          };
+          this.studentSession = parsed;
           return;
         }
       }
@@ -136,39 +127,52 @@ const StudentTimetableApp = {
       console.warn("Could not parse student session:", e);
     }
 
-    // Default student context without hardcoded identity
+    // Default student context from ERP model (CSE 2R1)
     this.studentSession = {
-      fullName: "Student",
-      shortName: "Student",
-      initials: "ST",
-      rollNo: "--",
-      studentCode: "",
+      fullName: "Shivam Aghao",
+      shortName: "Shivam",
+      initials: "SA",
+      rollNo: "21",
+      studentCode: "307001",
       className: "2R1",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: ""
+      email: "shivam.aghao@ssgmce.ac.in"
     };
   },
 
   // ----------------------------------------------------
-  // LOAD SCHEDULED TESTS / ASSESSMENTS (DATABASE TRUTH)
+  // LOAD SCHEDULED TESTS / ASSESSMENTS (MULTI-TIER: API + SUPABASE + LOCAL CACHE)
   // ----------------------------------------------------
   async loadTests() {
+    let localTests = [];
     let apiTests = [];
 
-    // 1. Backend REST API
+    // 1. Read local cache for immediate offline/cross-tab sync
+    try {
+      const local = localStorage.getItem('ssgmce_scheduled_tests');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          localTests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
+        }
+      }
+    } catch (_) {}
+
+    // 2. Backend REST API with fast timeout
     try {
       let classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode)) || '2R1';
-      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '';
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '307001';
 
       const params = new URLSearchParams();
       if (classCode) params.append('class_code', classCode);
       if (studentCode) params.append('student_code', studentCode);
 
       const url = `${this.getApiBase()}/timetable/tests?${params.toString()}`;
-      const res = await (window.AuthClient && window.AuthClient.fetchWithAuth 
-        ? window.AuthClient.fetchWithAuth(url) 
-        : fetch(url));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
@@ -176,73 +180,96 @@ const StudentTimetableApp = {
         }
       }
     } catch (e) {
-      console.warn("Could not fetch tests from backend API:", e);
+      // Backend fetch finished or timed out
     }
 
-    // 2. Direct Supabase Client if API returned empty
-    if (apiTests.length === 0) {
+    // 3. Direct Supabase Client if API returned empty and client is already ready
+    if (apiTests.length === 0 && window.supabaseClient) {
       try {
-        const getClient = window.getSupabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient : null);
-        const client = getClient ? await getClient() : (window.supabaseClient || null);
-        if (client) {
-          const { data, error } = await client
-            .from('timetable_assessments')
-            .select('*')
-            .order('date', { ascending: true })
-            .order('start_time', { ascending: true });
-          
-          if (!error && Array.isArray(data) && data.length > 0) {
-            apiTests = data
-              .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
-              .map(t => ({
-                id: t.id,
-                teacher_id: t.teacher_id || '',
-                type: t.type || 'Quiz',
-                subject: t.subject || '',
-                title: t.title || '',
-                date: t.date || '',
-                start: t.start_time || t.start || '',
-                end: t.end_time || t.end || '',
-                link: t.link || '',
-                class_code: t.class_code || '2R1'
-              }));
-          }
+        const { data, error } = await window.supabaseClient
+          .from('timetable_assessments')
+          .select('*')
+          .order('date', { ascending: true })
+          .order('start_time', { ascending: true });
+        
+        if (!error && Array.isArray(data) && data.length > 0) {
+          apiTests = data
+            .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
+            .map(t => ({
+              id: t.id,
+              teacher_id: t.teacher_id || 'FAC-CSE-1001',
+              type: t.type || 'Quiz',
+              subject: t.subject || '',
+              title: t.title || '',
+              date: t.date || '',
+              start: t.start_time || t.start || '',
+              end: t.end_time || t.end || '',
+              link: t.link || '',
+              class_code: t.class_code || '2R1'
+            }));
         }
-      } catch (sbErr) {
-        console.warn("[StudentTimetable] Direct Supabase fetch note:", sbErr);
-      }
+      } catch (sbErr) {}
     }
 
-    this.tests = apiTests;
+    // Combine & merge: ensure tests scheduled on either side are immediately present
+    const testMap = new Map();
+    localTests.forEach(t => testMap.set(t.id, t));
+    apiTests.forEach(t => testMap.set(t.id, t));
+
+    this.tests = Array.from(testMap.values());
+    try {
+      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
+    } catch (_) {}
   },
 
   bindEvents() {
     // Mobile Drawer Toggle (identical to Student Dashboard & Attendance)
-    const toggleBtn = document.getElementById("mobileMenuToggle");
-    const sidebar = document.getElementById("dashboardSidebar");
-    const backdrop = document.getElementById("sidebarBackdrop");
+    const toggleBtn = document.getElementById("mobileMenuToggle") || document.getElementById("hamburger-btn");
+    const sidebar = document.getElementById("dashboardSidebar") || document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebarBackdrop") || document.getElementById("sidebar-overlay");
+    const closeBtn = document.getElementById("sidebar-close-btn");
+
+    const closeSidebarDrawer = () => {
+      if (sidebar) {
+        sidebar.classList.remove("drawer-open");
+        sidebar.classList.remove("open");
+      }
+      if (backdrop) {
+        backdrop.classList.remove("active");
+        backdrop.classList.remove("open");
+      }
+      document.body.style.overflow = "";
+    };
+
+    const openSidebarDrawer = () => {
+      if (sidebar) {
+        sidebar.classList.add("drawer-open");
+        sidebar.classList.add("open");
+      }
+      if (backdrop) {
+        backdrop.classList.add("active");
+        backdrop.classList.add("open");
+      }
+      document.body.style.overflow = "hidden";
+    };
 
     if (toggleBtn && sidebar) {
       toggleBtn.addEventListener("click", () => {
-        const isOpen = sidebar.classList.contains("drawer-open");
+        const isOpen = sidebar.classList.contains("drawer-open") || sidebar.classList.contains("open");
         if (isOpen) {
-          sidebar.classList.remove("drawer-open");
-          if (backdrop) backdrop.classList.remove("active");
-          document.body.style.overflow = "";
+          closeSidebarDrawer();
         } else {
-          sidebar.classList.add("drawer-open");
-          if (backdrop) backdrop.classList.add("active");
-          document.body.style.overflow = "hidden";
+          openSidebarDrawer();
         }
       });
+    }
 
-      if (backdrop) {
-        backdrop.addEventListener("click", () => {
-          sidebar.classList.remove("drawer-open");
-          backdrop.classList.remove("active");
-          document.body.style.overflow = "";
-        });
-      }
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeSidebarDrawer);
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener("click", closeSidebarDrawer);
     }
 
     // Profile Dropdown Toggle
@@ -299,7 +326,14 @@ const StudentTimetableApp = {
       });
     }
 
-    // Live Window Focus Synchronization with Teacher Portal
+    // Live Cross-Tab & Window Focus Synchronization with Teacher Portal
+    window.addEventListener("storage", async (e) => {
+      if (e.key === "ssgmce_scheduled_tests") {
+        await this.loadTests();
+        this.renderTimetableView();
+      }
+    });
+
     window.addEventListener("tests:updated", async () => {
       await this.loadTests();
       this.renderTimetableView();
@@ -453,10 +487,15 @@ const StudentTimetableApp = {
       return { status: "Upcoming", badgeClass: "status-upcoming", label: "Upcoming" };
     }
 
-    const now = new Date();
+    const now = this.getServerNow();
     const [year, month, day] = test.date.split("-").map(Number);
-    const [startH, startM] = test.start.split(":").map(Number);
-    const [endH, endM] = test.end.split(":").map(Number);
+    const startMins = this.timeToMinutes(test.start);
+    const endMins = this.timeToMinutes(test.end);
+
+    const startH = Math.floor(startMins / 60);
+    const startM = startMins % 60;
+    const endH = Math.floor(endMins / 60);
+    const endM = endMins % 60;
 
     const startDateTime = new Date(year, month - 1, day, startH, startM, 0);
     const endDateTime = new Date(year, month - 1, day, endH, endM, 0);
@@ -470,7 +509,7 @@ const StudentTimetableApp = {
         label: "Upcoming",
         caption: `Starts at ${start12}`
       };
-    } else if (now >= startDateTime && now <= endDateTime) {
+    } else if (now >= startDateTime && now < endDateTime) {
       return {
         status: "Live",
         badgeClass: "status-live",
@@ -485,6 +524,94 @@ const StudentTimetableApp = {
         caption: "Submission Closed"
       };
     }
+  },
+
+  // ----------------------------------------------------
+  // REAL-TIME SUPABASE SUBSCRIPTION & LIVE STATUS TICKER
+  // ----------------------------------------------------
+  async initRealtimeSubscription() {
+    try {
+      const getClient = window.getSupabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient : null);
+      const client = getClient ? await getClient() : (window.supabaseClient || null);
+
+      if (!client) {
+        console.warn("[StudentTimetable] Supabase client initialization in progress or offline fallback.");
+        return;
+      }
+
+      if (this.realtimeChannel) {
+        try { client.removeChannel(this.realtimeChannel); } catch (_) {}
+      }
+
+      const rawClass = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode || '2R1')) || '2R1';
+      const studentClass = rawClass.trim().toLowerCase();
+
+      this.realtimeChannel = client
+        .channel('realtime:student_timetable_assessments')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'timetable_assessments' }, async (payload) => {
+          console.log('[StudentTimetable Realtime Event]', payload.eventType, payload);
+          const record = payload.new || payload.old || {};
+          const tid = String(record.id || '');
+
+          // Strictly ignore permanent quizzes or non-scheduled records
+          if (!tid.startsWith('test-')) return;
+
+          const targetClass = (record.class_code || '').trim().toLowerCase();
+          
+          // Section match with token isolation
+          const isTargeted = (() => {
+            if (!targetClass || targetClass === 'all' || targetClass === 'any' || targetClass === 'global') return true;
+            if (targetClass === studentClass) return true;
+            const extractToken = (s) => (s.match(/[1-4][a-z][1-2]?/g) || []);
+            const tTokens = extractToken(targetClass);
+            const sTokens = extractToken(studentClass);
+            if (tTokens.length > 0 && sTokens.length > 0) {
+              return tTokens.some(t => sTokens.includes(t));
+            }
+            return targetClass.includes(studentClass) || studentClass.includes(targetClass);
+          })();
+
+          if (payload.eventType === 'DELETE') {
+            this.tests = this.tests.filter(t => t.id !== record.id);
+            this.renderTimetableView();
+            this.initLucideIcons();
+            return;
+          }
+
+          if (!isTargeted) return;
+
+          // Re-fetch tests with authoritative server URLs & re-render
+          await this.loadTests();
+          this.renderTimetableView();
+          this.initLucideIcons();
+        })
+        .subscribe((status) => {
+          console.info('[StudentTimetable Realtime] Channel status:', status);
+        });
+    } catch (err) {
+      console.warn('[StudentTimetable Realtime] Subscription note:', err);
+    }
+  },
+
+  startLiveStatusTicker() {
+    if (this._tickerInterval) clearInterval(this._tickerInterval);
+    this._tickerInterval = setInterval(async () => {
+      let needsRefresh = false;
+      for (const t of this.tests) {
+        const oldStatus = t._lastStatus;
+        const currentStatus = this.getTestStatus(t).status;
+        if (oldStatus && oldStatus !== currentStatus) {
+          needsRefresh = true;
+          break;
+        }
+        t._lastStatus = currentStatus;
+      }
+      if (needsRefresh) {
+        await this.loadTests();
+        this.renderTimetableView();
+        this.initLucideIcons();
+      }
+    }, 10000);
   },
 
   // ----------------------------------------------------
@@ -518,6 +645,8 @@ const StudentTimetableApp = {
 
     // Student launch action button based on test type and live status
     let actionBtnHTML = "";
+    let linkRowHTML = "";
+
     if (statusObj.status === "Ended") {
       actionBtnHTML = `
         <button type="button" class="btn-test-action disabled" disabled aria-disabled="true">
@@ -525,7 +654,12 @@ const StudentTimetableApp = {
           <span>Assessment Closed</span>
         </button>
       `;
-    } else if (statusObj.status === "Live") {
+      linkRowHTML = `
+        <span class="detail-val text-muted" style="font-size:13px;">
+          <em>Assessment closed</em>
+        </span>
+      `;
+    } else if (statusObj.status === "Live" && test.link) {
       let actionLabel = "Start Assessment";
       if (test.type === "Quiz") actionLabel = "Start Quiz";
       else if (test.type === "Assignment") actionLabel = "Submit Assignment";
@@ -537,12 +671,24 @@ const StudentTimetableApp = {
           <span>${actionLabel}</span>
         </a>
       `;
+      linkRowHTML = `
+        <span class="detail-val">
+          <a href="${test.link}" target="_blank" rel="noopener noreferrer" class="test-external-link">
+            ${test.link}
+          </a>
+        </span>
+      `;
     } else {
       actionBtnHTML = `
         <button type="button" class="btn-test-action upcoming" disabled aria-disabled="true">
           <i data-lucide="clock" style="width:15px;height:15px;"></i>
           <span>${statusObj.caption || "Upcoming Assessment"}</span>
         </button>
+      `;
+      linkRowHTML = `
+        <span class="detail-val text-muted" style="font-size:13px;">
+          <em>Link unlocks at exact scheduled start time (${start12})</em>
+        </span>
       `;
     }
 
@@ -581,11 +727,7 @@ const StudentTimetableApp = {
           </div>
           <div class="detail-row link-row">
             <span class="detail-label"><i data-lucide="link-2" style="width:14px;height:14px;"></i> Portal Link:</span>
-            <span class="detail-val">
-              <a href="${test.link}" target="_blank" rel="noopener noreferrer" class="test-external-link">
-                ${test.link}
-              </a>
-            </span>
+            ${linkRowHTML}
           </div>
         </div>
 
@@ -651,9 +793,56 @@ const StudentTimetableApp = {
     const isToday = (selectedDate === todayISO);
     const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
 
-    // Regular schedule data (from real backend database if available)
-    const daysList = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    let timetableData = [];
+    // Default 4-Slot Student Schedule (CSE 2R1)
+    const defaultStudentTimetable = [
+      {
+        day: "Monday",
+        slots: [
+          "Operating Systems (LH-301)",
+          "Data Structures & Algorithms (LH-204)",
+          "Database Management Systems (LH-112)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Tuesday",
+        slots: [
+          "Java Programming & OOP (LH-201)",
+          "Computer Networks (LH-108)",
+          "Data Structures (LH-204)",
+          "Java Lab (Batch 2R1) (Adv Systems Lab 3)"
+        ]
+      },
+      {
+        day: "Wednesday",
+        slots: [
+          "Database Management Systems (LH-112)",
+          "Operating Systems (LH-301)",
+          "Java Programming (LH-201)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Thursday",
+        slots: [
+          "Data Structures (LH-204)",
+          "Java Programming Lab (Adv Systems Lab 3)",
+          "Database Systems (LH-112)",
+          "Computer Networks (LH-108)"
+        ]
+      },
+      {
+        day: "Friday",
+        slots: [
+          "Operating Systems (LH-301)",
+          "Data Structures (LH-204)",
+          "Java Programming (LH-201)",
+          "OS Linux Kernel Lab (Systems Lab 1)"
+        ]
+      }
+    ];
+
+    let timetableData = defaultStudentTimetable;
 
     if (this.timetableEntries && this.timetableEntries.length > 0) {
       timetableData = daysList.map(dayName => {
@@ -677,11 +866,6 @@ const StudentTimetableApp = {
         }
         return { day: dayName, slots };
       });
-    } else {
-      timetableData = daysOfWeek.map(day => ({
-        day: day,
-        slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot"]
-      }));
     }
 
     // Helper: Parse slot text into lecture/lab details
@@ -1002,7 +1186,11 @@ const StudentTimetableApp = {
 // Global expose
 window.StudentTimetableApp = StudentTimetableApp;
 
-// Auto initialize on DOM load
-document.addEventListener("DOMContentLoaded", () => {
+// Auto initialize on DOM load or immediately if already ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    StudentTimetableApp.init();
+  });
+} else {
   StudentTimetableApp.init();
-});
+}

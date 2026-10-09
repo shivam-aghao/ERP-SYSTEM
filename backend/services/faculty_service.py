@@ -86,12 +86,17 @@ class FacultyService:
         if not teacher:
             return None
         tid = teacher["id"]
+        valid_cols = {"full_name", "email", "phone", "designation", "avatar", "password"}
         for k, v in updates.items():
-            if v is not None and k not in ("id", "emp_code"):
+            if v is not None and k in valid_cols:
                 db.execute(text(f"UPDATE teachers SET {k} = :val WHERE id = :id"), {"val": v, "id": tid})
         db.commit()
         upd = db.execute(text("SELECT t.*, d.name as department_name FROM teachers t LEFT JOIN departments d ON t.department_id = d.id WHERE t.id = :id"), {"id": tid}).fetchone()
         return dict(upd._mapping) if upd else None
+
+    @staticmethod
+    def get_timetable(db: Session, teacher_identifier: Optional[str] = None) -> Dict[str, Any]:
+        return FacultyService.get_personal_timetable(teacher_identifier, db)
 
     @staticmethod
     def get_all_teachers(db: Session) -> List[Dict[str, Any]]:

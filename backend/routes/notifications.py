@@ -66,6 +66,8 @@ ws_hub = WebSocketNotificationHub()
 # REST ENDPOINTS
 # -----------------------------------------------------------------------------
 
+@router.get("")
+@router.get("/")
 @router.get("/list")
 @router.get("/my")
 def get_user_notifications(
@@ -127,6 +129,8 @@ def get_unread_count(user_id: Optional[str] = Query(None, alias="user_id")):
     return success_response(counts, "Unread count retrieved")
 
 
+@router.post("/{notification_id}/read")
+@router.patch("/{notification_id}/read")
 @router.post("/mark-read/{notification_id}")
 def mark_notification_read(
     notification_id: str,
@@ -160,6 +164,8 @@ def dismiss_notification(
     return success_response({"success": res, "notification_id": notification_id}, "Notification dismissed")
 
 
+@router.post("")
+@router.post("/")
 @router.post("/create")
 async def create_notification(
     payload: Dict[str, Any] = Body(...),

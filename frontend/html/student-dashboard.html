@@ -1521,40 +1521,58 @@
             <div class="exam-marks-banner" id="modalExamMarksBanner">
               <div class="marks-stat">
                 <span class="ms-lbl">Current Semester SGPA</span>
-                <span class="ms-val text-primary">9.25</span>
+                <span class="ms-val text-primary" id="examBannerSGPA">9.25</span>
               </div>
               <div class="marks-stat">
                 <span class="ms-lbl">Cumulative CGPA</span>
-                <span class="ms-val text-success">8.87</span>
+                <span class="ms-val text-success" id="examBannerCGPA">8.87</span>
               </div>
               <div class="marks-stat">
                 <span class="ms-lbl">Total Credits Earned</span>
-                <span class="ms-val text-accent">134 / 134</span>
+                <span class="ms-val text-accent" id="examBannerCredits">134 / 134</span>
               </div>
               <div class="marks-stat">
                 <span class="ms-lbl">Active Backlogs</span>
-                <span class="ms-val text-success">0 (Clear)</span>
+                <span class="ms-val text-success" id="examBannerBacklogs">0 (Clear)</span>
               </div>
             </div>
-            <div class="pane-section-header" style="display:flex; justify-content:space-between; align-items:center;">
-              <h4>Semester V Autonomous Examination Results</h4>
+            <div class="pane-section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <h4 id="modalExamSemesterTitle">Semester V Autonomous Examination Results</h4>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <label for="modalExamSemesterSelect" style="font-size:12px; font-weight:600; color:var(--text-muted);">Semester:</label>
+                  <select id="modalExamSemesterSelect" style="padding:4px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:600; background:#fff;" onchange="loadStudentExaminationData(this.value)">
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="4">Semester 4</option>
+                    <option value="5" selected>Semester 5</option>
+                    <option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option>
+                    <option value="8">Semester 8</option>
+                  </select>
+                </div>
+              </div>
               <span class="badge badge-cyan" id="modalExamResultBadge">Result Published ✓</span>
+            </div>
+            <div id="modalExamWithheldNotice" style="display:none; padding:16px; margin-bottom:16px; background:#fffbeb; border:1px solid #fef3c7; border-radius:8px; color:#b45309; font-size:13px;">
+              <strong>⚠️ Results Under Evaluation:</strong> Results for this semester have not yet been officially declared by the Autonomous Examination Cell.
             </div>
             <div class="table-responsive-wrapper">
               <table class="attendance-data-table">
                 <thead>
                   <tr>
                     <th>Subject Code &amp; Title</th>
-                    <th>Course Type</th>
                     <th>Credits</th>
                     <th>Internal CIE (30)</th>
                     <th>End-Sem ESE (70)</th>
                     <th>Total Marks (100)</th>
-                    <th>Grade</th>
+                    <th>Grade &amp; GP</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="modalExamMarksTableBody">
-                  <!-- Dynamically populated from /api/v1/student/examination -->
+                  <!-- Dynamically populated from /api/v1/results/student -->
                 </tbody>
               </table>
             </div>
@@ -1567,18 +1585,11 @@
               <p>Revaluation Fee: ₹300 per subject • Max 2 subjects per student per semester.</p>
               <form class="academic-form" onsubmit="handleRevaluationSubmit(event)">
                 <div class="subject-select-list" id="modalRevalSubjectList">
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS501" onchange="calculateRevalFee()">
-                    <span><strong>CS501 Database Management Systems</strong> • Grade: A+ (Fee: ₹300)</span>
-                  </label>
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS502" onchange="calculateRevalFee()">
-                    <span><strong>CS502 Computer Networks &amp; Protocols</strong> • Grade: O (Fee: ₹300)</span>
-                  </label>
-                  <label class="reval-check-label">
-                    <input type="checkbox" name="revalSubject" value="CS503" onchange="calculateRevalFee()">
-                    <span><strong>CS503 Theory of Computation</strong> • Grade: A (Fee: ₹300)</span>
-                  </label>
+                  <div style="padding:16px; text-align:center; color:var(--text-muted);">Loading eligible courses from published result...</div>
+                </div>
+                <div style="margin: 12px 0;">
+                  <label style="font-size:12px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Grounds for Revaluation / Verification:</label>
+                  <input type="text" id="revalReasonInput" class="form-control" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" placeholder="e.g. Expected higher marks in Section B; answer script verification requested" value="Answer script verification and re-totaling">
                 </div>
                 <div class="reval-total-box">
                   <span>Selected Subjects Fee:</span>
@@ -1588,6 +1599,14 @@
                   Submit Revaluation Application &rarr;
                 </button>
               </form>
+
+              <!-- Live Revaluation Applications Tracking -->
+              <div class="reval-status-container" style="margin-top:24px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                <h5 style="font-size:14px; font-weight:700; color:var(--dark-navy); margin-bottom:10px;">Your Revaluation Applications &amp; Status</h5>
+                <div id="modalRevalHistoryList" style="font-size:13px;">
+                  <div class="text-muted" style="text-align:center; padding:12px;">No active revaluation applications found.</div>
+                </div>
+              </div>
             </div>
           </div>
 
