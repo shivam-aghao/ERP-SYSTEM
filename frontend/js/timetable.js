@@ -47,9 +47,6 @@
     },
 
     /**
-<<<<<<< HEAD
-     * Fetch live timetable from Supabase Cloud or backend API
-=======
      * Load scheduled tests from cache or mock data
      */
     loadScheduledTests() {
@@ -168,36 +165,13 @@
 
     /**
      * Fetch live timetable from backend API if available
->>>>>>> origin/main
      */
     async loadLiveTimetableIfPossible() {
-      const activeCode = (typeof TeacherERPData !== 'undefined' && TeacherERPData.getActiveTeacherEmpCode)
-        ? TeacherERPData.getActiveTeacherEmpCode()
-        : 'EMP-CSE-1001';
-
-      // 1. Direct Supabase Query
-      if (typeof window !== 'undefined' && window.supabaseClient) {
-        try {
-          const { data, error } = await window.supabaseClient
-            .from('timetable_entries')
-            .select('*')
-            .eq('emp_code', activeCode)
-            .order('slot_index', { ascending: true });
-
-          if (!error && data && data.length > 0) {
-            this.buildTimetableFromSupabase(data);
-            this.liveDataLoaded = true;
-            this.render("timetable-content");
-            return;
-          }
-        } catch (sbErr) {
-          console.warn("[TimetableModule] Supabase fetch notice:", sbErr);
-        }
-      }
-
-      // 2. Fallback to TeacherAPI
       if (typeof window !== 'undefined' && window.TeacherAPI && typeof window.TeacherAPI.getMyTimetable === 'function') {
         try {
+          const activeCode = (typeof TeacherERPData !== 'undefined' && TeacherERPData.getActiveTeacherEmpCode)
+            ? TeacherERPData.getActiveTeacherEmpCode()
+            : 'EMP-CSE-1001';
           const liveData = await window.TeacherAPI.getMyTimetable(activeCode);
           if (liveData && liveData.grid && liveData.grid.length > 0) {
             this.liveData = liveData;
@@ -207,27 +181,6 @@
         } catch (e) {
           console.warn("[TimetableModule] Using high-fidelity offline PDF data:", e.message);
         }
-      }
-    },
-
-    buildTimetableFromSupabase(entries) {
-      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-      const grid = days.map(dayName => {
-        const dayEntries = entries.filter(e => (e.day || "").toLowerCase() === dayName.toLowerCase());
-        const slots = ["Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot"];
-        dayEntries.forEach(entry => {
-          const idx = (entry.slot_index ? entry.slot_index - 1 : 0);
-          if (idx >= 0 && idx < 6) {
-            const course = entry.course_name || entry.subject_abbr || entry.course_code || "Lecture";
-            const room = entry.venue || "B108";
-            const batch = entry.batch ? ` (Batch ${entry.batch})` : "";
-            slots[idx] = `${course}${batch} (${room})`;
-          }
-        });
-        return { day: dayName, slots: slots.slice(0, 6) };
-      });
-      if (typeof TeacherERPData !== 'undefined') {
-        TeacherERPData.timetable = grid;
       }
     },
 
@@ -292,45 +245,15 @@
      * Determine class code from subject name
      */
     getClassCodeForSubject(subjectName) {
-      if (!subjectName) return '3R';
-      const s = subjectName.toUpperCase();
-      if (s.includes('CC') || s.includes('CLOUD') || s.includes('4R') || s.includes('CG') || s.includes('BF') || s.includes('DWM') || s.includes('SSEE') || s.includes('DF')) return '4R';
-      if (s.includes('DBMS') || s.includes('DATABASE') || s.includes('3R') || s.includes('CD') || s.includes('MDM') || s.includes('CA&O') || s.includes('WT') || s.includes('ICS') || s.includes('DSS')) return '3R';
-      if (s.includes('2R2')) return '2R2';
-      if (s.includes('2R1') || s.includes('OOP') || s.includes('DS') || s.includes('DATA STRUCTURES') || s.includes('CEP')) return '2R1';
-      return '3R';
+      if (!subjectName) return '2R1';
+      if (subjectName.includes('2R2')) return '2R2';
+      if (subjectName.includes('2R1')) return '2R1';
+      if (subjectName.includes('3R') || subjectName.includes('DBMS') || subjectName.includes('CD') || subjectName.includes('MDM#')) return '3R';
+      if (subjectName.includes('4R') || subjectName.includes('CG') || subjectName.includes('BF') || subjectName.includes('CC') || subjectName.includes('DWM')) return '4R';
+      return '2R1';
     },
 
     /**
-<<<<<<< HEAD
-     * Extract batch identifier from subject slot string (e.g. Batch A, Batch B, Batch C, Batch D)
-     */
-    getBatchForSubject(slot) {
-      if (!slot) return null;
-      const m = slot.match(/Batch\s*([A-D0-9]+)/i);
-      return m ? m[1].toUpperCase() : null;
-    },
-
-    /**
-     * Slot click handler - directly opens existing Attendance module with lecture context
-     */
-    handleSlotClick(subjectName, roomPart, timeSlotHeader, classCode, selectedDate, batch) {
-      const params = {
-        classCode: classCode,
-        subject: subjectName,
-        room: roomPart,
-        timeSlot: timeSlotHeader,
-        date: selectedDate,
-        batch: batch
-      };
-
-      if (typeof window !== 'undefined' && window.TeacherApp && typeof window.TeacherApp.navigateToAttendance === 'function') {
-        window.TeacherApp.navigateToAttendance(params);
-      } else if (typeof window !== 'undefined' && window.parent && window.parent.TeacherApp && typeof window.parent.TeacherApp.navigateToAttendance === 'function') {
-        window.parent.TeacherApp.navigateToAttendance(params);
-      } else if (typeof window !== 'undefined' && window.TeacherApp && typeof window.TeacherApp.openAttendanceForClass === 'function') {
-        window.TeacherApp.openAttendanceForClass(classCode, subjectName);
-=======
      * Check if session has been marked (synced with AttendanceMarkingManager & localStorage)
      */
     isSessionMarked(sessionKey) {
@@ -479,7 +402,6 @@
         window.AttendanceMarkingManager.openFromSlot(subjectName, roomPart, timeSlotHeader, classCode, selectedDate);
       } else if (typeof window !== 'undefined' && window.TeacherApp && typeof window.TeacherApp.showToast === 'function') {
         window.TeacherApp.showToast(`Selected: ${subjectName} (${classCode}) on ${selectedDate}`);
->>>>>>> origin/main
       }
     },
 
@@ -499,42 +421,36 @@
       const isWeekend = (currentDayName === "Saturday" || currentDayName === "Sunday");
       const term = this.activeTerm || ((typeof AcademicDateUtils !== 'undefined') ? AcademicDateUtils.getCurrentAcademicTerm() : { academicYear: "2026-2027", semesterType: "Odd" });
 
-<<<<<<< HEAD
-      // Dynamic schedule rows with empty day slot defaults
-      const timetableData = (typeof TeacherERPData !== 'undefined' && TeacherERPData.timetable && TeacherERPData.timetable.length > 0)
-        ? TeacherERPData.timetable
-        : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(day => ({
-          day: day,
-          slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot"]
-        }));
-=======
       // Resolve Active Faculty details and list for switcher
       const activeEmpCode = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
         ? TeacherERPData.getActiveTeacherEmpCode()
         : 'EMP-CSE-1001';
 
       const facDataMap = (typeof SSGMCE_FACULTY_TIMETABLES !== 'undefined') ? SSGMCE_FACULTY_TIMETABLES : {};
-      const currentFacObj = facDataMap[activeEmpCode] || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty ? {
-        name: TeacherERPData.faculty.name || "Dr. Rohan Deshmukh",
-        empCode: activeEmpCode,
-        title: TeacherERPData.faculty.designation || "Assistant Professor",
-        totalLoad: 16,
-        teaching_load: []
-      } : {
-        name: "Dr. Rohan Deshmukh",
-        empCode: activeEmpCode,
-        title: "Assistant Professor",
-        totalLoad: 16,
-        teaching_load: []
-      });
+      const facMeta = (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.facultyList))
+        ? TeacherERPData.facultyList.find(f => f.empCode === activeEmpCode)
+        : null;
+      const rawFacObj = facDataMap[activeEmpCode] || {};
+      const computedLoad = Array.isArray(rawFacObj.teaching_load)
+        ? rawFacObj.teaching_load.reduce((sum, item) => sum + Number(item.theory || 0) + Number(item.practical || 0), 0)
+        : 0;
+      const currentFacObj = {
+        name: rawFacObj.name || (facMeta && facMeta.name) || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. J. M. Patil",
+        empCode: activeEmpCode || "EMP-CSE-1001",
+        title: rawFacObj.title || (facMeta && facMeta.title) || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty && TeacherERPData.faculty.title) || "Assistant Professor",
+        totalLoad: rawFacObj.totalLoad || (facMeta && facMeta.totalLoad) || computedLoad || 16,
+        teaching_load: rawFacObj.teaching_load || []
+      };
 
-      const facList = Object.keys(facDataMap).length > 0
-        ? Object.entries(facDataMap).map(([code, f]) => ({
-            empCode: code,
-            name: f.name || code,
-            totalLoad: f.totalLoad || 16
-          }))
-        : [{ empCode: activeEmpCode, name: currentFacObj.name, totalLoad: currentFacObj.totalLoad || 16 }];
+      const facList = (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.facultyList) && TeacherERPData.facultyList.length > 0)
+        ? TeacherERPData.facultyList
+        : (Object.keys(facDataMap).length > 0
+          ? Object.entries(facDataMap).map(([code, f]) => ({
+              empCode: code,
+              name: f.name || code,
+              totalLoad: f.totalLoad || 16
+            }))
+          : [{ empCode: activeEmpCode, name: currentFacObj.name, totalLoad: currentFacObj.totalLoad || 16 }]);
 
       const teachingLoad = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTeachingLoadForTeacher === 'function')
         ? TeacherERPData.getTeachingLoadForTeacher(activeEmpCode)
@@ -549,23 +465,6 @@
             day: day,
             slots: ["Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot"]
           })));
->>>>>>> origin/main
-
-      const activeEmpCode = (typeof TeacherERPData !== 'undefined' && TeacherERPData.getActiveTeacherEmpCode)
-        ? TeacherERPData.getActiveTeacherEmpCode()
-        : 'EMP-CSE-1001';
-      const facList = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
-        ? TeacherERPData.facultyList
-        : [{ empCode: "EMP-CSE-1001", name: "Prof. J. M. Patil", title: "Head Of Department", totalLoad: 12 }];
-      const currentFacObj = facList.find(f => f.empCode === activeEmpCode) || facList[0] || {
-        empCode: "EMP-CSE-1001",
-        name: "Prof. J. M. Patil",
-        title: "Head Of Department",
-        totalLoad: 12
-      };
-      const teachingLoad = (typeof TeacherERPData !== 'undefined' && TeacherERPData.teachingLoad)
-        ? (TeacherERPData.teachingLoad[activeEmpCode] || [])
-        : [];
 
       return `
       <div class="timetable-grid-card">
@@ -576,7 +475,7 @@
               ${currentFacObj.name.split('. ').pop().charAt(0) || 'F'}
             </div>
             <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff;">${currentFacObj.name}</h4>
                 <span style="background: #10B981; color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600;">${currentFacObj.empCode}</span>
                 <span style="background: rgba(255,255,255,0.2); color: #E0F2FE; font-size: 11px; padding: 2px 7px; border-radius: 4px;">${currentFacObj.title}</span>
@@ -587,12 +486,17 @@
             </div>
           </div>
 
-          <!-- Faculty Personal View Badge -->
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-              <i data-lucide="shield-check" style="width:14px;height:14px;color:#34D399;"></i>
-              Personal Timetable &bull; ${activeEmpCode}
-            </span>
+          <!-- Faculty Switcher & Dedicated View Controls -->
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <select aria-label="Switch Faculty Timetable"
+                    onchange="TimetableModule.switchFaculty(this.value)"
+                    style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
+              ${facList.map(f => `<option value="${f.empCode}" style="color:#0B1F3A; background:#fff;" ${f.empCode === activeEmpCode ? 'selected' : ''}>${f.name} (${f.empCode})</option>`).join('')}
+            </select>
+            <a href="teacher-timetable.html" style="background: #FFFFFF; color: #0B1F3A; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+              <i data-lucide="external-link" style="width:13px;height:13px;color:#0B5CAD;"></i>
+              <span>Official View</span>
+            </a>
           </div>
         </div>
 
@@ -738,22 +642,6 @@
                     if (isOff) {
                       return `<td style="color:var(--text-light, #94A3B8); font-size:12px; font-style:italic; background:#FAFAFA; text-align:center;">Off / Prep</td>`;
                     }
-<<<<<<< HEAD
-                    const isLab = slot.toLowerCase().includes("lab") || slot.toLowerCase().includes("cep") || slot.toLowerCase().includes("mdm");
-                    const timeSlotHeader = this.timeHeaders[slotIndex + 1] || "11:00 - 12:00 PM";
-                    const batch = this.getBatchForSubject(slot);
-                    const classCode = this.getClassCodeForSubject(slot);
-
-                    // Cleanly parse roomPart from final parenthesis and extract subject title
-                    let subjectName = slot;
-                    let roomPart = 'B108';
-                    const matches = [...slot.matchAll(/\(([^)]+)\)/g)];
-                    if (matches.length > 0) {
-                      const lastMatch = matches[matches.length - 1];
-                      roomPart = lastMatch[1].trim();
-                      subjectName = slot.substring(0, lastMatch.index).trim();
-                    }
-=======
                     const rawSubject = isObj ? slot.subject : slot.split('(')[0].trim();
                     const subjectName = rawSubject;
                     const roomPart = isObj ? (slot.room || 'Room 201') : (slot.split('(')[1] ? slot.split('(')[1].replace(')', '').trim() : 'B108');
@@ -764,11 +652,9 @@
                     const isFutureSlot = this.isClassInFuture(slotDate, timeSlotHeader);
                     const sessionKey = `${slotDate}_${classCode}_${subjectName}`;
                     const isMarked = isObj ? Boolean(slot.isMarked || this.isSessionMarked(sessionKey)) : this.isSessionMarked(sessionKey);
->>>>>>> origin/main
 
                     const safeSubject = subjectName.replace(/'/g, "\\'");
                     const safeRoom = roomPart.replace(/'/g, "\\'");
-                    const safeBatch = (batch || '').replace(/'/g, "\\'");
 
                     // Leave & Engagement Checks
                     const engRecord = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getClassEngagement === 'function')
@@ -886,19 +772,6 @@
                     // Default for past/active today session not yet marked: PENDING
                     return `
                       <td>
-<<<<<<< HEAD
-                        <div class="timetable-slot ${isLab ? 'lab' : ''} ${isHighlightRow ? 'active-slot' : ''} slot-clickable"
-                             onclick="TimetableModule.handleSlotClick('${safeSubject}', '${safeRoom}', '${timeSlotHeader}', '${classCode}', '${selectedDate}', '${safeBatch}')"
-                             style="cursor: pointer;"
-                             title="Click to open ${classCode} ${subjectName} swipe deck in Attendance module">
-                          <div class="slot-sub" style="display:flex; align-items:center; justify-content:space-between; gap:4px;">
-                            <span>${subjectName}</span>
-                            <span class="slot-class" style="font-weight:700; font-size:11px; color:#0B5CAD;">${classCode}</span>
-                          </div>
-                          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:3px;">
-                            <div class="slot-room">(${roomPart})</div>
-                            ${batch ? `<span style="font-weight:600; font-size:11px; color:#047857; background:#ECFDF5; padding:1px 6px; border-radius:4px;">Batch ${batch}</span>` : ''}
-=======
                         <div class="timetable-slot ${isLab ? 'lab' : ''} slot-pending slot-clickable"
                              onclick="TimetableModule.handleSlotClick('${safeSubject}', '${safeRoom}', '${timeSlotHeader}', '${classCode}', '${slotDate}')"
                              title="Attendance pending! Click to mark attendance immediately."
@@ -914,7 +787,6 @@
                           <div style="margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-size:10px; color:#B45309; font-weight:700;">Click to Mark</span>
                             <span style="font-size:10.5px; font-weight:800; color:#D97706;">Mark &rarr;</span>
->>>>>>> origin/main
                           </div>
                         </div>
                       </td>
@@ -939,10 +811,6 @@
               <span>Practical / Lab / Project</span>
             </div>
             <div class="legend-item">
-<<<<<<< HEAD
-              <span class="legend-swatch future"></span>
-              <span>Click Slot &rarr; Mark Attendance</span>
-=======
               <span class="legend-swatch" style="background:#FEFCE8; border:1px solid #FDE047; border-left:3px solid #F59E0B; width:12px; height:12px; border-radius:3px; display:inline-block;"></span>
               <span style="font-weight:600; color:#854D0E;">Attendance Pending</span>
             </div>
@@ -965,7 +833,6 @@
             <div class="legend-item">
               <span class="legend-swatch" style="background:#F8FAFC; border:1px solid #E2E8F0; border-left:3px solid #94A3B8; width:12px; height:12px; border-radius:3px; display:inline-block;"></span>
               <span style="color:#64748B;">Upcoming (Future)</span>
->>>>>>> origin/main
             </div>
           </div>
 
@@ -1641,11 +1508,15 @@
   // Expose TimetableModule globally
   global.TimetableModule = TimetableModule;
 
-  // Auto-bind to TeacherApp when script evaluates
+  // Auto-initialize and bind to TeacherApp when script evaluates
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    window.addEventListener('DOMContentLoaded', () => {
-      TimetableModule.attachGlobalBridge();
-    });
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', () => {
+        TimetableModule.init("timetable-content");
+      });
+    } else {
+      TimetableModule.init("timetable-content");
+    }
   }
 
 })(typeof window !== 'undefined' ? window : this);
