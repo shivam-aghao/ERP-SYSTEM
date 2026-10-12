@@ -4,6 +4,7 @@
 
 const TeacherApp = {
   currentView: 'dashboard',
+  selectedSyllabusSubjectId: null,
 
   init() {
     // 1. Immediately test and display backend connection status
@@ -733,22 +734,36 @@ const TeacherApp = {
         setHeaderBadge("Academics Hub");
         break;
       case 'attendance':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        if (!preserveFrame) {
-          this.initIntegratedAttendance(subView);
+        // Requirement: Timetable is the single entry point for student attendance marking
+        this.switchView('timetable');
+        if (typeof this.showToast === 'function') {
+          this.showToast('📅 Timetable is your Attendance Hub. Click any subject block to mark attendance.', 'info');
         }
         break;
-      case 'attendance-mark':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        this.switchAttendanceSubView('marking');
+      case 'attendance-mark': {
+        const markPage = document.getElementById("attendance-marking-page");
+        if (markPage) {
+          markPage.style.display = "block";
+          markPage.classList.add("active");
+        } else {
+          const mod = document.getElementById("attendance-module");
+          if (mod) mod.style.display = "block";
+        }
+        setHeaderBadge("Mark Attendance");
         break;
-      case 'attendance-roster':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        this.switchAttendanceSubView('roster');
+      }
+      case 'attendance-roster': {
+        const markPage = document.getElementById("attendance-marking-page");
+        if (markPage) {
+          markPage.style.display = "block";
+          markPage.classList.add("active");
+        }
+        if (window.AttendanceMarkingManager && typeof window.AttendanceMarkingManager.switchTab === 'function') {
+          window.AttendanceMarkingManager.switchTab('roster');
+        }
+        setHeaderBadge("Class Roster");
         break;
+      }
       case 'examination':
         document.getElementById("examination-view").style.display = "block";
         setHeaderBadge("Examinations");
@@ -781,10 +796,18 @@ const TeacherApp = {
         document.getElementById("settings-view").style.display = "block";
         setHeaderBadge("Settings");
         break;
-      case 'timetable':
-        document.getElementById("timetable-view").style.display = "block";
-        setHeaderBadge("Faculty Timetable");
+      case 'timetable': {
+        const ttView = document.getElementById("timetable-view");
+        if (ttView) {
+          ttView.style.display = "block";
+          ttView.classList.add("active");
+        }
+        setHeaderBadge("Personal Timetable");
+        if (typeof this.renderTimetableView === 'function') {
+          this.renderTimetableView();
+        }
         break;
+      }
       case 'classes':
         document.getElementById("classes-view").style.display = "block";
         setHeaderBadge("Assigned Classes");
@@ -796,6 +819,7 @@ const TeacherApp = {
       case 'syllabus':
         document.getElementById("syllabus-view").style.display = "block";
         setHeaderBadge("Syllabus Tracker");
+        this.renderSyllabusView();
         break;
       case 'results':
         document.getElementById("results-view").style.display = "block";
@@ -805,6 +829,16 @@ const TeacherApp = {
         document.getElementById("notifications-view").style.display = "block";
         setHeaderBadge("Notifications");
         break;
+      case 'leave': {
+        const leaveView = document.getElementById("leave-view");
+        if (leaveView) {
+          leaveView.style.display = "block";
+          leaveView.classList.add("active");
+        }
+        setHeaderBadge("Faculty Leave & Substitution");
+        this.renderLeaveView();
+        break;
+      }
       case 'information': {
         const profView = document.getElementById("profile-view");
         if (profView) {
@@ -1509,41 +1543,390 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // SYLLABUS VIEW
+  // DYNAMIC SYLLABUS COVERAGE TRACKING MODULE
   // ----------------------------------------------------
+  selectSyllabusSubject(subjectId) {
+    this.selectedSyllabusSubjectId = subjectId;
+    this.renderSyllabusView();
+  },
+
+  markSyllabusTopic(subjectId, unitId, topicId, count = 1) {
+    const updated = TeacherERPData.markTopicCovered(subjectId, unitId, topicId, count);
+    if (updated) {
+      this.renderSyllabusView();
+      const pct = updated.progress !== undefined ? updated.progress : Math.round((updated.totalLecturesTaken / updated.totalLecturesPlanned) * 100);
+      this.showToast(`Lecture marked as covered (+${count}). Subject coverage: ${pct}%`, 'success');
+    } else {
+      this.showToast('Failed to update syllabus topic.', 'error');
+    }
+  },
+
+  undoSyllabusTopic(subjectId, unitId, topicId, count = 1) {
+    const updated = TeacherERPData.undoTopicCovered(subjectId, unitId, topicId, count);
+    if (updated) {
+      this.renderSyllabusView();
+      const pct = updated.progress !== undefined ? updated.progress : Math.round((updated.totalLecturesTaken / updated.totalLecturesPlanned) * 100);
+      this.showToast(`Topic progress reverted (-${count} lect). Coverage: ${pct}%`, 'info');
+    } else {
+      this.showToast('Failed to revert topic progress.', 'error');
+    }
+  },
+
+  downloadSyllabusReport(subjectId) {
+    const subject = TeacherERPData.getSubjectSyllabus(subjectId);
+    if (!subject) {
+      this.showToast('Unable to export: syllabus not found.', 'error');
+      return;
+    }
+    const pct = subject.progress !== undefined ? subject.progress : Math.round((subject.totalLecturesTaken / subject.totalLecturesPlanned) * 100);
+    const rows = [
+      ["SSGMCE COLLEGE ERP - SYLLABUS COVERAGE & LECTURE TRACKING REPORT"],
+      ["Subject Name", `"${subject.subjectName}"`],
+      ["Subject Code", `"${subject.subjectCode}"`],
+      ["Class / Batch", `"${subject.classId}"`],
+      ["Faculty In-Charge", `"${subject.facultyName}"`],
+      ["Total Planned Lectures", subject.totalLecturesPlanned],
+      ["Total Engaged Lectures", subject.totalLecturesTaken],
+      ["Overall Coverage", `${pct}%`],
+      ["Curriculum Pace", `"${subject.pace || 'On Track'}"`],
+      ["Generated Date", `"${new Date().toLocaleDateString('en-GB')}"`],
+      [],
+      ["Unit Name", "Topic Name", "Topic Description", "No of Lect (Planned)", "Lectures Taken", "Weightage", "Weightage %", "Status"]
+    ];
+
+    (subject.units || []).forEach(unit => {
+      (unit.topics || []).forEach(topic => {
+        const desc = (topic.topicDescription || '').replace(/"/g, '""');
+        rows.push([
+          `"${unit.unitName}"`,
+          `"${topic.topicName}"`,
+          `"${desc}"`,
+          topic.noOfLectures || topic.estimatedLectures || 0,
+          topic.lecturesTaken || 0,
+          topic.weightage || 0,
+          `"${topic.weightagePercent || 0}%"`,
+          `"${topic.status || 'Not Started'}"`
+        ]);
+      });
+    });
+
+    const csvContent = "\uFEFF" + rows.map(r => r.join(",")).join("\r\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Syllabus_Report_${subject.subjectCode || 'SUB'}_${subject.classId || 'CLASS'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    this.showToast(`Syllabus report for ${subject.subjectName} exported!`, 'success');
+  },
+
   renderSyllabusView() {
     const container = document.getElementById("syllabus-content");
     if (!container) return;
 
+    const teacherCode = TeacherERPData.getActiveTeacherEmpCode ? TeacherERPData.getActiveTeacherEmpCode() : 'EMP-CSE-1001';
+    const subjects = TeacherERPData.getSyllabusForTeacher(teacherCode);
+
+    if (!subjects || subjects.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="padding:48px; text-align:center; color:var(--text-muted);">
+          <i data-lucide="book-open" style="width:48px;height:48px;margin-bottom:12px;opacity:0.4;"></i>
+          <h3>No Syllabus Records Available</h3>
+          <p>No active courses or syllabus plans assigned to this faculty profile.</p>
+        </div>
+      `;
+      this.initLucideIcons();
+      return;
+    }
+
+    if (!this.selectedSyllabusSubjectId || !subjects.some(s => s.subjectId === this.selectedSyllabusSubjectId)) {
+      this.selectedSyllabusSubjectId = subjects[0].subjectId;
+    }
+
+    const currentSubject = TeacherERPData.getSubjectSyllabus(this.selectedSyllabusSubjectId) || subjects[0];
+    const pct = currentSubject.progress !== undefined ? currentSubject.progress : Math.round((currentSubject.totalLecturesTaken / currentSubject.totalLecturesPlanned) * 100);
+    const pendingLectures = Math.max(0, currentSubject.totalLecturesPlanned - currentSubject.totalLecturesTaken);
+    const pace = currentSubject.pace || (pct >= 60 ? "Ahead of Schedule" : (pct >= 40 ? "On Track" : "Behind Schedule"));
+    const paceColor = pace === 'Ahead of Schedule' ? '#10B981' : (pace === 'On Track' ? '#0B5CAD' : '#F59E0B');
+    const paceBg = pace === 'Ahead of Schedule' ? '#DCFCE7' : (pace === 'On Track' ? '#EFF6FF' : '#FEF3C7');
+    const estDate = currentSubject.estimatedCompletionDate || "28 Nov 2026";
+
+    // SVG Donut calculation: radius = 42, circumference = 2 * PI * 42 ≈ 263.89
+    const radius = 42;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (circumference * pct / 100);
+    const ringColor = pct >= 70 ? '#10B981' : (pct >= 40 ? '#0B5CAD' : '#F59E0B');
+
     container.innerHTML = `
-      <div class="syllabus-units-grid">
-        ${TeacherERPData.syllabus.map(syl => `
-          <div class="syllabus-unit-card">
-            <div class="syllabus-header-row">
-              <div>
-                <h3 class="unit-title">${syl.subject}</h3>
-                <span style="font-size:12px; color:var(--text-muted); font-weight:500;">Class: ${syl.classCode} • Course Completion</span>
+      <div class="syllabus-view-container">
+        <!-- TOP TOOLBAR & SUBJECT SELECTOR -->
+        <div class="syl-toolbar-card">
+          <div class="syl-title-wrap">
+            <h2>
+              <i data-lucide="book-open-check" style="color:var(--primary); width:24px; height:24px;"></i>
+              Syllabus Coverage Tracking System
+            </h2>
+            <p>Faculty: <strong>${currentSubject.facultyName || 'Faculty'}</strong> • Real-time topic completion, lecture engagement logs & weightage compliance.</p>
+          </div>
+          <div>
+            <button class="syl-btn-export" onclick="TeacherApp.downloadSyllabusReport('${currentSubject.subjectId}')">
+              <i data-lucide="download" style="width:16px;height:16px;"></i> Download Syllabus Report (.csv)
+            </button>
+          </div>
+        </div>
+
+        <!-- MULTI-SUBJECT SELECTOR -->
+        <div>
+          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">
+            Select Teaching Subject / Course:
+          </div>
+          <div class="syl-subject-selector-bar">
+            ${subjects.map(s => {
+              const isActive = s.subjectId === currentSubject.subjectId;
+              const sPct = s.progress !== undefined ? s.progress : Math.round((s.totalLecturesTaken / s.totalLecturesPlanned) * 100);
+              return `
+                <button type="button" class="syl-subject-pill-btn ${isActive ? 'active' : ''}" onclick="TeacherApp.selectSyllabusSubject('${s.subjectId}')">
+                  <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span class="syl-pill-code">${s.subjectCode}</span>
+                    <span style="font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; background:${isActive ? '#DBEAFE' : '#F1F5F9'}; color:${isActive ? '#1D4ED8' : '#475569'};">
+                      ${s.classId}
+                    </span>
+                  </div>
+                  <div class="syl-pill-name">${s.subjectName}</div>
+                  <div class="syl-pill-meta">
+                    <span>${s.totalLecturesTaken}/${s.totalLecturesPlanned} Lect</span>
+                    <strong style="color:${sPct >= 70 ? '#10B981' : (sPct >= 40 ? '#0B5CAD' : '#F59E0B')};">${sPct}%</strong>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- ANALYTICS OVERVIEW (DONUT CHART & KPI STATS) -->
+        <div class="syl-analytics-grid">
+          <!-- DONUT CHART CARD -->
+          <div class="syl-chart-card">
+            <div style="font-size:13px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:0.5px;">
+              Syllabus Coverage
+            </div>
+            <div class="syl-donut-wrapper">
+              <svg width="140" height="140" viewBox="0 0 100 100" style="transform: rotate(-90deg);">
+                <circle cx="50" cy="50" r="${radius}" stroke="#E2E8F0" stroke-width="10" fill="transparent" />
+                <circle cx="50" cy="50" r="${radius}" stroke="${ringColor}" stroke-width="10" fill="transparent"
+                  stroke-dasharray="${circumference}"
+                  stroke-dashoffset="${strokeDashoffset}"
+                  stroke-linecap="round"
+                  style="transition: stroke-dashoffset 0.6s ease;"
+                />
+              </svg>
+              <div class="syl-donut-inner-text">
+                <div class="syl-donut-val">${pct}%</div>
+                <div class="syl-donut-lbl">Completed</div>
               </div>
-              <div class="unit-progress-badge">Overall: ${syl.progress}%</div>
             </div>
-
-            <div class="progress-track" style="height:8px; margin-bottom:18px;">
-              <div class="progress-fill completed" style="width: ${syl.progress}%;"></div>
-            </div>
-
-            <div class="topics-checklist">
-              ${syl.units.map(unit => `
-                <div class="topic-item">
-                  <i data-lucide="${unit.percent === 100 ? 'check-circle' : (unit.percent > 0 ? 'clock' : 'circle')}" 
-                     style="color:${unit.percent === 100 ? 'var(--success)' : (unit.percent > 0 ? 'var(--primary-blue)' : 'var(--text-light)')}; width:16px; height:16px;"></i>
-                  <span>${unit.name} <strong>(${unit.percent}%)</strong></span>
-                </div>
-              `).join('')}
+            <div class="syl-donut-legend">
+              <div class="syl-donut-legend-item">
+                <span class="syl-legend-dot" style="background:${ringColor};"></span>
+                <span>Engaged: <strong>${currentSubject.totalLecturesTaken}</strong></span>
+              </div>
+              <div class="syl-donut-legend-item">
+                <span class="syl-legend-dot" style="background:#CBD5E1;"></span>
+                <span>Pending: <strong>${pendingLectures}</strong></span>
+              </div>
             </div>
           </div>
-        `).join('')}
+
+          <!-- KPI 2x2 GRID -->
+          <div class="syl-kpi-grid">
+            <!-- 1. Lectures Engaged -->
+            <div class="syl-kpi-card">
+              <div class="syl-kpi-top">
+                <span class="syl-kpi-label">Lectures Engaged</span>
+                <div class="syl-kpi-icon-wrap" style="background:#EFF6FF; color:#1D4ED8;">
+                  <i data-lucide="check-circle" style="width:18px;height:18px;"></i>
+                </div>
+              </div>
+              <div class="syl-kpi-val">${currentSubject.totalLecturesTaken} <span style="font-size:14px; font-weight:500; color:var(--text-muted);">/ ${currentSubject.totalLecturesPlanned}</span></div>
+              <div class="syl-kpi-desc">Delivered vs. total planned sessions for semester</div>
+            </div>
+
+            <!-- 2. Pending Lectures -->
+            <div class="syl-kpi-card">
+              <div class="syl-kpi-top">
+                <span class="syl-kpi-label">Pending Lectures</span>
+                <div class="syl-kpi-icon-wrap" style="background:#FEF3C7; color:#B45309;">
+                  <i data-lucide="hourglass" style="width:18px;height:18px;"></i>
+                </div>
+              </div>
+              <div class="syl-kpi-val" style="color:#B45309;">${pendingLectures} <span style="font-size:14px; font-weight:500; color:var(--text-muted);">Sessions</span></div>
+              <div class="syl-kpi-desc">Remaining lectures needed to finish syllabus</div>
+            </div>
+
+            <!-- 3. Curriculum Pace -->
+            <div class="syl-kpi-card">
+              <div class="syl-kpi-top">
+                <span class="syl-kpi-label">Curriculum Pace</span>
+                <div class="syl-kpi-icon-wrap" style="background:#DCFCE7; color:#15803D;">
+                  <i data-lucide="trending-up" style="width:18px;height:18px;"></i>
+                </div>
+              </div>
+              <div>
+                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; background:${paceBg}; color:${paceColor};">
+                  <span style="width:7px; height:7px; border-radius:50%; background:${paceColor};"></span>
+                  ${pace}
+                </span>
+              </div>
+              <div class="syl-kpi-desc" style="margin-top:6px;">Delivery pace vs. academic schedule timeline</div>
+            </div>
+
+            <!-- 4. Estimated Completion -->
+            <div class="syl-kpi-card">
+              <div class="syl-kpi-top">
+                <span class="syl-kpi-label">Est. Completion</span>
+                <div class="syl-kpi-icon-wrap" style="background:#F3E8FF; color:#7E22CE;">
+                  <i data-lucide="calendar" style="width:18px;height:18px;"></i>
+                </div>
+              </div>
+              <div class="syl-kpi-val" style="font-size:20px;">${estDate}</div>
+              <div class="syl-kpi-desc">Forecasted date for 100% syllabus coverage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UNITS & TOPICS TABLES (MATCHING USER'S PDF FORMAT) -->
+        <div class="syl-units-container">
+          <div style="font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="layers" style="width:18px;height:18px; color:var(--primary);"></i>
+            Detailed Unit Modules & Topic-Level Coverage Tracker
+          </div>
+
+          ${(currentSubject.units || []).map((unit, uIdx) => {
+            const unitPlanned = unit.estimatedLectures || unit.topics.reduce((a, t) => a + (t.noOfLectures || t.estimatedLectures || 0), 0);
+            const unitTaken = unit.lecturesTaken || unit.topics.reduce((a, t) => a + (t.lecturesTaken || 0), 0);
+            const unitPct = unitPlanned > 0 ? Math.min(100, Math.round((unitTaken / unitPlanned) * 100)) : 0;
+            const unitWeightage = unit.topics.reduce((a, t) => a + (t.weightage || 0), 0);
+            const unitStatusClass = unit.status === 'Completed' ? 'completed' : (unit.status === 'In Progress' ? 'in-progress' : 'not-started');
+
+            return `
+              <div class="syl-unit-card">
+                <!-- UNIT HEADER -->
+                <div class="syl-unit-head">
+                  <div class="syl-unit-title">
+                    <span class="syl-unit-tag">${unit.unitId || `UNIT-${uIdx+1}`}</span>
+                    <span>${unit.unitName}</span>
+                  </div>
+                  <div class="syl-unit-badges">
+                    <span class="syl-status-pill ${unitStatusClass}">${unit.status || 'Not Started'}</span>
+                    <span style="font-size:12px; font-weight:700; padding:4px 10px; background:#F1F5F9; border-radius:999px; color:var(--navy);">
+                      ${unitTaken}/${unitPlanned} Lect (${unitPct}%)
+                    </span>
+                    <span style="font-size:12px; font-weight:600; padding:4px 10px; background:#EFF6FF; border-radius:999px; color:var(--primary);">
+                      Weightage: ${unitWeightage} Marks
+                    </span>
+                  </div>
+                </div>
+
+                <!-- PROGRESS BAR -->
+                <div class="syl-progress-track">
+                  <div class="syl-progress-fill" style="width: ${unitPct}%;"></div>
+                </div>
+
+                <!-- TOPICS TABLE (EXACT PDF COLUMNS) -->
+                <div class="syl-table-wrap">
+                  <table class="syl-table">
+                    <thead>
+                      <tr>
+                        <th style="width:90px;">Unit Name</th>
+                        <th style="width:190px;">Topic Name</th>
+                        <th>Topic Description</th>
+                        <th style="text-align:center; width:95px;">No of Lect</th>
+                        <th style="text-align:center; width:85px;">Weightage</th>
+                        <th style="text-align:center; width:95px;">Weightage %</th>
+                        <th style="text-align:center; width:135px;">Status</th>
+                        <th style="text-align:right; width:170px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(unit.topics || []).map(topic => {
+                        const planned = topic.noOfLectures || topic.estimatedLectures || 1;
+                        const taken = topic.lecturesTaken || 0;
+                        const isDone = taken >= planned && taken > 0;
+                        const isInProg = taken > 0 && taken < planned;
+                        const statusPillClass = isDone ? 'completed' : (isInProg ? 'in-progress' : 'not-started');
+                        const statusIcon = isDone ? 'check-circle-2' : (isInProg ? 'clock' : 'circle');
+
+                        return `
+                          <tr>
+                            <td>
+                              <span class="syl-unit-tag">${unit.unitId || `U${uIdx+1}`}</span>
+                            </td>
+                            <td>
+                              <div class="syl-topic-name">${topic.topicName}</div>
+                            </td>
+                            <td>
+                              <div class="syl-topic-desc">${topic.topicDescription || '—'}</div>
+                            </td>
+                            <td style="text-align:center;">
+                              <span class="syl-badge-lect">${planned}</span>
+                            </td>
+                            <td style="text-align:center; font-weight:600; color:var(--navy);">
+                              ${topic.weightage || 1}
+                            </td>
+                            <td style="text-align:center; font-weight:600; color:var(--primary);">
+                              ${topic.weightagePercent || 15}%
+                            </td>
+                            <td style="text-align:center;">
+                              <span class="syl-status-pill ${statusPillClass}">
+                                <i data-lucide="${statusIcon}" style="width:12px;height:12px;"></i>
+                                ${topic.status || (isDone ? 'Completed' : (isInProg ? 'In Progress' : 'Not Started'))}
+                                ${taken > 0 ? `(${taken}/${planned})` : ''}
+                              </span>
+                            </td>
+                            <td>
+                              <div class="syl-actions-cell">
+                                ${isDone ? `
+                                  <button type="button" class="syl-btn-undo" onclick="TeacherApp.undoSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Undo 1 lecture">
+                                    <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i> Undo
+                                  </button>
+                                ` : isInProg ? `
+                                  <button type="button" class="syl-btn-step" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Add 1 lecture">
+                                    <i data-lucide="plus" style="width:12px;height:12px;"></i> 1 Lect
+                                  </button>
+                                  <button type="button" class="syl-btn-cover" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', ${planned - taken})" title="Mark all remaining lectures complete">
+                                    <i data-lucide="check" style="width:12px;height:12px;"></i> Done
+                                  </button>
+                                  <button type="button" class="syl-btn-undo" onclick="TeacherApp.undoSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Undo 1 lecture">
+                                    <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i>
+                                  </button>
+                                ` : `
+                                  <button type="button" class="syl-btn-cover" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', ${planned})">
+                                    <i data-lucide="check" style="width:12px;height:12px;"></i> Mark Covered
+                                  </button>
+                                  <button type="button" class="syl-btn-step" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Log 1 lecture">
+                                    <i data-lucide="plus" style="width:12px;height:12px;"></i> 1 Lect
+                                  </button>
+                                `}
+                              </div>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
       </div>
     `;
+
+    this.initLucideIcons();
   },
 
   // ----------------------------------------------------
@@ -1581,6 +1964,220 @@ const TeacherApp = {
         </div>
       </div>
     `;
+  },
+
+  // ----------------------------------------------------
+  // FACULTY LEAVE & SUBSTITUTION MODULE
+  // ----------------------------------------------------
+  renderLeaveView() {
+    const container = document.getElementById("leave-view");
+    if (!container) return;
+
+    const teacher = this.getLoggedInTeacher() || {};
+    const facultyId = teacher.id || teacher.facultyId || teacher.empCode || "EMP-CSE-1001";
+    const facultyName = teacher.name || "Dr. Rohan Deshmukh";
+    const facultyEmail = teacher.email || (teacher.employeeId ? `${teacher.employeeId.toLowerCase()}@ssgmce.ac.in` : "faculty@ssgmce.ac.in");
+    const facultyPhone = teacher.phone || "+91 94228 12345";
+
+    const leaves = (window.TeacherERPData && typeof TeacherERPData.getFacultyLeaves === 'function')
+      ? TeacherERPData.getFacultyLeaves(facultyId)
+      : ((window.TeacherERPData && TeacherERPData.leaves) || []);
+
+    const todayISO = (typeof AcademicDateUtils !== 'undefined')
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    const defaultEndDate = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+
+    container.innerHTML = `
+      <div class="card" style="padding:24px; margin-bottom:20px;">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light, #E2E8F0); padding-bottom:16px; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:10px; background:#EFF6FF; color:#0B5CAD; display:flex; align-items:center; justify-content:center; font-size:22px;">
+              <i data-lucide="calendar" style="width:24px;height:24px;color:#0B5CAD;"></i>
+            </div>
+            <div>
+              <h2 style="margin:0; font-size:19px; font-weight:800; color:var(--dark-navy, #0B1F3A);">Faculty Leave Application &amp; Class Substitution</h2>
+              <p style="margin:3px 0 0 0; font-size:12.5px; color:var(--text-muted, #64748B);">Apply for official leave and monitor peer faculty class coverage &amp; substitution</p>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="quick-action-btn primary" onclick="TeacherApp.switchView('timetable')" style="display:inline-flex; align-items:center; gap:6px;">
+              <i data-lucide="layout-grid" style="width:14px;height:14px;"></i> View Full Timetable
+            </button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:24px;">
+          <!-- LEFT COLUMN: Leave Application Form -->
+          <div style="background:var(--bg-light, #F8FAFC); border:1px solid var(--border-light, #E2E8F0); border-radius:10px; padding:20px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <i data-lucide="file-text" style="width:18px;height:18px;color:#0B5CAD;"></i>
+              <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--dark-navy, #0B1F3A);">Apply for New Leave</h3>
+            </div>
+
+            <form id="leaveApplicationForm" onsubmit="TeacherApp.handleLeaveFormSubmit(event)" style="display:flex; flex-direction:column; gap:14px;">
+              <!-- Hidden Faculty ID -->
+              <input type="hidden" id="leaveFacultyId" value="${facultyId}">
+
+              <!-- Faculty Name (Auto-filled) -->
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">Faculty Name (Auto-filled)</label>
+                <input type="text" id="leaveFacultyName" value="${facultyName}" readonly style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; background:#E2E8F0; color:#475569; font-size:13px; font-weight:600; box-sizing:border-box; cursor:not-allowed;">
+              </div>
+
+              <!-- Faculty Email (Auto-filled) -->
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">Faculty Email (Auto-filled)</label>
+                <input type="email" id="leaveFacultyEmail" value="${facultyEmail}" readonly style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; background:#E2E8F0; color:#475569; font-size:13px; font-weight:600; box-sizing:border-box; cursor:not-allowed;">
+              </div>
+
+              <!-- Phone Number -->
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">Phone Number <span style="color:#EF4444;">*</span></label>
+                <input type="tel" id="leavePhone" value="${facultyPhone}" placeholder="e.g., 9822012345" required style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; background:#ffffff; font-size:13px; color:#0F172A; box-sizing:border-box;">
+              </div>
+
+              <!-- Starting Date & End Date Grid -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                  <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">Starting Date <span style="color:#EF4444;">*</span></label>
+                  <input type="date" id="leaveStartDate" value="${todayISO}" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #CBD5E1; background:#ffffff; font-size:13px; color:#0F172A; box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">End Date <span style="color:#EF4444;">*</span></label>
+                  <input type="date" id="leaveEndDate" value="${defaultEndDate}" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #CBD5E1; background:#ffffff; font-size:13px; color:#0F172A; box-sizing:border-box;">
+                </div>
+              </div>
+
+              <!-- Reason for Leave -->
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:5px;">Reason for Leave <span style="color:#EF4444;">*</span></label>
+                <textarea id="leaveReason" rows="3" placeholder="State academic, medical, or official conference reason..." required style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; background:#ffffff; font-size:13px; color:#0F172A; resize:vertical; box-sizing:border-box;"></textarea>
+              </div>
+
+              <!-- Info hint -->
+              <div style="background:#FEF3C7; border-left:4px solid #F59E0B; padding:10px 12px; border-radius:4px; font-size:12px; color:#92400E; line-height:1.4;">
+                <strong>Notice:</strong> Once your leave is recorded, your scheduled classes in this date range will display an <em>&ldquo;On Leave&rdquo;</em> tag and will be open for peer faculty substitution.
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" id="leaveSubmitBtn" style="margin-top:4px; padding:11px 18px; background:#0B5CAD; color:#ffffff; border:none; border-radius:6px; font-weight:700; font-size:13.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 8px rgba(11,92,173,0.25);">
+                <span>Submit Leave Application</span>
+                <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- RIGHT COLUMN: Leave Status Tracking -->
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <i data-lucide="clipboard-list" style="width:18px;height:18px;color:#0B5CAD;"></i>
+                <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--dark-navy, #0B1F3A);">Leave History &amp; Status Tracking</h3>
+              </div>
+              <span style="background:#E2E8F0; color:#334155; font-size:11.5px; padding:2px 8px; border-radius:12px; font-weight:700;">
+                ${leaves.length} Total
+              </span>
+            </div>
+
+            ${leaves.length === 0 ? `
+              <div style="padding:40px 20px; text-align:center; background:var(--bg-light, #F8FAFC); border:1.5px dashed #CBD5E1; border-radius:10px; color:#64748B; font-size:13px;">
+                <div style="font-size:28px; margin-bottom:8px;">🏖️</div>
+                <strong>No leave requests recorded yet.</strong>
+                <p style="margin:4px 0 0 0; font-size:12px;">Your submitted leave applications will appear here with live status updates.</p>
+              </div>
+            ` : `
+              <div style="display:flex; flex-direction:column; gap:12px; max-height:480px; overflow-y:auto; padding-right:4px;">
+                ${leaves.map(l => {
+                  const isAppr = l.status === 'Approved';
+                  const isPend = l.status === 'Pending';
+                  const badgeBg = isAppr ? '#DCFCE7' : (isPend ? '#FEF9C3' : '#FEE2E2');
+                  const badgeColor = isAppr ? '#166534' : (isPend ? '#854D0E' : '#991B1B');
+                  const badgeBorder = isAppr ? '#86EFAC' : (isPend ? '#FDE047' : '#FCA5A5');
+                  const borderLeft = isAppr ? '#10B981' : (isPend ? '#F59E0B' : '#EF4444');
+                  const appliedDate = l.createdAt ? new Date(l.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently';
+
+                  return `
+                    <div style="background:#ffffff; border:1px solid #E2E8F0; border-left:5px solid ${borderLeft}; border-radius:8px; padding:14px 16px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <span style="font-weight:800; font-size:13px; color:#0F172A;">${l.startDate} &rarr; ${l.endDate}</span>
+                          <span style="background:#F1F5F9; color:#475569; font-size:10.5px; padding:1px 6px; border-radius:4px; font-weight:600;">
+                            ${l.daysCount || 1} ${l.daysCount === 1 ? 'Day' : 'Days'}
+                          </span>
+                        </div>
+                        <span style="background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px; letter-spacing:0.3px;">
+                          ${isAppr ? '✓ APPROVED' : (isPend ? '⏳ PENDING' : '✕ REJECTED')}
+                        </span>
+                      </div>
+                      <div style="font-size:12.5px; color:#475569; margin:6px 0; line-height:1.4;">
+                        <strong>Reason:</strong> ${l.reason || 'Not specified'}
+                      </div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94A3B8; margin-top:8px; padding-top:6px; border-top:1px solid #F1F5F9;">
+                        <span>Applied: ${appliedDate}</span>
+                        <span style="font-weight:600; color:#64748B;">Phone: ${l.phone || '--'}</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.initLucideIcons();
+  },
+
+  handleLeaveFormSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const facultyId = document.getElementById("leaveFacultyId")?.value || "EMP-CSE-1001";
+    const facultyName = document.getElementById("leaveFacultyName")?.value || "Faculty Member";
+    const facultyEmail = document.getElementById("leaveFacultyEmail")?.value || "faculty@ssgmce.ac.in";
+    const phone = document.getElementById("leavePhone")?.value?.trim() || "";
+    const startDate = document.getElementById("leaveStartDate")?.value || "";
+    const endDate = document.getElementById("leaveEndDate")?.value || "";
+    const reason = document.getElementById("leaveReason")?.value?.trim() || "";
+
+    if (!startDate || !endDate) {
+      this.showToast("Please select both starting and end dates.", "error");
+      return;
+    }
+    if (startDate > endDate) {
+      this.showToast("End date cannot be earlier than starting date.", "error");
+      return;
+    }
+    if (!reason || reason.length < 5) {
+      this.showToast("Please provide a descriptive reason for leave.", "error");
+      return;
+    }
+
+    if (window.TeacherERPData && typeof TeacherERPData.applyForLeave === 'function') {
+      TeacherERPData.applyForLeave({
+        facultyId,
+        empCode: facultyId,
+        facultyName,
+        facultyEmail,
+        phone,
+        startDate,
+        endDate,
+        reason
+      });
+    }
+
+    this.showToast("Leave application submitted successfully.", "success");
+
+    // Re-render leave view to reflect history
+    this.renderLeaveView();
+
+    // Trigger timetable re-render if loaded
+    if (window.TimetableManager && typeof TimetableManager.render === 'function') {
+      try { TimetableManager.render(); } catch (_) {}
+    }
   },
 
   // ----------------------------------------------------

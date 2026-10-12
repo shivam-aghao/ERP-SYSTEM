@@ -4,36 +4,63 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional, Dict
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 logger = logging.getLogger("ssgmce_erp_backend.utils")
 
-def success_response(data: Any = None, message: str = "Success", meta: Optional[Dict[str, Any]] = None, code: int = 200):
+def success_response(data: Any = None, message: Optional[str] = None, meta: Optional[Dict[str, Any]] = None, code: int = 200):
     payload = {
         "success": True,
-        "code": code,
+        "data": data if data is not None else {},
         "message": message,
-        "data": data
+        "code": code
     }
     if meta is not None:
         payload["meta"] = meta
+    if code != 200:
+        return JSONResponse(status_code=code, content=jsonable_encoder(payload))
     return payload
 
-def error_response(message: str = "Error", code: int = 400, details: Any = None):
-    return JSONResponse(
-        status_code=code,
-        content={
-            "success": False,
-            "code": code,
-            "message": message,
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details
-            }
+def error_response(message: str = "Error", code: Any = 400, details: Any = None, error_code: Optional[str] = None):
+    if isinstance(message, str) and (isinstance(code, int) or str(code).isdigit()):
+        status_code = int(code)
+        err_msg = message
+        status_map = {
+            400: "BAD_REQUEST",
+            401: "UNAUTHORIZED",
+            403: "FORBIDDEN",
+            404: "NOT_FOUND",
+            405: "METHOD_NOT_ALLOWED",
+            409: "CONFLICT",
+            422: "VALIDATION_ERROR",
+            500: "INTERNAL_SERVER_ERROR"
         }
-    )
+        err_code = error_code or status_map.get(status_code, "ERROR")
+    elif isinstance(message, str) and not isinstance(code, int):
+        err_code = message
+        err_msg = str(code)
+        status_code = int(details) if isinstance(details, int) else 400
+        details = None
+    else:
+        err_msg = str(message)
+        err_code = "ERROR"
+        status_code = 400
+
+    content = {
+        "success": False,
+        "data": None,
+        "error": {
+            "code": err_code,
+            "message": err_msg
+        },
+        "message": err_msg,
+        "code": status_code
+    }
+    if details is not None:
+        content["error"]["details"] = details
+    return JSONResponse(status_code=status_code, content=jsonable_encoder(content))
 
 def ensure_utc(val: Any) -> Optional[datetime]:
     if not val:

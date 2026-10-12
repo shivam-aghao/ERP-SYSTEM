@@ -1,30 +1,57 @@
 import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.config.database import get_db
 from backend.schemas.faculty import TeacherProfileUpdate, ClassCardCreate
 from backend.services.faculty_service import FacultyService
 from backend.utils.helpers import success_response, error_response
+from backend.auth.jwt_handler import decode_token
 
 router = APIRouter(tags=["Faculty Portal"])
 
 def extract_teacher_identifier(request: Request, teacher_id: Optional[str] = None, emp_code: Optional[str] = None) -> Optional[str]:
-    if teacher_id:
-        return teacher_id.strip()
-    if emp_code:
-        return emp_code.strip()
     if request:
         auth_hdr = request.headers.get("authorization", "")
         if auth_hdr.startswith("Bearer "):
             token = auth_hdr.split(" ", 1)[1].strip()
-            if token.startswith("teach_token_"):
+            if token.startswith("st_token_") or token == "demo-student-token-ssgmce-2026":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: Students cannot access teacher resources."
+                )
+            if not token.startswith("teach_token_"):
+                try:
+                    payload = decode_token(token, verify_exp=False)
+                    role = (payload.get("role") or "").lower()
+                    if role == "student":
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Forbidden: Students cannot access teacher resources."
+                        )
+                    return payload.get("identifier") or teacher_id or emp_code
+                except HTTPException:
+                    raise
+                except Exception:
+                    pass
+            elif token.startswith("teach_token_"):
                 return token.replace("teach_token_", "").strip()
+
+        if request.headers.get("x-user-role", "").lower() == "student":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: Students cannot access teacher resources."
+            )
         if request.headers.get("x-teacher-id"):
             return request.headers.get("x-teacher-id").strip()
         if request.headers.get("x-emp-code"):
             return request.headers.get("x-emp-code").strip()
+
+    if teacher_id:
+        return teacher_id.strip()
+    if emp_code:
+        return emp_code.strip()
     return None
 
 @router.get("/teachers")

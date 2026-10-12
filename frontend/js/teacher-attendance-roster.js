@@ -186,8 +186,12 @@
           try {
             const headers = {};
             if (ep.includes("supabase.co")) {
-              headers["apikey"] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY";
-              headers["Authorization"] = "Bearer " + headers["apikey"];
+              const cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
+              const anonKey = cfg.SUPABASE_ANON_KEY || (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || '';
+              if (anonKey) {
+                headers["apikey"] = anonKey;
+                headers["Authorization"] = "Bearer " + anonKey;
+              }
             }
 
             const res = await fetch(ep, { headers: headers });

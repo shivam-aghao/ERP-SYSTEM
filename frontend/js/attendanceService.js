@@ -84,13 +84,25 @@
         // Direct Cloud Supabase Fallback
         if (!attData && (typeof window !== 'undefined')) {
           try {
-            const sbUrl = 'https://gftqvclenyplnuoocbwe.supabase.co/rest/v1';
-            const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY';
-            let userCode = '308637';
-            try {
-              const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
-              userCode = stored.student_code || stored.studentCode || stored.enrollmentNo || '308637';
-            } catch (e) {}
+            const cfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
+            const sbBase = cfg.SUPABASE_URL || 'https://gftqvclenyplnuoocbwe.supabase.co';
+            const sbUrl = sbBase.replace(/\/+$/, '') + '/rest/v1';
+            const sbKey = cfg.SUPABASE_ANON_KEY || (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || '';
+            let userCode = '';
+            if (typeof window !== 'undefined' && window.verifiedUser) {
+              userCode = window.verifiedUser.user_id || window.verifiedUser.student_code || '';
+            }
+            if (!userCode && typeof window !== 'undefined' && window.AuthClient && window.AuthClient.getCurrentUser) {
+              const u = window.AuthClient.getCurrentUser();
+              if (u) userCode = u.user_id || u.student_code || '';
+            }
+            if (!userCode) {
+              try {
+                const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+                userCode = stored.student_code || stored.studentCode || stored.enrollmentNo || stored.user_id || '';
+              } catch (e) {}
+            }
+            if (!userCode) throw new Error('No authenticated student code found');
 
             const sRes = await fetch(`${sbUrl}/student_attendance_subjects?student_code=eq.${encodeURIComponent(userCode)}&order=subject_code`, {
               headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` }
@@ -119,22 +131,28 @@
           }
         }
 
-        if (attData && attData.subjectWise && attData.subjectWise.length > 0) {
-          const list = attData.subjectWise.map((item, idx) => {
-            const attended = item.attended !== undefined ? item.attended : (item.present || 0);
-            const total = item.total !== undefined ? item.total : 0;
-            const pct = item.percentage !== undefined ? Number(item.percentage) : (total > 0 ? Number(((attended / total) * 100).toFixed(2)) : 0);
+        const subjectArray = (attData && (attData.subjects || attData.subjectWise || attData.subject_wise)) || [];
+        if (subjectArray && subjectArray.length > 0) {
+          const list = subjectArray.map((item, idx) => {
+            const attended = item.attended !== undefined ? item.attended : (item.present_periods !== undefined ? item.present_periods : (item.present !== undefined ? item.present : 0));
+            const total = item.total !== undefined ? item.total : (item.total_periods !== undefined ? item.total_periods : 0);
+            const pct = item.percentage !== undefined ? Number(item.percentage) : (item.attendance_percentage !== undefined ? Number(item.attendance_percentage) : (total > 0 ? Number(((attended / total) * 100).toFixed(2)) : 0));
             const status = calc.getStatus ? calc.getStatus(pct) : {
               label: pct >= 75 ? 'Safe Zone' : 'Critical (<75%)',
               badgeClass: pct >= 75 ? 'att-badge-good' : 'att-badge-danger'
             };
 
+            const rawType = (item.type || item.subject_type || '').toUpperCase();
+            const isPrac = rawType.includes('PR') || rawType.includes('LAB');
+            const normType = isPrac ? 'PR' : 'TH';
+            const normTypeName = isPrac ? 'Practical' : 'Theory';
+
             return {
               id: item.id || `sub-${idx}`,
               code: item.code || item.subjectCode || item.subject_code || '',
               name: item.name || item.subjectName || item.subject_name || '',
-              type: item.type || (item.code && item.code.includes('LAB') ? 'PR' : 'TH'),
-              typeName: item.typeName || (item.type === 'PR' ? 'Practical' : 'Theory'),
+              type: normType,
+              typeName: item.typeName || normTypeName,
               faculty: item.faculty || item.faculty_name || '',
               classroom: item.classroom || item.room || '',
               present: attended,

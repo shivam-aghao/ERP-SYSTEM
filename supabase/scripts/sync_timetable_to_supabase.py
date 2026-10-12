@@ -1,10 +1,13 @@
+import os
 import sqlite3
 import urllib.request
 import json
 import urllib.error
+from dotenv import load_dotenv
 
-SUPABASE_URL = "https://gftqvclenyplnuoocbwe.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY"
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gftqvclenyplnuoocbwe.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 def sync_to_supabase():
     conn = sqlite3.connect("backend/erp.db")

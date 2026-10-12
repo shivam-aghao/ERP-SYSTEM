@@ -1,19 +1,54 @@
 import uuid
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Query, Body, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.config.database import get_db
+from backend.auth import AuthenticatedUser, get_optional_user
 from backend.schemas.student import StudentProfileUpdate
 from backend.services.student_service import StudentService
 from backend.utils.helpers import success_response, error_response
 
 router = APIRouter(tags=["Student Portal"])
 
+
+def _resolve_student_code(
+    requested_code: Optional[str],
+    current_user: Optional[AuthenticatedUser]
+) -> str:
+    """
+    Enforces server-side student identity binding:
+    - If caller is authenticated with role 'student':
+      They can ONLY access their own records. Accessing another student's code is rejected with 403 Forbidden.
+    - If caller is authenticated as faculty or admin:
+      They are allowed to specify any student_code.
+    - If caller is unauthenticated (legacy/dev):
+      Falls back to requested_code or sample student for backwards-compatibility.
+    """
+    if current_user:
+        role = (current_user.role or "").lower()
+        if role == "student":
+            user_student_code = current_user.identifier
+            if requested_code and requested_code.strip() not in (user_student_code, current_user.user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: Students are only permitted to access their own academic records."
+                )
+            return user_student_code
+        if requested_code:
+            return requested_code.strip()
+    return (requested_code.strip() if requested_code else None) or "308637"
+
+
 @router.get("/student/profile")
 @router.get("/profile")
-def get_student_profile(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    data = StudentService.get_profile(student_code, db)
+def get_student_profile(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
+    data = StudentService.get_profile(sc, db)
     if not data:
         return error_response("Student profile not found", 404)
     return success_response(data)
@@ -22,27 +57,47 @@ def get_student_profile(student_code: Optional[str] = Query(None), db: Session =
 @router.put("/profile")
 @router.post("/student/profile/update")
 @router.post("/profile/update")
-def update_student_profile(payload: StudentProfileUpdate, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    data = StudentService.update_profile(student_code, payload.model_dump(exclude_unset=True), db)
+def update_student_profile(
+    payload: StudentProfileUpdate,
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
+    data = StudentService.update_profile(sc, payload.model_dump(exclude_unset=True), db)
     return success_response(data or {}, "Profile updated successfully")
 
 @router.get("/student/overview")
 @router.get("/overview")
-def get_student_overview(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    data = StudentService.get_overview(student_code, db)
+def get_student_overview(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
+    data = StudentService.get_overview(sc, db)
     return success_response(data)
 
 @router.get("/student/academic-metrics")
 @router.get("/academic-metrics")
 @router.get("/metrics")
-def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    data = StudentService.get_academic_metrics(student_code, db)
+def get_academic_metrics(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
+    data = StudentService.get_academic_metrics(sc, db)
     return success_response(data)
 
 @router.get("/student/attendance")
 @router.get("/attendance")
-def get_student_attendance(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    sc = student_code or "308637"
+def get_student_attendance(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
     sub_dicts = []
     recent_records = []
     
@@ -161,8 +216,12 @@ def get_student_attendance(student_code: Optional[str] = Query(None), db: Sessio
 @router.get("/student/documents")
 @router.get("/documents")
 @router.get("/dwallet")
-def get_student_documents(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    sc = student_code or "308637"
+def get_student_documents(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
     try:
         from backend.services.academic_wallet_service import AcademicWalletService
         docs = AcademicWalletService.get_student_documents(sc)
@@ -181,8 +240,12 @@ def upload_student_document(payload: Dict[str, Any] = Body(...)):
 @router.get("/student/fees")
 @router.get("/fees")
 @router.get("/student/fee-wallet")
-def get_student_fees(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    sc = student_code or "308637"
+def get_student_fees(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
     try:
         from backend.services.academic_wallet_service import AcademicWalletService
         wallet = AcademicWalletService.get_student_fee_wallet(sc)
@@ -235,8 +298,12 @@ def submit_change_info_request(payload: Dict[str, Any] = Body(...)):
 
 @router.get("/student/examination")
 @router.get("/examination")
-def get_student_examination(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    sc = student_code or "308637"
+def get_student_examination(
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    sc = _resolve_student_code(student_code, current_user)
     try:
         from backend.services.academic_wallet_service import AcademicWalletService
         dash = AcademicWalletService.get_student_academic_dashboard(sc) or {}

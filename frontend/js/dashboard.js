@@ -1479,10 +1479,13 @@ async function hydrateDashboardData() {
 
     // 3. Attendance
     const att = overview.attendanceSummary || {};
-    const overallPct = Math.round(att.overallPercentage !== undefined ? att.overallPercentage : (overview.metrics?.overallAttendancePct || 82));
-    const absentPct = 100 - overallPct;
-    const attendedCount = att.attendedLectures !== undefined ? att.attendedLectures : 157;
-    const absentCount = att.absentLectures !== undefined ? att.absentLectures : 34;
+    const overallPct = att.overallPercentage !== undefined
+      ? (typeof att.overallPercentage === 'number' ? Number(att.overallPercentage.toFixed(2)) : Number(att.overallPercentage))
+      : (overview.attendance_pct !== undefined ? Number(overview.attendance_pct) : 85.19);
+    const attendedCount = att.attendedLectures !== undefined ? att.attendedLectures : 69;
+    const absentCount = att.absentLectures !== undefined ? att.absentLectures : 12;
+    const totalCount = att.totalLectures !== undefined ? att.totalLectures : (attendedCount + absentCount);
+    const absentPct = totalCount > 0 ? Number(((absentCount / totalCount) * 100).toFixed(2)) : Number((100 - overallPct).toFixed(2));
 
     const centerPct = document.getElementById('overallAttCenterPct');
     const presentPctEl = document.getElementById('overallAttPresentPct');
@@ -1492,6 +1495,7 @@ async function hydrateDashboardData() {
     const sbAttBadge = document.getElementById('sidebarAttendanceBadge');
     const dropAttPct = document.getElementById('dropdownAttPct');
     const threshText = document.getElementById('attThresholdText');
+    const modalEligibility = document.getElementById('modalAttEligibilitySummary');
 
     if (centerPct) centerPct.textContent = `${overallPct}%`;
     if (presentPctEl) presentPctEl.textContent = `${overallPct}%`;
@@ -1501,20 +1505,29 @@ async function hydrateDashboardData() {
     if (sbAttBadge) sbAttBadge.textContent = `${overallPct}%`;
     if (dropAttPct) dropAttPct.textContent = `${overallPct}%`;
 
+    document.querySelectorAll('.nav-badge-pill.pct-pill, .header-att-pct').forEach(el => {
+      el.textContent = `${overallPct}%`;
+    });
+
+    if (modalEligibility) {
+      modalEligibility.innerHTML = `Overall Attendance: <strong>${overallPct}%</strong> (${attendedCount} Present / ${absentCount} Absent out of ${totalCount} total lectures).`;
+    }
+
     if (threshText) {
       if (overallPct >= 75) {
-        const diff = overallPct - 75;
+        const diff = (overallPct - 75).toFixed(1);
         threshText.innerHTML = `Your overall attendance is currently <strong>${diff}% above</strong> the autonomous institutional requirement.`;
       } else {
-        const diff = 75 - overallPct;
+        const diff = (75 - overallPct).toFixed(1);
         threshText.innerHTML = `<span class="text-warning"><strong>Attendance Deficit (${overallPct}% &lt; 75%)</strong>: You need to attend upcoming lectures to clear eligibility threshold.</span>`;
       }
     }
 
     renderAttendanceChart(overallPct, absentPct, attendedCount, absentCount);
 
-    if (att.subjectWise && att.subjectWise.length > 0) {
-      renderSubjectWiseAttendance(att.subjectWise);
+    const subjectsToRender = att.subjectWise || att.subjects || [];
+    if (subjectsToRender && subjectsToRender.length > 0) {
+      renderSubjectWiseAttendance(subjectsToRender);
     }
 
     // 4. Timetable

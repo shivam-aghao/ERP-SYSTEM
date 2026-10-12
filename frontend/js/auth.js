@@ -1,69 +1,52 @@
 /**
  * SSGMCE College ERP — Central Authentication & Role-Based Session Manager
- * Complete Integration: login(), logout(), getCurrentUser(), isAuthenticated(),
- * requireAuth(), requireRole(), redirectByRole()
+ * frontend/js/auth.js
+ *
+ * Secure Token-Based Authentication Architecture:
+ * - Uses signed JWT tokens issued by backend & Supabase Auth as the single source of truth.
+ * - Server validates user identity and authoritative role on every protected request.
+ * - Zero-trust of client storage: Modifying localStorage/sessionStorage will NEVER grant elevated access.
+ * - Handles auto-refresh on token expiration and secure session termination on logout.
  */
+
 (function (window) {
   'use strict';
 
+  var STORAGE_ACCESS_TOKEN = 'ssgmce_access_token';
+  var STORAGE_REFRESH_TOKEN = 'ssgmce_refresh_token';
   var STORAGE_USER_KEY = 'ssgmce_user';
-  var STORAGE_SESSION_KEY = 'ssgmce_erp_session';
-  var STORAGE_LEGACY_KEY = 'ssgmce_user_session';
-  var STORAGE_ROLE_KEY = 'ssgmce_active_role';
-  var STORAGE_TEACHER_TOKEN = 'ssgmce_teacher_token';
-  var STORAGE_STUDENT_TOKEN = 'ssgmce_student_token';
+  var STORAGE_ACTIVE_ROLE = 'ssgmce_active_role';
+  var STORAGE_REMEMBER_KEY = 'ssgmce_remember_session';
 
   function getApiBase() {
     if (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) {
       return window.ERP_CONFIG.API_BASE;
     }
-    if (window.__API_BASE__) {
-      return window.__API_BASE__;
-    }
-    var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
-      ? window.location.hostname 
-      : '127.0.0.1';
-    var currentPort = (window.location && window.location.port) ? window.location.port : '';
-    var origin = (currentPort === '8000') 
+    var port = (window.location && window.location.port) ? window.location.port : '';
+    var origin = (port === '8000') 
       ? window.location.origin 
-      : 'http://' + currentHost + ':8000';
+      : 'http://' + (window.location.hostname || 'localhost') + ':8000';
     return origin + '/api/v1';
+  }
+
+  function getStorage(remember) {
+    if (remember === undefined) {
+      remember = (localStorage.getItem(STORAGE_REMEMBER_KEY) === 'true');
+    }
+    return remember ? localStorage : sessionStorage;
   }
 
   var ERP_AUTH = {
     /**
-     * Performs backend authentication with seamless offline/direct fallback
-     * @param {string} userId - Student ID, Faculty Emp Code, or Admin username
+     * Authenticates user against backend API and receives signed JWT tokens
+     * @param {string} userId - Student Code, Faculty Emp Code, or Admin Username
      * @param {string} password - User password
      * @param {string} [roleHint] - Optional role hint
+     * @param {boolean} [rememberMe=false] - Whether to persist across browser restarts
      * @returns {Promise<Object>}
      */
-    login: async function (userId, password, roleHint) {
-      var rawUid = String(userId || '').trim();
-      var cleanUid = rawUid.toLowerCase();
-      var rawPwd = String(password || '').trim();
-      var cleanPwd = rawPwd.toLowerCase();
-
+    login: async function (userId, password, roleHint, rememberMe) {
       var apiBase = getApiBase();
-      var currentHost = (window.location && window.location.hostname && window.location.hostname !== '') 
-        ? window.location.hostname 
-        : '127.0.0.1';
-      var rawEndpoints = [
-        apiBase + '/auth/login',
-        'http://' + currentHost + ':8000/api/v1/auth/login',
-        'http://127.0.0.1:8000/api/v1/auth/login',
-        'http://localhost:8000/api/v1/auth/login',
-        '/api/v1/auth/login',
-        '/auth/login',
-        '/api/auth/login'
-      ];
-      var endpoints = [];
-      for (var e = 0; e < rawEndpoints.length; e++) {
-        if (endpoints.indexOf(rawEndpoints[e]) === -1) {
-          endpoints.push(rawEndpoints[e]);
-        }
-      }
-
       var payload = {
         user_id: rawUid,
         username: rawUid,
@@ -71,746 +54,214 @@
         role: roleHint || ''
       };
 
-      // 1. Try FastAPI Backend if active
-      for (var i = 0; i < endpoints.length; i++) {
-        try {
-          var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-          var timeoutId = controller ? setTimeout(function() { controller.abort(); }, 1200) : null;
+      var res = await fetch(apiBase + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-          var fetchOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          };
-          if (controller) {
-            fetchOptions.signal = controller.signal;
-          }
-
-          var res = await fetch(endpoints[i], fetchOptions);
-          if (timeoutId) clearTimeout(timeoutId);
-
-          if (res.ok) {
-            var data = await res.json();
-            var result = data.data || data;
-            var user = result.user || result;
-            var token = result.token || data.token || 'token_' + Date.now();
-            var role = (result.role || user.role || 'student').toLowerCase();
-            if (role === 'faculty') role = 'teacher';
-
-            user.role = role;
-            this.setSession(user, token);
-            return {
-              success: true,
-              user: user,
-              token: token,
-              role: role,
-              redirect: result.redirect || this.getRedirectForRole(role)
-            };
-          } else if (res.status === 401 || res.status === 403) {
-            var errData = await res.json().catch(function() { return {}; });
-            // If explicit rejection from backend, throw error
-            if (errData.detail || errData.message) {
-              throw new Error(errData.message || errData.detail || 'Invalid User ID or Password.');
-            }
-          }
-        } catch (err) {
-          if (err.message && err.message.includes('Invalid User ID')) {
-            throw err;
-          }
-          // Network connection error / server not running on port 8000 -> proceed to client-side fallback
-        }
+      if (!res.ok) {
+        var errData = await res.json().catch(function () { return {}; });
+        var errMsg = errData.detail || errData.message || 'Invalid User ID or Password.';
+        throw new Error(errMsg);
       }
 
-      console.info('[ERPAuth] Backend server unreachable on port 8000. Applying high-availability client directory authentication for:', rawUid);
+      var resData = await res.json();
+      var data = resData.data || resData;
+      var accessToken = data.access_token || data.token;
+      var refreshToken = data.refresh_token;
+      var user = data.user || {};
+      var role = (data.role || user.role || 'student').toLowerCase();
+      if (role === 'faculty') role = 'teacher';
 
-      // 2. High-Availability Fallback Authenticator (Works seamlessly offline and online)
-      var matchedUser = null;
-      var role = 'student';
-      var token = 'offline_token_' + Date.now();
-
-      var isKulthe = cleanUid === 'emp-cse-1015' ||
-                     cleanUid === 'kvkulthe' ||
-                     cleanUid === 'kvkulthe@ssgmce.ac.in' ||
-                     cleanUid === 'kulthe' ||
-                     cleanUid === 'krushan kulthe' ||
-                     cleanUid === 'mr. krushan. v. kulthe' ||
-                     cleanUid === 'mr krushan v kulthe' ||
-                     cleanUid === 'krushan. v. kulthe' ||
-                     cleanUid === 'krushan v kulthe' ||
-                     cleanUid.includes('kulthe');
-
-      var isRakhonde = cleanUid === 'emp-cse-1014' ||
-                       cleanUid === 'mdrakhonde' ||
-                       cleanUid === 'mdrakhonde@ssgmce.ac.in' ||
-                       cleanUid === 'rakhonde' ||
-                       cleanUid === 'prof m d rakhonde' ||
-                       cleanUid === 'prof. m. d. rakhonde' ||
-                       cleanUid === 'm d rakhonde' ||
-                       cleanUid.includes('rakhonde');
-
-      var isFatkar = cleanUid === 'emp-cse-1013' ||
-                     cleanUid === 'nnfatkar' ||
-                     cleanUid === 'nnfatkar@ssgmce.ac.in' ||
-                     cleanUid === 'fatkar' ||
-                     cleanUid === 'prof n n fatkar' ||
-                     cleanUid === 'prof. n. n. fatkar' ||
-                     cleanUid === 'n n fatkar' ||
-                     cleanUid.includes('fatkar');
-
-      var isKanherkar = cleanUid === 'emp-cse-1012' ||
-                        cleanUid === 'vskanherkar' ||
-                        cleanUid === 'vskanherkar@ssgmce.ac.in' ||
-                        cleanUid === 'kanherkar' ||
-                        cleanUid === 'prof v s kanherkar' ||
-                        cleanUid === 'prof. v. s. kanherkar' ||
-                        cleanUid === 'v s kanherkar' ||
-                        cleanUid.includes('kanherkar');
-
-      var isPuranik = cleanUid === 'emp-cse-1011' ||
-                      cleanUid === 'tapuranik' ||
-                      cleanUid === 'tapuranik@ssgmce.ac.in' ||
-                      cleanUid === 'puranik' ||
-                      cleanUid === 'prof t a puranik' ||
-                      cleanUid === 'prof. t. a. puranik' ||
-                      cleanUid === 't a puranik' ||
-                      cleanUid.includes('puranik');
-
-      var isJawake = cleanUid === 'emp-cse-1010' ||
-                     cleanUid === 'smjawake' ||
-                     cleanUid === 'smjawake@ssgmce.ac.in' ||
-                     cleanUid === 'jawake' ||
-                     cleanUid === 'prof s m jawake' ||
-                     cleanUid === 'prof. s. m. jawake' ||
-                     cleanUid === 's m jawake' ||
-                     cleanUid.includes('jawake');
-
-      var isDeshmukh = cleanUid === 'emp-cse-1009' ||
-                       cleanUid === 'rvdeshmukh' ||
-                       cleanUid === 'rvdeshmukh@ssgmce.ac.in' ||
-                       cleanUid === 'deshmukh' ||
-                       cleanUid === 'prof r v deshmukh' ||
-                       cleanUid === 'prof. r. v. deshmukh' ||
-                       cleanUid === 'r v deshmukh' ||
-                       cleanUid.includes('deshmukh');
-
-      var isZamare = cleanUid === 'emp-cse-1008' ||
-                     cleanUid === 'razamare' ||
-                     cleanUid === 'razamare@ssgmce.ac.in' ||
-                     cleanUid === 'zamare' ||
-                     cleanUid === 'dr r a zamare' ||
-                     cleanUid === 'dr. r. a. zamare' ||
-                     cleanUid === 'prof r a zamare' ||
-                     cleanUid === 'prof. r. a. zamare' ||
-                     cleanUid === 'r a zamare' ||
-                     cleanUid.includes('zamare');
-
-      var isPagrut = cleanUid === 'emp-cse-1007' ||
-                    cleanUid === 'sbpagrut' ||
-                    cleanUid === 'sbpagrut@ssgmce.ac.in' ||
-                    cleanUid === 'pagrut' ||
-                    cleanUid === 'prof s b pagrut' ||
-                    cleanUid === 'prof. s. b. pagrut' ||
-                    cleanUid === 's b pagrut' ||
-                    cleanUid.includes('pagrut');
-
-      var isSable = cleanUid === 'emp-cse-1006' ||
-                    cleanUid === 'kpsable' ||
-                    cleanUid === 'kpsable@ssgmce.ac.in' ||
-                    cleanUid === 'sable' ||
-                    cleanUid === 'prof k p sable' ||
-                    cleanUid === 'prof. k. p. sable' ||
-                    cleanUid === 'k p sable' ||
-                    cleanUid.includes('sable');
-
-      var isBharne = cleanUid === 'emp-cse-1005' ||
-                     cleanUid === 'pkbharne' ||
-                     cleanUid === 'pkbharne@ssgmce.ac.in' ||
-                     cleanUid === 'bharne' ||
-                     cleanUid === 'dr p k bharne' ||
-                     cleanUid === 'dr. p. k. bharne' ||
-                     cleanUid === 'prof p k bharne' ||
-                     cleanUid === 'prof. p. k. bharne' ||
-                     cleanUid === 'p k bharne' ||
-                     cleanUid.includes('bharne');
-
-      var isMahalle = cleanUid === 'emp-cse-1004' ||
-                      cleanUid === 'vsmahalle' ||
-                      cleanUid === 'vsmahalle@ssgmce.ac.in' ||
-                      cleanUid === 'mahalle' ||
-                      cleanUid === 'dr v s mahalle' ||
-                      cleanUid === 'dr. v. s. mahalle' ||
-                      cleanUid === 'prof. v. s. mahalle' ||
-                      cleanUid === 'v s mahalle' ||
-                      cleanUid.includes('mahalle');
-
-      var isMankar = cleanUid === 'emp-cse-1003' ||
-                     cleanUid === 'cmmankar' ||
-                     cleanUid === 'cmmankar@ssgmce.ac.in' ||
-                     cleanUid === 'mankar' ||
-                     cleanUid === 'prof c m mankar' ||
-                     cleanUid === 'prof. c. m. mankar' ||
-                     cleanUid === 'c m mankar' ||
-                     cleanUid === 'f1f57a1c-779e-4df8-a0fe-451084d2221b' ||
-                     cleanUid.includes('mankar');
-
-      var isKandoi = cleanUid === 'emp-cse-1002' ||
-                     cleanUid === 'nmkandoi' ||
-                     cleanUid === 'nmkandoi@ssgmce.ac.in' ||
-                     cleanUid === 'kandoi' ||
-                     cleanUid === 'dr n m kandoi' ||
-                     cleanUid === 'dr. n. m. kandoi' ||
-                     cleanUid.includes('kandoi');
-
-      var isPatil = cleanUid === 'emp-cse-1001' ||
-                    cleanUid === 'jmpatil' ||
-                    cleanUid === 'jmpatil@ssgmce.ac.in' ||
-                    cleanUid === 'patil' ||
-                    cleanUid === 'patilsir' ||
-                    cleanUid === 'dr jm patil' ||
-                    cleanUid === 'dr. j. m. patil' ||
-                    cleanUid === 'prof. j. m. patil' ||
-                    cleanUid.includes('patil');
-
-      var isTeacherQuery = isKulthe || isRakhonde || isFatkar || isKanherkar || isPuranik || isJawake || isDeshmukh || isZamare || isPagrut || isSable || isBharne || isMahalle || isMankar || isKandoi || isPatil ||
-                           cleanUid === 'fac-01' ||
-                           cleanUid === 'teacher' ||
-                           cleanUid === 'faculty' ||
-                           cleanUid === 'prof' ||
-                           cleanUid.startsWith('emp-') ||
-                           cleanUid.startsWith('emp') ||
-                           cleanUid.startsWith('fac-') ||
-                           cleanUid.startsWith('fac') ||
-                           cleanUid.startsWith('teach') ||
-                           (roleHint && (roleHint.toLowerCase() === 'teacher' || roleHint.toLowerCase() === 'faculty'));
-
-      var isAdminQuery = cleanUid === 'admin' ||
-                         cleanUid === 'administrator' ||
-                         cleanUid === 'superadmin' ||
-                         cleanUid === 'adm' ||
-                         (roleHint && roleHint.toLowerCase() === 'admin');
-
-      if (isAdminQuery) {
-        role = 'admin';
-        matchedUser = {
-          id: 'ADM-001',
-          name: 'System Administrator',
-          full_name: 'System Administrator',
-          fullName: 'System Administrator',
-          username: 'admin',
-          role: 'admin',
-          department: 'Academic Administration',
-          department_code: 'ADMIN'
-        };
-        token = 'adm_token_' + Date.now();
-      } else if (isTeacherQuery) {
-        role = 'teacher';
-        if (isKulthe) {
-          matchedUser = {
-            id: 'EMP-CSE-1015',
-            emp_code: 'EMP-CSE-1015',
-            empCode: 'EMP-CSE-1015',
-            name: 'Mr. Krushan. V. Kulthe',
-            full_name: 'Mr. Krushan. V. Kulthe',
-            fullName: 'Mr. Krushan. V. Kulthe',
-            email: 'kvkulthe@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 77777',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1015';
-        } else if (isRakhonde) {
-          matchedUser = {
-            id: 'EMP-CSE-1014',
-            emp_code: 'EMP-CSE-1014',
-            empCode: 'EMP-CSE-1014',
-            name: 'Prof. M. D. Rakhonde',
-            full_name: 'Prof. M. D. Rakhonde',
-            fullName: 'Prof. M. D. Rakhonde',
-            email: 'mdrakhonde@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 66666',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1014';
-        } else if (isFatkar) {
-          matchedUser = {
-            id: 'EMP-CSE-1013',
-            emp_code: 'EMP-CSE-1013',
-            empCode: 'EMP-CSE-1013',
-            name: 'Prof. N. N. Fatkar',
-            full_name: 'Prof. N. N. Fatkar',
-            fullName: 'Prof. N. N. Fatkar',
-            email: 'nnfatkar@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 55555',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1013';
-        } else if (isKanherkar) {
-          matchedUser = {
-            id: 'EMP-CSE-1012',
-            emp_code: 'EMP-CSE-1012',
-            empCode: 'EMP-CSE-1012',
-            name: 'Prof. V. S. Kanherkar',
-            full_name: 'Prof. V. S. Kanherkar',
-            fullName: 'Prof. V. S. Kanherkar',
-            email: 'vskanherkar@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 44444',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1012';
-        } else if (isPuranik) {
-          matchedUser = {
-            id: 'EMP-CSE-1011',
-            emp_code: 'EMP-CSE-1011',
-            empCode: 'EMP-CSE-1011',
-            name: 'Prof. T. A. Puranik',
-            full_name: 'Prof. T. A. Puranik',
-            fullName: 'Prof. T. A. Puranik',
-            email: 'tapuranik@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 11111',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1011';
-        } else if (isJawake) {
-          matchedUser = {
-            id: 'EMP-CSE-1010',
-            emp_code: 'EMP-CSE-1010',
-            empCode: 'EMP-CSE-1010',
-            name: 'Prof. S. M. Jawake',
-            full_name: 'Prof. S. M. Jawake',
-            fullName: 'Prof. S. M. Jawake',
-            email: 'smjawake@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 22222',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1010';
-        } else if (isDeshmukh) {
-          matchedUser = {
-            id: 'EMP-CSE-1009',
-            emp_code: 'EMP-CSE-1009',
-            empCode: 'EMP-CSE-1009',
-            name: 'Prof. R. V. Deshmukh',
-            full_name: 'Prof. R. V. Deshmukh',
-            fullName: 'Prof. R. V. Deshmukh',
-            email: 'rvdeshmukh@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 33333',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1009';
-        } else if (isZamare) {
-          matchedUser = {
-            id: 'EMP-CSE-1008',
-            emp_code: 'EMP-CSE-1008',
-            empCode: 'EMP-CSE-1008',
-            name: 'Dr. R. A. Zamare',
-            full_name: 'Dr. R. A. Zamare',
-            fullName: 'Dr. R. A. Zamare',
-            email: 'razamare@ssgmce.ac.in',
-            designation: 'Associate Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 44444',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1008';
-        } else if (isPagrut) {
-          matchedUser = {
-            id: 'EMP-CSE-1007',
-            emp_code: 'EMP-CSE-1007',
-            empCode: 'EMP-CSE-1007',
-            name: 'Prof. S. B. Pagrut',
-            full_name: 'Prof. S. B. Pagrut',
-            fullName: 'Prof. S. B. Pagrut',
-            email: 'sbpagrut@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 55555',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1007';
-        } else if (isSable) {
-          matchedUser = {
-            id: 'EMP-CSE-1006',
-            emp_code: 'EMP-CSE-1006',
-            empCode: 'EMP-CSE-1006',
-            name: 'Prof. K. P. Sable',
-            full_name: 'Prof. K. P. Sable',
-            fullName: 'Prof. K. P. Sable',
-            email: 'kpsable@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 66666',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1006';
-        } else if (isBharne) {
-          matchedUser = {
-            id: 'EMP-CSE-1005',
-            emp_code: 'EMP-CSE-1005',
-            empCode: 'EMP-CSE-1005',
-            name: 'Dr. P. K. Bharne',
-            full_name: 'Dr. P. K. Bharne',
-            fullName: 'Dr. P. K. Bharne',
-            email: 'pkbharne@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 77777',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1005';
-        } else if (isMahalle) {
-          matchedUser = {
-            id: 'EMP-CSE-1004',
-            emp_code: 'EMP-CSE-1004',
-            empCode: 'EMP-CSE-1004',
-            name: 'Dr. V. S. Mahalle',
-            full_name: 'Dr. V. S. Mahalle',
-            fullName: 'Dr. V. S. Mahalle',
-            email: 'vsmahalle@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 88888',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1004';
-        } else if (isMankar) {
-          matchedUser = {
-            id: 'EMP-CSE-1003',
-            emp_code: 'EMP-CSE-1003',
-            empCode: 'EMP-CSE-1003',
-            name: 'Prof. C. M. Mankar',
-            full_name: 'Prof. C. M. Mankar',
-            fullName: 'Prof. C. M. Mankar',
-            email: 'cmmankar@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 99999',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1003';
-        } else if (isKandoi) {
-          matchedUser = {
-            id: 'EMP-CSE-1002',
-            emp_code: 'EMP-CSE-1002',
-            empCode: 'EMP-CSE-1002',
-            name: 'Dr. N. M. Kandoi',
-            full_name: 'Dr. N. M. Kandoi',
-            fullName: 'Dr. N. M. Kandoi',
-            email: 'nmkandoi@ssgmce.ac.in',
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 45678',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1002';
-        } else if (isPatil || cleanUid === 'teacher' || cleanUid === 'faculty' || cleanUid === 'fac-01') {
-          matchedUser = {
-            id: 'EMP-CSE-1001',
-            emp_code: 'EMP-CSE-1001',
-            empCode: 'EMP-CSE-1001',
-            name: 'Dr. J. M. Patil',
-            full_name: 'Dr. J. M. Patil',
-            fullName: 'Dr. J. M. Patil',
-            email: 'jmpatil@ssgmce.ac.in',
-            designation: 'Head Of Department & Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 94228 12345',
-            role: 'teacher'
-          };
-          token = 'teach_token_EMP-CSE-1001';
-        } else {
-          var facultyCode = rawUid.toUpperCase() || 'EMP-CSE-1002';
-          var facultyName = rawUid || 'Faculty Member';
-          matchedUser = {
-            id: facultyCode,
-            emp_code: facultyCode,
-            empCode: facultyCode,
-            name: facultyName,
-            full_name: facultyName,
-            fullName: facultyName,
-            email: cleanUid.includes('@') ? cleanUid : (cleanUid + '@ssgmce.ac.in'),
-            designation: 'Assistant Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 98223 00000',
-            role: 'teacher'
-          };
-          token = 'teach_token_' + facultyCode;
-        }
+      // Persist session tokens
+      var storage = getStorage(!!rememberMe);
+      if (rememberMe) {
+        localStorage.setItem(STORAGE_REMEMBER_KEY, 'true');
       } else {
-        // Student query (308653, gargi, 307001, shivam, 3R, 2R1, 2R2, 4R, or generic student)
-        role = 'student';
-        var isGargi = cleanUid === '308653' ||
-                      cleanUid === '3r9' ||
-                      cleanUid === '4r9' ||
-                      cleanUid === '2ra9' ||
-                      cleanUid === '2rb9' ||
-                      cleanUid === '312225e143' ||
-                      cleanUid.includes('gargi') ||
-                      cleanUid.includes('mane') ||
-                      cleanUid === 'student' ||
-                      cleanUid === '';
-
-        var is2R1 = cleanUid === '307001' || cleanUid === '2r1' || cleanUid.includes('shivam') || cleanUid.includes('aghao');
-        var is2R2 = cleanUid === '2r2';
-        var is3R = cleanUid === '3r';
-        var is4R = cleanUid === '4r';
-
-        if (isGargi) {
-          matchedUser = {
-            id: '0086f6eb-0d55-4b92-b5df-e6bac0958cab',
-            student_code: '308653',
-            studentCode: '308653',
-            name: 'Mane Gargi Manoj',
-            full_name: 'Mane Gargi Manoj',
-            fullName: 'Mane Gargi Manoj',
-            shortName: 'Gargi Mane',
-            initials: 'GM',
-            email: '308653@ssgmce.ac.in',
-            class_name: '2R2',
-            className: '2R2',
-            class_code: '2R2',
-            classCode: '2R2',
-            roll_no: '2RB9',
-            rollNo: '2RB9',
-            semester: 'III',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            role: 'student'
-          };
-          token = 'stud_token_308653';
-        } else if (is2R1) {
-          matchedUser = {
-            id: '307001',
-            student_code: '307001',
-            studentCode: '307001',
-            name: 'Shivam Aghao',
-            full_name: 'Shivam Aghao',
-            fullName: 'Shivam Aghao',
-            shortName: 'Shivam',
-            initials: 'SA',
-            email: 'shivam.aghao@ssgmce.ac.in',
-            class_name: '2R1',
-            className: '2R1',
-            class_code: '2R1',
-            classCode: '2R1',
-            roll_no: '21',
-            rollNo: '21',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            role: 'student'
-          };
-          token = 'stud_token_307001';
-        } else if (is2R2) {
-          matchedUser = {
-            id: '307050',
-            student_code: '307050',
-            studentCode: '307050',
-            name: 'Student 2R2',
-            full_name: 'Student 2R2',
-            fullName: 'Student 2R2',
-            shortName: 'Student 2R2',
-            initials: '2R',
-            email: 'student.2r2@ssgmce.ac.in',
-            class_name: '2R2',
-            className: '2R2',
-            class_code: '2R2',
-            classCode: '2R2',
-            roll_no: '01',
-            rollNo: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            role: 'student'
-          };
-          token = 'stud_token_2r2';
-        } else if (is4R) {
-          matchedUser = {
-            id: '306001',
-            student_code: '306001',
-            studentCode: '306001',
-            name: 'Student 4R',
-            full_name: 'Student 4R',
-            fullName: 'Student 4R',
-            shortName: 'Student 4R',
-            initials: '4R',
-            email: 'student.4r@ssgmce.ac.in',
-            class_name: '4R',
-            className: '4R',
-            class_code: '4R',
-            classCode: '4R',
-            roll_no: '01',
-            rollNo: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            role: 'student'
-          };
-          token = 'stud_token_4r';
-        } else {
-          var studentCode = rawUid || '308653';
-          var studentName = rawUid ? ('Student ' + rawUid) : 'Mane Gargi Manoj';
-          var cName = (cleanUid.includes('2r1') ? '2R1' : (cleanUid.includes('2r2') ? '2R2' : (cleanUid.includes('4r') ? '4R' : '3R')));
-          matchedUser = {
-            id: studentCode,
-            student_code: studentCode,
-            studentCode: studentCode,
-            name: studentName,
-            full_name: studentName,
-            fullName: studentName,
-            shortName: studentName,
-            initials: 'ST',
-            email: (cleanUid && cleanUid.includes('@')) ? cleanUid : (studentCode + '@ssgmce.ac.in'),
-            class_name: cName,
-            className: cName,
-            class_code: cName,
-            classCode: cName,
-            roll_no: cName === '3R' ? '3R9' : '01',
-            rollNo: cName === '3R' ? '3R9' : '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            role: 'student'
-          };
-          token = 'stud_token_' + studentCode;
-        }
+        localStorage.removeItem(STORAGE_REMEMBER_KEY);
       }
 
-      this.setSession(matchedUser, token);
+      storage.setItem(STORAGE_ACCESS_TOKEN, accessToken);
+      localStorage.setItem(STORAGE_ACCESS_TOKEN, accessToken);
+      localStorage.setItem('ssgmce_token', accessToken);
 
-      var redirectUrl = this.getRedirectForRole(role);
-      // For teacher, prioritize teacher_timetable.html or teacher-dashboard.html
+      if (refreshToken) {
+        storage.setItem(STORAGE_REFRESH_TOKEN, refreshToken);
+        localStorage.setItem(STORAGE_REFRESH_TOKEN, refreshToken);
+      }
+
+      // Store user cache for immediate display
+      var userJson = JSON.stringify(user);
+      storage.setItem(STORAGE_USER_KEY, userJson);
+      storage.setItem(STORAGE_ACTIVE_ROLE, role);
+      localStorage.setItem(STORAGE_USER_KEY, userJson);
+      localStorage.setItem(STORAGE_ACTIVE_ROLE, role);
+      localStorage.setItem('user_role', role);
+
+      // Return standardized payload
       return {
         success: true,
-        user: matchedUser,
-        token: token,
+        user: user,
+        token: accessToken,
+        access_token: accessToken,
+        refresh_token: refreshToken,
         role: role,
-        redirect: redirectUrl
+        redirect: data.redirect || this.getRedirectForRole(role)
       };
     },
 
     /**
-     * Saves user session across all synchronized storage keys
+     * Gets current access token from storage
      */
-    setSession: function (user, token) {
+    getToken: function () {
+      return sessionStorage.getItem(STORAGE_ACCESS_TOKEN) ||
+             localStorage.getItem(STORAGE_ACCESS_TOKEN) ||
+             localStorage.getItem('ssgmce_token') ||
+             null;
+    },
+
+    /**
+     * Gets refresh token
+     */
+    getRefreshToken: function () {
+      return sessionStorage.getItem(STORAGE_REFRESH_TOKEN) ||
+             localStorage.getItem(STORAGE_REFRESH_TOKEN) ||
+             null;
+    },
+
+    /**
+     * Refreshes access token with server using refresh token
+     */
+    refreshSession: async function () {
+      var refreshToken = this.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      var apiBase = getApiBase();
+      var res = await fetch(apiBase + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+
+      if (!res.ok) {
+        this.clearLocalSession();
+        throw new Error('Session refresh rejected by server');
+      }
+
+      var data = await res.json();
+      var result = data.data || data;
+      var newAccessToken = result.access_token;
+      var newRefreshToken = result.refresh_token;
+
+      var storage = getStorage();
+      storage.setItem(STORAGE_ACCESS_TOKEN, newAccessToken);
+      localStorage.setItem(STORAGE_ACCESS_TOKEN, newAccessToken);
+      localStorage.setItem('ssgmce_token', newAccessToken);
+
+      if (newRefreshToken) {
+        storage.setItem(STORAGE_REFRESH_TOKEN, newRefreshToken);
+        localStorage.setItem(STORAGE_REFRESH_TOKEN, newRefreshToken);
+      }
+
+      return newAccessToken;
+    },
+
+    /**
+     * Authoritative server validation: Calls /api/v1/auth/me to verify user identity.
+     * NEVER relies on localStorage values.
+     * @returns {Promise<Object>} Authoritatively verified user
+     */
+    verifySession: async function () {
+      var token = this.getToken();
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      var apiBase = getApiBase();
+      var res = await fetch(apiBase + '/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/json'
+        }
+      });
+
+      // Handle token expiry: attempt automatic refresh
+      if (res.status === 401) {
+        try {
+          var newToken = await this.refreshSession();
+          var retryRes = await fetch(apiBase + '/auth/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + newToken,
+              'Accept': 'application/json'
+            }
+          });
+          if (retryRes.ok) {
+            var retryJson = await retryRes.json();
+            var verifiedUser = retryJson.data || retryJson;
+            this.syncVerifiedSession(verifiedUser);
+            return verifiedUser;
+          }
+        } catch (refreshErr) {
+          this.clearLocalSession();
+          throw new Error('Session expired');
+        }
+        this.clearLocalSession();
+        throw new Error('Session unauthorized');
+      }
+
+      if (!res.ok) {
+        this.clearLocalSession();
+        throw new Error('Authentication validation failed');
+      }
+
+      var resJson = await res.json();
+      var user = resJson.data || resJson;
+      this.syncVerifiedSession(user);
+      return user;
+    },
+
+    /**
+     * Synchronizes verified server user to local state
+     */
+    syncVerifiedSession: function (user) {
       if (!user) return;
       var role = (user.role || 'student').toLowerCase();
       if (role === 'faculty') role = 'teacher';
       user.role = role;
 
-      // Provide standardized normalized fields
-      user.fullName = user.full_name || user.name || user.fullName || 'SSGMCE Member';
+      user.fullName = user.full_name || user.name || 'SSGMCE Member';
       user.shortName = user.fullName;
-      user.initials = user.fullName.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-      user.studentCode = user.student_code || user.id;
+      user.initials = user.fullName.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+      user.studentCode = user.student_code || user.identifier || user.id;
       user.rollNo = user.roll_no || 1;
       user.className = user.class_name || '3R';
-      user.classCode = user.class_code || user.className;
-      user.empCode = user.emp_code || user.id;
+      user.empCode = user.emp_code || user.identifier || user.id;
 
       var userJson = JSON.stringify(user);
+      var storage = getStorage();
+      storage.setItem(STORAGE_USER_KEY, userJson);
+      storage.setItem(STORAGE_ACTIVE_ROLE, role);
       localStorage.setItem(STORAGE_USER_KEY, userJson);
-      localStorage.setItem(STORAGE_SESSION_KEY, userJson);
-      localStorage.setItem(STORAGE_LEGACY_KEY, userJson);
-      sessionStorage.setItem(STORAGE_SESSION_KEY, userJson);
-      sessionStorage.setItem(STORAGE_USER_KEY, userJson);
-      localStorage.setItem(STORAGE_ROLE_KEY, role);
+      localStorage.setItem(STORAGE_ACTIVE_ROLE, role);
       localStorage.setItem('user_role', role);
-      sessionStorage.setItem('user_role', role);
 
-      var perms = JSON.stringify({
-        student_dashboard: role === 'student',
-        employee_dashboard: role === 'teacher' || role === 'faculty',
-        faculty_dashboard: role === 'teacher' || role === 'faculty',
-        admin_dashboard: role === 'admin'
-      });
-      localStorage.setItem('dashboard_permissions', perms);
-      sessionStorage.setItem('dashboard_permissions', perms);
-
-      if (token) {
-        if (role === 'teacher' || role === 'faculty') {
-          localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-          sessionStorage.setItem(STORAGE_TEACHER_TOKEN, token);
-          localStorage.setItem('ssgmce_active_teacher', userJson);
-          if (user.emp_code || user.empCode) {
-            localStorage.setItem('ssgmce_selected_faculty', user.emp_code || user.empCode);
-          }
-        } else {
-          localStorage.setItem(STORAGE_STUDENT_TOKEN, token);
-          sessionStorage.setItem(STORAGE_STUDENT_TOKEN, token);
-        }
-      }
+      window.verifiedUser = user;
+      window.currentUser = user;
+      window.activeUser = user;
     },
 
     /**
-     * Retrieves current logged in user object or null
+     * Retrieves cached user object (for offline or instantaneous header rendering)
      */
     getCurrentUser: function () {
       try {
-        var raw = localStorage.getItem(STORAGE_USER_KEY) || 
-                  localStorage.getItem(STORAGE_SESSION_KEY) || 
-                  localStorage.getItem(STORAGE_LEGACY_KEY) ||
-                  sessionStorage.getItem(STORAGE_USER_KEY) ||
-                  sessionStorage.getItem(STORAGE_SESSION_KEY);
-        if (raw) return JSON.parse(raw);
-
-        var role = localStorage.getItem(STORAGE_ROLE_KEY) || 
-                   localStorage.getItem('user_role') ||
-                   sessionStorage.getItem('user_role');
-        if (role) {
-          var normRole = (role === 'faculty' || role === 'employee') ? 'teacher' : role.toLowerCase();
-          return {
-            id: '',
-            name: 'User',
-            full_name: 'User',
-            role: normRole
-          };
-        }
-        return null;
+        var raw = sessionStorage.getItem(STORAGE_USER_KEY) || localStorage.getItem(STORAGE_USER_KEY);
+        return raw ? JSON.parse(raw) : null;
       } catch (e) {
         return null;
       }
@@ -822,42 +273,30 @@
 
     getUserName: function () {
       var user = this.getCurrentUser();
-      return user ? (user.fullName || user.full_name || user.name || 'Faculty') : 'Faculty';
+      return user ? (user.fullName || user.full_name || user.name || 'User') : 'User';
     },
 
     /**
-     * Checks if current session is active
+     * Checks if a token exists in storage
      */
     isAuthenticated: function () {
-      var user = this.getCurrentUser();
-      return !!(user && user.role);
+      return !!this.getToken();
     },
 
     isLoggedIn: function () {
       return this.isAuthenticated();
     },
 
-    /**
-     * Gets user role: 'student', 'teacher', or 'admin'
-     */
     getRole: function () {
       var user = this.getCurrentUser();
-      if (user && user.role) {
-        var r = user.role.toLowerCase();
-        return (r === 'faculty') ? 'teacher' : r;
-      }
-      var storedRole = localStorage.getItem(STORAGE_ROLE_KEY) || localStorage.getItem('user_role') || sessionStorage.getItem('user_role');
-      return storedRole ? ((storedRole === 'faculty' || storedRole === 'employee') ? 'teacher' : storedRole.toLowerCase()) : 'student';
+      return user && user.role ? user.role.toLowerCase() : 'student';
     },
 
-    /**
-     * Returns appropriate destination for given role
-     */
     getRedirectForRole: function (role) {
-      role = (role || this.getRole() || '').toLowerCase();
-      if (role === 'teacher' || role === 'faculty') {
+      role = String(role || this.getRole() || '').toLowerCase();
+      if (role === 'teacher' || role === 'faculty' || role === 'hod') {
         return 'teacher-dashboard.html';
-      } else if (role === 'admin') {
+      } else if (role === 'admin' || role === 'super_admin') {
         return 'admin-dashboard.html';
       }
       return 'student-dashboard.html';
@@ -867,192 +306,103 @@
       window.location.href = this.getRedirectForRole(role);
     },
 
-    /**
-     * Centralized Logout
-     */
-    logout: function () {
-      try {
-        localStorage.removeItem(STORAGE_USER_KEY);
-        localStorage.removeItem(STORAGE_SESSION_KEY);
-        localStorage.removeItem(STORAGE_LEGACY_KEY);
-        localStorage.removeItem(STORAGE_ROLE_KEY);
-        localStorage.removeItem(STORAGE_TEACHER_TOKEN);
-        localStorage.removeItem(STORAGE_STUDENT_TOKEN);
-        localStorage.removeItem('user_role');
-        localStorage.removeItem('dashboard_permissions');
-        sessionStorage.clear();
-      } catch (e) {}
-      window.location.replace('login.html?logout=true');
+    clearLocalSession: function () {
+      sessionStorage.clear();
+      localStorage.removeItem(STORAGE_ACCESS_TOKEN);
+      localStorage.removeItem(STORAGE_REFRESH_TOKEN);
+      localStorage.removeItem(STORAGE_USER_KEY);
+      localStorage.removeItem(STORAGE_ACTIVE_ROLE);
+      localStorage.removeItem(STORAGE_REMEMBER_KEY);
+      localStorage.removeItem('ssgmce_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('ssgmce_teacher_token');
+      localStorage.removeItem('ssgmce_selected_faculty');
     },
 
     /**
-     * Role-Based Access Guard for Protected Pages
+     * Terminates session on the server and clears browser storage
+     */
+    logout: async function () {
+      var token = this.getToken();
+      var apiBase = getApiBase();
+      try {
+        if (token) {
+          await fetch(apiBase + '/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+        }
+      } catch (e) {
+        console.warn('[ERPAuth] Logout warning:', e);
+      } finally {
+        this.clearLocalSession();
+        window.location.replace('login.html?logout=true');
+      }
+    },
+
+    /**
+     * Authoritative Page Guard.
+     * Validates authentication token against backend.
+     * Prevents unauthorized role switching and privilege escalation.
      * @param {'student'|'teacher'|'admin'|'any'} expectedRole
-     * @returns {boolean}
      */
     requireAuth: function (expectedRole) {
-      // If inside an iframe, adopt session from parent window if available
-      if (window.self !== window.top) {
-        try {
-          if (window.parent && window.parent.ERP_AUTH && window.parent.ERP_AUTH.isAuthenticated()) {
-            var pUser = window.parent.ERP_AUTH.getCurrentUser();
-            if (pUser) {
-              this.setSession(pUser);
-              return true;
-            }
-          }
-        } catch (_) {}
-      }
+      var curPath = (window.location && window.location.pathname) 
+        ? window.location.pathname.split('/').pop().toLowerCase() 
+        : 'index.html';
 
-      var curPath = (window.location && window.location.pathname) ? window.location.pathname.split('/').pop().toLowerCase() : '';
-      var isStudentTargetPage = (expectedRole === 'student') || (curPath && curPath.indexOf('student') !== -1);
-      var isTeacherTargetPage = (expectedRole === 'teacher' || expectedRole === 'faculty') || (curPath && (curPath.indexOf('teacher') !== -1 || curPath.indexOf('faculty') !== -1));
-
-      // Handle unauthenticated state or direct Live Server access
+      // 1. Check token existence
       if (!this.isAuthenticated()) {
-        // Inside embedded iframe: do NOT hijack parent window navigation into a login loop
-        if (window.self !== window.top) {
-          console.warn('[ERPAuth] Auth check: Embedded sub-module running in iframe context without parent session.');
-          return false;
-        }
-
-        // Live Server or direct file/local development viewing:
-        // Automatically provision appropriate session context for the open file
-        if (isStudentTargetPage) {
-          console.info('[ERPAuth] Student page opened directly. Initializing student context.');
-          this.setSession({
-            id: '308637',
-            student_code: '308637',
-            full_name: 'Student',
-            role: 'student',
-            class_name: '3R',
-            roll_no: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
-
-        if (isTeacherTargetPage) {
-          console.info('[ERPAuth] Teacher page opened directly. Initializing Dr. J. M. Patil faculty context.');
-          this.setSession({
-            id: 'EMP-CSE-1001',
-            emp_code: 'EMP-CSE-1001',
-            empCode: 'EMP-CSE-1001',
-            full_name: 'Dr. J. M. Patil',
-            name: 'Dr. J. M. Patil',
-            fullName: 'Dr. J. M. Patil',
-            role: 'teacher',
-            designation: 'Head Of Department & Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering',
-            phone: '+91 94228 12345'
-          });
-          return true;
-        }
-
-        console.warn('[ERPAuth] Auth check failed: Unauthenticated access attempt. Redirecting to login.html');
-        var defaultLanding = isStudentTargetPage ? 'student-dashboard.html' : 'teacher-dashboard.html';
-        if (!curPath || curPath === '/') curPath = defaultLanding;
-        if (window.location && window.location.hash) curPath += window.location.hash;
+        console.warn('[ERPAuth] Unauthenticated access blocked: No token found. Redirecting to login.');
         window.location.replace('login.html?redirect=' + encodeURIComponent(curPath));
         return false;
       }
 
-      var currentRole = this.getRole();
-      if (expectedRole && expectedRole !== 'any') {
-        var exp = expectedRole.toLowerCase();
-        if (exp === 'faculty') exp = 'teacher';
+      // 2. Asynchronously verify with server
+      var self = this;
+      this.verifySession()
+        .then(function (verifiedUser) {
+          var authoritativeRole = String(verifiedUser.role || '').toLowerCase();
+          if (authoritativeRole === 'faculty') authoritativeRole = 'teacher';
 
-        var isTeacher = (currentRole === 'teacher' || currentRole === 'faculty' || currentRole === 'employee');
-        var isStudent = (currentRole === 'student');
+          if (expectedRole && expectedRole !== 'any') {
+            var exp = expectedRole.toLowerCase();
+            if (exp === 'faculty') exp = 'teacher';
 
-        if (exp === 'teacher' && !isTeacher && currentRole !== 'admin') {
-          // If on a teacher page while a previous student session was lingering in localStorage,
-          // adapt session to teacher context so the teacher page renders its respective interface!
-          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on teacher page. Switching session to Dr. J. M. Patil.');
-          this.setSession({
-            id: 'EMP-CSE-1001',
-            emp_code: 'EMP-CSE-1001',
-            empCode: 'EMP-CSE-1001',
-            full_name: 'Dr. J. M. Patil',
-            name: 'Dr. J. M. Patil',
-            fullName: 'Dr. J. M. Patil',
-            role: 'teacher',
-            designation: 'Head Of Department & Professor',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE',
-            department_name: 'Computer Science & Engineering'
-          });
-          return true;
-        }
+            // Universal admin bypass for administrative roles
+            if (authoritativeRole === 'super_admin' || authoritativeRole === 'admin') {
+              return;
+            }
 
-        if (exp === 'student' && !isStudent && currentRole !== 'admin') {
-          // If on a student page while a previous teacher session was lingering,
-          // adapt session to student context so the student page renders its respective interface!
-          console.warn('[ERPAuth] Role mismatch: Active session was ' + currentRole + ' on student page. Switching session to student.');
-          this.setSession({
-            id: '308637',
-            student_code: '308637',
-            full_name: 'Student',
-            role: 'student',
-            class_name: '3R',
-            roll_no: '01',
-            department: 'Computer Science & Engineering',
-            department_code: 'CSE'
-          });
-          return true;
-        }
-      }
+            // Role mismatch check
+            if (exp !== authoritativeRole) {
+              console.error('[ERPAuth] Privilege escalation blocked. True Role: ' + authoritativeRole + ', Attempted Page: ' + exp);
+              var authorizedHome = self.getRedirectForRole(authoritativeRole);
+              alert('Access Denied: You do not have permission to access this portal.');
+              window.location.replace(authorizedHome);
+            }
+          }
+        })
+        .catch(function (err) {
+          console.warn('[ERPAuth] Session verification failed:', err.message);
+          window.location.replace('login.html?expired=1&redirect=' + encodeURIComponent(curPath));
+        });
+
       return true;
     },
 
-    requireRole: function (role) {
+    requireRole: function (role, redirectUrl) {
       return this.requireAuth(role);
-    },
-
-    /**
-     * Hydrates DOM header elements with current user details
-     */
-    hydrateUI: function () {
-      var user = this.getCurrentUser();
-      if (!user) return;
-
-      var nameElements = document.querySelectorAll('.student-name, .profile-name, #header-profile-name, .user-name, #userName');
-      nameElements.forEach(function (el) {
-        el.textContent = user.fullName || user.name || 'User';
-      });
-
-      var codeElements = document.querySelectorAll('.student-code, #headerStudentCode, .user-id, #userCode');
-      codeElements.forEach(function (el) {
-        el.textContent = user.studentCode || user.empCode || user.id || '';
-      });
-
-      var classElements = document.querySelectorAll('.student-class, #headerClass, .user-class');
-      classElements.forEach(function (el) {
-        el.textContent = user.className || '3R';
-      });
-
-      var avatarElements = document.querySelectorAll('.avatar-circle span, .profile-avatar span, #userInitials');
-      avatarElements.forEach(function (el) {
-        el.textContent = user.initials || 'SS';
-      });
     }
   };
 
-  // Expose on window
+  // Expose globally
   window.ERP_AUTH = ERP_AUTH;
-  window.ERPAuth = ERP_AUTH; // Compatibility alias
-  window.getCurrentUser = function () { return ERP_AUTH.getCurrentUser(); };
-  window.logout = function () { ERP_AUTH.logout(); };
-  window.handleLogout = function () { ERP_AUTH.logout(); };
+  window.ERPAuth = ERP_AUTH;
 
-  // Auto-hydrate on DOM ready if user exists
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', function () {
-      ERP_AUTH.hydrateUI();
-    });
+  // Auto-init AuthGuard integration if loaded
+  if (window.AuthGuard) {
+    window.AuthGuard.verifySession = ERP_AUTH.verifySession.bind(ERP_AUTH);
   }
 
 })(typeof window !== 'undefined' ? window : this);

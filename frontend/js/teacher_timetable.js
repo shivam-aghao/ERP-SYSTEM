@@ -60,15 +60,8 @@ const TeacherTimetableApp = {
   },
 
   loadCachedTests() {
-    try {
-      const local = localStorage.getItem('ssgmce_scheduled_tests');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
-        }
-      }
-    } catch (_) {}
+    // Strict zero-localStorage policy for business data: Database is the single source of truth.
+    this.tests = [];
   },
 
   getApiBase() {
@@ -287,7 +280,7 @@ const TeacherTimetableApp = {
   async loadTests() {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const res = await fetch(`${this.getApiBase()}/timetable/tests`, {
         headers: this.getAuthHeaders(),
         signal: controller.signal
@@ -296,26 +289,7 @@ const TeacherTimetableApp = {
       if (res.ok) {
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data)) {
-          this.tests = json.data
-            .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
-            .map(t => ({
-              id: t.id,
-              type: t.type || 'Quiz',
-              subject: t.subject || '',
-              title: t.title || '',
-              date: t.date || '',
-              start: t.start || t.start_time || '',
-              end: t.end || t.end_time || '',
-              link: t.link || '',
-              class_code: t.class_code || '2R1',
-              teacher_id: t.teacher_id || t.faculty_id || t.created_by || 'EMP-CSE-1001',
-              faculty_id: t.faculty_id || t.teacher_id || t.created_by || 'EMP-CSE-1001',
-              faculty_name: t.faculty_name || 'Dr. J. M. Patil',
-              created_by: t.created_by || t.teacher_id || 'EMP-CSE-1001'
-            }));
-          try {
-            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-          } catch (_) {}
+          this.tests = json.data.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
           return;
         }
       }
@@ -323,7 +297,7 @@ const TeacherTimetableApp = {
       console.warn("Could not load tests from backend API:", e);
     }
 
-    // Try direct Supabase client if already ready without blocking
+    // Direct Supabase query as authenticated database fallback
     try {
       if (window.supabaseClient) {
         const { data, error } = await window.supabaseClient
@@ -332,7 +306,7 @@ const TeacherTimetableApp = {
           .order('date', { ascending: true })
           .order('start_time', { ascending: true });
         
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           this.tests = data
             .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
             .map(t => ({
@@ -350,16 +324,12 @@ const TeacherTimetableApp = {
               link: t.link || '',
               class_code: t.class_code || '2R1'
             }));
-          try {
-            localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-          } catch (_) {}
           return;
         }
       }
     } catch (_) {}
 
-    // Fallback to localStorage cache
-    this.loadCachedTests();
+    this.tests = [];
   },
 
   isTestCreator(test, activeTeacher) {
@@ -416,10 +386,7 @@ const TeacherTimetableApp = {
   },
 
   saveTests() {
-    try {
-      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-      window.dispatchEvent(new CustomEvent('tests:updated', { detail: { tests: this.tests } }));
-    } catch (_) {}
+    window.dispatchEvent(new CustomEvent('tests:updated', { detail: { tests: this.tests } }));
   },
 
   bindEvents() {
@@ -1087,7 +1054,9 @@ const TeacherTimetableApp = {
       if (existingIdx >= 0) {
         this.tests[existingIdx] = testObj;
       } else {
-        this.tests.push(testObj);
+        const errJson = await res.json().catch(() => ({}));
+        const errMsg = errJson.detail || errJson.message || `Failed to save assessment (HTTP ${res.status})`;
+        this.showToast(errMsg, "error");
       }
       if (typeof TeacherTestScheduler !== 'undefined' && TeacherTestScheduler.tests) {
         const scIdx = TeacherTestScheduler.tests.findIndex(t => t.id === testObj.id);
@@ -1100,28 +1069,8 @@ const TeacherTimetableApp = {
       this.closeTestFormModal();
       this.renderTimetableView();
     } catch (err) {
-      console.warn("Backend save notice:", err);
-      const testObj = {
-        id: id || payload.id || ("test-" + Date.now()),
-        ...payload,
-        start: payload.start_time,
-        end: payload.end_time
-      };
-      const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
-      if (existingIdx >= 0) {
-        this.tests[existingIdx] = testObj;
-      } else {
-        this.tests.push(testObj);
-      }
-      if (typeof TeacherTestScheduler !== 'undefined' && TeacherTestScheduler.tests) {
-        const scIdx = TeacherTestScheduler.tests.findIndex(t => t.id === testObj.id);
-        if (scIdx >= 0) TeacherTestScheduler.tests[scIdx] = testObj;
-        else TeacherTestScheduler.tests.push(testObj);
-      }
-      this.saveTests();
-      this.showToast(successMsg, "success");
-      this.closeTestFormModal();
-      this.renderTimetableView();
+      console.error("Backend save error:", err);
+      this.showToast("Network error: Unable to save assessment to server. Please check connection.", "error");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       if (submitText) submitText.textContent = originalText;
@@ -1335,35 +1284,39 @@ const TeacherTimetableApp = {
     if (deleteBtn) deleteBtn.disabled = true;
 
     try {
-      await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
+      const res = await fetch(`${this.getApiBase()}/timetable/tests/${encodeURIComponent(testId)}`, {
         method: "DELETE",
         headers: this.getAuthHeaders()
       });
-      this.showToast("Assessment deleted successfully", "success");
-    } catch (err) {
-      console.warn("Backend delete notice:", err);
-      this.showToast("Assessment deleted from schedule", "success");
-    } finally {
-      if (deleteBtn) deleteBtn.disabled = false;
-    }
-
-    // Remove from TeacherTimetableApp tests
-    const idx = this.tests.findIndex(t => t.id === testId);
-    if (idx !== -1) {
-      this.tests.splice(idx, 1);
-    }
-    // Remove from TeacherTestScheduler tests
-    if (typeof TeacherTestScheduler !== 'undefined' && TeacherTestScheduler.tests) {
-      const scIdx = TeacherTestScheduler.tests.findIndex(t => t.id === testId);
-      if (scIdx !== -1) {
-        TeacherTestScheduler.tests.splice(scIdx, 1);
+      if (!res.ok) {
+        throw new Error(`Delete failed (HTTP ${res.status})`);
       }
+      this.showToast("Assessment deleted from database", "success");
+      const idx = this.tests.findIndex(t => t.id === testId);
+      if (idx !== -1) {
+        this.tests.splice(idx, 1);
+        this.saveTests();
+      }
+    } catch (err) {
+      console.error("Backend delete error:", err);
+      this.showToast("Failed to delete assessment from server. Please retry.", "error");
     }
 
     this.saveTests();
     this.closeDeleteConfirmModal();
     this.closeTestDetailsModal();
     this.renderTimetableView();
+  },
+
+  handleSlotClick(subject, room, timeSlot, classId, date) {
+    const params = new URLSearchParams();
+    params.set('view', 'attendance-mark');
+    params.set('subject', subject);
+    params.set('room', room || 'Room 201');
+    params.set('time', timeSlot);
+    params.set('classId', classId || '2R1');
+    params.set('date', date || new Date().toISOString().split('T')[0]);
+    window.location.href = `teacher-dashboard.html?${params.toString()}`;
   },
 
   // ----------------------------------------------------
@@ -3319,8 +3272,143 @@ const TeacherTimetableApp = {
               </tr>
             </thead>
             <tbody>
-              ${scheduleRows.map(r => renderRowHTML(r)).join('')}
-              ${sundayRowHTML}
+              ${timetableData.map(row => {
+                const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
+                return `
+                <tr class="schedule-row ${isHighlightRow ? 'active-day-row' : ''}" role="row">
+                  
+                  <!-- Day Cell -->
+                  <td class="day-cell ${isHighlightRow ? 'active-day-cell' : ''}" scope="row">
+                    <div class="day-cell-inner">
+                      <span class="day-label">${row.day.toUpperCase()}</span>
+                      ${isHighlightRow ? `
+                        <span class="today-badge ${isToday ? 'today-badge-current' : 'today-badge-active'}">
+                          ${isToday ? 'TODAY' : 'ACTIVE'}
+                        </span>
+                      ` : ''}
+                    </div>
+                  </td>
+
+                  <!-- Subject Slots -->
+                  ${row.slots.map((slotText, slotIdx) => {
+                    const parsed = parseSlotInfo(slotText);
+
+                    // Find tests scheduled for this day & slot
+                    const slotTests = this.tests.filter(t => {
+                      if (!t.date || !t.start) return false;
+                      const [y, m, d] = t.date.split("-").map(Number);
+                      const testDayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+                      if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
+                      return this.getSlotIndexForTime(t.start) === slotIdx;
+                    });
+
+                    // Build regular class card HTML if not free
+                    let regularClassHTML = "";
+                    if (!parsed.isFree) {
+                      const safeSub = parsed.subject.replace(/'/g, "\\'");
+                      const safeLoc = (parsed.location || 'Room 201').replace(/'/g, "\\'");
+                      const timeStr = timeSlots[slotIdx] ? `${timeSlots[slotIdx].range} ${timeSlots[slotIdx].period}` : "09:00 - 10:30 AM";
+                      regularClassHTML = `
+                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}"
+                             onclick="TeacherTimetableApp.handleSlotClick('${safeSub}', '${safeLoc}', '${timeStr}', '2R1', '${selectedDate}')"
+                             style="cursor: pointer;"
+                             title="Click to mark attendance for ${parsed.subject}">
+                          <div class="class-card-top">
+                            <span class="class-type ${parsed.isLab ? 'type-lab' : 'type-lecture'}">
+                              <i data-lucide="${parsed.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
+                              ${parsed.typeLabel}
+                            </span>
+                          </div>
+                          
+                          <div class="class-title" title="${parsed.subject}">
+                            ${parsed.subject}
+                          </div>
+
+                          ${parsed.location ? `
+                            <div class="class-location">
+                              <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
+                              <span>${parsed.location}</span>
+                            </div>
+                          ` : ''}
+                          <div style="margin-top: 4px; font-size: 10px; font-weight: 700; color: #0B5CAD;">
+                            Mark Attendance &rarr;
+                          </div>
+                        </div>
+                      `;
+                    }
+
+                    // Build test cards HTML
+                    const testsHTML = slotTests.map(t => {
+                      const st = this.getTestStatus(t);
+                      const start12 = this.formatTime12Hour(t.start);
+                      const end12 = this.formatTime12Hour(t.end);
+
+                      return `
+                        <div class="test-card ${t.type.toLowerCase()}-card"
+                             onclick="TeacherTimetableApp.openTestDetails('${t.id}')"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Assessment: ${t.title}"
+                             onkeydown="if(event.key==='Enter') TeacherTimetableApp.openTestDetails('${t.id}')">
+                          <div class="test-card-top">
+                            <span class="test-type-badge ${t.type.toLowerCase()}-type">
+                              <i data-lucide="file-text" style="width:11px;height:11px;"></i>
+                              ${t.type.toUpperCase()}
+                            </span>
+                            <span class="test-status-pill ${st.badgeClass}">
+                              ${st.label}
+                            </span>
+                          </div>
+                          <div class="test-subject">${t.subject}</div>
+                          <div class="test-title" title="${t.title}">${t.title}</div>
+                          <div class="test-time">
+                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                            <span>${t.date}</span>
+                            <span style="margin: 0 4px; opacity:0.5;">•</span>
+                            <i data-lucide="clock" style="width:11px;height:11px;"></i>
+                            <span>${start12} – ${end12}</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join('');
+
+                    // If test(s) are scheduled for this slot, show test card (replaces regular lecture)
+                    if (slotTests.length > 0) {
+                      return `
+                        <td class="schedule-cell">
+                          <div class="cell-stack-container">
+                            ${testsHTML}
+                          </div>
+                        </td>
+                      `;
+                    }
+
+                    // If regular class is free and no test exists, render Off/Prep
+                    if (parsed.isFree) {
+                      return `
+                        <td class="schedule-cell off-prep-cell">
+                          <div class="off-prep">
+                            <span class="off-prep-pill">
+                              <i data-lucide="coffee" style="width:12px;height:12px;"></i>
+                              OFF / PREP
+                            </span>
+                            <span class="off-prep-caption">No Class Scheduled</span>
+                          </div>
+                        </td>
+                      `;
+                    }
+
+                    return `
+                      <td class="schedule-cell">
+                        <div class="cell-stack-container">
+                          ${regularClassHTML}
+                        </div>
+                      </td>
+                    `;
+                  }).join('')}
+                </tr>
+              `;
+              }).join('')}
             </tbody>
           </table>
         </div>

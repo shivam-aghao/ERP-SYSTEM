@@ -1,9 +1,12 @@
+import os
 import urllib.request
 import json
 import urllib.error
+from dotenv import load_dotenv
 
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
-base = 'https://gftqvclenyplnuoocbwe.supabase.co/rest/v1'
+load_dotenv()
+key = os.getenv('SUPABASE_ANON_KEY', '')
+base = (os.getenv('SUPABASE_URL', 'https://gftqvclenyplnuoocbwe.supabase.co')).rstrip('/') + '/rest/v1'
 
 candidate_tables = [
     'timetable_entries', 'timetable', 'timetables', 'teacher_timetable', 

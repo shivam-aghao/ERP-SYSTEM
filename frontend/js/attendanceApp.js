@@ -107,7 +107,9 @@
     const banner = document.getElementById('attendanceAlertBanner');
     if (!banner) return;
 
-    const overallPct = state.summary?.overall?.percentage || 35.14;
+    const overallPct = state.summary?.overall?.percentage !== undefined ? state.summary.overall.percentage : (state.summary?.overall?.total > 0 ? Number(((state.summary.overall.present / state.summary.overall.total) * 100).toFixed(2)) : 85.19);
+    const presentPeriods = state.summary?.overall?.present !== undefined ? state.summary.overall.present : 69;
+    const totalPeriods = state.summary?.overall?.total !== undefined ? state.summary.overall.total : 81;
     const isCritical = overallPct < 50;
     const isWarning = overallPct >= 50 && overallPct < 75;
 
@@ -120,7 +122,7 @@
       </svg>
     `;
     let title = '⚠ Mandatory 75% Attendance Shortage Alert';
-    let desc = `Your current overall attendance is <strong>${overallPct}%</strong> (26 / 74 periods), which is below the mandatory autonomous threshold of <strong>75.00%</strong>. ${state.insights?.below75Count || 8} of your subjects are currently in shortage. Attend consecutive upcoming sessions to regain examination eligibility.`;
+    let desc = `Your current overall attendance is <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods), which is below the mandatory autonomous threshold of <strong>75.00%</strong>. ${state.insights?.below75Count || 0} of your subjects are currently in shortage. Attend consecutive upcoming sessions to regain examination eligibility.`;
 
     if (!isCritical && !isWarning) {
       alertClass = 'alert-success';
@@ -131,11 +133,11 @@
         </svg>
       `;
       title = '✓ Attendance in Good Standing';
-      desc = `Your current overall attendance is <strong>${overallPct}%</strong>. You satisfy the autonomous college eligibility requirement.`;
+      desc = `Your current overall attendance is <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods). You satisfy the autonomous college eligibility requirement.`;
     } else if (isWarning) {
       alertClass = 'alert-warning';
       title = '▲ Attendance Warning Notice';
-      desc = `Your overall attendance is at <strong>${overallPct}%</strong>. Maintain consistency to remain above 75.00%.`;
+      desc = `Your overall attendance is at <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods). Maintain consistency to remain above 75.00%.`;
     }
 
     banner.className = `att-alert-banner ${alertClass}`;
@@ -321,8 +323,10 @@
       state.charts.donut.destroy();
     }
 
-    const present = state.summary?.overall?.present || 26;
-    const absent = (state.summary?.overall?.total || 74) - present;
+    const present = state.summary?.overall?.present !== undefined ? state.summary.overall.present : 69;
+    const total = state.summary?.overall?.total !== undefined ? state.summary.overall.total : 81;
+    const absent = Math.max(0, total - present);
+    const overallPct = state.summary?.overall?.percentage !== undefined ? state.summary.overall.percentage : (total > 0 ? Number(((present / total) * 100).toFixed(2)) : 85.19);
 
     state.charts.donut = new Chart(canvas, {
       type: 'doughnut',
@@ -353,8 +357,8 @@
             cornerRadius: 6,
             callbacks: {
               label: function (ctx) {
-                const total = present + absent;
-                const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                const tot = present + absent;
+                const pct = tot > 0 ? ((ctx.parsed / tot) * 100).toFixed(1) : 0;
                 return ` ${ctx.label}: ${ctx.parsed} periods (${pct}%)`;
               }
             }
@@ -365,8 +369,23 @@
 
     const centerPct = document.getElementById('donutCenterPct');
     if (centerPct) {
-      centerPct.textContent = `${state.summary?.overall?.percentage || 35.14}%`;
+      centerPct.textContent = `${overallPct}%`;
     }
+
+    // Dynamic legend hydration
+    const legPresent = document.getElementById('donutLegendPresent');
+    const legAbsent = document.getElementById('donutLegendAbsent');
+    const legTotal = document.getElementById('donutLegendTotal');
+    const presentPct = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+    const absentPct = total > 0 ? ((absent / total) * 100).toFixed(1) : 0;
+    if (legPresent) legPresent.textContent = `${present} Periods (${presentPct}%)`;
+    if (legAbsent) legAbsent.textContent = `${absent} Periods (${absentPct}%)`;
+    if (legTotal) legTotal.textContent = `${total} Periods (100%)`;
+
+    // Dynamic navbar badges sync
+    document.querySelectorAll('.nav-badge-pill.pct-pill, #sidebarAttendanceBadge, .header-att-pct').forEach(el => {
+      el.textContent = `${overallPct}%`;
+    });
   }
 
   // 5B. Subject Attendance Bar Chart

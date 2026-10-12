@@ -12,5 +12,5 @@ echo  Database: Cloud Supabase PostgreSQL (aws-0-ap-southeast-1.pooler.supabase.
 echo.
 echo Starting Unified Uvicorn Server...
 cd /d "%~dp0"
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+python run.py
 pause

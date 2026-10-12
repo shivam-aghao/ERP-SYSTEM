@@ -1,0 +1,1505 @@
+{
+  "total_tables": 57,
+  "tables": [
+    {
+      "table_name": "academic_result_change_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "academic_result_publications",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "academic_semesters",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "academic_years",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "admin_audit_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "admins",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "attendance_records",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "attendance_sessions",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "classes",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "curriculum_units",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "departments",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "faculty_class_assignments",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "faculty_documents",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "faculty_leave_requests",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "faculty_subject_assignments",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "fee_invoice_items",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "fee_invoices",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "fee_payments",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "fee_receipts",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "fee_refunds",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_audit_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_delivery_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_preferences",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_recipients",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_targets",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notification_templates",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "notifications",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "permissions",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "question_bank",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "question_options",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quiz_attempt_answers",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quiz_attempts",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quiz_questions",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quiz_results",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quiz_security_events",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "quizzes",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "result_change_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "result_publication_logs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "role_permissions",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "roles",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_academic_records",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_answer_options",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_answers",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_attendance_subjects",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_backlogs",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_certificates",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_documents",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_fee_accounts",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_scholarships",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "student_subject_results",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "students",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "subject_syllabus",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "subjects",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "teachers",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "timetable_assessments",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "timetable_entries",
+      "rls_enabled": true,
+      "rls_forced": false
+    },
+    {
+      "table_name": "user_roles",
+      "rls_enabled": true,
+      "rls_forced": false
+    }
+  ],
+  "rls_disabled_tables": [],
+  "total_policies": 121,
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "academic_result_change_logs",
+      "policyname": "arcl_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "academic_result_publications",
+      "policyname": "arp_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "academic_semesters",
+      "policyname": "academic_semesters_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "academic_semesters",
+      "policyname": "academic_semesters_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "academic_years",
+      "policyname": "academic_years_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "academic_years",
+      "policyname": "academic_years_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admin_audit_logs",
+      "policyname": "admin_audit_logs_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "true"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admin_audit_logs",
+      "policyname": "admin_audit_logs_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admins",
+      "policyname": "admins_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "admins",
+      "policyname": "admins_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_records",
+      "policyname": "attendance_records_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((EXISTS ( SELECT 1\n   FROM attendance_sessions ses\n  WHERE ((ses.id = attendance_records.session_id) AND (ses.teacher_id = current_teacher_id()) AND ((ses.status)::text = 'draft'::text)))) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_records",
+      "policyname": "attendance_records_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((EXISTS ( SELECT 1\n   FROM attendance_sessions ses\n  WHERE ((ses.id = attendance_records.session_id) AND (ses.teacher_id = current_teacher_id()) AND ((ses.status)::text = 'draft'::text)))) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_records",
+      "policyname": "attendance_records_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR (EXISTS ( SELECT 1\n   FROM attendance_sessions ses\n  WHERE ((ses.id = attendance_records.session_id) AND ((ses.teacher_id = current_teacher_id()) OR is_teacher_assigned_to_class(ses.class_id))))) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_records",
+      "policyname": "attendance_records_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((EXISTS ( SELECT 1\n   FROM attendance_sessions ses\n  WHERE ((ses.id = attendance_records.session_id) AND (ses.teacher_id = current_teacher_id()) AND ((ses.status)::text = 'draft'::text)))) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM attendance_sessions ses\n  WHERE ((ses.id = attendance_records.session_id) AND (ses.teacher_id = current_teacher_id()) AND ((ses.status)::text = 'draft'::text)))) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_sessions",
+      "policyname": "attendance_sessions_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(((teacher_id = current_teacher_id()) AND ((status)::text = 'draft'::text)) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_sessions",
+      "policyname": "attendance_sessions_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(((teacher_id = current_teacher_id()) AND is_teacher_assigned_to_class(class_id)) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_sessions",
+      "policyname": "attendance_sessions_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((class_id = current_student_class_id()) OR (teacher_id = current_teacher_id()) OR is_teacher_assigned_to_class(class_id) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "attendance_sessions",
+      "policyname": "attendance_sessions_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(((teacher_id = current_teacher_id()) AND ((status)::text = 'draft'::text)) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(((teacher_id = current_teacher_id()) AND ((status)::text = 'draft'::text)) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "classes",
+      "policyname": "classes_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "classes",
+      "policyname": "classes_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "curriculum_units",
+      "policyname": "curriculum_units_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "curriculum_units",
+      "policyname": "curriculum_units_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "departments",
+      "policyname": "departments_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "departments",
+      "policyname": "departments_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_class_assignments",
+      "policyname": "faculty_class_assignments_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_class_assignments",
+      "policyname": "faculty_class_assignments_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_documents",
+      "policyname": "faculty_documents_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((faculty_id = current_teacher_id()) OR is_admin_or_superadmin())",
+      "with_check": "((faculty_id = current_teacher_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_documents",
+      "policyname": "faculty_documents_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((faculty_id = current_teacher_id()) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_leave_requests",
+      "policyname": "faculty_leave_requests_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(((faculty_id = current_teacher_id()) AND ((status)::text = 'pending'::text)) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_leave_requests",
+      "policyname": "faculty_leave_requests_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((faculty_id = current_teacher_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_leave_requests",
+      "policyname": "faculty_leave_requests_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((faculty_id = current_teacher_id()) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_leave_requests",
+      "policyname": "faculty_leave_requests_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(((faculty_id = current_teacher_id()) AND ((status)::text = 'pending'::text)) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(((faculty_id = current_teacher_id()) AND ((status)::text = 'pending'::text)) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_subject_assignments",
+      "policyname": "faculty_subject_assignments_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "faculty_subject_assignments",
+      "policyname": "faculty_subject_assignments_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_invoice_items",
+      "policyname": "fee_invoice_items_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_invoice_items",
+      "policyname": "fee_invoice_items_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM fee_invoices fi\n  WHERE ((fi.id = fee_invoice_items.invoice_id) AND (fi.student_id = current_student_id())))) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_invoices",
+      "policyname": "fee_invoices_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_invoices",
+      "policyname": "fee_invoices_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee_payments_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee_payments_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_payments",
+      "policyname": "fee_payments_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_receipts",
+      "policyname": "fee_receipts_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_receipts",
+      "policyname": "fee_receipts_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fee_refunds",
+      "policyname": "fee_refunds_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_audit_logs",
+      "policyname": "notification_audit_logs_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_delivery_logs",
+      "policyname": "notification_delivery_logs_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_teacher())",
+      "with_check": "(is_admin_or_superadmin() OR is_teacher())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_preferences",
+      "policyname": "notification_preferences_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((user_id = current_student_id()) OR (user_id = current_teacher_id()) OR (user_id = current_admin_id()) OR is_admin_or_superadmin())",
+      "with_check": "((user_id = current_student_id()) OR (user_id = current_teacher_id()) OR (user_id = current_admin_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_recipients",
+      "policyname": "notification_recipients_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(is_teacher() OR is_hod() OR is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_recipients",
+      "policyname": "notification_recipients_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((recipient_id = current_student_id()) OR (recipient_id = current_teacher_id()) OR (recipient_id = current_admin_id()) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_recipients",
+      "policyname": "notification_recipients_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((recipient_id = current_student_id()) OR (recipient_id = current_teacher_id()) OR (recipient_id = current_admin_id()) OR is_admin_or_superadmin())",
+      "with_check": "((recipient_id = current_student_id()) OR (recipient_id = current_teacher_id()) OR (recipient_id = current_admin_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_targets",
+      "policyname": "notification_targets_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod() OR is_teacher())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod() OR is_teacher())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_templates",
+      "policyname": "notification_templates_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notification_templates",
+      "policyname": "notification_templates_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "notifications_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "notifications_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "permissions",
+      "policyname": "permissions_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "permissions",
+      "policyname": "permissions_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "question_bank",
+      "policyname": "question_bank_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "question_bank",
+      "policyname": "question_bank_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(is_teacher() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "question_options",
+      "policyname": "question_options_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (quiz_questions qq\n     JOIN quizzes q ON ((qq.quiz_id = q.id)))\n  WHERE ((qq.id = question_options.question_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM (quiz_questions qq\n     JOIN quizzes q ON ((qq.quiz_id = q.id)))\n  WHERE ((qq.id = question_options.question_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "question_options",
+      "policyname": "question_options_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (quiz_questions qq\n     JOIN quizzes q ON ((qq.quiz_id = q.id)))\n  WHERE ((qq.id = question_options.question_id) AND (((q.class_id = current_student_class_id()) AND ((q.status)::text = ANY ((ARRAY['published'::character varying, 'active'::character varying, 'completed'::character varying])::text[]))) OR (q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempt_answers",
+      "policyname": "quiz_attempt_answers_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE (((qa.id)::text = (quiz_attempt_answers.attempt_id)::text) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE (((qa.id)::text = (quiz_attempt_answers.attempt_id)::text) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempt_answers",
+      "policyname": "quiz_attempt_answers_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE (((qa.id)::text = (quiz_attempt_answers.attempt_id)::text) AND (qa.student_id = current_student_id())))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempts",
+      "policyname": "quiz_attempts_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempts",
+      "policyname": "quiz_attempts_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((student_id = current_student_id()) AND (EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_attempts.quiz_id) AND (q.class_id = current_student_class_id()) AND ((q.status)::text = 'active'::text)))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempts",
+      "policyname": "quiz_attempts_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR (EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_attempts.quiz_id) AND ((q.teacher_id = current_teacher_id()) OR is_teacher_assigned_to_class(q.class_id))))) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_attempts",
+      "policyname": "quiz_attempts_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(((student_id = current_student_id()) AND ((status)::text = 'in_progress'::text)) OR (EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_attempts.quiz_id) AND (q.teacher_id = current_teacher_id())))) OR is_admin_or_superadmin())",
+      "with_check": "(((student_id = current_student_id()) AND ((status)::text = ANY ((ARRAY['in_progress'::character varying, 'submitted'::character varying])::text[]))) OR (EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_attempts.quiz_id) AND (q.teacher_id = current_teacher_id())))) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_questions",
+      "policyname": "quiz_questions_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_questions.quiz_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_questions.quiz_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_questions",
+      "policyname": "quiz_questions_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_questions.quiz_id) AND (((q.class_id = current_student_class_id()) AND ((q.status)::text = ANY ((ARRAY['published'::character varying, 'active'::character varying, 'completed'::character varying])::text[]))) OR (q.teacher_id = current_teacher_id()) OR is_teacher_assigned_to_class(q.class_id) OR is_admin_or_superadmin()))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_results",
+      "policyname": "quiz_results_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_results.quiz_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_results.quiz_id) AND ((q.teacher_id = current_teacher_id()) OR is_admin_or_superadmin()))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_results",
+      "policyname": "quiz_results_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(((student_id = current_student_id()) AND (published = true)) OR (EXISTS ( SELECT 1\n   FROM quizzes q\n  WHERE ((q.id = quiz_results.quiz_id) AND (q.teacher_id = current_teacher_id())))) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_security_events",
+      "policyname": "quiz_security_events_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE (((qa.id)::text = (quiz_security_events.attempt_id)::text) AND (qa.student_id = current_student_id())))) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quiz_security_events",
+      "policyname": "quiz_security_events_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(is_teacher() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quizzes",
+      "policyname": "quizzes_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(((teacher_id = current_teacher_id()) AND (NOT (EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE (qa.quiz_id = qa.id))))) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quizzes",
+      "policyname": "quizzes_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((teacher_id = current_teacher_id()) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quizzes",
+      "policyname": "quizzes_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(((class_id = current_student_class_id()) AND ((status)::text = ANY ((ARRAY['published'::character varying, 'active'::character varying, 'completed'::character varying])::text[]))) OR (teacher_id = current_teacher_id()) OR is_teacher_assigned_to_class(class_id) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "quizzes",
+      "policyname": "quizzes_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((teacher_id = current_teacher_id()) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "((teacher_id = current_teacher_id()) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "result_change_logs",
+      "policyname": "result_change_logs_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "result_publication_logs",
+      "policyname": "result_publication_logs_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "role_permissions",
+      "policyname": "role_permissions_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "role_permissions",
+      "policyname": "role_permissions_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "roles",
+      "policyname": "roles_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "roles",
+      "policyname": "roles_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_academic_records",
+      "policyname": "student_academic_records_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_academic_records",
+      "policyname": "student_academic_records_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(((student_id = current_student_id()) AND (result_published = true)) OR is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_answer_options",
+      "policyname": "student_answer_options_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (student_answers sa\n     JOIN quiz_attempts qa ON ((sa.attempt_id = qa.id)))\n  WHERE ((sa.id = student_answer_options.student_answer_id) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM (student_answers sa\n     JOIN quiz_attempts qa ON ((sa.attempt_id = qa.id)))\n  WHERE ((sa.id = student_answer_options.student_answer_id) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_answer_options",
+      "policyname": "student_answer_options_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (student_answers sa\n     JOIN quiz_attempts qa ON ((sa.attempt_id = qa.id)))\n  WHERE ((sa.id = student_answer_options.student_answer_id) AND (qa.student_id = current_student_id())))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_answers",
+      "policyname": "student_answers_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE ((qa.id = student_answers.attempt_id) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE ((qa.id = student_answers.attempt_id) AND (qa.student_id = current_student_id()) AND ((qa.status)::text = 'in_progress'::text)))) OR is_teacher() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_answers",
+      "policyname": "student_answers_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM quiz_attempts qa\n  WHERE ((qa.id = student_answers.attempt_id) AND (qa.student_id = current_student_id())))) OR is_teacher() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_attendance_subjects",
+      "policyname": "student_attendance_subjects_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_attendance_subjects",
+      "policyname": "student_attendance_subjects_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_backlogs",
+      "policyname": "student_backlogs_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_backlogs",
+      "policyname": "student_backlogs_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_certificates",
+      "policyname": "student_certificates_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_certificates",
+      "policyname": "student_certificates_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{public}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_teacher() OR is_admin_or_superadmin() OR (verification_code IS NOT NULL))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_documents",
+      "policyname": "student_documents_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(((student_id = current_student_id()) AND (((status)::text = 'pending'::text) OR (NOT verified))) OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_documents",
+      "policyname": "student_documents_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((student_id = current_student_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_documents",
+      "policyname": "student_documents_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_teacher() OR is_admin_or_superadmin() OR is_accountant())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_documents",
+      "policyname": "student_documents_update_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(((student_id = current_student_id()) AND (((status)::text = 'pending'::text) OR (NOT verified))) OR is_admin_or_superadmin())",
+      "with_check": "(((student_id = current_student_id()) AND (((status)::text = 'pending'::text) OR (NOT verified))) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_fee_accounts",
+      "policyname": "student_fee_accounts_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_fee_accounts",
+      "policyname": "student_fee_accounts_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin() OR is_hod())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_scholarships",
+      "policyname": "student_scholarships_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "((student_id = current_student_id()) OR is_accountant() OR is_admin_or_superadmin())",
+      "with_check": "(is_accountant() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_subject_results",
+      "policyname": "student_subject_results_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher_assigned_to_subject(subject_id) OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher_assigned_to_subject(subject_id) OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "student_subject_results",
+      "policyname": "student_subject_results_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(((student_id = current_student_id()) AND (EXISTS ( SELECT 1\n   FROM student_academic_records ar\n  WHERE ((ar.id = student_subject_results.academic_record_id) AND (ar.result_published = true))))) OR is_teacher_assigned_to_subject(subject_id) OR is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "students",
+      "policyname": "student_admin_delete_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "students",
+      "policyname": "student_admin_insert_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "students",
+      "policyname": "student_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((id = current_student_id()) OR is_teacher_assigned_to_class(class_id) OR is_teacher() OR is_admin_or_superadmin() OR is_accountant())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "students",
+      "policyname": "student_update_self_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((id = current_student_id()) OR is_admin_or_superadmin())",
+      "with_check": "((id = current_student_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "subject_syllabus",
+      "policyname": "subject_syllabus_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "subject_syllabus",
+      "policyname": "subject_syllabus_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "subjects",
+      "policyname": "subjects_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_admin_or_superadmin() OR is_hod())",
+      "with_check": "(is_admin_or_superadmin() OR is_hod())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "subjects",
+      "policyname": "subjects_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "teachers",
+      "policyname": "teachers_admin_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "teachers",
+      "policyname": "teachers_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "teachers",
+      "policyname": "teachers_update_self_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((id = current_teacher_id()) OR is_admin_or_superadmin())",
+      "with_check": "((id = current_teacher_id()) OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "timetable_assessments",
+      "policyname": "timetable_assessments_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "timetable_assessments",
+      "policyname": "timetable_assessments_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "timetable_entries",
+      "policyname": "timetable_entries_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())",
+      "with_check": "(is_teacher() OR is_hod() OR is_admin_or_superadmin())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "timetable_entries",
+      "policyname": "timetable_entries_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_roles",
+      "policyname": "user_roles_manage_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "ALL",
+      "qual": "is_admin_or_superadmin()",
+      "with_check": "is_admin_or_superadmin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_roles",
+      "policyname": "user_roles_select_policy",
+      "permissive": "PERMISSIVE",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((user_id = current_student_id()) OR (user_id = current_teacher_id()) OR (user_id = current_admin_id()) OR is_admin_or_superadmin())",
+      "with_check": null
+    }
+  ],
+  "unrestricted_policies": []
+}

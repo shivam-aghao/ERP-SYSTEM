@@ -31,9 +31,9 @@
     AUTH_API_BASE: origin + '/api/v1/auth',
     ADMIN_API_BASE: origin + '/api/v1',
 
-    // Supabase Configuration
-    SUPABASE_URL: 'https://gftqvclenyplnuoocbwe.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY',
+    // Supabase Public Client Configuration (Safe for frontend with Row Level Security)
+    SUPABASE_URL: window.__SUPABASE_URL__ || 'https://gftqvclenyplnuoocbwe.supabase.co',
+    SUPABASE_ANON_KEY: window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY',
 
     // Storage Keys
     AUTH_STORAGE_KEY: 'ssgmce_user',
@@ -46,5 +46,20 @@
   window.__API_BASE__ = Config.API_BASE;
   window.__TEACHER_API_BASE__ = Config.TEACHER_API_BASE;
   window.__STUDENT_API_BASE__ = Config.STUDENT_API_BASE;
+
+  // Asynchronously synchronize public client config with backend
+  if (typeof window !== 'undefined' && typeof window.fetch === 'function' && isHttp) {
+    window.fetch(origin + '/api/v1/system/config')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (res) {
+        if (res && res.data) {
+          if (res.data.supabase_url) Config.SUPABASE_URL = res.data.supabase_url;
+          if (res.data.supabase_anon_key) Config.SUPABASE_ANON_KEY = res.data.supabase_anon_key;
+        }
+      })
+      .catch(function () {
+        // Fallback to initial public config
+      });
+  }
 
 })(typeof window !== 'undefined' ? window : this);

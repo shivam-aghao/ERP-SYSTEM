@@ -185,7 +185,7 @@ d:\ERP-SYSTEM\
 ### 4.1 Connection Configuration
 All backend services connect directly to Supabase PostgreSQL using SQLAlchemy Connection Pooling with automatic keep-alive:
 ```python
-DATABASE_URL = "postgresql://erp_app.gftqvclenyplnuoocbwe:SsgmceApp2026@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://<username>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres")
 
 engine = create_engine(
     DATABASE_URL,

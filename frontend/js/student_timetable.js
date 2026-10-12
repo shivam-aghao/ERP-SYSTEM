@@ -605,15 +605,8 @@ const StudentTimetableApp = {
   },
 
   loadCachedTests() {
-    try {
-      const local = localStorage.getItem('ssgmce_scheduled_tests');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.tests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
-        }
-      }
-    } catch (_) {}
+    // Database is the single source of truth for business data
+    this.tests = [];
   },
 
   async syncServerTime() {
@@ -682,41 +675,57 @@ const StudentTimetableApp = {
   // AUTHENTICATED STUDENT SESSION
   // ----------------------------------------------------
   loadStudentSession() {
+    // 1. Check window.verifiedUser / AuthClient
+    if (window.verifiedUser) {
+      const u = window.verifiedUser;
+      this.studentSession = {
+        fullName: u.name || u.full_name || u.fullName || "Student",
+        shortName: (u.name || u.full_name || u.fullName || "Student").split(" ")[0],
+        initials: ((u.name || u.full_name || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
+        rollNo: u.roll_no || u.rollNo || "",
+        studentCode: u.user_id || u.student_id || u.student_code || u.studentCode || "",
+        className: u.class_name || u.className || u.class_code || u.classCode || "2R1",
+        department: u.department || "Computer Science & Engineering",
+        departmentCode: u.department_code || "CSE",
+        email: u.email || ""
+      };
+      return;
+    }
+
+    if (window.AuthClient && typeof window.AuthClient.getCurrentUser === 'function') {
+      const u = window.AuthClient.getCurrentUser();
+      if (u) {
+        this.studentSession = {
+          fullName: u.name || u.full_name || u.fullName || "Student",
+          shortName: (u.name || u.full_name || u.fullName || "Student").split(" ")[0],
+          initials: ((u.name || u.full_name || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
+          rollNo: u.roll_no || u.rollNo || "",
+          studentCode: u.user_id || u.student_id || u.student_code || u.studentCode || "",
+          className: u.class_name || u.className || u.class_code || u.classCode || "2R1",
+          department: u.department || "Computer Science & Engineering",
+          departmentCode: u.department_code || "CSE",
+          email: u.email || ""
+        };
+        return;
+      }
+    }
+
     try {
-      const stored = localStorage.getItem('ssgmce_erp_session') || localStorage.getItem('ssgmce_user');
+      const stored = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.role === 'student' || parsed.studentCode || parsed.rollNo || parsed.className) {
-          const nameStr = String(parsed.fullName || parsed.full_name || parsed.name || "");
-          const isGargi = nameStr.toLowerCase().includes("gargi") || nameStr.toLowerCase().includes("mane") || String(parsed.studentCode) === "308653" || String(parsed.rollNo).toUpperCase() === "3R9";
-          
-          let rawClass = String(parsed.className || parsed.class_name || parsed.classCode || parsed.class_code || "").toUpperCase();
-          if (rawClass.includes("2R2") || isGargi) {
-            parsed.className = "2R2";
-            parsed.classCode = "2R2";
-            parsed.class_name = "2R2";
-            parsed.fullName = parsed.fullName || "Mane Gargi Manoj";
-            parsed.shortName = parsed.shortName || "Gargi Mane";
-            parsed.initials = "GM";
-            parsed.rollNo = parsed.rollNo && parsed.rollNo.toUpperCase().includes("2RB") ? parsed.rollNo : "2RB9";
-            parsed.studentCode = parsed.studentCode || "308653";
-            parsed.email = parsed.email || "308653@ssgmce.ac.in";
-            parsed.semester = "III";
-          } else if (rawClass.includes("2R1")) {
-            parsed.className = "2R1";
-            parsed.classCode = "2R1";
-          } else if (rawClass.includes("3R")) {
-            parsed.className = "3R";
-            parsed.classCode = "3R";
-          } else if (rawClass.includes("4R")) {
-            parsed.className = "4R";
-            parsed.classCode = "4R";
-          } else {
-            parsed.className = "2R2";
-            parsed.classCode = "2R2";
-          }
-
-          this.studentSession = parsed;
+        if (parsed.role === 'student' || parsed.studentCode || parsed.rollNo) {
+          this.studentSession = {
+            fullName: parsed.name || parsed.fullName || "Student",
+            shortName: (parsed.name || parsed.fullName || "Student").split(" ")[0],
+            initials: ((parsed.name || parsed.fullName || "ST").split(" ").map(n => n[0]).join("")).substring(0, 2).toUpperCase(),
+            rollNo: parsed.roll_no || parsed.rollNo || "",
+            studentCode: parsed.user_id || parsed.student_id || parsed.student_code || parsed.studentCode || "",
+            className: parsed.class_name || parsed.className || parsed.class_code || parsed.classCode || "2R1",
+            department: parsed.department || "Computer Science & Engineering",
+            departmentCode: parsed.department_code || "CSE",
+            email: parsed.email || ""
+          };
           return;
         }
       }
@@ -724,47 +733,30 @@ const StudentTimetableApp = {
       console.warn("Could not parse student session:", e);
     }
 
-    // Default student context from ERP model: Gargi Mane (Class 2R2)
+    // Default structure without hardcoded fake identity
     this.studentSession = {
-      id: "0086f6eb-0d55-4b92-b5df-e6bac0958cab",
-      fullName: "Mane Gargi Manoj",
-      shortName: "Gargi Mane",
-      initials: "GM",
-      rollNo: "2RB9",
-      studentCode: "308653",
-      className: "2R2",
-      classCode: "2R2",
-      semester: "III",
-      academicYear: "2026-2027",
+      fullName: "Student",
+      shortName: "Student",
+      initials: "ST",
+      rollNo: "",
+      studentCode: "",
+      className: "2R1",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: "308653@ssgmce.ac.in",
-      role: "student"
+      email: ""
     };
   },
 
   // ----------------------------------------------------
-  // LOAD SCHEDULED TESTS / ASSESSMENTS (MULTI-TIER: API + SUPABASE + LOCAL CACHE)
+  // LOAD SCHEDULED TESTS / ASSESSMENTS (DATABASE SOURCE OF TRUTH: API + SUPABASE)
   // ----------------------------------------------------
   async loadTests() {
-    let localTests = [];
     let apiTests = [];
 
-    // 1. Read local cache for immediate offline/cross-tab sync
+    // 1. Backend REST API (backed by Supabase PostgreSQL timetable_assessments)
     try {
-      const local = localStorage.getItem('ssgmce_scheduled_tests');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) {
-          localTests = parsed.filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"));
-        }
-      }
-    } catch (_) {}
-
-    // 2. Backend REST API with fast timeout
-    try {
-      let classCode = this.getClassCode();
-      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '308653';
+      let classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode)) || '2R1';
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '';
 
       const params = new URLSearchParams();
       if (classCode) params.append('class_code', classCode);
@@ -772,8 +764,10 @@ const StudentTimetableApp = {
 
       const url = `${this.getApiBase()}/timetable/tests?${params.toString()}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(url, { signal: controller.signal });
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await (window.AuthClient && window.AuthClient.fetchWithAuth 
+        ? window.AuthClient.fetchWithAuth(url, { signal: controller.signal })
+        : fetch(url, { signal: controller.signal }));
       clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
@@ -782,10 +776,10 @@ const StudentTimetableApp = {
         }
       }
     } catch (e) {
-      // Backend fetch finished or timed out
+      console.warn('[StudentTimetable] Error loading tests from API:', e);
     }
 
-    // 3. Direct Supabase Client if API returned empty and client is already ready
+    // 2. Direct Supabase Client fallback if API returned empty and client is authenticated
     if (apiTests.length === 0 && window.supabaseClient) {
       try {
         const { data, error } = await window.supabaseClient
@@ -799,7 +793,7 @@ const StudentTimetableApp = {
             .filter(t => t && t.id && String(t.id).startsWith("test-") && !String(t.id).startsWith("quiz-tt-"))
             .map(t => ({
               id: t.id,
-              teacher_id: t.teacher_id || 'FAC-CSE-1001',
+              teacher_id: t.teacher_id || '',
               type: t.type || 'Quiz',
               subject: t.subject || '',
               title: t.title || '',
@@ -810,18 +804,12 @@ const StudentTimetableApp = {
               class_code: t.class_code || '2R1'
             }));
         }
-      } catch (sbErr) {}
+      } catch (sbErr) {
+        console.warn('[StudentTimetable] Supabase query error:', sbErr);
+      }
     }
 
-    // Combine & merge: ensure tests scheduled on either side are immediately present
-    const testMap = new Map();
-    localTests.forEach(t => testMap.set(t.id, t));
-    apiTests.forEach(t => testMap.set(t.id, t));
-
-    this.tests = Array.from(testMap.values());
-    try {
-      localStorage.setItem('ssgmce_scheduled_tests', JSON.stringify(this.tests));
-    } catch (_) {}
+    this.tests = apiTests;
   },
 
   bindEvents() {

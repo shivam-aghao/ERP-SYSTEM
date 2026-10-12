@@ -1,435 +1,306 @@
 /**
- * College ERP - Attendance Service Layer
- * Simulates REST API / Backend DB interactions (PostgreSQL, Supabase, MySQL)
- * with LocalStorage fallback for true state persistence.
+ * College ERP — Teacher Attendance Service Layer
+ * frontend/js/teacher-attendance-service.js
+ *
+ * Strict Zero-LocalStorage Policy for Business Data:
+ * Supabase PostgreSQL via FastAPI Backend is the sole authoritative source of truth.
+ * No attendance records, drafts, or class cards are stored in browser storage.
  */
 
-const AttendanceService = {
-  STORAGE_KEY_ATTENDANCE: "erp_attendance_records",
-  STORAGE_KEY_DRAFTS: "erp_attendance_drafts",
-  STORAGE_KEY_CLASS_CARDS: "erp_teacher_class_cards",
+(function (window) {
+  'use strict';
 
-  defaultClassCards: [],
+  function getApiBase() {
+    if (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) {
+      return window.ERP_CONFIG.API_BASE;
+    }
+    var port = (window.location && window.location.port) ? window.location.port : '';
+    var origin = (port === '8000')
+      ? window.location.origin
+      : 'http://' + (window.location.hostname || 'localhost') + ':8000';
+    return origin + '/api/v1';
+  }
 
-  init() {
-    if (!localStorage.getItem(this.STORAGE_KEY_ATTENDANCE)) {
-      localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify([]));
-    }
-    if (!localStorage.getItem(this.STORAGE_KEY_DRAFTS)) {
-      localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify({}));
-    }
-    const savedCards = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
-    if (!savedCards || savedCards === "null") {
-      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
+  function getAuthHeaders() {
+    var headers = {
+      'Content-Type': 'application/json'
+    };
+    if (window.AuthClient && typeof window.AuthClient.getAccessToken === 'function') {
+      var tok = window.AuthClient.getAccessToken();
+      if (tok) headers['Authorization'] = 'Bearer ' + tok;
     } else {
+      var fallbackTok = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_teacher_token');
+      if (fallbackTok) headers['Authorization'] = 'Bearer ' + fallbackTok;
+    }
+    return headers;
+  }
+
+  const AttendanceService = {
+    // -------------------------------------------------------------
+    // 1. GET ALL ATTENDANCE RECORDS (LIVE DATABASE QUERY)
+    // -------------------------------------------------------------
+    async getAllRecords() {
+      const apiBase = getApiBase();
       try {
-        const parsed = JSON.parse(savedCards);
-        const filtered = Array.isArray(parsed) ? parsed.filter(c => !["CARD-1001", "CARD-1002", "CARD-1003"].includes(c.id)) : [];
-        if (filtered.length !== parsed.length) {
-          localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(filtered));
+        if (window.ErpApi && typeof window.ErpApi.getRecords === 'function') {
+          const live = await window.ErpApi.getRecords();
+          if (Array.isArray(live)) {
+            return live.map(r => ({
+              id: r.idDisplay || r.id_display || r.session_code || r.id,
+              department: r.departmentCode || r.department_code || "CSE",
+              departmentName: "Computer Science & Engineering",
+              classId: r.className || r.class_name || "3R",
+              subjectCode: r.subjectCode || r.subject_code,
+              subjectName: r.subjectName || r.subject_name,
+              date: r.sessionDate || r.session_date,
+              dateFormatted: r.dateFormatted || r.date_formatted || r.sessionDate || r.session_date,
+              totalStudents: r.totalStudents !== undefined ? r.totalStudents : (r.total_students || 0),
+              presentCount: r.presentCount !== undefined ? r.presentCount : (r.present_count || 0),
+              absentCount: r.absentCount !== undefined ? r.absentCount : ((r.total_students || 0) - (r.present_count || 0)),
+              percentage: `${r.attendanceRate !== undefined ? r.attendanceRate : (r.attendance_rate || 0)}%`,
+              status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
+              savedAt: (r.createdAt || r.created_at) ? new Date(r.createdAt || r.created_at).toLocaleDateString() : "Recorded"
+            }));
+          }
         }
-      } catch (e) {
-        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify([]));
-      }
-    }
-  },
 
-  async getAllRecords() {
-    this.init();
-    // 1. Try live Supabase / Backend API records
-    try {
-      if (typeof window !== 'undefined' && window.ErpApi && typeof window.ErpApi.getRecords === 'function') {
-        const live = await window.ErpApi.getRecords();
-        if (live && live.length > 0) {
-          return live.map(r => ({
-            id: r.idDisplay || r.id_display || r.session_code || r.id,
-            department: r.departmentCode || r.department_code || "CSE",
-            departmentName: "Computer Science & Engineering",
-            classId: r.className || r.class_name || "3R",
-            subjectCode: r.subjectCode || r.subject_code,
-            subjectName: r.subjectName || r.subject_name,
-            date: r.sessionDate || r.session_date,
-            dateFormatted: r.dateFormatted || r.date_formatted || r.sessionDate || r.session_date,
-            totalStudents: r.totalStudents !== undefined ? r.totalStudents : (r.total_students || 0),
-            presentCount: r.presentCount !== undefined ? r.presentCount : (r.present_count || 0),
-            absentCount: (r.absentCount !== undefined) ? r.absentCount : (r.absent_count !== undefined ? r.absent_count : ((r.totalStudents || r.total_students || 0) - (r.presentCount || r.present_count || 0))),
-            percentage: `${r.attendanceRate !== undefined ? r.attendanceRate : (r.attendance_rate || 0)}%`,
-            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
-            savedAt: (r.createdAt || r.created_at) ? new Date(r.createdAt || r.created_at).toLocaleDateString() : "Recently"
-          }));
+        const res = await fetch(`${apiBase}/attendance/records?limit=50`, {
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to load attendance records (HTTP ${res.status})`);
         }
-      }
-      const res = await fetch("http://localhost:8000/api/v1/attendance/records?limit=50");
-      if (res.ok) {
+
         const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          return json.data.map(r => ({
-            id: r.id_display || r.session_code || r.id,
-            department: r.department_code || "CSE",
-            departmentName: "Computer Science & Engineering",
-            classId: r.class_name || "3R",
-            subjectCode: r.subject_code,
-            subjectName: r.subject_name,
-            date: r.session_date,
-            dateFormatted: r.date_formatted || r.session_date,
-            totalStudents: r.total_students,
-            presentCount: r.present_count,
-            absentCount: r.absent_count,
-            percentage: `${r.attendance_rate}%`,
-            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
-            savedAt: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recently"
-          }));
-        }
+        const records = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+
+        return records.map(r => ({
+          id: r.id_display || r.session_code || r.id,
+          department: r.department_code || "CSE",
+          departmentName: "Computer Science & Engineering",
+          classId: r.class_name || r.class_id || "3R",
+          subjectCode: r.subject_code || r.subject_id,
+          subjectName: r.subject_name || "Course",
+          date: r.session_date,
+          dateFormatted: r.date_formatted || r.session_date,
+          totalStudents: r.total_students || 0,
+          presentCount: r.present_count || 0,
+          absentCount: r.absent_count || 0,
+          percentage: `${r.attendance_rate || 0}%`,
+          status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
+          savedAt: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recorded"
+        }));
+      } catch (err) {
+        console.error("[AttendanceService] Error loading records from server:", err);
+        throw err;
       }
-    } catch (e) {}
+    },
 
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEY_ATTENDANCE);
-      return JSON.parse(data) || [];
-    } catch (e) {
-      console.error("Failed to parse attendance records from storage:", e);
-      return (typeof ERP_DATA !== 'undefined' ? ERP_DATA.recentAttendance : []);
-    }
-  },
+    // -------------------------------------------------------------
+    // 2. CHECK DUPLICATE ATTENDANCE (LIVE SERVER VALIDATION)
+    // -------------------------------------------------------------
+    async checkDuplicate(department, classId, date, subjectCode) {
+      try {
+        const records = await this.getAllRecords();
+        if (!Array.isArray(records)) return false;
+        return records.some(
+          r => (r.classId === classId || r.className === classId) &&
+               r.date === date &&
+               r.subjectCode === subjectCode &&
+               r.status === "Submitted"
+        );
+      } catch (e) {
+        return false;
+      }
+    },
 
-  async checkDuplicate(department, classId, date, subjectCode) {
-    try {
-      const records = await this.getAllRecords();
-      if (!Array.isArray(records)) return false;
-      return records.some(
-        (r) =>
-          r.department === department &&
-          (r.classId === classId || r.className === classId) &&
-          r.date === date &&
-          r.subjectCode === subjectCode &&
-          r.status === "Submitted"
-      );
-    } catch (e) {
-      return false;
-    }
-  },
+    // -------------------------------------------------------------
+    // 3. GET DRAFT ATTENDANCE FROM DATABASE
+    // -------------------------------------------------------------
+    async getDraft(department, classId, date, subjectCode) {
+      const apiBase = getApiBase();
+      try {
+        const query = new URLSearchParams({
+          class_id: classId || '',
+          subject_id: subjectCode || '',
+          session_date: date || ''
+        }).toString();
 
-  getDraft(department, classId, date, subjectCode) {
-    this.init();
-    try {
-      const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
-      const key = `${department}_${classId}_${date}_${subjectCode}`;
-      return drafts[key] || null;
-    } catch (e) {
-      return null;
-    }
-  },
+        const res = await fetch(`${apiBase}/attendance/draft?${query}`, {
+          headers: getAuthHeaders()
+        });
 
-  saveDraft(sessionData) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.init();
-        const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
-        const key = `${sessionData.department}_${sessionData.classId}_${sessionData.date}_${sessionData.subjectCode}`;
-        drafts[key] = {
-          ...sessionData,
-          savedAt: new Date().toISOString(),
-          status: "Draft"
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data) {
+            return json.data;
+          }
+        }
+        return null;
+      } catch (e) {
+        console.warn("[AttendanceService] Could not fetch draft from server:", e);
+        return null;
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 4. SAVE DRAFT TO DATABASE
+    // -------------------------------------------------------------
+    async saveDraft(sessionData) {
+      const apiBase = getApiBase();
+      try {
+        const presentIds = (sessionData.students || [])
+          .filter(s => s.status === "present")
+          .map(s => s.id || s.studentCode || s.roll);
+        const absentIds = (sessionData.students || [])
+          .filter(s => s.status === "absent")
+          .map(s => s.id || s.studentCode || s.roll);
+
+        const payload = {
+          class_id: sessionData.classId,
+          subject_id: sessionData.subjectCode,
+          session_date: sessionData.date,
+          period_number: sessionData.periodNumber ? parseInt(sessionData.periodNumber) : 1,
+          session_type: sessionData.sessionType || "theory",
+          present_student_ids: presentIds,
+          absent_student_ids: absentIds,
+          remarks: sessionData.remarks || "Draft saved from web portal"
         };
-        localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify(drafts));
-        resolve({ success: true, message: "Attendance saved as draft successfully." });
-      }, 300);
-    });
-  },
 
-  async submitAttendance(sessionData) {
-    this.init();
-    const isDup = await this.checkDuplicate(sessionData.department, sessionData.classId, sessionData.date, sessionData.subjectCode);
-    if (isDup) {
-      throw {
-        duplicate: true,
-        message: `Attendance for ${sessionData.classId} - ${sessionData.subjectName} on ${sessionData.date} is already submitted!`
-      };
-    }
+        const res = await fetch(`${apiBase}/attendance/draft`, {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
 
-    // 1. Send live submission to FastAPI Backend & Supabase
-    try {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || errData.message || `Draft save failed (HTTP ${res.status})`);
+        }
+
+        const data = await res.json();
+        return { success: true, message: "Attendance saved as draft in database.", data: data.data };
+      } catch (err) {
+        console.error("[AttendanceService] Save draft error:", err);
+        throw err;
+      }
+    },
+
+    // -------------------------------------------------------------
+    // 5. SUBMIT ATTENDANCE DIRECTLY TO DATABASE
+    // -------------------------------------------------------------
+    async submitAttendance(sessionData) {
+      const apiBase = getApiBase();
       const presentIds = (sessionData.students || [])
         .filter(s => s.status === "present")
-        .map(s => s.id || s.studentCode || s.prn || s.roll);
+        .map(s => s.id || s.studentCode || s.roll);
       const absentIds = (sessionData.students || [])
         .filter(s => s.status === "absent")
-        .map(s => s.id || s.studentCode || s.prn || s.roll);
+        .map(s => s.id || s.studentCode || s.roll);
 
       const payload = {
         class_id: sessionData.classId,
         subject_id: sessionData.subjectCode,
         session_date: sessionData.date,
         period_number: sessionData.periodNumber ? parseInt(sessionData.periodNumber) : 1,
-        session_type: "theory",
+        session_type: sessionData.sessionType || "theory",
         present_student_ids: presentIds,
-        absent_student_ids: absentIds
+        absent_student_ids: absentIds,
+        remarks: sessionData.remarks || "Formal attendance submission"
       };
 
-      const resp = await fetch("http://localhost:8000/api/v1/attendance/submit", {
+      const res = await fetch(`${apiBase}/attendance/submit`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
-      if (!resp.ok) {
-        console.warn("[AttendanceService] Backend submit responded with:", resp.status);
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const msg = errJson.detail || errJson.message || `Attendance submission failed (HTTP ${res.status})`;
+        throw new Error(msg);
       }
-    } catch (apiErr) {
-      console.warn("[AttendanceService] Backend submit error (persisting locally):", apiErr);
-    }
 
-    const records = this.getAllRecords();
-    const newRecord = {
-      id: `REC-${Date.now().toString().slice(-6)}`,
-      department: sessionData.department,
-      departmentName: sessionData.departmentName,
-      classId: sessionData.classId,
-      subjectCode: sessionData.subjectCode,
-      subjectName: sessionData.subjectName,
-      date: sessionData.date,
-      dateFormatted: sessionData.dateFormatted,
-      totalStudents: sessionData.totalStudents,
-      presentCount: sessionData.presentCount,
-      absentCount: sessionData.absentCount,
-      percentage: sessionData.percentage,
-      students: sessionData.students,
-      status: "Submitted",
-      savedAt: "Just now"
-    };
+      const resData = await res.json();
+      return {
+        success: true,
+        message: "Attendance successfully recorded in official database.",
+        data: resData.data || resData
+      };
+    },
 
-    records.unshift(newRecord);
-    localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify(records));
+    // -------------------------------------------------------------
+    // 6. GET TEACHER CLASS CARDS (FETCHED LIVE FROM DATABASE)
+    // -------------------------------------------------------------
+    async getAllClassCards() {
+      const apiBase = getApiBase();
+      try {
+        if (window.ErpApi && typeof window.ErpApi.getClassCards === 'function') {
+          const liveCards = await window.ErpApi.getClassCards();
+          if (Array.isArray(liveCards) && liveCards.length > 0) {
+            return liveCards;
+          }
+        }
 
-    // Clear any corresponding draft
-    const drafts = JSON.parse(localStorage.getItem(this.STORAGE_KEY_DRAFTS)) || {};
-    const key = `${sessionData.department}_${sessionData.classId}_${sessionData.date}_${sessionData.subjectCode}`;
-    delete drafts[key];
-    localStorage.setItem(this.STORAGE_KEY_DRAFTS, JSON.stringify(drafts));
+        const res = await fetch(`${apiBase}/management/teacher/classes`, {
+          headers: getAuthHeaders()
+        });
 
-    return { success: true, record: newRecord, message: "Attendance submitted successfully." };
-  },
+        if (res.ok) {
+          const json = await res.json();
+          const classes = json.data || json || [];
+          if (Array.isArray(classes) && classes.length > 0) {
+            return classes.map((c, idx) => ({
+              id: c.class_id || `CARD-${c.class_name}`,
+              department: "CSE",
+              department_name: "Computer Science & Engineering",
+              class: c.class_name,
+              class_name: c.class_name,
+              subject_code: c.subject_code || "CSE",
+              subject_name: c.subject_name || `${c.class_name} Course`,
+              card_type: "assigned",
+              time_slot: c.time_slot || "Scheduled Slot",
+              room_number: c.room || "Main Building",
+              color_gradient: idx % 2 === 0 ? "from-blue-600 to-indigo-700" : "from-teal-600 to-emerald-700"
+            }));
+          }
+        }
 
-  deleteRecord(id) {
-    const records = this.getAllRecords().filter(r => r.id !== id);
-    localStorage.setItem(this.STORAGE_KEY_ATTENDANCE, JSON.stringify(records));
-    return records;
-  },
+        const fallbackRes = await fetch(`${apiBase}/classes`, {
+          headers: getAuthHeaders()
+        });
+        if (fallbackRes.ok) {
+          const json = await fallbackRes.json();
+          const list = json.data || json || [];
+          if (Array.isArray(list) && list.length > 0) {
+            return list.map((c, idx) => ({
+              id: c.id,
+              department: "CSE",
+              department_name: "Computer Science & Engineering",
+              class: c.class_name || c.name,
+              class_name: c.class_name || c.name,
+              subject_code: "CSE-CORE",
+              subject_name: `${c.class_name || c.name} Instruction`,
+              card_type: "roster",
+              time_slot: "Campus Schedule",
+              room_number: c.room || "Hall",
+              color_gradient: "from-blue-600 to-indigo-700"
+            }));
+          }
+        }
 
-  // =========================================================================
-  // TEACHER CLASS CARDS (Table / Collection: teacher_class_cards)
-  // Endpoints verify ownership: cards belong to the logged-in teacher.
-  // =========================================================================
-
-  async getAllClassCards() {
-    this.init();
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
-      const parsed = data ? JSON.parse(data) : [];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        throw new Error("No authorized classes found for faculty member in database.");
+      } catch (err) {
+        console.error("[AttendanceService] Class cards load error:", err);
+        throw err;
       }
-    } catch (e) {}
+    },
 
-    // Fallback: load live cards from backend or ERP_DATA
-    try {
-      if (typeof window !== "undefined" && window.ErpApi) {
-        const liveCards = await window.ErpApi.getClassCards();
-        if (Array.isArray(liveCards) && liveCards.length > 0) {
-          localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(liveCards));
-          return liveCards;
-        }
-      }
-    } catch (apiErr) {}
-
-    if (typeof ERP_DATA !== "undefined" && Array.isArray(ERP_DATA.classCards) && ERP_DATA.classCards.length > 0) {
-      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(ERP_DATA.classCards));
-      return ERP_DATA.classCards;
+    async getTeacherCards(teacherId) {
+      return await this.getAllClassCards();
     }
+  };
 
-    const defaultCards = [
-      {
-        id: "CARD-2R1-DS",
-        department: "CSE",
-        department_name: "Computer Science & Engineering",
-        class: "2R1",
-        class_name: "2R1",
-        subject_code: "CS302",
-        subject_name: "Data Structures",
-        card_type: "scheduled",
-        time_slot: "10:30 AM - 11:30 AM",
-        room_number: "Hall A",
-        color_gradient: "from-blue-600 to-indigo-700"
-      },
-      {
-        id: "CARD-2R2-JP",
-        department: "CSE",
-        department_name: "Computer Science & Engineering",
-        class: "2R2",
-        class_name: "2R2",
-        subject_code: "CS303",
-        subject_name: "Java Programming",
-        card_type: "scheduled",
-        time_slot: "11:30 AM - 12:30 PM",
-        room_number: "Lab 301 / Hall B",
-        color_gradient: "from-teal-600 to-emerald-700"
-      },
-      {
-        id: "CARD-3R-DBMS",
-        department: "CSE",
-        department_name: "Computer Science & Engineering",
-        class: "3R",
-        class_name: "3R",
-        subject_code: "CS305",
-        subject_name: "Database Management",
-        card_type: "scheduled",
-        time_slot: "02:00 PM - 03:00 PM",
-        room_number: "Hall C",
-        color_gradient: "from-indigo-600 to-purple-700"
-      }
-    ];
-
-    try {
-      localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(defaultCards));
-    } catch (_) {}
-    return defaultCards;
-  },
-
-  async getTeacherCards(teacherId) {
-    if (!teacherId) {
-      throw new Error("Unauthorized: Teacher ID is required.");
-    }
-    const all = await this.getAllClassCards();
-    return all.filter((card) => card.teacher_id === teacherId);
-  },
-
-  getCachedClassCards() {
-    this.init();
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEY_CLASS_CARDS);
-      return JSON.parse(data) || [];
-    } catch (e) {
-      return [];
-    }
-  },
-
-  checkCardDuplicate(teacherId, department, classId, subjectCode, excludeCardId = null) {
-    const all = this.getCachedClassCards();
-    return all.some(
-      (c) =>
-        c.teacher_id === teacherId &&
-        c.department === department &&
-        c.class === classId &&
-        c.subject_code === subjectCode &&
-        (!excludeCardId || c.id !== excludeCardId)
-    );
-  },
-
-  createCard(teacherId, cardData) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (!teacherId) {
-          return reject(new Error("Unauthorized: Teacher ID is missing."));
-        }
-
-        const { department, department_name, class: classId, subject_code, subject_name } = cardData;
-
-        if (!department || !classId || !subject_code) {
-          return reject(new Error("Department, Class, and Subject are all required."));
-        }
-
-        if (this.checkCardDuplicate(teacherId, department, classId, subject_code)) {
-          return reject(new Error("Duplicate card: You already have a class card for this Department, Class, and Subject."));
-        }
-
-        const all = this.getCachedClassCards();
-        const newCard = {
-          id: `CARD-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-          teacher_id: teacherId,
-          department: department,
-          department_name: department_name || department,
-          class: classId,
-          subject_code: subject_code,
-          subject_name: subject_name || subject_code,
-          created_at: new Date().toISOString()
-        };
-
-        all.unshift(newCard);
-        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(all));
-        resolve({ success: true, card: newCard, message: "Class card created successfully." });
-      }, 150);
-    });
-  },
-
-  updateCard(teacherId, cardId, cardData) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (!teacherId) {
-          return reject(new Error("Unauthorized: Teacher ID is missing."));
-        }
-
-        const all = this.getCachedClassCards();
-        const cardIndex = all.findIndex((c) => c.id === cardId);
-
-        if (cardIndex === -1) {
-          return reject(new Error("Card not found."));
-        }
-
-        // Security verify: Card must belong to the logged-in teacher
-        if (all[cardIndex].teacher_id !== teacherId) {
-          return reject(new Error("Forbidden: You do not have permission to modify this card."));
-        }
-
-        const { department, department_name, class: classId, subject_code, subject_name } = cardData;
-
-        if (this.checkCardDuplicate(teacherId, department, classId, subject_code, cardId)) {
-          return reject(new Error("Duplicate card: Another card already exists with this combination."));
-        }
-
-        all[cardIndex] = {
-          ...all[cardIndex],
-          department: department || all[cardIndex].department,
-          department_name: department_name || all[cardIndex].department_name,
-          class: classId || all[cardIndex].class,
-          subject_code: subject_code || all[cardIndex].subject_code,
-          subject_name: subject_name || all[cardIndex].subject_name,
-          updated_at: new Date().toISOString()
-        };
-
-        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(all));
-        resolve({ success: true, card: all[cardIndex], message: "Class card updated successfully." });
-      }, 150);
-    });
-  },
-
-  deleteCard(teacherId, cardId) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (!teacherId) {
-          return reject(new Error("Unauthorized: Teacher ID is missing."));
-        }
-
-        const all = this.getCachedClassCards();
-        const card = all.find((c) => c.id === cardId);
-
-        if (!card) {
-          return reject(new Error("Card not found."));
-        }
-
-        // Security verify: Card must belong to the logged-in teacher
-        if (card.teacher_id !== teacherId) {
-          return reject(new Error("Forbidden: You do not have permission to delete this card."));
-        }
-
-        const filtered = all.filter((c) => c.id !== cardId);
-        localStorage.setItem(this.STORAGE_KEY_CLASS_CARDS, JSON.stringify(filtered));
-
-        // Note: Past attendance records (STORAGE_KEY_ATTENDANCE) are explicitly untouched.
-        resolve({ success: true, message: "Class card deleted successfully without affecting past attendance records." });
-      }, 150);
-    });
-  }
-};
-
-window.AttendanceService = AttendanceService;
-
-
+  window.AttendanceService = AttendanceService;
+})(window);
