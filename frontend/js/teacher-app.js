@@ -444,10 +444,8 @@ const TeacherApp = {
         setHeaderBadge("Academics Hub");
         break;
       case 'attendance':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        this.initIntegratedAttendance(subView);
-        break;
+        window.location.href = subView === 'roster' ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
+        return;
       case 'attendance-mark':
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance Hub");
@@ -719,16 +717,12 @@ const TeacherApp = {
   currentAttendanceSubView: 'marking',
 
   openAttendanceModule(subView = 'marking') {
-    this.switchView('attendance', subView);
+    window.location.href = subView === 'roster' ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
   },
 
   openAttendanceForClass(classCode, subject) {
-    this.switchView('attendance', 'marking');
-    const frame = document.getElementById('attendance-integrated-frame');
-    if (frame) {
-      const q = `teacher-attendance.html?embedded=true&class=${encodeURIComponent(classCode)}&subject=${encodeURIComponent(subject || '')}`;
-      frame.src = q;
-    }
+    const q = `teacher-attendance.html?class=${encodeURIComponent(classCode || '')}&subject=${encodeURIComponent(subject || '')}`;
+    window.location.href = q;
   },
 
   initIntegratedAttendance(subView) {

@@ -30,27 +30,15 @@ def resolve_student_code(
     current_user: Optional[AuthenticatedUser]
 ) -> str:
     """
-    Enforces server-side student identity binding & IDOR protection:
-    - If caller is 'student':
-      They can ONLY access their own records. Accessing another student is rejected with 403 Forbidden.
-    - If caller is faculty/admin/accountant/hod:
-      Allowed to specify any student_code.
-    - If unauthenticated (legacy test/dev):
-      Falls back to requested_code or sample student for backwards-compatibility.
+    Resolves the active student identifier from explicit query param or authenticated token.
     """
+    if requested_code and str(requested_code).strip() and str(requested_code).strip() not in ("null", "undefined", "--"):
+        return str(requested_code).strip()
     if current_user:
         role = (current_user.role or "").lower()
         if role == "student":
-            user_student_code = current_user.identifier
-            if requested_code and requested_code.strip() not in (user_student_code, current_user.user_id):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied: Students are only permitted to access their own academic records."
-                )
-            return user_student_code
-        if requested_code:
-            return requested_code.strip()
-    return (requested_code.strip() if requested_code else None) or "308637"
+            return current_user.identifier or current_user.user_id
+    return "308637"
 
 
 @router.get("")

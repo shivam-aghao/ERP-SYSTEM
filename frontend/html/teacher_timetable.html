@@ -107,18 +107,22 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>View Profile</span>
             </a>
+            <a href="teacher-dashboard.html#leave" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+              <span>Apply Leave</span>
+            </a>
             <a href="teacher-dashboard.html#information" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               <span>Information</span>
             </a>
-            <a href="teacher-dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+            <a href="teacher-dashboard.html#settings" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               <span>Settings</span>
             </a>
             <div class="p-divider"></div>
-            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="alert('Faculty logged out successfully.')">
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              <span>Logout</span>
+              <span>Sign Out</span>
             </div>
           </div>
         </div>
@@ -205,7 +209,7 @@
 
             <!-- 4. Classes -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="classes">
+              <a href="teacher-dashboard.html#classes" class="nav-item sidebar-link" data-view="classes">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M2 3h20"></path>
                   <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
@@ -218,7 +222,7 @@
 
             <!-- 5. Students -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="students">
+              <a href="teacher-dashboard.html#students" class="nav-item sidebar-link" data-view="students">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
@@ -232,7 +236,7 @@
 
             <!-- 6. Syllabus -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="syllabus">
+              <a href="teacher-dashboard.html#syllabus" class="nav-item sidebar-link" data-view="syllabus">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -244,7 +248,7 @@
 
             <!-- 7. Results -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="results">
+              <a href="teacher-dashboard.html#results" class="nav-item sidebar-link" data-view="results">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -267,6 +271,22 @@
                 </svg>
                 <span class="nav-label" style="font-weight: 700;">Quiz Management</span>
                 <span class="nav-badge" style="background:#2563EB; color:white;">Live</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 7c. Apply Leave -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#leave" class="nav-item sidebar-link" data-view="leave">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <line x1="12" y1="14" x2="12" y2="18"></line>
+                  <line x1="10" y1="16" x2="14" y2="16"></line>
+                </svg>
+                <span class="nav-label">Apply Leave</span>
                 <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
             </li>
@@ -302,7 +322,7 @@
 
             <!-- 10. Notifications -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="notifications">
+              <a href="teacher-dashboard.html#notifications" class="nav-item sidebar-link" data-view="notifications">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -314,12 +334,24 @@
 
             <!-- 11. Settings -->
             <li class="sidebar-item">
-              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="settings">
+              <a href="teacher-dashboard.html#settings" class="nav-item sidebar-link" data-view="settings">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
                 <span class="nav-label">Settings</span>
+              </a>
+            </li>
+
+            <!-- 12. Sign Out -->
+            <li class="sidebar-item">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')" style="color:#FCA5A5;">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="nav-label" style="color:#FCA5A5; font-weight:700;">Sign Out</span>
               </a>
             </li>
           </ul>
@@ -392,7 +424,7 @@
         <!-- ========================================================
              ISOLATED TIMETABLE MODULE SECTION
              ======================================================== -->
-        <section id="timetable-view" class="view-section-pane app-module-view" style="display:block;">
+        <section id="timetable-view" class="view-section-pane app-module-view active" style="display:block;">
           <div id="timetable-content">
             <!-- Timetable generated by teacher_timetable.js -->
           </div>
@@ -656,9 +688,11 @@
   <div id="toast-container" class="toast-stack" aria-live="polite"></div>
 
   <!-- Shared Data & Utilities -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/data.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
   <script src="../js/teacher-api.js"></script>
   <script src="../js/supabaseClient.js"></script>
 

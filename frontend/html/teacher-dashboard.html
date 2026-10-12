@@ -200,6 +200,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>View Profile</span>
             </div>
+            <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('leave')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+              <span>Apply Leave</span>
+            </div>
             <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('information')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               <span>Information</span>
@@ -209,9 +213,9 @@
               <span>Settings</span>
             </div>
             <div class="p-divider"></div>
-            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : TeacherApp.handleLogout()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              <span>Logout</span>
+              <span>Sign Out</span>
             </div>
           </div>
         </div>
@@ -253,9 +257,9 @@
               </div>
             </li>
 
-            <!-- 2. Attendance (Single Entry Point via Timetable) -->
+            <!-- 2. Attendance -->
             <li class="sidebar-item">
-              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="attendance" onclick="TeacherApp.switchView('timetable')" title="Mark Student Attendance via Timetable">
+              <a href="teacher-attendance.html" class="nav-item sidebar-link" data-view="attendance" title="Mark & Manage Student Attendance">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -335,7 +339,7 @@
 
             <!-- 7. Results (with chevron) -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="results" onclick="TeacherApp.switchView('results')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="results" onclick="TeacherApp.switchView('results')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -362,6 +366,22 @@
               </a>
             </li>
 
+            <!-- 7c. Leave & Substitution -->
+            <li class="sidebar-item">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="leave" onclick="TeacherApp.switchView('leave')">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <line x1="12" y1="14" x2="12" y2="18"></line>
+                  <line x1="10" y1="16" x2="14" y2="16"></line>
+                </svg>
+                <span class="nav-label">Apply Leave</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
             <!-- Preferences & Info Divider -->
             <li class="sidebar-item">
               <div class="sidebar-section-divider"></div>
@@ -370,7 +390,7 @@
 
             <!-- 8. Profile -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="profile" onclick="TeacherApp.switchView('profile')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="profile" onclick="TeacherApp.switchView('profile')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
@@ -381,7 +401,7 @@
 
             <!-- 9. Information -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="information" onclick="TeacherApp.switchView('information')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="information" onclick="TeacherApp.switchView('information')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -393,7 +413,7 @@
 
             <!-- 10. Notifications -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="notifications" onclick="TeacherApp.switchView('notifications')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="notifications" onclick="TeacherApp.switchView('notifications')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -405,12 +425,24 @@
 
             <!-- 11. Settings -->
             <li class="sidebar-item">
-              <a class="nav-item sidebar-link" data-view="settings" onclick="TeacherApp.switchView('settings')">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" data-view="settings" onclick="TeacherApp.switchView('settings')">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
                 <span class="nav-label">Settings</span>
+              </a>
+            </li>
+
+            <!-- 12. Sign Out -->
+            <li class="sidebar-item">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" onclick="window.handleLogout ? window.handleLogout() : TeacherApp.handleLogout()" style="color:#FCA5A5;">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="nav-label" style="color:#FCA5A5; font-weight:700;">Sign Out</span>
               </a>
             </li>
           </ul>
@@ -751,7 +783,7 @@
             <!-- Embedded Live Attendance Module -->
             <iframe id="attendance-integrated-frame" 
                     class="attendance-integrated-frame"
-                    src="teacher-attendance.html?embedded=true" 
+                    src="about:blank" 
                     title="Teacher Attendance Management"
                     onload="TeacherApp.onAttendanceFrameLoaded()"
                     onerror="TeacherApp.onAttendanceFrameError()">
@@ -1313,6 +1345,13 @@
         </section>
 
         <!-- ========================================================
+             PANE 7B: LEAVE APPLICATION & SUBSTITUTION VIEW
+             ======================================================== -->
+        <section id="leave-view" class="view-section-pane app-module-view">
+          <!-- Leave application & substitution console generated by JS -->
+        </section>
+
+        <!-- ========================================================
              PANE 8: NOTIFICATIONS HUB VIEW
              ======================================================== -->
         <section id="notifications-view" class="view-section-pane app-module-view">
@@ -1740,7 +1779,7 @@
             <span class="footer-heading">Quick Links</span>
             <a href="javascript:void(0)" onclick="TeacherApp.switchView('dashboard')">Dashboard</a>
             <a href="javascript:void(0)" onclick="TeacherApp.switchView('profile')">Profile</a>
-            <a href="javascript:void(0)" onclick="TeacherApp.switchView('attendance')">Attendance</a>
+            <a href="teacher-attendance.html">Attendance</a>
             <a href="javascript:void(0)" onclick="TeacherApp.switchView('timetable')">Timetable</a>
             <a href="javascript:void(0)" onclick="TeacherApp.switchView('classes')">Classes</a>
             <a href="javascript:void(0)" onclick="TeacherApp.switchView('students')">Students</a>
@@ -1772,6 +1811,7 @@
   <script src="../js/supabaseClient.js"></script>
 
   <!-- Application Scripts -->
+  <script src="../js/auth.js"></script>
   <script src="../js/data.js"></script>
   <script src="../js/state.js"></script>
   <script src="../js/calendar.js"></script>

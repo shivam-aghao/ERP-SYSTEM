@@ -142,6 +142,8 @@ class QuizService:
 
         questions_list = cls.get_prop(payload, "questions") or []
 
+        res_pub = bool(cls.get_prop(payload, "result_published", False))
+
         db.execute(text("""
             INSERT INTO quizzes (
                 id, teacher_id, class_id, subject_id, title, description, instructions,
@@ -154,7 +156,7 @@ class QuizService:
                 :tot_q, :tot_marks, :pass_marks, :dur,
                 :start_t, :end_t, :max_att,
                 :shuff_q, :shuff_opt, :neg_m, :neg_val,
-                :st, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                :st, :res_pub, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
         """), {
             "id": quiz_id,
@@ -175,7 +177,8 @@ class QuizService:
             "shuff_opt": shuff_opt,
             "neg_m": neg_marking,
             "neg_val": neg_val,
-            "st": status_val
+            "st": status_val,
+            "res_pub": res_pub
         })
 
         # Insert initial questions and options
@@ -483,9 +486,25 @@ class QuizService:
         """), {"aid": attempt_id}).fetchall()
         saved_answers = {str(a[0]): {"selected_option": a[1], "text_answer": a[2], "is_marked_for_review": bool(a[3])} for a in saved_ans_rows}
 
+        quiz_summary = {
+            "id": str(qm.get("id")),
+            "title": qm.get("title") or "Quiz Assessment",
+            "subject": qm.get("subject"),
+            "subject_name": qm.get("subject_name") or qm.get("subject") or "General Subject",
+            "duration_minutes": duration_mins,
+            "total_marks": float(qm.get("total_marks") or 100.0),
+            "passing_marks": float(qm.get("passing_marks") or 40.0),
+            "negative_marks": float(qm.get("negative_marks") or qm.get("negative_marks_per_question") or 0.0),
+            "negative_marks_per_question": float(qm.get("negative_marks_per_question") or 0.0),
+            "negative_marking": bool(qm.get("negative_marking")),
+            "class_id": str(qm.get("class_id")) if qm.get("class_id") else None,
+            "status": qm.get("status")
+        }
+
         return {
             "attempt_id": attempt_id,
             "quiz_id": quiz_id,
+            "quiz": quiz_summary,
             "title": qm.get("title"),
             "instructions": qm.get("instructions"),
             "duration_minutes": duration_mins,
@@ -682,12 +701,31 @@ class QuizService:
             q_marks = float(q_row[1] or 2.0)
             q_neg = float(q_row[2] or default_neg_penalty) if is_neg_marking else 0.0
 
-            # Correct options from DB
-            correct_opts = db.execute(text("""
-                SELECT id, option_text FROM question_options WHERE question_id = :qid AND is_correct = TRUE
+            # All options from DB ordered by option_order ASC so we know their letter keys (A, B, C, D)
+            all_opts = db.execute(text("""
+                SELECT id, option_text, option_order, is_correct FROM question_options WHERE question_id = :qid ORDER BY option_order ASC
             """), {"qid": q_id}).fetchall()
-            correct_ids = [str(o[0]) for o in correct_opts]
-            correct_texts = [str(o[1]).strip().lower() for o in correct_opts]
+
+            correct_ids = []
+            correct_texts = []
+            correct_keys = []
+            formatted_opts = []
+            for idx, o in enumerate(all_opts):
+                opt_key = chr(65 + idx)
+                opt_id = str(o[0])
+                opt_txt = str(o[1] or "").strip()
+                opt_corr = bool(o[3])
+                formatted_opts.append({
+                    "id": opt_id,
+                    "key": opt_key,
+                    "text": opt_txt,
+                    "option_text": opt_txt,
+                    "is_correct": opt_corr
+                })
+                if opt_corr:
+                    correct_ids.append(opt_id)
+                    correct_texts.append(opt_txt.lower())
+                    correct_keys.append(opt_key.upper())
 
             # Student answer from DB
             st_ans = db.execute(text("""
@@ -703,10 +741,17 @@ class QuizService:
 
             if is_attempted:
                 attempted_count += 1
-                # Check option id match or text match
-                if sel_opt and (sel_opt in correct_ids or sel_opt.lower() in correct_texts):
+                # Check option letter key ('A','B','C','D'), option id, or option text match
+                if sel_opt and (
+                    sel_opt.upper() in correct_keys
+                    or sel_opt in correct_ids
+                    or sel_opt.lower() in correct_texts
+                ):
                     is_correct = True
-                elif txt_ans and (txt_ans.lower() in correct_texts):
+                elif txt_ans and (
+                    txt_ans.upper() in correct_keys
+                    or txt_ans.lower() in correct_texts
+                ):
                     is_correct = True
 
                 if is_correct:
@@ -736,13 +781,16 @@ class QuizService:
                     """), {"id": st_ans[0]})
 
             # Collect for result breakdown
-            primary_corr_text = correct_opts[0][1] if correct_opts else "N/A"
+            primary_corr_key = correct_keys[0] if correct_keys else (correct_texts[0] if correct_texts else "A")
             review_items.append({
                 "question_id": q_id,
                 "question_text": q_row[3],
+                "options": formatted_opts,
                 "selected_option": sel_opt or txt_ans or None,
-                "correct_option": primary_corr_text,
+                "correct_option": primary_corr_key,
+                "correct_options": correct_keys,
                 "is_correct": is_correct,
+                "marks": q_marks,
                 "marks_awarded": q_marks if is_correct else ((-q_neg) if (is_neg_marking and is_attempted and q_neg > 0) else 0.0),
                 "explanation": q_row[5] or ""
             })
@@ -798,8 +846,9 @@ class QuizService:
         })
         db.commit()
 
-        # Check result release policy
-        is_published = bool(qm.get("result_published"))
+        # Check result release policy (default True if null)
+        raw_pub = qm.get("result_published")
+        is_published = True if raw_pub is None else bool(raw_pub)
 
         result_payload = {
             "attempt_id": attempt_id,
@@ -815,12 +864,16 @@ class QuizService:
             "total_questions": total_questions,
             "attempted_questions": attempted_count,
             "correct_answers": correct_count,
+            "correct_count": correct_count,
             "wrong_answers": wrong_count,
+            "incorrect_count": wrong_count,
             "unanswered_questions": unanswered_count,
+            "unanswered_count": unanswered_count,
             "negative_marks_deducted": negative_marks,
             "time_taken_seconds": time_taken_seconds,
             "submitted_at": now.isoformat(),
-            "results_released": is_published
+            "results_released": is_published,
+            "is_released": is_published
         }
 
         if is_published:
@@ -845,7 +898,8 @@ class QuizService:
         quiz = db.execute(text("SELECT * FROM quizzes WHERE id = :id"), {"id": qid}).fetchone()
         qm = dict(quiz._mapping) if quiz else {}
 
-        is_released = bool(qm.get("result_published", False)) or is_teacher_or_admin
+        raw_pub = qm.get("result_published")
+        is_released = (True if raw_pub is None else bool(raw_pub)) or is_teacher_or_admin
 
         # Basic scorecard
         tot_marks = float(qm.get("total_marks") or 100.0)
@@ -862,6 +916,7 @@ class QuizService:
             "quiz_title": qm.get("title"),
             "status": am.get("status"),
             "is_released": is_released,
+            "results_released": is_released,
             "score": final_marks,
             "final_marks": final_marks,
             "total_marks": tot_marks,
@@ -871,8 +926,11 @@ class QuizService:
             "total_questions": am.get("total_questions", 0),
             "attempted_questions": am.get("attempted_questions", 0),
             "correct_answers": am.get("correct_answers", 0),
+            "correct_count": am.get("correct_answers", 0),
             "wrong_answers": am.get("wrong_answers", 0),
+            "incorrect_count": am.get("wrong_answers", 0),
             "unanswered_questions": am.get("unanswered_questions", 0),
+            "unanswered_count": am.get("unanswered_questions", 0),
             "time_taken_seconds": time_taken,
             "submitted_at": submitted_at.isoformat() if submitted_at else None
         }
@@ -898,22 +956,36 @@ class QuizService:
                 WHERE attempt_id = :aid AND question_id = :qid
             """), {"aid": attempt_id, "qid": q_id}).fetchone()
 
-            corr_opts = db.execute(text("""
-                SELECT option_text FROM question_options WHERE question_id = :qid AND is_correct = TRUE
-            """), {"qid": q_id}).fetchall()
-            corr_text = ", ".join([o[0] for o in corr_opts]) if corr_opts else "N/A"
-
             all_opts = db.execute(text("""
                 SELECT id, option_text, is_correct FROM question_options WHERE question_id = :qid ORDER BY option_order ASC
             """), {"qid": q_id}).fetchall()
 
+            formatted_opts = []
+            corr_keys = []
+            for idx, o in enumerate(all_opts):
+                opt_key = chr(65 + idx)
+                opt_corr = bool(o[2])
+                formatted_opts.append({
+                    "id": str(o[0]),
+                    "key": opt_key,
+                    "text": o[1],
+                    "option_text": o[1],
+                    "is_correct": opt_corr
+                })
+                if opt_corr:
+                    corr_keys.append(opt_key)
+
+            primary_corr = corr_keys[0] if corr_keys else "A"
+
             reviews.append({
                 "question_id": q_id,
                 "question_text": q[1],
-                "options": [{"id": str(o[0]), "text": o[1], "is_correct": bool(o[2])} for o in all_opts],
+                "options": formatted_opts,
                 "selected_option": ans[0] if ans else None,
-                "correct_option": corr_text,
+                "correct_option": primary_corr,
+                "correct_options": corr_keys,
                 "is_correct": bool(ans[2]) if ans else False,
+                "marks": float(q[3] or 2.0),
                 "marks_awarded": float(ans[3] or 0.0) if ans else 0.0,
                 "total_marks": float(q[3] or 2.0),
                 "explanation": q[4] or ""
@@ -1033,7 +1105,8 @@ class QuizService:
                 "marks": float(q[2] or 2.0),
                 "total_answered": tot_ans,
                 "correct_count": corr_ans,
-                "accuracy_percentage": acc_pct
+                "accuracy_percentage": acc_pct,
+                "accuracy": acc_pct
             })
 
         # Student rankings (Leaderboard)
@@ -1046,20 +1119,25 @@ class QuizService:
             dur = int((sb - st).total_seconds()) if (st and sb) else 0
             dur_mins = dur // 60
             dur_secs = dur % 60
+            pct_val = round(float(am.get("percentage") or 0.0), 1)
 
             rankings.append({
                 "rank": rank,
                 "student_id": str(am["student_id"]),
                 "name": am["full_name"],
-                "roll": am.get("roll_no") or am.get("student_code"),
-                "student_code": am.get("student_code"),
+                "roll": am.get("roll_no") or am.get("student_code") or "-",
+                "roll_no": am.get("roll_no") or am.get("student_code") or "-",
+                "student_code": am.get("student_code") or "-",
                 "score": float(am.get("final_marks") or 0.0),
-                "percentage": float(am.get("percentage") or 0.0),
+                "percentage": pct_val,
+                "accuracy": pct_val,
                 "status": am.get("result_status", "pass"),
                 "time_taken_seconds": dur,
                 "speed": f"{dur_mins}m {dur_secs:02d}s"
             })
             rank += 1
+
+        avg_accuracy = round(sum(r["percentage"] for r in rankings) / len(rankings), 1) if rankings else 0.0
 
         # Proctoring security incidents
         sec_count = db.execute(text("""
@@ -1077,6 +1155,8 @@ class QuizService:
             "passing_marks": float(qm.get("passing_marks") or 40.0),
             "total_attempts": total_attempts,
             "average_score": avg_score,
+            "average_accuracy": avg_accuracy,
+            "average_time_seconds": avg_time,
             "highest_score": high_score,
             "lowest_score": low_score,
             "pass_percentage": pass_pct,
@@ -1088,7 +1168,9 @@ class QuizService:
             },
             "attempt_distribution": buckets,
             "question_accuracy": question_accuracy,
+            "questions_analysis": question_accuracy,
             "student_ranking": rankings,
+            "top_performers": rankings[:10],
             "security_incidents_count": sec_count
         }
 
@@ -1121,7 +1203,7 @@ class QuizService:
         target_class_id = qm["class_id"]
         class_label = qm.get("class_name", "Class")
 
-        # Fetch all enrolled students and their attempts
+        # Fetch all enrolled students in class (plus any student who attempted this quiz) and their latest submitted attempt
         rows = db.execute(text("""
             SELECT 
                 s.id as student_id,
@@ -1144,9 +1226,17 @@ class QuizService:
                 qa.auto_submitted
             FROM students s
             LEFT JOIN classes c ON s.class_id = c.id
-            LEFT JOIN quiz_attempts qa ON (s.id = qa.student_id AND qa.quiz_id = :qid AND qa.status IN ('submitted', 'evaluated', 'auto_submitted', 'SUBMITTED'))
-            WHERE s.class_id = :cid
-            ORDER BY s.roll_no ASC, s.full_name ASC
+            LEFT JOIN LATERAL (
+                SELECT *
+                FROM quiz_attempts a
+                WHERE a.student_id = s.id
+                  AND a.quiz_id = :qid
+                  AND a.status IN ('submitted', 'evaluated', 'auto_submitted', 'SUBMITTED')
+                ORDER BY a.submitted_at DESC NULLS LAST, a.started_at DESC NULLS LAST
+                LIMIT 1
+            ) qa ON TRUE
+            WHERE s.class_id = :cid OR qa.id IS NOT NULL
+            ORDER BY CASE WHEN qa.id IS NOT NULL THEN 0 ELSE 1 END, s.roll_no ASC, s.full_name ASC
         """), {"cid": target_class_id, "qid": quiz_id}).fetchall()
 
         export_rows = []
@@ -1170,11 +1260,14 @@ class QuizService:
             sb = ensure_utc(m.get("submitted_at"))
             time_sec = int((sb - st).total_seconds()) if (st and sb) else 0
             time_formatted = f"{time_sec // 60}m {time_sec % 60:02d}s" if has_attempted else "-"
+            corr_cnt = int(m.get("correct_answers") or 0) if has_attempted else 0
+            wrong_cnt = int(m.get("wrong_answers") or 0) if has_attempted else 0
 
             export_rows.append({
                 "Sr No": sr,
                 "Student Code": m.get("student_code") or "-",
-                "Roll No": m.get("roll_no") or "-",
+                "Student ID": m.get("student_code") or "-",
+                "Roll No": m.get("roll_no") or m.get("student_code") or "-",
                 "Student Name": m.get("full_name") or "-",
                 "Class": m.get("class_name") or class_label,
                 "Email": m.get("email") or "-",
@@ -1186,8 +1279,10 @@ class QuizService:
                 "Total Marks": float(qm.get("total_marks") or 100.0),
                 "Score": float(m.get("final_marks") or 0.0) if has_attempted else 0.0,
                 "Percentage": f"{float(m.get('percentage') or 0.0):.1f}%" if has_attempted else "0.0%",
-                "Correct Answers": int(m.get("correct_answers") or 0) if has_attempted else 0,
-                "Wrong Answers": int(m.get("wrong_answers") or 0) if has_attempted else 0,
+                "Correct Answers": corr_cnt,
+                "Wrong Answers": wrong_cnt,
+                "Correct": corr_cnt,
+                "Wrong": wrong_cnt,
                 "Unanswered": int(m.get("unanswered_questions") or 0) if has_attempted else 0,
                 "Result": ("Passed" if passed else "Failed") if has_attempted else "Not Attempted",
                 "Auto Submitted": "Yes" if m.get("auto_submitted") else "No"
@@ -1206,7 +1301,7 @@ class QuizService:
         ]
 
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=headers)
+        writer = csv.DictWriter(output, fieldnames=headers, extrasaction="ignore")
         writer.writeheader()
         for row in export_rows:
             writer.writerow(row)

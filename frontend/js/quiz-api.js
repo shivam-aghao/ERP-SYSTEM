@@ -106,10 +106,20 @@
       }
     },
 
-    // 5. Teacher: List All Quizzes
+    // 5. Teacher: List Only Quizzes Uploaded By This Teacher
     async getTeacherQuizzes(classId) {
-      var query = classId ? ('?class_id=' + encodeURIComponent(classId)) : '';
-      var res = await this._fetch('/quizzes' + query);
+      var query = [];
+      if (classId) query.push('class_id=' + encodeURIComponent(classId));
+      try {
+        var userRaw = localStorage.getItem('ssgmce_user') || sessionStorage.getItem('ssgmce_user');
+        if (userRaw) {
+          var u = JSON.parse(userRaw);
+          var tid = u.emp_code || u.empCode || u.identifier || u.id;
+          if (tid) query.push('teacher_id=' + encodeURIComponent(tid));
+        }
+      } catch (e) {}
+      var qStr = query.length ? ('?' + query.join('&')) : '';
+      var res = await this._fetch('/quizzes' + qStr);
       return res.data || [];
     },
 
@@ -185,12 +195,24 @@
       return res.data;
     },
 
-    // 15. Student: Get Available Quizzes for Enrolled Class
+    // 15. Student: Get Only Available Quizzes for Enrolled Class
     async getStudentQuizzes(className, studentId) {
-      var query = '';
-      if (className) query += '?class_id=' + encodeURIComponent(className);
-      if (studentId) query += (query ? '&' : '?') + 'student_code=' + encodeURIComponent(studentId);
-      var res = await this._fetch('/quizzes' + query);
+      var query = [];
+      if (className) query.push('class_id=' + encodeURIComponent(className));
+      if (studentId) {
+        query.push('student_code=' + encodeURIComponent(studentId));
+      } else {
+        try {
+          var userRaw = localStorage.getItem('ssgmce_user') || sessionStorage.getItem('ssgmce_user');
+          if (userRaw) {
+            var u = JSON.parse(userRaw);
+            var sc = u.student_code || u.studentCode || u.identifier || u.id;
+            if (sc) query.push('student_code=' + encodeURIComponent(sc));
+          }
+        } catch (e) {}
+      }
+      var qStr = query.length ? ('?' + query.join('&')) : '';
+      var res = await this._fetch('/quizzes' + qStr);
       return res.data || [];
     },
 
@@ -273,6 +295,28 @@
         body: JSON.stringify(payload)
       });
       return res.data;
+    },
+
+    // 23b. Teacher: Get Quiz Results Summary & Roster
+    async getQuizResults(quizId, filter = 'all') {
+      try {
+        var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/results?filter=' + encodeURIComponent(filter));
+        return res.data;
+      } catch (err) {
+        console.warn('[QuizAPI] getQuizResults fallback:', err.message);
+        return null;
+      }
+    },
+
+    // 23c. Student: Get Quiz Notifications for Class
+    async getNotifications(className) {
+      try {
+        var query = className ? ('?class_name=' + encodeURIComponent(className)) : '';
+        var res = await this._fetch('/notifications' + query);
+        return res.data || [];
+      } catch (err) {
+        return [];
+      }
     },
 
     // 24. Teacher: Direct Export URL (CSV, Excel)

@@ -352,6 +352,11 @@ function initSidebarLinks() {
         return;
       }
 
+      // Online Quiz page
+      if (navKey === 'quiz' || (href && href.includes('student-quiz.html'))) {
+        return;
+      }
+
       // Timetable page navigation
       if (navKey === 'timetable') {
         if (href && !href.startsWith('#') && href !== 'javascript:void(0)') {
@@ -547,6 +552,9 @@ function initQuickAccessTiles() {
       }, 150);
 
       switch (action) {
+        case 'online-quiz':
+          window.location.href = 'student-quiz.html';
+          break;
         case 'timetable': {
           const target = document.getElementById('timetableCard');
           if (target) {
@@ -593,7 +601,11 @@ function initQuickActionStrip() {
   actionBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.getAttribute('data-action');
-      if (action === 'hall-ticket') {
+      if (action === 'online-quiz') {
+        window.location.href = 'student-quiz.html';
+      } else if (action === 'examination') {
+        openStudentModule('examination', 'view-marks');
+      } else if (action === 'hall-ticket') {
         openStudentModule('hall-ticket', 'view-hall-ticket');
       } else if (action === 'download-id') {
         openStudentModule('student-id', 'card-view');
@@ -825,7 +837,8 @@ const studentModuleConfig = {
     subtabs: [
       { key: 'view-marks', label: 'View Marks' },
       { key: 'revaluation', label: 'Application for Revaluation' },
-      { key: 'backlog', label: 'Backlog' }
+      { key: 'backlog', label: 'Backlog' },
+      { key: 'online-quiz', label: 'Online Quiz Portal' }
     ]
   },
   'course-choices': {
@@ -964,6 +977,15 @@ function initStudentModules() {
       closeStudentModule();
     }
   });
+
+  const checkHashModule = () => {
+    const hash = (window.location.hash || '').replace(/^#/, '').trim();
+    if (hash && studentModuleConfig[hash]) {
+      setTimeout(() => openStudentModule(hash), 150);
+    }
+  };
+  checkHashModule();
+  window.addEventListener('hashchange', checkHashModule);
 }
 
 function openStudentModule(moduleKey, requestedSubtab) {
@@ -1055,7 +1077,17 @@ function switchModalSubtab(subtabKey, updatePill = true) {
    ========================================================================== */
 async function hydrateStudentModule(moduleKey, subtabKey) {
   const token = localStorage.getItem('ssgmce_access_token') || localStorage.getItem('ssgmce_token') || sessionStorage.getItem('ssgmce_access_token');
-  const studentCode = localStorage.getItem('ssgmce_student_code') || localStorage.getItem('user_id') || '308637'; // Current authenticated student
+  let sessionUser = null;
+  try {
+    const rawUser = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+    if (rawUser) sessionUser = JSON.parse(rawUser);
+  } catch (e) {}
+  const activeOverviewStudent = (window.__currentStudentOverview && window.__currentStudentOverview.student) || {};
+  const studentCode = activeOverviewStudent.studentCode || activeOverviewStudent.student_code ||
+    (sessionUser && (sessionUser.student_code || sessionUser.studentCode || sessionUser.identifier || sessionUser.roll_no || sessionUser.user_id)) ||
+    localStorage.getItem('ssgmce_student_code') || localStorage.getItem('user_id') || '';
+  const studentClass = activeOverviewStudent.className || activeOverviewStudent.class_name ||
+    (sessionUser && (sessionUser.class_name || sessionUser.className)) || '';
   const apiBase = window.__API_BASE__ || 'http://localhost:8000/api/v1';
   const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
 
@@ -1230,8 +1262,12 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
 
         const quizGrid = document.getElementById('modalElearningQuizGrid');
         if (quizGrid) {
-          const qRes = await fetch(`${apiBase}/student/quizzes?student_code=${studentCode}`).then(r => r.json()).catch(() => null);
-          const quizzes = (qRes && qRes.data) ? qRes.data : [];
+          const qRes = await fetch(`${apiBase}/student/quizzes?student_code=${encodeURIComponent(studentCode)}&class_id=${encodeURIComponent(studentClass)}`).then(r => r.json()).catch(() => null);
+          const quizzes = ((qRes && qRes.data) ? qRes.data : []).filter(q => {
+            if (!studentClass) return true;
+            const qClass = String(q.class_name || q.class_id || '').trim().toUpperCase();
+            return !qClass || qClass === String(studentClass).trim().toUpperCase();
+          });
           if (quizzes.length > 0) {
             quizGrid.innerHTML = quizzes.map(q => `
               <div class="quiz-card" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
@@ -2986,30 +3022,80 @@ async function hydrateDashboardData() {
     // 5. Syllabus Progress
     hydrateSyllabusAnalytics();
 
-    // 6. Quizzes Notification Pill on Sidebar
+    // 6. Quizzes Notification Pill on Sidebar & Dashboard Quiz Card
     try {
-      const qRes = await fetch(`/api/v1/student/quizzes?student_code=${studentCode}`);
+      const qRes = await fetch(`/api/v1/student/quizzes?student_code=${encodeURIComponent(studentCode)}&class_id=${encodeURIComponent(cls)}`);
       if (qRes.ok) {
         const qData = await qRes.json();
-        const quizzes = (qData && qData.data) ? qData.data : [];
-        const unattempted = quizzes.filter(q => !q.attempt_status || !['submitted', 'auto_submitted', 'SUBMITTED'].includes(q.attempt_status));
-        const sbQuizBadge = document.getElementById('sidebarQuizBadge');
-        if (sbQuizBadge) {
+        const quizzes = ((qData && qData.data) ? qData.data : []).filter(q => {
+          if (!cls) return true;
+          const qClass = String(q.class_name || q.class_id || '').trim().toUpperCase();
+          return !qClass || qClass === String(cls).trim().toUpperCase();
+        });
+        const unattempted = quizzes.filter(q => !q.attempt_status || !['submitted', 'auto_submitted', 'SUBMITTED', 'evaluated'].includes(q.attempt_status));
+        [document.getElementById('sidebarQuizBadge'), document.getElementById('sidebarQuizTopBadge')].forEach(sbQuizBadge => {
+          if (!sbQuizBadge) return;
           if (unattempted.length > 0) {
             sbQuizBadge.textContent = `${unattempted.length} New`;
             sbQuizBadge.style.background = '#E11D48';
             sbQuizBadge.style.color = '#FFFFFF';
             sbQuizBadge.style.boxShadow = '0 0 10px rgba(225, 29, 72, 0.45)';
           } else if (quizzes.length > 0) {
-            sbQuizBadge.textContent = 'Active';
+            sbQuizBadge.textContent = `${quizzes.length} Active`;
             sbQuizBadge.style.background = '#10B981';
             sbQuizBadge.style.color = '#FFFFFF';
             sbQuizBadge.style.boxShadow = 'none';
           } else {
-            sbQuizBadge.textContent = 'None';
-            sbQuizBadge.style.background = '#64748B';
+            sbQuizBadge.textContent = 'Portal';
+            sbQuizBadge.style.background = '#00A6D6';
             sbQuizBadge.style.color = '#FFFFFF';
             sbQuizBadge.style.boxShadow = 'none';
+          }
+        });
+
+        const quizClassBadge = document.getElementById('dashboardQuizClassBadge');
+        if (quizClassBadge && cls) {
+          quizClassBadge.textContent = `Class ${cls} • ${quizzes.length} Active Quiz${quizzes.length === 1 ? '' : 'zes'}`;
+        }
+
+        const dashQuizList = document.getElementById('studentDashboardQuizList');
+        if (dashQuizList) {
+          if (quizzes.length === 0) {
+            dashQuizList.innerHTML = `
+              <div style="grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;">
+                <div>
+                  <strong style="color: #0F172A; font-size: 0.92rem;">No Active Quizzes Assigned for Class ${cls || '--'}</strong>
+                  <div style="color: #64748B; font-size: 0.8rem; margin-top: 2px;">Quizzes assigned to your class (${cls || '--'}) will appear here automatically.</div>
+                </div>
+                <a href="student-quiz.html" style="padding: 8px 16px; background: #0B5CAD; color: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 700; text-decoration: none;">Open Quiz Portal →</a>
+              </div>
+            `;
+          } else {
+            dashQuizList.innerHTML = quizzes.map(q => {
+              const isSub = ['submitted', 'auto_submitted', 'SUBMITTED', 'evaluated'].includes(q.attempt_status);
+              const isRel = (q.result_published !== false) && (q.is_result_released !== false);
+              const qCount = q.question_count || q.total_questions || 0;
+              return `
+                <div style="padding: 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: #EFF6FF; color: #0B5CAD;">Class ${q.class_name || cls} • ${q.subject_name || q.subject || 'Assessment'}</span>
+                      <span style="font-size: 0.75rem; color: #64748B; font-weight: 600;">${q.duration_minutes || 20} Mins</span>
+                    </div>
+                    <h4 style="margin: 0 0 4px 0; font-size: 0.98rem; color: #0F172A; font-weight: 700;">${q.title}</h4>
+                    <div style="font-size: 0.78rem; color: #64748B;">${qCount} Questions • Max Marks: <strong>${q.total_marks || 10}</strong></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E2E8F0;">
+                    <span style="font-size: 0.76rem; font-weight: 700; color: ${isSub ? '#15803D' : '#D97706'};">
+                      ${isSub ? (isRel && q.attempt_score !== null && q.attempt_score !== undefined ? `✓ Score: ${q.attempt_score} / ${q.total_marks}` : '✓ Submitted') : '● Ready to Attempt'}
+                    </span>
+                    <a href="student-quiz.html" style="padding: 6px 14px; background: ${isSub ? '#10B981' : '#0B5CAD'}; color: #fff; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none;">
+                      ${isSub ? (isRel ? 'View Result →' : 'View Status →') : 'Start Quiz →'}
+                    </a>
+                  </div>
+                </div>
+              `;
+            }).join('');
           }
         }
       }

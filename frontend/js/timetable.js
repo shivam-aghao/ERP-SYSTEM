@@ -427,27 +427,30 @@
         : 'EMP-CSE-1001';
 
       const facDataMap = (typeof SSGMCE_FACULTY_TIMETABLES !== 'undefined') ? SSGMCE_FACULTY_TIMETABLES : {};
-      const currentFacObj = facDataMap[activeEmpCode] || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty ? {
-        name: TeacherERPData.faculty.name || "Dr. Rohan Deshmukh",
-        empCode: activeEmpCode,
-        title: TeacherERPData.faculty.designation || "Assistant Professor",
-        totalLoad: 16,
-        teaching_load: []
-      } : {
-        name: "Dr. Rohan Deshmukh",
-        empCode: activeEmpCode,
-        title: "Assistant Professor",
-        totalLoad: 16,
-        teaching_load: []
-      });
+      const facMeta = (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.facultyList))
+        ? TeacherERPData.facultyList.find(f => f.empCode === activeEmpCode)
+        : null;
+      const rawFacObj = facDataMap[activeEmpCode] || {};
+      const computedLoad = Array.isArray(rawFacObj.teaching_load)
+        ? rawFacObj.teaching_load.reduce((sum, item) => sum + Number(item.theory || 0) + Number(item.practical || 0), 0)
+        : 0;
+      const currentFacObj = {
+        name: rawFacObj.name || (facMeta && facMeta.name) || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty && TeacherERPData.faculty.name) || "Prof. J. M. Patil",
+        empCode: activeEmpCode || "EMP-CSE-1001",
+        title: rawFacObj.title || (facMeta && facMeta.title) || (typeof TeacherERPData !== 'undefined' && TeacherERPData.faculty && TeacherERPData.faculty.title) || "Assistant Professor",
+        totalLoad: rawFacObj.totalLoad || (facMeta && facMeta.totalLoad) || computedLoad || 16,
+        teaching_load: rawFacObj.teaching_load || []
+      };
 
-      const facList = Object.keys(facDataMap).length > 0
-        ? Object.entries(facDataMap).map(([code, f]) => ({
-            empCode: code,
-            name: f.name || code,
-            totalLoad: f.totalLoad || 16
-          }))
-        : [{ empCode: activeEmpCode, name: currentFacObj.name, totalLoad: currentFacObj.totalLoad || 16 }];
+      const facList = (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.facultyList) && TeacherERPData.facultyList.length > 0)
+        ? TeacherERPData.facultyList
+        : (Object.keys(facDataMap).length > 0
+          ? Object.entries(facDataMap).map(([code, f]) => ({
+              empCode: code,
+              name: f.name || code,
+              totalLoad: f.totalLoad || 16
+            }))
+          : [{ empCode: activeEmpCode, name: currentFacObj.name, totalLoad: currentFacObj.totalLoad || 16 }]);
 
       const teachingLoad = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getTeachingLoadForTeacher === 'function')
         ? TeacherERPData.getTeachingLoadForTeacher(activeEmpCode)
@@ -472,7 +475,7 @@
               ${currentFacObj.name.split('. ').pop().charAt(0) || 'F'}
             </div>
             <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff;">${currentFacObj.name}</h4>
                 <span style="background: #10B981; color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600;">${currentFacObj.empCode}</span>
                 <span style="background: rgba(255,255,255,0.2); color: #E0F2FE; font-size: 11px; padding: 2px 7px; border-radius: 4px;">${currentFacObj.title}</span>
@@ -483,12 +486,17 @@
             </div>
           </div>
 
-          <!-- Faculty Personal View Badge -->
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-              <i data-lucide="shield-check" style="width:14px;height:14px;color:#34D399;"></i>
-              Personal Timetable &bull; ${activeEmpCode}
-            </span>
+          <!-- Faculty Switcher & Dedicated View Controls -->
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <select aria-label="Switch Faculty Timetable"
+                    onchange="TimetableModule.switchFaculty(this.value)"
+                    style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
+              ${facList.map(f => `<option value="${f.empCode}" style="color:#0B1F3A; background:#fff;" ${f.empCode === activeEmpCode ? 'selected' : ''}>${f.name} (${f.empCode})</option>`).join('')}
+            </select>
+            <a href="teacher-timetable.html" style="background: #FFFFFF; color: #0B1F3A; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+              <i data-lucide="external-link" style="width:13px;height:13px;color:#0B5CAD;"></i>
+              <span>Official View</span>
+            </a>
           </div>
         </div>
 
@@ -1500,11 +1508,15 @@
   // Expose TimetableModule globally
   global.TimetableModule = TimetableModule;
 
-  // Auto-bind to TeacherApp when script evaluates
+  // Auto-initialize and bind to TeacherApp when script evaluates
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    window.addEventListener('DOMContentLoaded', () => {
-      TimetableModule.attachGlobalBridge();
-    });
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', () => {
+        TimetableModule.init("timetable-content");
+      });
+    } else {
+      TimetableModule.init("timetable-content");
+    }
   }
 
 })(typeof window !== 'undefined' ? window : this);

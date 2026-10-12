@@ -863,18 +863,22 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>View Profile</span>
             </a>
+            <a href="teacher-dashboard.html#leave" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+              <span>Apply Leave</span>
+            </a>
             <a href="teacher-timetable.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               <span>Timetable</span>
             </a>
-            <a href="teacher-dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+            <a href="teacher-dashboard.html#settings" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               <span>Settings</span>
             </a>
             <div class="p-divider"></div>
-            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer;" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              <span>Logout</span>
+              <span>Sign Out</span>
             </div>
           </div>
         </div>
@@ -1018,6 +1022,21 @@
               </a>
             </li>
 
+            <!-- 9b. Apply Leave -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#leave" class="nav-item sidebar-link" data-view="leave">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <line x1="12" y1="14" x2="12" y2="18"></line>
+                  <line x1="10" y1="16" x2="14" y2="16"></line>
+                </svg>
+                <span class="nav-label">Apply Leave</span>
+              </a>
+            </li>
+
             <!-- Preferences & Info Divider -->
             <li class="sidebar-item">
               <div class="sidebar-section-divider"></div>
@@ -1044,6 +1063,41 @@
                   <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
                 <span class="nav-label">Information</span>
+              </a>
+            </li>
+
+            <!-- 12. Notifications -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#notifications" class="nav-item sidebar-link" data-view="notifications">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="nav-label">Notifications</span>
+                <span class="nav-badge" style="background:#00A6D6;color:#fff;">4</span>
+              </a>
+            </li>
+
+            <!-- 13. Settings -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#settings" class="nav-item sidebar-link" data-view="settings">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+
+            <!-- 14. Sign Out -->
+            <li class="sidebar-item">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')" style="color:#FCA5A5;">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="nav-label" style="color:#FCA5A5; font-weight:700;">Sign Out</span>
               </a>
             </li>
           </ul>
@@ -1166,27 +1220,16 @@
         <table class="quiz-table">
 
           <thead>
-
             <tr>
-
               <th>Quiz Title</th>
-
               <th>Target Class</th>
-
               <th>Subject</th>
-
-              <th>Duration</th>
-
-              <th>Total Marks</th>
-
+              <th>Duration / Marks</th>
               <th>Status</th>
-
               <th>Attempts</th>
-
-              <th style="text-align: right;">Actions</th>
-
+              <th>Student Results</th>
+              <th style="text-align: right;">Actions & Export</th>
             </tr>
-
           </thead>
 
           <tbody id="quizTableBody">
@@ -1384,6 +1427,8 @@
           </button>
 
         </div>
+      </div>
+    </section>
 
     <!-- SECTION 4: FULL CLASS QUIZ RESULTS & EXPORT -->
     <section id="sec-results" class="view-section">
@@ -1847,18 +1892,12 @@
 
 
     async function refreshQuizzes() {
-
       quizzes = await QuizAPI.getTeacherQuizzes();
-
       renderQuizzes();
-
       populateAnalyticsDropdown();
-
       populateImportDropdown();
-
+      populateResultsDropdown();
     }
-
-
 
     function switchTab(tab) {
 
@@ -1966,36 +2005,53 @@
         return;
       }
 
-
-
       filtered.forEach(q => {
         const rawStatus = (q.status || 'draft').toLowerCase();
         const isPublished = (rawStatus === 'active' || rawStatus === 'published');
         const badgeClass = isPublished ? 'badge-published' : (rawStatus === 'draft' ? 'badge-draft' : 'badge-closed');
         const displayStatus = isPublished ? 'Active' : (rawStatus === 'draft' ? 'Draft' : rawStatus.toUpperCase());
         const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
+        const isReleased = (q.result_published !== false) && (q.is_result_released !== false);
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${q.title}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">${qCount} Questions</div></td>
           <td><span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700;">${q.class_name}</span></td>
           <td>${q.subject || q.subject_name || 'General'}</td>
-          <td>${q.duration_minutes} mins</td>
-          <td>${q.total_marks} marks</td>
+          <td>${q.duration_minutes} mins • <strong>${q.total_marks}</strong> marks</td>
           <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
           <td><strong>${q.attempts_count || q.attempt_count || 0}</strong> submissions</td>
+          <td style="white-space: nowrap;">
+            <div style="display: inline-flex; align-items: center; gap: 0.45rem;">
+              <span class="badge" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 999px; font-weight: 700; ${isReleased ? 'background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC;' : 'background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D;'}">
+                ${isReleased ? '✓ Visible' : 'Hidden'}
+              </span>
+              ${isReleased ? `
+                <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 6px; font-weight: 600;" onclick="quickToggleReleaseResult('${q.id}', false)" title="Hide quiz scores & answer review from students">
+                  <i data-lucide="eye-off" style="width:13px;height:13px;"></i> Hide Result
+                </button>
+              ` : `
+                <button class="btn btn-success" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; border-radius: 6px; font-weight: 700; background: #10B981; color: #FFFFFF; border: 1px solid #059669;" onclick="quickToggleReleaseResult('${q.id}', true)" title="Show quiz scores & answer review to students">
+                  <i data-lucide="eye" style="width:13px;height:13px;"></i> Show to Students
+                </button>
+              `}
+            </div>
+          </td>
           <td style="text-align: right; white-space: nowrap;">
-            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="viewQuizResultsDirect('${q.id}')" title="View Full Class Results & Export">
-              <i data-lucide="file-spreadsheet"></i> Results (${q.attempts_count || q.attempt_count || 0})
+            <button class="btn btn-success" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="exportQuizCSVDirect('${q.id}')" title="Download Excel/CSV Results directly">
+              <i data-lucide="download" style="width:14px;height:14px;"></i> Export CSV
             </button>
-            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="openManageQuestions('${q.id}')">
-              <i data-lucide="help-circle"></i> Questions (${qCount})
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="viewQuizResultsDirect('${q.id}')" title="View Full Class Results & Roster">
+              <i data-lucide="file-spreadsheet" style="width:14px;height:14px;"></i> Results (${q.attempts_count || q.attempt_count || 0})
             </button>
-            <button class="btn ${isPublished ? 'btn-secondary' : 'btn-success'}" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="togglePublish('${q.id}', ${isPublished})" title="${isPublished ? 'Unpublish quiz back to Draft' : 'Publish quiz for students'}">
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="openManageQuestions('${q.id}')">
+              <i data-lucide="help-circle" style="width:14px;height:14px;"></i> Questions (${qCount})
+            </button>
+            <button class="btn ${isPublished ? 'btn-secondary' : 'btn-primary'}" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="togglePublish('${q.id}', ${isPublished})" title="${isPublished ? 'Unpublish quiz back to Draft' : 'Publish quiz for students'}">
               ${isPublished ? 'Unpublish' : 'Publish'}
             </button>
-            <button class="btn btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #EF4444;" onclick="handleDeleteQuiz('${q.id}')" title="Delete Quiz">
-              <i data-lucide="trash-2"></i>
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; color: #EF4444;" onclick="handleDeleteQuiz('${q.id}')" title="Delete Quiz">
+              <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
             </button>
           </td>
         `;
@@ -2586,10 +2642,39 @@
     // ==========================================
     let currentResultsData = null;
 
+    function showToast(message, type = 'info') {
+      let container = document.getElementById('teacherToastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'teacherToastContainer';
+        container.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 380px;';
+        document.body.appendChild(container);
+      }
+      const colors = {
+        success: { bg: '#ECFDF5', border: '#10B981', text: '#065F46' },
+        warning: { bg: '#FFFBEB', border: '#F59E0B', text: '#92400E' },
+        error:   { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B' },
+        info:    { bg: '#EFF6FF', border: '#3B82F6', text: '#1E40AF' }
+      };
+      const c = colors[type] || colors.info;
+      const toast = document.createElement('div');
+      toast.style.cssText = `background: ${c.bg}; border-left: 4px solid ${c.border}; color: ${c.text}; padding: 12px 16px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); font-size: 0.86rem; font-weight: 600; transition: opacity 0.3s ease;`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
     function populateResultsDropdown() {
       const sel = document.getElementById('resultsQuizSelect');
       if (!sel) return;
+      const prevVal = sel.value;
       sel.innerHTML = quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
+      if (prevVal && quizzes.some(q => q.id === prevVal)) {
+        sel.value = prevVal;
+      }
     }
 
     function viewQuizResultsDirect(quizId) {
@@ -2598,6 +2683,73 @@
       if (sel) {
         sel.value = quizId;
         loadQuizResultsView();
+      }
+    }
+
+    async function quickToggleReleaseResult(quizId, explicitState = null) {
+      if (!quizId) return;
+      const q = quizzes.find(x => x.id === quizId);
+      const isCurrentlyReleased = q ? ((q.result_published !== false) && (q.is_result_released !== false)) : true;
+      const targetState = (typeof explicitState === 'boolean') ? explicitState : !isCurrentlyReleased;
+
+      try {
+        const resp = await QuizAPI.toggleReleaseResults(quizId, targetState);
+        const finalState = (resp && typeof resp.result_published === 'boolean') ? resp.result_published : targetState;
+        if (q) {
+          q.result_published = finalState;
+          q.is_result_released = finalState;
+          q.show_result_immediately = finalState;
+          q.result_release_mode = finalState ? 'IMMEDIATE' : 'MANUAL';
+        }
+        showToast(
+          (resp && resp.message) || (finalState ? 'Quiz results are now VISIBLE to students!' : 'Quiz results are now HIDDEN from students.'),
+          finalState ? 'success' : 'warning'
+        );
+        renderQuizzes();
+        if (document.getElementById('sec-results').classList.contains('active')) {
+          loadQuizResultsView();
+        }
+      } catch (err) {
+        showToast('Failed to update result visibility: ' + err.message, 'error');
+      }
+    }
+
+    async function exportQuizCSVDirect(quizId) {
+      if (!quizId) return showToast('Please select a quiz first', 'warning');
+      await triggerQuizDownload(quizId, 'all', 'csv');
+    }
+
+    async function triggerQuizDownload(qid, filter = 'all', format = 'csv') {
+      const q = quizzes.find(x => x.id === qid);
+      const safeTitle = ((q && q.title) ? q.title : 'Quiz').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const ext = format === 'json' ? 'json' : 'csv';
+      const filename = `${safeTitle}_Results_${filter}.${ext}`;
+      const exportUrl = QuizAPI.getExportUrl(qid, filter, format);
+
+      showToast(`Downloading ${filename}...`, 'info');
+      try {
+        const res = await fetch(exportUrl);
+        if (!res.ok) throw new Error('Export failed (' + res.status + ')');
+        let blob;
+        if (format === 'json') {
+          const jsonData = await res.json();
+          const rows = (jsonData && jsonData.data) ? jsonData.data : jsonData;
+          blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json;charset=utf-8;' });
+        } else {
+          blob = await res.blob();
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        showToast(`Exported ${filename} successfully!`, 'success');
+      } catch (err) {
+        console.warn('Direct blob download fallback:', err);
+        window.open(exportUrl, '_blank');
       }
     }
 
@@ -2644,7 +2796,7 @@
         document.getElementById('resRosterCountBadge').textContent = `${roster.length} Students Listed`;
 
         // Update Release Status Banner
-        const isReleased = q ? (q.result_release_mode === 'IMMEDIATE' || q.show_result_immediately) : false;
+        const isReleased = q ? ((q.result_published !== false) && (q.is_result_released !== false)) : true;
         const banner = document.getElementById('resultsReleaseBanner');
         const bannerTitle = document.getElementById('releaseBannerTitle');
         const bannerSub = document.getElementById('releaseBannerSub');
@@ -2655,13 +2807,13 @@
           banner.style.background = '#DCFCE7';
           banner.style.borderColor = '#86EFAC';
           bannerTitle.style.color = '#15803D';
-          bannerTitle.textContent = 'Results Status: Released to Students';
+          bannerTitle.textContent = 'Results Status: Shown to Students';
           bannerSub.style.color = '#166534';
-          bannerSub.textContent = 'Students can now view their scores and detailed question review on their portal.';
+          bannerSub.textContent = 'Students can immediately view their scores and detailed question review on their portal.';
           bannerBtn.textContent = 'Hide from Students';
           bannerBtn.className = 'btn btn-secondary';
           if (toggleBtn) {
-            toggleBtn.innerHTML = '<i data-lucide="eye-off"></i> Hide Results';
+            toggleBtn.innerHTML = '<i data-lucide="eye-off"></i> Hide Results from Students';
             toggleBtn.className = 'btn btn-secondary';
           }
         } else {
@@ -2670,11 +2822,11 @@
           bannerTitle.style.color = '#92400E';
           bannerTitle.textContent = 'Results Status: Hidden from Students';
           bannerSub.style.color = '#B45309';
-          bannerSub.textContent = 'Students cannot view their marks or answer review until you release them.';
-          bannerBtn.textContent = 'Release to Students';
+          bannerSub.textContent = 'Students cannot view their marks or answer review until you click Show Results.';
+          bannerBtn.textContent = 'Show to Students Now';
           bannerBtn.className = 'btn btn-primary';
           if (toggleBtn) {
-            toggleBtn.innerHTML = '<i data-lucide="eye"></i> Release Results';
+            toggleBtn.innerHTML = '<i data-lucide="eye"></i> Show Results to Students';
             toggleBtn.className = 'btn btn-success';
           }
         }
@@ -2694,18 +2846,21 @@
           const isPass = r["Result"] === "Passed";
           const resBadge = isAtt ? (isPass ? '<span class="badge badge-published">Passed</span>' : '<span class="badge" style="background:#FEE2E2; color:#DC2626;">Failed</span>') : '<span class="badge badge-closed">Not Attempted</span>';
           const statusBadge = isAtt ? '<span class="badge" style="background:#EFF6FF; color:#1D4ED8; font-weight:700;">Attempted</span>' : '<span class="badge" style="background:#F1F5F9; color:#64748B;">Pending</span>';
+          const studentCode = r["Student ID"] || r["Student Code"] || "-";
+          const corrVal = r["Correct"] !== undefined ? r["Correct"] : (r["Correct Answers"] || 0);
+          const wrongVal = r["Wrong"] !== undefined ? r["Wrong"] : (r["Wrong Answers"] || 0);
 
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${r["Sr No"]}</td>
             <td><strong>${r["Roll No"]}</strong></td>
-            <td><strong>${r["Student Name"]}</strong><div style="font-size:0.75rem; color:var(--text-muted);">${r["Student ID"]}</div></td>
+            <td><strong>${r["Student Name"]}</strong><div style="font-size:0.75rem; color:var(--text-muted);">${studentCode}</div></td>
             <td><span class="badge" style="background:#EFF6FF; color:var(--primary); font-weight:700;">${r["Class"]}</span></td>
             <td>${statusBadge}</td>
             <td><strong style="color:var(--navy); font-size:0.95rem;">${isAtt ? r["Score"] : '-'}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">/ ${r["Total Marks"]}</span></td>
             <td><strong>${isAtt ? r["Percentage"] : '-'}</strong></td>
             <td>${r["Time Taken"]}</td>
-            <td>${isAtt ? `<span style="color:#15803D;">${r["Correct"]} C</span> • <span style="color:#DC2626;">${r["Wrong"]} W</span>` : '-'}</td>
+            <td>${isAtt ? `<span style="color:#15803D; font-weight:600;">${corrVal} C</span> • <span style="color:#DC2626; font-weight:600;">${wrongVal} W</span>` : '-'}</td>
             <td>${resBadge}</td>
           `;
           tbody.appendChild(tr);
@@ -2720,50 +2875,27 @@
 
     async function handleToggleReleaseResults() {
       const sel = document.getElementById('resultsQuizSelect');
-      const qid = sel ? sel.value : null;
+      const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
       if (!qid) return showToast('Please select a quiz first', 'warning');
-
-      const q = quizzes.find(x => x.id === qid);
-      const isCurrentlyReleased = q ? (q.result_release_mode === 'IMMEDIATE' || q.show_result_immediately) : false;
-      const targetState = !isCurrentlyReleased;
-
-      const confirmMsg = targetState
-        ? 'Release quiz results and answers to all enrolled students now?'
-        : 'Hide quiz results from students? (Students will only see "Results Pending")';
-      if (!confirm(confirmMsg)) return;
-
-      try {
-        const resp = await QuizAPI.toggleReleaseResults(qid, targetState);
-        showToast(resp.message || (targetState ? 'Results RELEASED to students!' : 'Results HIDDEN from students.'), 'success');
-        await refreshQuizzes();
-        loadQuizResultsView();
-      } catch (err) {
-        showToast('Failed to update result release status: ' + err.message, 'error');
-      }
+      await quickToggleReleaseResult(qid);
     }
 
-    function exportQuizCSV() {
+    async function exportQuizCSV() {
       const sel = document.getElementById('resultsQuizSelect');
       const filterSel = document.getElementById('resultsFilterSelect');
-      const qid = sel ? sel.value : null;
+      const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
       const filter = filterSel ? filterSel.value : 'all';
       if (!qid) return showToast('Please select a quiz first', 'warning');
-
-      showToast('Generating CSV class roster export...', 'info');
-      const exportUrl = QuizAPI.getExportUrl(qid, filter, 'csv');
-      window.open(exportUrl, '_blank');
+      await triggerQuizDownload(qid, filter, 'csv');
     }
 
-    function exportQuizJSON() {
+    async function exportQuizJSON() {
       const sel = document.getElementById('resultsQuizSelect');
       const filterSel = document.getElementById('resultsFilterSelect');
-      const qid = sel ? sel.value : null;
+      const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
       const filter = filterSel ? filterSel.value : 'all';
       if (!qid) return showToast('Please select a quiz first', 'warning');
-
-      showToast('Generating JSON report export...', 'info');
-      const exportUrl = QuizAPI.getExportUrl(qid, filter, 'json');
-      window.open(exportUrl, '_blank');
+      await triggerQuizDownload(qid, filter, 'json');
     }
 
     // Init
@@ -2798,15 +2930,17 @@
 
       // Profile menu dropdown toggle
       const profileTrigger = document.getElementById('profile-dropdown-trigger');
-      const profilePanel = document.getElementById('profile-panel');
+      const profilePanel = document.getElementById('profile-dropdown-menu') || document.getElementById('profile-panel');
       if (profileTrigger && profilePanel) {
         profileTrigger.addEventListener('click', (e) => {
           e.stopPropagation();
           profilePanel.classList.toggle('show');
+          profileTrigger.classList.toggle('active');
         });
         document.addEventListener('click', (e) => {
           if (!profilePanel.contains(e.target) && !profileTrigger.contains(e.target)) {
             profilePanel.classList.remove('show');
+            profileTrigger.classList.remove('active');
           }
         });
       }
