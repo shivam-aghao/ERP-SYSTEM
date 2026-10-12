@@ -116,16 +116,26 @@ class QuizService:
         now = datetime.now(timezone.utc)
         start_time = cls.get_prop(payload, "start_time") or cls.get_prop(payload, "start_at") or now
         end_time = cls.get_prop(payload, "end_time") or cls.get_prop(payload, "end_at") or (start_time + timedelta(days=7))
+        if end_time <= start_time:
+            end_time = start_time + timedelta(days=7)
 
         # 5. Resolve booleans & floats
         shuff_q = bool(cls.get_prop(payload, "randomize_questions") if cls.get_prop(payload, "randomize_questions") is not None else cls.get_prop(payload, "shuffle_questions", False))
         shuff_opt = bool(cls.get_prop(payload, "randomize_options") if cls.get_prop(payload, "randomize_options") is not None else cls.get_prop(payload, "shuffle_options", False))
         neg_marking = bool(cls.get_prop(payload, "negative_marking", False))
-        neg_val = float(cls.get_prop(payload, "negative_marks_per_question") if cls.get_prop(payload, "negative_marks_per_question") is not None else cls.get_prop(payload, "negative_marks", 0.0) or 0.0)
-        tot_marks = float(cls.get_prop(payload, "total_marks", 100.0) or 100.0)
-        pass_marks = float(cls.get_prop(payload, "passing_marks", 40.0) or 40.0)
-        duration = int(cls.get_prop(payload, "duration_minutes", 30) or 30)
-        max_att = int(cls.get_prop(payload, "max_attempts", 1) or 1)
+        neg_val = max(0.0, float(cls.get_prop(payload, "negative_marks_per_question") if cls.get_prop(payload, "negative_marks_per_question") is not None else cls.get_prop(payload, "negative_marks", 0.0) or 0.0))
+        tot_marks = max(1.0, float(cls.get_prop(payload, "total_marks", 100.0) or 100.0))
+        raw_pass = cls.get_prop(payload, "passing_marks")
+        if raw_pass is not None:
+            pass_marks = float(raw_pass)
+        else:
+            pass_marks = round(tot_marks * 0.4, 2)
+        if pass_marks > tot_marks:
+            pass_marks = round(tot_marks * 0.4, 2)
+        if pass_marks < 0:
+            pass_marks = 0.0
+        duration = max(1, int(cls.get_prop(payload, "duration_minutes", 30) or 30))
+        max_att = max(1, int(cls.get_prop(payload, "max_attempts", 1) or 1))
         status_val = cls.normalize_quiz_status(cls.get_prop(payload, "status", "draft"))
 
         quiz_id = str(uuid.uuid4())
@@ -282,7 +292,15 @@ class QuizService:
         db.execute(text("UPDATE quizzes SET total_questions = :tq, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "id": quiz_id})
         db.commit()
 
-        return {"question_id": q_id, "quiz_id": quiz_id, "question_order": new_order, "total_questions": tot_q}
+        return {
+            "id": q_id,
+            "question_id": q_id,
+            "quiz_id": quiz_id,
+            "question_text": q_text,
+            "marks": q_marks,
+            "question_order": new_order,
+            "total_questions": tot_q
+        }
 
     @classmethod
     def remove_question_from_quiz(cls, quiz_id: str, question_id: str, db: Session) -> bool:

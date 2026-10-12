@@ -176,13 +176,15 @@ def approve_attendance(
 # ==============================================================================
 
 @router.get("/student")
+@router.get("/student/{student_code}")
 def get_student_attendance(
-    student_code: Optional[str] = Query(None),
+    student_code: Optional[str] = None,
     current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
     GET /api/v1/attendance/student
+    GET /api/v1/attendance/student/{student_code}
     Authoritative student attendance records:
     - Overall attendance percentage
     - Subject-wise percentage & eligibility

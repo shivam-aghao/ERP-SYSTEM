@@ -86,6 +86,7 @@ ROLE_PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.QUIZ_CREATE.value,
         Permission.QUIZ_EDIT.value,
         Permission.QUIZ_PUBLISH.value,
+        Permission.QUIZ_DELETE.value,
         Permission.QUIZ_VIEW_RESULTS.value,
         Permission.QUIZ_EXPORT.value,
         # Marks
@@ -129,6 +130,7 @@ ROLE_PERMISSION_MATRIX: Dict[str, Set[str]] = {
         Permission.QUIZ_CREATE.value,
         Permission.QUIZ_EDIT.value,
         Permission.QUIZ_PUBLISH.value,
+        Permission.QUIZ_DELETE.value,
         Permission.QUIZ_VIEW_RESULTS.value,
         Permission.QUIZ_EXPORT.value,
         # Marks (internal/CIE/ESE marks for assigned subjects)
@@ -196,6 +198,10 @@ ROLE_PERMISSION_MATRIX: Dict[str, Set[str]] = {
 
 def get_default_permissions_for_role(role_name: str) -> Set[str]:
     """Retrieves canonical permissions mapped to a role."""
-    norm_role = role_name.strip().lower()
+    norm_role = (role_name or "").strip().lower()
+    if norm_role in ("faculty", "instructor", "lecturer", "professor"):
+        norm_role = "teacher"
+    elif norm_role in ("superadmin", "super-admin"):
+        norm_role = "super_admin"
     return ROLE_PERMISSION_MATRIX.get(norm_role, set()).copy()
 

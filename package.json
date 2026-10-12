@@ -1,4 +1,11 @@
 {
+  "name": "ssgmce-college-erp",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "python backend.py",
+    "backend": "python backend.py",
+    "dev": "python backend.py"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2"
   },

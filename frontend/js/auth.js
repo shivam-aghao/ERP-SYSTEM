@@ -307,16 +307,33 @@
     },
 
     clearLocalSession: function () {
-      sessionStorage.clear();
-      localStorage.removeItem(STORAGE_ACCESS_TOKEN);
-      localStorage.removeItem(STORAGE_REFRESH_TOKEN);
-      localStorage.removeItem(STORAGE_USER_KEY);
-      localStorage.removeItem(STORAGE_ACTIVE_ROLE);
-      localStorage.removeItem(STORAGE_REMEMBER_KEY);
-      localStorage.removeItem('ssgmce_token');
-      localStorage.removeItem('user_role');
-      localStorage.removeItem('ssgmce_teacher_token');
-      localStorage.removeItem('ssgmce_selected_faculty');
+      try {
+        sessionStorage.clear();
+      } catch (e) {}
+      var keysToRemove = [
+        STORAGE_ACCESS_TOKEN,
+        STORAGE_REFRESH_TOKEN,
+        STORAGE_USER_KEY,
+        STORAGE_ACTIVE_ROLE,
+        STORAGE_REMEMBER_KEY,
+        'ssgmce_token',
+        'user_role',
+        'ssgmce_teacher_token',
+        'ssgmce_student_token',
+        'ssgmce_erp_session',
+        'ssgmce_selected_faculty',
+        'ssgmce_active_user',
+        'ssgmce_auth_user'
+      ];
+      keysToRemove.forEach(function (k) {
+        try {
+          localStorage.removeItem(k);
+          sessionStorage.removeItem(k);
+        } catch (e) {}
+      });
+      window.verifiedUser = null;
+      window.currentUser = null;
+      window.activeUser = null;
     },
 
     /**

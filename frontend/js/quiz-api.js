@@ -138,8 +138,9 @@
     },
 
     // 9. Teacher: Toggle Publish Status
-    async togglePublish(quizId) {
-      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/publish', {
+    async togglePublish(quizId, action) {
+      var query = action ? ('?action=' + encodeURIComponent(action)) : '';
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/publish' + query, {
         method: 'PUT'
       });
       return res.data;

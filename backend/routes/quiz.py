@@ -162,7 +162,7 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
     if cnt == 0:
         raise HTTPException(status_code=400, detail="Cannot publish a quiz with 0 questions. Please add questions first.")
 
-    db.execute(text("UPDATE quizzes SET is_published = 1, status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"id": quiz_id})
+    db.execute(text("UPDATE quizzes SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"id": quiz_id})
     c_info = db.execute(text("SELECT class_name FROM classes WHERE id = :cid"), {"cid": q._mapping["class_id"]}).fetchone()
     c_name = c_info[0] if c_info else "Target Class"
     db.execute(text("""
@@ -193,7 +193,7 @@ def publish_quiz(quiz_id: str, db: Session = Depends(get_db)):
 @router.post("/quizzes/{quiz_id}/close")
 @router.post("/quiz/quizzes/{quiz_id}/close")
 def close_quiz(quiz_id: str, db: Session = Depends(get_db)):
-    db.execute(text("UPDATE quizzes SET status = 'closed', is_published = 0, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"id": quiz_id})
+    db.execute(text("UPDATE quizzes SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"id": quiz_id})
     db.commit()
     return success_response({"id": quiz_id, "status": "closed"}, "Quiz closed successfully")
 

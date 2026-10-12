@@ -251,17 +251,33 @@
 <body>
 
   <!-- Top Header -->
-  <header class="top-header">
-    <a href="login.html" class="header-brand">
-      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Logo" class="brand-logo">
-      <div class="college-info">
-        <h1>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
-        <p>Autonomous Institute • Central Quiz & Assessment System</p>
+  <!-- ==================== TOP STICKY HEADER ==================== -->
+  <header class="app-header ssgmce-top-header" role="banner" style="background:#0B1F3A; padding:0.75rem 2rem; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 10px rgba(0,0,0,0.15); color:white;">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <a href="login.html" style="display:flex; align-items:center; gap:0.85rem; text-decoration:none; color:white;">
+        <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" style="height:42px; width:auto; border-radius:4px; background:white; padding:2px;">
+        <div>
+          <div style="font-size:1.05rem; font-weight:700; line-height:1.2;">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div style="font-size:0.75rem; color:#94A3B8;">(An Autonomous Institute) â€¢ Central Examination &amp; Quiz Portal</div>
+        </div>
+      </a>
+      <div style="width:1px; height:28px; background:rgba(255,255,255,0.2);"></div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="background:linear-gradient(135deg, #0B5CAD, #00A6D6); color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:4px; letter-spacing:0.5px;">ERP</span>
+        <span style="font-size:12px; color:#CBD5E1; font-weight:500;">Learn | Grow | Excel</span>
       </div>
-    </a>
-    <a href="login.html" style="color: #94A3B8; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
-      <i data-lucide="home"></i> ERP Home
-    </a>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <a href="student-dashboard.html" style="color:#94A3B8; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem; padding:6px 12px; border-radius:6px; background:rgba(255,255,255,0.06); transition:all 0.2s;">
+        <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Student Dashboard
+      </a>
+      <a href="teacher-dashboard.html" style="color:#94A3B8; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem; padding:6px 12px; border-radius:6px; background:rgba(255,255,255,0.06); transition:all 0.2s;">
+        <i data-lucide="graduation-cap" style="width:16px;height:16px;"></i> Faculty Portal
+      </a>
+      <a href="login.html" style="color:#F87171; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem; padding:6px 12px; border-radius:6px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);">
+        <i data-lucide="log-in" style="width:16px;height:16px;"></i> ERP Home
+      </a>
+    </div>
   </header>
 
   <main class="gateway-container">
