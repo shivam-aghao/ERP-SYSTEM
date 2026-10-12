@@ -115,6 +115,8 @@
 
   <!-- Unified ERP Authentication Guard -->
   <script src="../js/config.js"></script>
+  <script src="../common/auth/auth-client.js"></script>
+  <script src="../common/auth/auth-guard.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
@@ -276,7 +278,7 @@
             </ul>
           </li>
           <li class="nav-item">
-            <a href="#timetable" class="nav-link" data-nav="timetable">
+            <a href="teacher_timetable.html" class="nav-link" data-nav="timetable">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2"/>
@@ -295,7 +297,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#classes" class="nav-link" data-nav="classes">
+            <a href="teacher-dashboard.html#classes" class="nav-link" data-nav="classes">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
@@ -306,7 +308,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#students" class="nav-link" data-nav="students">
+            <a href="teacher-dashboard.html#students" class="nav-link" data-nav="students">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -319,7 +321,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#syllabus" class="nav-link" data-nav="syllabus">
+            <a href="teacher-dashboard.html#syllabus" class="nav-link" data-nav="syllabus">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
@@ -330,7 +332,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#results" class="nav-link" data-nav="results">
+            <a href="teacher-dashboard.html#results" class="nav-link" data-nav="results">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" x2="18" y1="20" y2="10"/>
@@ -342,7 +344,35 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#notifications" class="nav-link" data-nav="notifications">
+            <a href="teacher_test_schedule.html" class="nav-link" data-nav="test-schedule">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </span>
+              <span>Test Scheduler</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="teacher-quiz.html" class="nav-link" data-nav="quiz" style="color: #38BDF8;">
+              <span class="nav-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </span>
+              <span>Quiz Management</span>
+              <span style="margin-left:auto; background:#2563EB; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:10px;">Live</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="teacher-dashboard.html#notifications" class="nav-link" data-nav="notifications">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -353,7 +383,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="#settings" class="nav-link" data-nav="settings">
+            <a href="teacher-dashboard.html#settings" class="nav-link" data-nav="settings">
               <span class="nav-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="3"/>

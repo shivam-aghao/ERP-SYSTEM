@@ -16,9 +16,10 @@
   // Read configuration from window or ERP-Supabase
   const getSupabaseConfig = () => {
     const parentConfig = (global.ERPSupabase && global.ERPSupabase.config) || {};
+    const erpCfg = (global.ERP_CONFIG) || {};
     return {
-      url: global.__SUPABASE_URL__ || parentConfig.url || 'https://gftqvclenyplnuoocbwe.supabase.co',
-      anonKey: global.__SUPABASE_ANON_KEY__ || parentConfig.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
+      url: global.__SUPABASE_URL__ || erpCfg.SUPABASE_URL || parentConfig.url || 'https://gftqvclenyplnuoocbwe.supabase.co',
+      anonKey: global.__SUPABASE_ANON_KEY__ || erpCfg.SUPABASE_ANON_KEY || parentConfig.anonKey || ''
     };
   };
 
@@ -61,26 +62,12 @@
         const res = await fetch(endpoint, { headers: this._getHeaders() });
         if (res.ok) {
           const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
             let profile = rows[0];
-            // Overlay any user edited fields from localStorage if present
-            try {
-              if (typeof localStorage !== 'undefined') {
-                const saved = JSON.parse(localStorage.getItem('ssgmce_student_profile_data') || '{}');
-                if (saved.mobile) profile.primary_mobile = saved.mobile;
-                if (saved.email) profile.institutional_email = saved.email;
-                if (saved.blood) profile.blood_group = saved.blood;
-                if (saved.emergency) profile.emergency_contact = saved.emergency;
-                if (saved.address) profile.permanent_address = saved.address;
-              }
-            } catch (e) {
-              console.warn('[StudentSupabase] LocalStorage parse error:', e);
-            }
             return { success: true, data: profile, source: 'supabase' };
           }
         }
       } catch (err) {
-        console.info('[StudentSupabase] Offline mode: using local cache for profile:', err.message);
+        console.error('[StudentSupabase] Profile fetch error:', err.message);
       }
 
       return { success: false, data: null, source: 'supabase' };
@@ -242,26 +229,19 @@
       const cfg = getSupabaseConfig();
       try {
         const endpoint = `${cfg.url}/rest/v1/students?student_code=eq.${encodeURIComponent(studentCode)}`;
-        await fetch(endpoint, {
+        const res = await fetch(endpoint, {
           method: 'PATCH',
           headers: this._getHeaders(),
           body: JSON.stringify(updates)
         });
-      } catch (err) {
-        console.warn('[StudentSupabase] Remote profile update error:', err);
-      }
-
-      // Always persist to localStorage for instant local reflection
-      try {
-        if (typeof localStorage !== 'undefined') {
-          const existing = JSON.parse(localStorage.getItem('ssgmce_student_profile_data') || '{}');
-          const merged = { ...existing, ...updates };
-          localStorage.setItem('ssgmce_student_profile_data', JSON.stringify(merged));
-          return { success: true, data: merged, source: 'local-storage' };
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          throw new Error(`Profile update failed: ${errText || res.statusText}`);
         }
-        return { success: true, data: updates, source: 'memory' };
-      } catch (e) {
-        return { success: false, error: e.message };
+        return { success: true, data: updates, source: 'supabase' };
+      } catch (err) {
+        console.error('[StudentSupabase] Remote profile update error:', err);
+        return { success: false, error: err.message };
       }
     },
 

@@ -236,11 +236,14 @@ class NotificationService:
         expires_at: Optional[str] = None
     ) -> Optional[str]:
         """Creates a targeted notification and fans out to recipients."""
+        norm_prio = str(priority or "normal").lower()
+        if norm_prio not in ("low", "normal", "high", "urgent"):
+            norm_prio = "normal"
         payload = {
             "p_notification_type": notification_type,
             "p_title": title,
             "p_message": message,
-            "p_priority": priority,
+            "p_priority": norm_prio,
             "p_sender_id": sender_id,
             "p_action_url": action_url,
             "p_target_type": target_type,

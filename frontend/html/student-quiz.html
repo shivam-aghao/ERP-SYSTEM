@@ -36,6 +36,8 @@
 
   <!-- Central Config & Auth Guard -->
   <script src="../js/config.js"></script>
+  <script src="../common/auth/auth-client.js"></script>
+  <script src="../common/auth/auth-guard.js"></script>
   <script src="../js/auth.js"></script>
   <script>
     if (window.ERP_AUTH) {
@@ -50,9 +52,12 @@
 
   <!-- Base ERP Stylesheets -->
 
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/dashboard.css">
-
-  
+  <link rel="stylesheet" href="../css/quiz.css">
 
   <style>
 
@@ -846,70 +851,325 @@
 
 
 
-  <!-- Top Header -->
-
-  <header class="top-header">
-
-    <a href="student-dashboard.html" class="header-brand">
-
-      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" class="brand-logo">
-
-      <div>
-
-        <h1 style="font-size: 1.05rem; margin: 0; font-weight: 700;">Shri Sant Gajanan Maharaj College of Engineering</h1>
-
-        <p style="font-size: 0.75rem; margin: 0; color: #94A3B8;">Autonomous Institute â€¢ Student Quiz Portal</p>
-
-      </div>
-
-    </a>
-
-    <div class="header-user">
-
-      <div class="user-pill" style="display: flex; align-items: center; gap: 0.65rem; background: rgba(255,255,255,0.12); padding: 0.35rem 0.9rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.18);">
-
-        <div class="student-avatar" id="studentAvatarInitials">SA</div>
-
-        <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.25;">
-
-          <span id="studentPillName" style="font-weight: 700; font-size: 0.88rem; color: #FFFFFF;">Student</span>
-
-          <span id="studentPillMeta" style="font-size: 0.72rem; color: #93C5FD; font-weight: 500;">Class: 3R • Roll: --</span>
-
-        </div>
-
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.18); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.78rem; font-weight: 600;">
-
-        <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
-
-        <span>Verified Profile</span>
-
-      </div>
-
-
-
-      <a href="student-dashboard.html" class="btn btn-secondary" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; text-decoration: none; display: flex; align-items: center; gap: 0.4rem;">
-
-        <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Back to Dashboard
-
-      </a>
-
-      <button onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')" class="btn btn-secondary" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-
-        <i data-lucide="log-out" style="width: 14px; height: 14px;"></i> Logout
-
+  <!-- ==================== TOP STICKY HEADER ==================== -->
+  <header class="ssgmce-top-header app-header" id="app-header" role="banner">
+    <div class="header-left header-left-brand">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
 
+      <!-- SSGMCE College Crest / Brand -->
+      <a href="student-dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Home">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo" onerror="this.src='../images/logo.png'">
+        </div>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
+        </div>
+      </a>
+
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
+      </div>
+      <div class="conn-status-wrap" style="margin-left: 12px; display: inline-flex; align-items: center;">
+        <span id="liveBackendStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); cursor: pointer;" title="Connected to FastAPI backend">
+          <span id="liveStatusDot" style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px #10B981;"></span>
+          <span id="liveStatusText">FastAPI :8000 Connected</span>
+        </span>
+      </div>
     </div>
 
+    <!-- Right Controls: Notifications & Student Profile -->
+    <div class="header-right">
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <button type="button" class="header-icon-btn" id="notifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge" id="topNotifBadge">1</span>
+        </button>
+        <!-- Notification Dropdown Popover -->
+        <div class="header-dropdown-panel notif-panel" id="notifPanel" role="menu">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:12px 16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h4 style="margin:0; font-size:14px; font-weight:700; color:#0F172A;">Notifications</h4>
+              <span class="unread-tag" id="topUnreadTag" style="background:#00A6D6; color:#fff; border-radius:12px; padding:2px 8px; font-size:11px; font-weight:700;">New Assessment</span>
+            </div>
+            <button type="button" class="btn-link-action" id="markAllReadBtn" style="font-size:11px; color:#00A6D6; background:none; border:none; cursor:pointer; font-weight:600;">Mark all read</button>
+          </div>
+          <ul class="notif-list" id="topNotifList" style="max-height:360px; overflow-y:auto; margin:0; padding:0; list-style:none;">
+            <li class="notif-item">
+              <span class="notif-bullet bg-accent"></span>
+              <div class="notif-info">
+                <p class="notif-msg">Online Quiz portal is live for your class.</p>
+                <span class="notif-time">Just now • Examination Cell</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Student Profile Pill -->
+      <div class="profile-wrapper" id="profileWrapper">
+        <button type="button" class="profile-pill-btn" id="profileBtn" aria-label="Student Profile Menu" aria-haspopup="true" aria-expanded="false">
+          <div class="avatar-circle" id="studentAvatarInitials">SA</div>
+          <div class="profile-details">
+            <span class="student-name" id="studentPillName">Loading Student...</span>
+            <span class="student-meta" id="studentPillMeta">Class: 3R • Roll: --</span>
+          </div>
+          <svg class="chevron-down-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <!-- Profile Dropdown Popover -->
+        <div class="header-dropdown-panel profile-panel" id="profilePanel" role="menu">
+          <div class="profile-panel-header">
+            <div class="large-avatar" id="dropdownAvatarInitials">SA</div>
+            <div>
+              <div class="p-name" id="dropdownStudentName">Student Profile</div>
+              <div class="p-dept" id="dropdownStudentDept">B.Tech - Computer Science &amp; Engg.</div>
+              <div class="p-roll" id="dropdownStudentRoll">Class: 3R • Verified</div>
+            </div>
+          </div>
+          <div class="p-links">
+            <a href="student-dashboard.html" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Student Dashboard
+            </a>
+            <a href="student-profile.html" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              My Student Profile
+            </a>
+            <a href="student-attendance.html" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Subject-wise Attendance
+            </a>
+            <a href="student-timetable.html" class="p-link-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path></svg>
+              Timetable
+            </a>
+            <a href="student-quiz.html" class="p-link-item active" style="color:var(--primary); font-weight:600;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Online Quiz &amp; Tests (Active)
+            </a>
+            <div class="p-divider"></div>
+            <button type="button" class="p-link-item text-danger" id="logoutBtn" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 
 
 
-  <!-- Sub Nav -->
+    <div class="dashboard-wrapper app-wrapper">
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
+    <!-- LEFT SIDEBAR (Dark Navy #0B1F3A) -->
+    <aside class="dashboard-sidebar app-sidebar" id="dashboardSidebar" aria-label="Student Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav-container" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard -->
+            <li class="sidebar-item">
+              <a href="student-dashboard.html" class="sidebar-link" data-nav="dashboard">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- STUDENT MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">STUDENT MODULE</span>
+              </div>
+            </li>
+
+            <!-- 2. Timetable -->
+            <li class="sidebar-item" data-module="timetable">
+              <a href="student-timetable.html" class="sidebar-link" data-nav="timetable">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <path d="M8 14h.01"></path>
+                  <path d="M12 14h.01"></path>
+                  <path d="M16 14h.01"></path>
+                </svg>
+                <span class="nav-label">Timetable</span>
+                <span class="nav-badge-pill">DAILY</span>
+              </a>
+            </li>
+
+            <!-- 3. Attendance -->
+            <li class="sidebar-item" data-module="attendance">
+              <a href="student-attendance.html" class="sidebar-link" data-nav="attendance">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+                <span class="nav-badge-pill pct-pill" id="sidebarAttendanceBadge">--%</span>
+              </a>
+            </li>
+
+            <!-- 4. Syllabus -->
+            <li class="sidebar-item" data-module="syllabus">
+              <a href="student-syllabus.html" class="sidebar-link" data-nav="syllabus">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+              </a>
+            </li>
+
+            <!-- 5. Fees -->
+            <li class="sidebar-item" data-module="fees">
+              <a href="student-dashboard.html#fees" class="sidebar-link" data-nav="fees">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                  <circle cx="7" cy="15" r="1"></circle>
+                </svg>
+                <span class="nav-label">Fees</span>
+              </a>
+            </li>
+
+            <!-- 6. Profile -->
+            <li class="sidebar-item" data-module="profile">
+              <a href="student-profile.html" class="sidebar-link" data-nav="profile">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
+
+            <!-- 7. E-Learning -->
+            <li class="sidebar-item" data-module="elearning">
+              <a href="student-dashboard.html#elearning" class="sidebar-link" data-nav="elearning">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                  <polygon points="10 8 15 10 10 12"></polygon>
+                </svg>
+                <span class="nav-label">E-Learning</span>
+              </a>
+            </li>
+
+            <!-- 8. Change Information -->
+            <li class="sidebar-item" data-module="change-info">
+              <a href="student-dashboard.html#change-info" class="sidebar-link" data-nav="change-info">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+                <span class="nav-label">Change Information</span>
+              </a>
+            </li>
+
+            <!-- 9. Updation Information -->
+            <li class="sidebar-item" data-module="update-info">
+              <a href="student-dashboard.html#update-info" class="sidebar-link" data-nav="update-info">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span class="nav-label">Updation Information</span>
+              </a>
+            </li>
+
+            <!-- 10. D-Wallet -->
+            <li class="sidebar-item" data-module="dwallet">
+              <a href="student-dashboard.html#dwallet" class="sidebar-link" data-nav="dwallet">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
+                </svg>
+                <span class="nav-label">D-Wallet</span>
+              </a>
+            </li>
+
+            <!-- 11. Examination / Online Quiz (ACTIVE) -->
+            <li class="sidebar-item" data-module="examination">
+              <a href="student-quiz.html" class="sidebar-link active" data-nav="examination" aria-current="page">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label">Quiz &amp; Examination</span>
+                <span class="nav-badge-pill" id="sidebarQuizBadge" style="background:#00A6D6; color:#fff;">Live</span>
+              </a>
+            </li>
+
+            <!-- CAMPUS SERVICES Section Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Campus Services</span>
+            </li>
+
+            <!-- 12. Documents -->
+            <li class="sidebar-item">
+              <a href="student-dashboard.html#documents" class="sidebar-link" data-nav="documents">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="nav-label">Documents</span>
+              </a>
+            </li>
+
+            <!-- 13. Settings -->
+            <li class="sidebar-item">
+              <a href="student-dashboard.html#settings" class="sidebar-link" data-nav="settings">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="main-content-layout" style="flex:1; min-width:0; overflow-y:auto; display:flex; flex-direction:column;">
+  <!-- Sub Nav -->
   <nav class="sub-nav">
 
     <div class="nav-tab active" onclick="switchStudentTab('available')">
@@ -1007,21 +1267,19 @@
     <section id="view-runner" class="view-pane">
 
       <div class="quiz-runner-header">
-
         <div>
-
           <h3 style="margin: 0; color: var(--navy);" id="runnerQuizTitle">Programming Principles & C++ Basics</h3>
-
-          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);" id="runnerQuizSubtitle">Class 1R1 â€¢ Negative Marking: 0.5 Marks</p>
-
+          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);" id="runnerQuizSubtitle">Class 1R1 • Negative Marking: 0.5 Marks</p>
         </div>
-
-        <div class="timer-badge">
-
-          <i data-lucide="clock"></i> <span id="quizTimerText">14:59</span>
-
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="runnerAutosavePill" class="autosave-pill saved">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor;"></span>
+            <span id="runnerAutosaveText">All Saved</span>
+          </div>
+          <div class="timer-badge" id="runnerTimerBadge">
+            <i data-lucide="clock"></i> <span id="quizTimerText">--:--</span>
+          </div>
         </div>
-
       </div>
 
 
@@ -1078,56 +1336,40 @@
 
 
 
-        <!-- Navigator (Study Guide Section 3) -->
+        <!-- 5-State Accessible Navigator (Study Guide Section 3 & 4) -->
+        <div class="q-navigator-card">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+            <h4 style="margin: 0; font-size: 0.95rem; color: var(--navy);">Question Navigator</h4>
+            <span id="navProgressBadge" style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">0/0 Answered</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.75rem 0;">Jump directly to any question</p>
 
-        <div class="navigator-card">
-
-          <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: var(--navy);">Question Navigator</h4>
-
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Jump directly to any question</p>
-
-
-
-          <div class="nav-grid" id="navigatorGrid">
-
-            <!-- Rendered dynamically -->
-
+          <div class="q-nav-grid" id="navigatorGrid">
+            <!-- Rendered dynamically with 5 accessible states -->
           </div>
 
-
-
-          <div style="margin-top: 1.5rem; font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--text-muted);">
-
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-
-              <span style="width: 12px; height: 12px; border-radius: 3px; background: #DCFCE7; border: 1px solid #86EFAC;"></span> Answered
-
+          <div class="nav-legend">
+            <div class="legend-item">
+              <span class="legend-dot answered"></span> Answered (<span id="countAnswered">0</span>)
             </div>
-
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-
-              <span style="width: 12px; height: 12px; border-radius: 3px; background: #FEF3C7; border: 1px solid #FCD34D;"></span> Marked for Review
-
+            <div class="legend-item">
+              <span class="legend-dot not-answered"></span> Visited & Unanswered (<span id="countUnanswered">0</span>)
             </div>
-
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-
-              <span style="width: 12px; height: 12px; border-radius: 3px; background: #F8FAFC; border: 1px solid var(--border-color);"></span> Not Answered
-
+            <div class="legend-item">
+              <span class="legend-dot review"></span> Marked for Review (<span id="countReview">0</span>)
             </div>
-
+            <div class="legend-item">
+              <span class="legend-dot answered-review"></span> Answered & Review (<span id="countAnsweredReview">0</span>)
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot not-visited"></span> Not Visited (<span id="countNotVisited">0</span>)
+            </div>
           </div>
 
-
-
-          <button onclick="confirmSubmitQuiz()" style="width: 100%; margin-top: 1.5rem; padding: 0.75rem; background: var(--success); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
-
-            âœ“ Submit Quiz Now
-
+          <button onclick="openSubmitConfirmModal()" class="btn btn-success" style="width: 100%; margin-top: 1.25rem; padding: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer;">
+            ✓ Review & Submit Quiz
           </button>
-
         </div>
-
       </div>
 
     </section>
@@ -1448,7 +1690,48 @@
 
 
 
+    <!-- PRE-SUBMISSION CONFIRMATION MODAL -->
+    <div id="submitConfirmModal" class="quiz-modal-backdrop">
+      <div class="quiz-modal-box">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            ⚠️
+          </div>
+          <div>
+            <h3 style="margin: 0; color: var(--navy); font-size: 1.15rem;">Ready to Submit Your Exam?</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Please verify your answer breakdown before finalizing.</p>
+          </div>
+        </div>
+
+        <div class="modal-stat-grid">
+          <div class="modal-stat-box answered">
+            <div class="modal-stat-num" id="modalCountAnswered">0</div>
+            <div class="modal-stat-label">Answered</div>
+          </div>
+          <div class="modal-stat-box unanswered">
+            <div class="modal-stat-num" id="modalCountUnanswered">0</div>
+            <div class="modal-stat-label">Unanswered</div>
+          </div>
+          <div class="modal-stat-box review">
+            <div class="modal-stat-num" id="modalCountReview">0</div>
+            <div class="modal-stat-label">For Review</div>
+          </div>
+        </div>
+
+        <div id="modalWarningText" style="padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.825rem; margin-bottom: 1.5rem; background: #F8FAFC; border: 1px solid var(--border-color); color: var(--text-main);">
+          Your answers will be securely graded on the server immediately upon submission.
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button class="btn btn-secondary" onclick="closeSubmitConfirmModal()">Return to Exam</button>
+          <button class="btn btn-success" id="btnFinalSubmitConfirm" onclick="performFinalSubmit()">Confirm Submission</button>
+        </div>
+      </div>
+    </div>
+
   </main>
+    </div><!-- /.main-content-layout -->
+  </div><!-- /.dashboard-wrapper -->
 
 
 
@@ -1471,15 +1754,11 @@
     let currentQuestionIdx = 0;
 
     let studentAnswers = {};
-
+    let visitedQuestions = new Set();
     let timerInterval = null;
-
     let remainingSeconds = 0;
-
     let trendChart = null;
-
     let currentLeaderboardType = 'score';
-
     let latestReviewData = [];
 
 
@@ -1518,29 +1797,14 @@
 
 
 
-      // 2. Check login session from localStorage / sessionStorage
-
-      let loginData = null;
-
-      try {
-
-        const raw = sessionStorage.getItem('loginData') || localStorage.getItem('loginData');
-
-        if (raw) loginData = JSON.parse(raw);
-
-      } catch (e) {}
-
-
-
-      let profileData = null;
-
-      try {
-
-        const raw = localStorage.getItem('ssgmce_student_profile_data');
-
-        if (raw) profileData = JSON.parse(raw);
-
-      } catch (e) {}
+      // 2. Check authenticated session from AuthClient / window.verifiedUser
+      let authUser = (typeof window.AuthClient !== 'undefined' && window.AuthClient.getCurrentUser()) || window.verifiedUser || null;
+      if (!authUser) {
+        try {
+          const raw = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+          if (raw) authUser = JSON.parse(raw);
+        } catch (e) {}
+      }
 
 
 
@@ -1550,7 +1814,9 @@
 
       try {
 
-        const res = await fetch('http://localhost:8000/api/v1/student/profile');
+        const apiBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || '/api/v1';
+        const fetchFn = (window.AuthClient && window.AuthClient.fetchWithAuth) ? window.AuthClient.fetchWithAuth : fetch;
+        const res = await fetchFn(`${apiBase}/student/profile`);
 
         if (res.ok) {
 
@@ -1565,9 +1831,8 @@
 
 
       const candidateCode = urlCode || 
-        (loginData && (loginData.roll_number || loginData.user_id || loginData.student_code)) || 
-        (profileData && profileData.studentCode) || 
-        (backendStudent && backendStudent.studentCode) || 
+        (authUser && (authUser.user_id || authUser.student_code || authUser.studentCode || authUser.roll_no)) || 
+        (backendStudent && (backendStudent.studentCode || backendStudent.student_code || backendStudent.rollNo)) || 
         '';
 
       // 4. Resolve authoritative student record from Quiz API
@@ -1623,53 +1888,34 @@
 
 
     function updateHeaderStudentBadge() {
-
       if (!currentStudent) return;
-
       const nameEl = document.getElementById('studentPillName');
-
       const metaEl = document.getElementById('studentPillMeta');
-
       const avatarEl = document.getElementById('studentAvatarInitials');
-
+      const dropName = document.getElementById('dropdownStudentName');
+      const dropRoll = document.getElementById('dropdownStudentRoll');
+      const dropAvatar = document.getElementById('dropdownAvatarInitials');
       const classDisp = document.getElementById('currentClassNameDisplay');
 
+      const initials = (currentStudent.full_name || 'Student')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || 'SA';
 
+      const rollPart = currentStudent.roll_no ? `Roll: ${currentStudent.roll_no}` : '';
+      const codePart = currentStudent.student_code ? `(${currentStudent.student_code})` : '';
+      const metaStr = `Class: ${currentStudentClass} • ${rollPart} ${codePart}`.trim();
 
       if (nameEl) nameEl.textContent = currentStudent.full_name;
-
-      if (metaEl) {
-
-        const rollPart = currentStudent.roll_no ? `Roll: ${currentStudent.roll_no}` : '';
-
-        const codePart = currentStudent.student_code ? `(${currentStudent.student_code})` : '';
-
-        metaEl.textContent = `Class: ${currentStudentClass} • ${rollPart} ${codePart}`.trim();
-
-      }
-
-      if (avatarEl) {
-
-        const initials = (currentStudent.full_name || 'Student')
-
-          .split(' ')
-
-          .filter(Boolean)
-
-          .map(w => w[0])
-
-          .join('')
-
-          .slice(0, 2)
-
-          .toUpperCase();
-
-        avatarEl.textContent = initials || 'SA';
-
-      }
-
+      if (metaEl) metaEl.textContent = metaStr;
+      if (avatarEl) avatarEl.textContent = initials;
+      if (dropName) dropName.textContent = currentStudent.full_name;
+      if (dropRoll) dropRoll.textContent = metaStr;
+      if (dropAvatar) dropAvatar.textContent = initials;
       if (classDisp) classDisp.textContent = currentStudentClass;
-
     }
 
 
@@ -1957,305 +2203,319 @@
 
 
         currentQuestionIdx = 0;
-
+        visitedQuestions = new Set([0]);
         studentAnswers = {};
 
-        remainingSeconds = (activeQuiz.duration_minutes || 20) * 60;
+        // Restore saved answers from server if resuming an attempt
+        if (startData.saved_answers && typeof startData.saved_answers === 'object') {
+          activeQuizQuestions.forEach((q, idx) => {
+            const qid = String(q.id || q.question_id);
+            if (startData.saved_answers[qid]) {
+              const sa = startData.saved_answers[qid];
+              studentAnswers[idx] = {
+                option: sa.selected_option || null,
+                marked: Boolean(sa.is_marked_for_review)
+              };
+              visitedQuestions.add(idx);
+            }
+          });
+        }
+
+        // Server authoritative remaining seconds
+        if (startData.remaining_seconds !== undefined && startData.remaining_seconds !== null) {
+          remainingSeconds = Math.max(0, parseInt(startData.remaining_seconds));
+        } else {
+          remainingSeconds = (activeQuiz.duration_minutes || 20) * 60;
+        }
 
         latestReviewData = [];
-
         const revContainer = document.getElementById('resultReviewContainer');
-
         if (revContainer) revContainer.style.display = 'none';
-
         const revBtn = document.getElementById('btnToggleReview');
-
         if (revBtn) revBtn.innerHTML = '<i data-lucide="file-text"></i> Review Questions';
 
-
-
         // Populate Runner Header
-
         document.getElementById('runnerQuizTitle').textContent = activeQuiz.title;
-
         document.getElementById('runnerQuizSubtitle').textContent = `Class ${currentStudentClass} • ${activeQuiz.subject_name || activeQuiz.subject || 'Assessment'} • -${activeQuiz.negative_marks || 0} Neg Marks`;
-
-
+        setAutosaveStatus('saved', 'All Saved');
 
         // Switch View
-
         document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
-
         document.getElementById('view-runner').classList.add('active');
 
-
-
         // Start Countdown Timer
-
         startTimer();
-
         renderCurrentQuestion();
-
         renderNavigator();
-
         lucide.createIcons();
 
       } catch (err) {
-
         alert('Could not start quiz: ' + err.message);
-
       }
-
     }
 
-
+    function setAutosaveStatus(state, label) {
+      const pill = document.getElementById('runnerAutosavePill');
+      const txt = document.getElementById('runnerAutosaveText');
+      if (!pill || !txt) return;
+      pill.className = `autosave-pill ${state}`;
+      txt.textContent = label;
+    }
 
     function startTimer() {
-
       clearInterval(timerInterval);
+      const badge = document.getElementById('runnerTimerBadge');
+
+      const updateDisplay = () => {
+        const mins = Math.max(0, Math.floor(remainingSeconds / 60));
+        const secs = Math.max(0, remainingSeconds % 60);
+        const timerEl = document.getElementById('quizTimerText');
+        if (timerEl) timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        if (badge) {
+          if (remainingSeconds <= 300) {
+            badge.classList.add('urgent');
+          } else {
+            badge.classList.remove('urgent');
+          }
+        }
+      };
+
+      updateDisplay();
 
       timerInterval = setInterval(() => {
-
         remainingSeconds--;
-
-        const mins = Math.floor(remainingSeconds / 60);
-
-        const secs = remainingSeconds % 60;
-
-        const timerEl = document.getElementById('quizTimerText');
-
-        if (timerEl) timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-
+        updateDisplay();
 
         if (remainingSeconds <= 0) {
-
           clearInterval(timerInterval);
-
-          alert('Time expired! Your answers are being submitted automatically.');
-
-          submitQuizEvaluation();
-
+          alert('Examination time has expired! Your answers are being submitted automatically.');
+          performFinalSubmit();
         }
-
       }, 1000);
-
     }
 
-
-
     function renderCurrentQuestion() {
-
       if (!activeQuizQuestions || activeQuizQuestions.length === 0) return;
-
+      visitedQuestions.add(currentQuestionIdx);
       const q = activeQuizQuestions[currentQuestionIdx];
-
       document.getElementById('runnerQNumber').textContent = `Question ${currentQuestionIdx + 1} of ${activeQuizQuestions.length}`;
-
       document.getElementById('runnerQText').textContent = q.question_text || q.text;
 
-
-
       const optsContainer = document.getElementById('runnerOptionsContainer');
-
       optsContainer.innerHTML = '';
-
-
 
       const currentSelected = studentAnswers[currentQuestionIdx] ? studentAnswers[currentQuestionIdx].option : null;
 
-
-
       (q.options || []).forEach(opt => {
-
         const btn = document.createElement('button');
-
         const key = opt.key || opt.option_key || 'A';
-
         const text = opt.text || opt.option_text || '';
-
         btn.className = `option-btn ${currentSelected === key ? 'selected' : ''}`;
-
         btn.onclick = () => selectOption(key);
-
         btn.innerHTML = `
-
           <div class="option-letter">${key}</div>
-
           <div>${text}</div>
-
         `;
-
         optsContainer.appendChild(btn);
-
       });
 
-
-
       // Prev / Next button states
-
       document.getElementById('btnPrevQ').style.visibility = currentQuestionIdx === 0 ? 'hidden' : 'visible';
-
-      document.getElementById('btnNextQ').textContent = currentQuestionIdx === activeQuizQuestions.length - 1 ? 'Finish →' : 'Next →';
-
+      document.getElementById('btnNextQ').textContent = currentQuestionIdx === activeQuizQuestions.length - 1 ? 'Review & Submit →' : 'Next →';
     }
-
-
 
     function selectOption(key) {
-
-      if (!studentAnswers[currentQuestionIdx]) {
-
-        studentAnswers[currentQuestionIdx] = { option: key, marked: false };
-
-      } else {
-
-        studentAnswers[currentQuestionIdx].option = key;
-
-      }
+      const prevMarked = Boolean(studentAnswers[currentQuestionIdx] && studentAnswers[currentQuestionIdx].marked);
+      studentAnswers[currentQuestionIdx] = { option: key, marked: prevMarked };
 
       renderCurrentQuestion();
-
       renderNavigator();
 
-
-
-      // Background Autosave
-
+      // Visual Autosave Pill & API Sync
+      setAutosaveStatus('saving', 'Saving...');
       if (activeAttemptId && activeQuizQuestions[currentQuestionIdx]) {
-
         const qid = activeQuizQuestions[currentQuestionIdx].question_id || activeQuizQuestions[currentQuestionIdx].id;
-
         QuizAPI._fetch(`/attempts/${activeAttemptId}/answers`, {
-
           method: 'PUT',
-
           body: JSON.stringify({
-
-            answers: [{ question_id: qid, selected_option: key, is_marked_for_review: false }]
-
+            answers: [{ question_id: qid, selected_option: key, is_marked_for_review: prevMarked }]
           })
-
-        }).catch(() => {});
-
+        }).then(() => {
+          setAutosaveStatus('saved', 'Saved');
+        }).catch(err => {
+          console.warn('Autosave warning:', err);
+          setAutosaveStatus('error', 'Sync failed');
+        });
       }
-
     }
-
-
 
     function toggleMarkForReview() {
-
       if (!studentAnswers[currentQuestionIdx]) {
-
         studentAnswers[currentQuestionIdx] = { option: null, marked: true };
-
       } else {
-
         studentAnswers[currentQuestionIdx].marked = !studentAnswers[currentQuestionIdx].marked;
-
       }
-
       renderNavigator();
 
+      // Sync marked status
+      if (activeAttemptId && activeQuizQuestions[currentQuestionIdx]) {
+        const qid = activeQuizQuestions[currentQuestionIdx].question_id || activeQuizQuestions[currentQuestionIdx].id;
+        const opt = studentAnswers[currentQuestionIdx].option;
+        const isMarked = studentAnswers[currentQuestionIdx].marked;
+        QuizAPI._fetch(`/attempts/${activeAttemptId}/answers`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            answers: [{ question_id: qid, selected_option: opt, is_marked_for_review: isMarked }]
+          })
+        }).catch(() => {});
+      }
     }
-
-
 
     function prevQuestion() {
-
       if (currentQuestionIdx > 0) {
-
         currentQuestionIdx--;
-
         renderCurrentQuestion();
-
         renderNavigator();
-
       }
-
     }
-
-
 
     function nextQuestion() {
-
       if (currentQuestionIdx < activeQuizQuestions.length - 1) {
-
         currentQuestionIdx++;
-
         renderCurrentQuestion();
-
         renderNavigator();
-
       } else {
-
-        confirmSubmitQuiz();
-
+        openSubmitConfirmModal();
       }
-
     }
 
-
-
     function renderNavigator() {
-
       const grid = document.getElementById('navigatorGrid');
-
       if (!grid) return;
-
       grid.innerHTML = '';
 
-
+      let cAnswered = 0;
+      let cUnanswered = 0;
+      let cReview = 0;
+      let cAnsweredReview = 0;
+      let cNotVisited = 0;
 
       activeQuizQuestions.forEach((_, idx) => {
-
         const btn = document.createElement('button');
-
-        btn.className = 'nav-btn';
-
-        if (idx === currentQuestionIdx) btn.classList.add('active');
-
-
-
-        const ans = studentAnswers[idx];
-
-        if (ans && ans.option) btn.classList.add('answered');
-
-        else if (ans && ans.marked) btn.classList.add('marked');
-
-
-
         btn.textContent = idx + 1;
 
+        const ans = studentAnswers[idx];
+        const hasOption = Boolean(ans && ans.option);
+        const isMarked = Boolean(ans && ans.marked);
+        const isVisited = visitedQuestions.has(idx);
+
+        let stateClass = 'not-visited';
+        if (hasOption && isMarked) {
+          stateClass = 'answered-review';
+          cAnsweredReview++;
+          cAnswered++;
+        } else if (hasOption) {
+          stateClass = 'answered';
+          cAnswered++;
+        } else if (isMarked) {
+          stateClass = 'review';
+          cReview++;
+        } else if (isVisited) {
+          stateClass = 'not-answered';
+          cUnanswered++;
+        } else {
+          stateClass = 'not-visited';
+          cNotVisited++;
+        }
+
+        btn.className = `q-nav-btn ${stateClass}`;
+        if (idx === currentQuestionIdx) {
+          btn.classList.add('current');
+        }
+
         btn.onclick = () => {
-
           currentQuestionIdx = idx;
-
           renderCurrentQuestion();
-
           renderNavigator();
-
         };
 
         grid.appendChild(btn);
-
       });
 
+      // Update counters
+      const elAns = document.getElementById('countAnswered');
+      if (elAns) elAns.textContent = cAnswered;
+      const elUnans = document.getElementById('countUnanswered');
+      if (elUnans) elUnans.textContent = cUnanswered;
+      const elRev = document.getElementById('countReview');
+      if (elRev) elRev.textContent = cReview;
+      const elAnsRev = document.getElementById('countAnsweredReview');
+      if (elAnsRev) elAnsRev.textContent = cAnsweredReview;
+      const elNotVis = document.getElementById('countNotVisited');
+      if (elNotVis) elNotVis.textContent = cNotVisited;
+
+      const elProg = document.getElementById('navProgressBadge');
+      if (elProg) elProg.textContent = `${cAnswered}/${activeQuizQuestions.length} Answered`;
     }
 
+    function openSubmitConfirmModal() {
+      let answeredCount = 0;
+      let reviewCount = 0;
+      let unansweredCount = 0;
 
+      activeQuizQuestions.forEach((_, idx) => {
+        const ans = studentAnswers[idx];
+        const hasOption = Boolean(ans && ans.option);
+        const isMarked = Boolean(ans && ans.marked);
+        if (hasOption) {
+          answeredCount++;
+        } else {
+          unansweredCount++;
+        }
+        if (isMarked) {
+          reviewCount++;
+        }
+      });
 
-    function confirmSubmitQuiz() {
+      const mAns = document.getElementById('modalCountAnswered');
+      if (mAns) mAns.textContent = answeredCount;
+      const mUnans = document.getElementById('modalCountUnanswered');
+      if (mUnans) mUnans.textContent = unansweredCount;
+      const mRev = document.getElementById('modalCountReview');
+      if (mRev) mRev.textContent = reviewCount;
 
-      if (confirm('Are you sure you want to submit your quiz? Answers will be evaluated immediately by the grading engine.')) {
-
-        clearInterval(timerInterval);
-
-        submitQuizEvaluation();
-
+      const warnEl = document.getElementById('modalWarningText');
+      if (warnEl) {
+        if (unansweredCount > 0 || reviewCount > 0) {
+          warnEl.innerHTML = `<strong>Attention:</strong> You have <strong>${unansweredCount}</strong> unanswered question(s) and <strong>${reviewCount}</strong> marked for review. Submitted answers cannot be changed.`;
+          warnEl.style.background = '#FEF2F2';
+          warnEl.style.borderColor = '#FCA5A5';
+          warnEl.style.color = '#B91C1C';
+        } else {
+          warnEl.innerHTML = `<strong>Great job!</strong> You have answered all <strong>${activeQuizQuestions.length}</strong> questions. Your answers will be submitted for immediate grading.`;
+          warnEl.style.background = '#F0FDF4';
+          warnEl.style.borderColor = '#86EFAC';
+          warnEl.style.color = '#15803D';
+        }
       }
 
+      const modal = document.getElementById('submitConfirmModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeSubmitConfirmModal() {
+      const modal = document.getElementById('submitConfirmModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function performFinalSubmit() {
+      closeSubmitConfirmModal();
+      clearInterval(timerInterval);
+      submitQuizEvaluation();
+    }
+
+    function confirmSubmitQuiz() {
+      openSubmitConfirmModal();
     }
 
 
@@ -3029,6 +3289,62 @@
     // Initialization on Page Load
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Universal Navbar & Sidebar Toggles
+      const mobileToggle = document.getElementById('mobileMenuToggle');
+      const studentSidebar = document.getElementById('dashboardSidebar');
+      const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+      const sidebarClose = document.getElementById('sidebarCloseBtn');
+
+      if (mobileToggle && studentSidebar) {
+        mobileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          studentSidebar.classList.toggle('active');
+          if (sidebarBackdrop) sidebarBackdrop.classList.toggle('active');
+        });
+      }
+      if (sidebarBackdrop && studentSidebar) {
+        sidebarBackdrop.addEventListener('click', () => {
+          studentSidebar.classList.remove('active');
+          sidebarBackdrop.classList.remove('active');
+        });
+      }
+      if (sidebarClose && studentSidebar) {
+        sidebarClose.addEventListener('click', () => {
+          studentSidebar.classList.remove('active');
+          if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+        });
+      }
+
+      // Profile menu dropdown toggle
+      const profileBtn = document.getElementById('profileBtn');
+      const profilePanel = document.getElementById('profilePanel');
+      if (profileBtn && profilePanel) {
+        profileBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profilePanel.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+          if (!profilePanel.contains(e.target) && !profileBtn.contains(e.target)) {
+            profilePanel.classList.remove('show');
+          }
+        });
+      }
+
+      // Notification panel toggle
+      const notifBtn = document.getElementById('notifBtn');
+      const notifPanel = document.getElementById('notifPanel');
+      if (notifBtn && notifPanel) {
+        notifBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifPanel.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+          if (!notifPanel.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifPanel.classList.remove('show');
+          }
+        });
+      }
+
 
       initStudentPortal();
 

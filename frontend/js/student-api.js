@@ -17,7 +17,10 @@
       return window.__STUDENT_API_BASE__;
     }
     if (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) {
-      return `${window.location.origin}/api/v1/student`;
+      if (window.location.port === '8000') {
+        return `${window.location.origin}/api/v1/student`;
+      }
+      return `http://${window.location.hostname || 'localhost'}:8000/api/v1/student`;
     }
     return 'http://127.0.0.1:8000/api/v1/student';
   }

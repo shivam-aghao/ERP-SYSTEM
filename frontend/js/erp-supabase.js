@@ -15,9 +15,10 @@
 (function (global) {
   'use strict';
 
+  const erpCfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
   const DEFAULT_CONFIG = {
-    url: (typeof window !== 'undefined' && window.__SUPABASE_URL__) || 'https://gftqvclenyplnuoocbwe.supabase.co',
-    anonKey: (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
+    url: (typeof window !== 'undefined' && window.__SUPABASE_URL__) || erpCfg.SUPABASE_URL || 'https://gftqvclenyplnuoocbwe.supabase.co',
+    anonKey: (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || erpCfg.SUPABASE_ANON_KEY || ''
   };
 
   const ERPSupabase = {
@@ -106,28 +107,14 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(recordsPayload)
-          });
-
           return { success: true, sessionId: createdSession.id, source: 'supabase' };
+        } else {
+          const errBody = await sessionRes.text().catch(() => '');
+          throw new Error(`Failed to create attendance session: ${errBody || sessionRes.statusText}`);
         }
       } catch (err) {
-        console.warn('[ERPSupabase] Session insert failed, persisting to LocalStorage fallback:', err);
-      }
-
-      // Local storage fallback for faculty attendance
-      try {
-        const existing = JSON.parse(localStorage.getItem('erp_attendance_records') || '[]');
-        existing.unshift({
-          id: 'SESSION-' + Date.now(),
-          ...sessionObj,
-          records: recordsArray,
-          status: 'Submitted',
-          timestamp: new Date().toISOString()
-        });
-        localStorage.setItem('erp_attendance_records', JSON.stringify(existing));
-        return { success: true, sessionId: 'LOCAL-' + Date.now(), source: 'local-storage' };
-      } catch (e) {
-        return { success: false, error: e.message };
+        console.error('[ERPSupabase] Session insert failed:', err);
+        return { success: false, error: err.message };
       }
     }
   };

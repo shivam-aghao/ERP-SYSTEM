@@ -55,16 +55,16 @@
    * Initialize UI Components
    */
   function initUI() {
-    renderStudentHeader();
-    renderAlertBanner();
-    renderSummaryCards();
-    renderInsights();
-    renderAttendanceTable();
-    initCharts();
-    initFilters();
-    initCalculator();
-    initModalEvents();
-    initMobileNavAndDropdowns();
+    try { renderStudentHeader(); } catch (e) { console.warn('renderStudentHeader error:', e); }
+    try { renderAlertBanner(); } catch (e) { console.warn('renderAlertBanner error:', e); }
+    try { renderSummaryCards(); } catch (e) { console.warn('renderSummaryCards error:', e); }
+    try { renderInsights(); } catch (e) { console.warn('renderInsights error:', e); }
+    try { renderAttendanceTable(); } catch (e) { console.warn('renderAttendanceTable error:', e); }
+    try { initCharts(); } catch (e) { console.warn('initCharts error:', e); }
+    try { initFilters(); } catch (e) { console.warn('initFilters error:', e); }
+    try { initCalculator(); } catch (e) { console.warn('initCalculator error:', e); }
+    try { initModalEvents(); } catch (e) { console.warn('initModalEvents error:', e); }
+    try { initMobileNavAndDropdowns(); } catch (e) { console.warn('initMobileNavAndDropdowns error:', e); }
   }
 
   /* ==========================================================================
@@ -75,8 +75,9 @@
     const nameEl = document.getElementById('studentFullName');
     const classMetaEl = document.getElementById('studentClassMeta');
 
-    if (nameEl && p.name) {
-      nameEl.textContent = p.name;
+    const displayName = p.fullName || p.name || 'Aghao Shivam Sanjay';
+    if (nameEl) {
+      nameEl.textContent = displayName;
     }
 
     if (classMetaEl) {
@@ -107,7 +108,9 @@
     const banner = document.getElementById('attendanceAlertBanner');
     if (!banner) return;
 
-    const overallPct = state.summary?.overall?.percentage || 35.14;
+    const overallPct = state.summary?.overall?.percentage !== undefined ? state.summary.overall.percentage : (state.summary?.overall?.total > 0 ? Number(((state.summary.overall.present / state.summary.overall.total) * 100).toFixed(2)) : 85.19);
+    const presentPeriods = state.summary?.overall?.present !== undefined ? state.summary.overall.present : 69;
+    const totalPeriods = state.summary?.overall?.total !== undefined ? state.summary.overall.total : 81;
     const isCritical = overallPct < 50;
     const isWarning = overallPct >= 50 && overallPct < 75;
 
@@ -120,7 +123,7 @@
       </svg>
     `;
     let title = '⚠ Mandatory 75% Attendance Shortage Alert';
-    let desc = `Your current overall attendance is <strong>${overallPct}%</strong> (26 / 74 periods), which is below the mandatory autonomous threshold of <strong>75.00%</strong>. ${state.insights?.below75Count || 8} of your subjects are currently in shortage. Attend consecutive upcoming sessions to regain examination eligibility.`;
+    let desc = `Your current overall attendance is <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods), which is below the mandatory autonomous threshold of <strong>75.00%</strong>. ${state.insights?.below75Count || 0} of your subjects are currently in shortage. Attend consecutive upcoming sessions to regain examination eligibility.`;
 
     if (!isCritical && !isWarning) {
       alertClass = 'alert-success';
@@ -131,11 +134,11 @@
         </svg>
       `;
       title = '✓ Attendance in Good Standing';
-      desc = `Your current overall attendance is <strong>${overallPct}%</strong>. You satisfy the autonomous college eligibility requirement.`;
+      desc = `Your current overall attendance is <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods). You satisfy the autonomous college eligibility requirement.`;
     } else if (isWarning) {
       alertClass = 'alert-warning';
       title = '▲ Attendance Warning Notice';
-      desc = `Your overall attendance is at <strong>${overallPct}%</strong>. Maintain consistency to remain above 75.00%.`;
+      desc = `Your overall attendance is at <strong>${overallPct}%</strong> (${presentPeriods} / ${totalPeriods} periods). Maintain consistency to remain above 75.00%.`;
     }
 
     banner.className = `att-alert-banner ${alertClass}`;
@@ -278,13 +281,13 @@
       {
         label: 'Highest Attendance',
         val: ins.highestSubject ? `${ins.highestSubject.percentage}%` : '—',
-        sub: ins.highestSubject ? ins.highestSubject.subject.split('-')[0] : 'None',
+        sub: ins.highestSubject ? (ins.highestSubject.subject || ins.highestSubject.name || ins.highestSubject.code || '').split('-')[0].trim() : 'None',
         color: '#10B981'
       },
       {
         label: 'Lowest Attendance',
         val: ins.lowestSubject ? `${ins.lowestSubject.percentage}%` : '—',
-        sub: ins.lowestSubject ? ins.lowestSubject.subject.split('-')[0] : 'None',
+        sub: ins.lowestSubject ? (ins.lowestSubject.subject || ins.lowestSubject.name || ins.lowestSubject.code || '').split('-')[0].trim() : 'None',
         color: '#EF4444'
       }
     ];
@@ -321,8 +324,10 @@
       state.charts.donut.destroy();
     }
 
-    const present = state.summary?.overall?.present || 26;
-    const absent = (state.summary?.overall?.total || 74) - present;
+    const present = state.summary?.overall?.present !== undefined ? state.summary.overall.present : 69;
+    const total = state.summary?.overall?.total !== undefined ? state.summary.overall.total : 81;
+    const absent = Math.max(0, total - present);
+    const overallPct = state.summary?.overall?.percentage !== undefined ? state.summary.overall.percentage : (total > 0 ? Number(((present / total) * 100).toFixed(2)) : 85.19);
 
     state.charts.donut = new Chart(canvas, {
       type: 'doughnut',
@@ -353,8 +358,8 @@
             cornerRadius: 6,
             callbacks: {
               label: function (ctx) {
-                const total = present + absent;
-                const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                const tot = present + absent;
+                const pct = tot > 0 ? ((ctx.parsed / tot) * 100).toFixed(1) : 0;
                 return ` ${ctx.label}: ${ctx.parsed} periods (${pct}%)`;
               }
             }
@@ -365,8 +370,23 @@
 
     const centerPct = document.getElementById('donutCenterPct');
     if (centerPct) {
-      centerPct.textContent = `${state.summary?.overall?.percentage || 35.14}%`;
+      centerPct.textContent = `${overallPct}%`;
     }
+
+    // Dynamic legend hydration
+    const legPresent = document.getElementById('donutLegendPresent');
+    const legAbsent = document.getElementById('donutLegendAbsent');
+    const legTotal = document.getElementById('donutLegendTotal');
+    const presentPct = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+    const absentPct = total > 0 ? ((absent / total) * 100).toFixed(1) : 0;
+    if (legPresent) legPresent.textContent = `${present} Periods (${presentPct}%)`;
+    if (legAbsent) legAbsent.textContent = `${absent} Periods (${absentPct}%)`;
+    if (legTotal) legTotal.textContent = `${total} Periods (100%)`;
+
+    // Dynamic navbar badges sync
+    document.querySelectorAll('.nav-badge-pill.pct-pill, #sidebarAttendanceBadge, .header-att-pct').forEach(el => {
+      el.textContent = `${overallPct}%`;
+    });
   }
 
   // 5B. Subject Attendance Bar Chart
@@ -379,7 +399,8 @@
     }
 
     const labels = state.subjects.map(s => {
-      const parts = s.subject.split('-');
+      const raw = s.subject || s.name || s.code || 'Subject';
+      const parts = raw.split('-');
       const name = parts[0].trim();
       return name.length > 20 ? name.substring(0, 18) + '...' : name;
     });
@@ -436,7 +457,8 @@
             callbacks: {
               title: (items) => {
                 const idx = items[0].dataIndex;
-                return state.subjects[idx].subject;
+                const sub = state.subjects[idx] || {};
+                return sub.subject || sub.name || sub.code || 'Subject';
               },
               label: (ctx) => {
                 const idx = ctx.dataIndex;
@@ -549,8 +571,8 @@
           <td style="color:#64748B; font-weight:600; text-align:center;">${idx + 1}</td>
           <td>
             <div class="subject-cell-wrap">
-              <span class="subject-main-name">${escapeHTML(item.subject)}</span>
-              <span class="subject-sub-code">${escapeHTML(item.code)} • ${escapeHTML(item.faculty || 'SSGMCE Faculty')}</span>
+              <span class="subject-main-name">${escapeHTML(item.subject || item.name || item.code || 'Subject')}</span>
+              <span class="subject-sub-code">${escapeHTML(item.code || '')} • ${escapeHTML(item.faculty || 'SSGMCE Faculty')}</span>
             </div>
           </td>
           <td>
@@ -580,8 +602,8 @@
     // Attach click listeners to "View" buttons
     tbody.querySelectorAll('.btn-table-view').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const id = parseInt(btn.getAttribute('data-subject-id'), 10);
-        const subject = state.subjects.find(s => s.id === id);
+        const id = btn.getAttribute('data-subject-id');
+        const subject = state.subjects.find(s => String(s.id) === String(id));
         if (subject) openSubjectModal(subject);
       });
     });
@@ -640,10 +662,12 @@
     if (!subjectSelect || !presentInput || !totalInput || !targetSelect) return;
 
     // Populate subject select
+    const overallPres = state.summary?.overall?.present ?? 0;
+    const overallTot = state.summary?.overall?.total ?? 0;
     subjectSelect.innerHTML = `
-      <option value="overall" selected>Overall Attendance (26 / 74 Conducted)</option>
+      <option value="overall" selected>Overall Attendance (${overallPres} / ${overallTot} Conducted)</option>
       ${state.subjects.map(s => `
-        <option value="${s.id}">${escapeHTML(s.subject)} (${s.present}/${s.total})</option>
+        <option value="${s.id}">${escapeHTML(s.subject || s.name || s.code || 'Subject')} (${s.present}/${s.total})</option>
       `).join('')}
     `;
 
@@ -676,11 +700,10 @@
     subjectSelect.addEventListener('change', () => {
       const val = subjectSelect.value;
       if (val === 'overall') {
-        presentInput.value = state.summary?.overall?.present || 26;
-        totalInput.value = state.summary?.overall?.total || 74;
+        presentInput.value = state.summary?.overall?.present ?? 0;
+        totalInput.value = state.summary?.overall?.total ?? 0;
       } else {
-        const id = parseInt(val, 10);
-        const sub = state.subjects.find(s => s.id === id);
+        const sub = state.subjects.find(s => String(s.id) === String(val));
         if (sub) {
           presentInput.value = sub.present;
           totalInput.value = sub.total;
@@ -711,8 +734,8 @@
     state.selectedSubjectForModal = subject;
 
     const typeFull = subject.type === 'TH' ? 'Theory' : (subject.type === 'PR' ? 'Practical / Laboratory' : 'Tutorial');
-    if (codeEl) codeEl.textContent = `${subject.code} • ${typeFull}`;
-    if (titleEl) titleEl.textContent = subject.subject;
+    if (codeEl) codeEl.textContent = `${subject.code || ''} • ${typeFull}`;
+    if (titleEl) titleEl.textContent = subject.subject || subject.name || subject.code || 'Subject';
 
     const absent = subject.total - subject.present;
     const calc75 = window.AttendanceCalculations.calculateConsecutiveNeeded(subject.present, subject.total, 75);

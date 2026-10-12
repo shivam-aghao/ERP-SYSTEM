@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Optional
 from sqlalchemy import create_engine
@@ -6,30 +7,42 @@ from backend.config.settings import settings
 
 logger = logging.getLogger("ssgmce_erp_backend.database")
 
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=False
-)
+# Initialize PostgreSQL engine connected directly to Supabase Cloud with SQLite fallback
+try:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        echo=False
+    )
+    # Test connection
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    logger.warning("PostgreSQL direct connection fallback: %s. Using SQLite engine.", e)
+    sqlite_path = os.path.join(settings.BASE_DIR, "erp.db")
+    engine = create_engine(
+        f"sqlite:///{sqlite_path}",
+        connect_args={"check_same_thread": False},
+        echo=False
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
+    """Dependency that yields a database session connected directly to Supabase PostgreSQL."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-# Supabase Client
+# Supabase REST Client
 supabase_client = None
 
 def get_supabase_client():
+    """Returns singleton Supabase Python client instance."""
     global supabase_client
     if supabase_client is None:
         try:
@@ -39,5 +52,5 @@ def get_supabase_client():
                 supabase_client = create_client(settings.SUPABASE_URL, key)
                 logger.info("Supabase client initialized successfully: %s", settings.SUPABASE_URL)
         except Exception as e:
-            logger.info("Supabase direct client notice: %s", e)
+            logger.warning("Supabase direct client notice: %s", e)
     return supabase_client

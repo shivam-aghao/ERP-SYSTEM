@@ -1897,6 +1897,19 @@ const AttendanceMarkingManager = {
   isSubmitting: false,
 
   async init() {
+    // 0. Load previously saved sessions from localStorage first
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const localData = window.localStorage.getItem('ssgmce_marked_sessions');
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          if (parsed && typeof parsed === 'object') {
+            this.markedSessions = Object.assign({}, parsed, this.markedSessions);
+          }
+        }
+      }
+    } catch (_) {}
+
     // 1. Fetch previously marked sessions from backend
     try {
       const res = await fetch('/api/v1/teacher/attendance/sessions');
@@ -1908,6 +1921,11 @@ const AttendanceMarkingManager = {
             const key = `${d}_${s.classCode}_${s.subjectCode || s.subject}`;
             this.markedSessions[key] = s;
           });
+          try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+              window.localStorage.setItem('ssgmce_marked_sessions', JSON.stringify(this.markedSessions));
+            }
+          } catch (_) {}
         }
       }
     } catch (e) {
@@ -1937,6 +1955,23 @@ const AttendanceMarkingManager = {
 
     // 3. Set up pointer drag physics on active card
     this.setupPointerPhysics();
+
+    // 4. Auto-route from URL parameters if requested (e.g. ?view=attendance-mark&...)
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'attendance-mark') {
+          const sub = params.get('subject') || 'Data Structures';
+          const rm = params.get('room') || 'Room 201';
+          const tm = params.get('time') || '09:00 - 10:30 AM';
+          const cls = params.get('classId') || '2R1';
+          const dt = params.get('date') || new Date().toISOString().split('T')[0];
+          setTimeout(() => {
+            this.openFromSlot(sub, rm, tm, cls, dt);
+          }, 150);
+        }
+      }
+    } catch (_) {}
   },
 
   setupPointerPhysics() {
@@ -2063,6 +2098,7 @@ const AttendanceMarkingManager = {
     }
   },
 
+<<<<<<< HEAD
   async openFromSlot(subject, room, timeslot, classCode, date, batch) {
     // Forward directly to dedicated Attendance Module
     if (typeof window.TeacherApp !== 'undefined' && typeof window.TeacherApp.navigateToAttendance === 'function') {
@@ -2084,6 +2120,44 @@ const AttendanceMarkingManager = {
     if (!batch) {
       const bMatch = (subject || '').match(/Batch\s*([A-D0-9]+)/i);
       if (bMatch) batch = bMatch[1].toUpperCase();
+=======
+  async openFromSlot(subject, room, timeslot, classCode, date) {
+    // 0. Leave & Engagement Permission Check
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.canMarkAttendance === 'function') {
+      const activeEmp = (typeof TeacherERPData.getActiveTeacherEmpCode === 'function')
+        ? TeacherERPData.getActiveTeacherEmpCode()
+        : 'EMP-CSE-1001';
+
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      let dayName = 'Monday';
+      try {
+        const dObj = new Date(date || new Date().toISOString().split('T')[0]);
+        if (!isNaN(dObj.getTime())) dayName = days[dObj.getDay()];
+      } catch (_) {}
+
+      const perm = TeacherERPData.canMarkAttendance(activeEmp, {
+        day: dayName,
+        date: date || new Date().toISOString().split('T')[0],
+        timeSlot: timeslot || '09:00 - 10:30 AM',
+        subject: subject,
+        classCode: classCode
+      });
+
+      if (!perm.allowed) {
+        const reason = perm.reason || 'You are on leave for this class. Attendance marking is disabled.';
+        if (typeof window.showToast === 'function') {
+          window.showToast(reason, 'warning');
+        } else if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
+          TeacherApp.showToast(reason);
+        } else {
+          alert(reason);
+        }
+        if (typeof TimetableModule !== 'undefined' && typeof TimetableModule.showOnLeaveAlert === 'function') {
+          TimetableModule.showOnLeaveAlert(reason, perm.engagingFacultyName);
+        }
+        return false;
+      }
+>>>>>>> origin/main
     }
 
     let dept = 'CSE';
@@ -2759,10 +2833,17 @@ const AttendanceMarkingManager = {
       }))
     };
     this.markedSessions[sessionKey] = draft;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('ssgmce_marked_sessions', JSON.stringify(this.markedSessions));
+      }
+    } catch (_) {}
 
     this.closeSaveModal();
     if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
       TeacherApp.showToast(`💾 Draft saved for ${this.activeContext.subject} (${this.activeContext.classCode})!`);
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(`💾 Draft saved for ${this.activeContext.subject} (${this.activeContext.classCode})!`, 'info');
     }
   },
 
@@ -2863,10 +2944,17 @@ const AttendanceMarkingManager = {
     if (window.AttendanceDrawer) {
       window.AttendanceDrawer.markedSessions[sessionKey] = savedSession;
     }
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('ssgmce_marked_sessions', JSON.stringify(this.markedSessions));
+      }
+    } catch (_) {}
 
     const presentCount = recordsArray.filter(r => r.status === 'present').length;
     if (typeof TeacherApp !== 'undefined' && TeacherApp.showToast) {
-      TeacherApp.showToast(`🎉 Attendance submitted successfully for ${this.activeContext.subject} (${this.activeContext.classCode})! ${presentCount}/${recordsArray.length} Present.`);
+      TeacherApp.showToast(`✅ Attendance submitted successfully for ${this.activeContext.subject} (${this.activeContext.classCode})! ${presentCount}/${recordsArray.length} Present.`);
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(`✅ Attendance submitted successfully for ${this.activeContext.subject} (${this.activeContext.classCode})!`, 'success');
     }
 
     this.closeSubmitModal();

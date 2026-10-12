@@ -12,9 +12,6 @@
 
   const STORAGE_KEY = 'ssgmce_erp_session';
 
-  // Demo fixtures removed - sessions must be authenticated via backend
-  const DEMO_PROFILES = {};
-
   const ERPAuth = {
     /**
      * Retrieve the current active session
@@ -51,6 +48,7 @@
 
     /**
      * Clear session and return to login portal
+     */
     logout: function (redirectUrl) {
       if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
         window.ERP_AUTH.logout();
@@ -74,24 +72,6 @@
     },
 
     /**
-     * Quick demo login for instant testing
-     * @param {'student'|'faculty'} role 
-     * @param {boolean} redirect 
-     */
-    loginAsDemo: function (role, redirect = true) {
-      const profile = DEMO_PROFILES[role] || DEMO_PROFILES.student;
-      this.setSession(profile, true);
-      if (redirect) {
-        if (role === 'faculty') {
-          window.location.href = this.resolvePath('faculty/dashboard/index.html');
-        } else {
-          window.location.href = this.resolvePath('student/dashboard/index.html');
-        }
-      }
-      return profile;
-    },
-
-    /**
      * Helper to resolve path from current directory depth
      */
     resolvePath: function (targetRelativeFromRoot) {
@@ -109,59 +89,28 @@
      * @param {'student'|'faculty'|'teacher'|'admin'|'any'} requiredRole 
      */
     guard: function (requiredRole = 'any') {
+      if (window.AuthGuard && typeof window.AuthGuard.guardPage === 'function') {
+        const roles = (requiredRole === 'any') ? ['student', 'teacher', 'admin', 'hod', 'super_admin'] : [requiredRole];
+        window.AuthGuard.guardPage(roles);
+        return this.getSession();
+      }
+
       if (window.ERP_AUTH && typeof window.ERP_AUTH.requireAuth === 'function') {
         window.ERP_AUTH.requireAuth(requiredRole);
         return this.getSession();
       }
 
       const session = this.getSession();
-      const path = (window.location.pathname || '').toLowerCase();
-      const isStudentPage = (requiredRole === 'student') || path.includes('student');
-      const isTeacherPage = (requiredRole === 'teacher' || requiredRole === 'faculty') || (path.includes('teacher') || path.includes('faculty'));
-
-      if (!session) {
-        if (isStudentPage) {
-          console.info('[ERPAuth Guard] Student page opened. Setting student session context.');
-          const defaultStudent = {
-            id: '308637',
-            student_code: '308637',
-            studentCode: '308637',
-            fullName: 'Student',
-            shortName: 'Student',
-            initials: 'ST',
-            role: 'student',
-            className: '3R',
-            rollNo: '01',
-            department: 'Computer Science & Engineering',
-            departmentCode: 'CSE'
-          };
-          this.setSession(defaultStudent, true);
-          return defaultStudent;
-        }
-
-        if (isTeacherPage) {
-          console.info('[ERPAuth Guard] Teacher page opened. Setting faculty session context.');
-          const defaultFaculty = {
-            id: 'FAC-01',
-            emp_code: 'FAC-01',
-            empCode: 'FAC-01',
-            fullName: 'Faculty Member',
-            name: 'Faculty Member',
-            shortName: 'Faculty',
-            initials: 'FM',
-            role: 'teacher',
-            designation: 'Associate Professor',
-            department: 'Computer Science & Engineering',
-            departmentCode: 'CSE'
-          };
-          this.setSession(defaultFaculty, true);
-          return defaultFaculty;
-        }
-
-        console.warn('[ERPAuth] Access denied: No active session. Redirecting to login.');
-        window.location.href = 'login.html';
+      const token = localStorage.getItem('ssgmce_access_token') || 
+                    sessionStorage.getItem('ssgmce_access_token') || 
+                    localStorage.getItem('ssgmce_token');
+      if (!session || !token) {
+        console.warn('[ERPAuth] Access denied: No active authenticated session. Redirecting to login.');
+        var curPath = window.location.pathname.split('/').pop() || 'index.html';
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(curPath);
         return null;
       }
+
       var role = (session.role || '').toLowerCase();
       if (role === 'faculty') role = 'teacher';
 
@@ -169,21 +118,11 @@
         var req = requiredRole.toLowerCase();
         if (req === 'faculty') req = 'teacher';
 
-        if (role !== req) {
-          console.warn(`[ERPAuth] Note: page role is ${req}, active session role is ${role}`);
-          if ((req === 'teacher' || req === 'faculty') && (role === 'teacher' || role === 'faculty')) {
-            return session;
-          }
-          if (req === 'student') {
-            session.role = 'student';
-            this.setSession(session, true);
-            return session;
-          }
-          if (req === 'teacher') {
-            session.role = 'teacher';
-            this.setSession(session, true);
-            return session;
-          }
+        if (role !== req && role !== 'super_admin' && !(role === 'admin' && req === 'teacher')) {
+          console.warn(`[ERPAuth] Forbidden: Required role '${req}', active session role is '${role}'`);
+          alert('Access Denied: You do not have permission to access this page.');
+          window.location.href = (role === 'teacher') ? 'teacher-dashboard.html' : 'student-dashboard.html';
+          return null;
         }
       }
       return session;
@@ -214,6 +153,31 @@
           el.textContent = `${session.designation} • ${session.departmentCode}`;
         }
       });
+
+      if (session.role === 'student') {
+        const updatePills = (pct) => {
+          if (!pct && pct !== 0) return;
+          const pctStr = `${pct}%`;
+          document.querySelectorAll('.nav-badge-pill.pct-pill, #sidebarAttendanceBadge, #dropdownAttPct, .header-att-pct').forEach(el => {
+            el.textContent = pctStr;
+          });
+        };
+        if (session.attendance_pct || session.attendancePct) {
+          updatePills(session.attendance_pct || session.attendancePct);
+        } else {
+          const sc = session.studentCode || session.student_code || session.id || '308637';
+          fetch(`/api/v1/attendance/student?student_code=${encodeURIComponent(sc)}`)
+            .then(res => res.json())
+            .then(resData => {
+              const d = resData && resData.data;
+              if (d && d.overall_percentage !== undefined) {
+                session.attendance_pct = d.overall_percentage;
+                updatePills(d.overall_percentage);
+              }
+            })
+            .catch(() => {});
+        }
+      }
     },
 
     /**
@@ -330,9 +294,7 @@
           }
         });
       }
-    },
-
-    DEMO_PROFILES: DEMO_PROFILES
+    }
   };
 
   // Auto-expose on global window

@@ -99,7 +99,7 @@ class SyllabusService:
             from backend.config.database import SessionLocal
             db = SessionLocal()
 
-        clause = "WHERE subject_code = :sid OR id = :sid" if subject_id else ""
+        clause = "WHERE subject_code = :sid OR id::text = :sid" if subject_id else ""
         params = {"sid": subject_id} if subject_id else {}
         rows = db.execute(text(f"SELECT * FROM subject_syllabus {clause} ORDER BY subject_code ASC"), params).fetchall()
         result = []
@@ -158,8 +158,8 @@ class SyllabusService:
             if sb:
                 query = sb.table("timetable_entries").select("*")
                 if day:
-                    query = query.eq("day_of_week", day)
-                resp = query.order("period_number").execute()
+                    query = query.ilike("day", f"%{day}%")
+                resp = query.order("period_num").execute()
                 if resp.data and len(resp.data) > 0:
                     return resp.data
         except Exception as e:
@@ -169,7 +169,7 @@ class SyllabusService:
         if not db:
             from backend.config.database import SessionLocal
             db = SessionLocal()
-        clause = "WHERE day_of_week = :d" if day else ""
+        clause = "WHERE LOWER(day) = LOWER(:d)" if day else ""
         params = {"d": day} if day else {}
-        rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY period_number ASC"), params).fetchall()
+        rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY slot_index ASC, period_num ASC"), params).fetchall()
         return [dict(r._mapping) for r in rows]
