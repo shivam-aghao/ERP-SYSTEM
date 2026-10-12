@@ -1428,21 +1428,25 @@ const TeacherTestScheduler = {
     const overlay = document.getElementById("sidebar-overlay");
     const closeBtn = document.getElementById("sidebar-close-btn");
 
-    if (hamburgerBtn && sidebar) {
-      hamburgerBtn.addEventListener("click", () => {
+    if (hamburgerBtn && sidebar && !hamburgerBtn.dataset.bound) {
+      hamburgerBtn.dataset.bound = "true";
+      hamburgerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         sidebar.classList.toggle("open");
         if (overlay) overlay.classList.toggle("active");
       });
     }
 
-    if (closeBtn && sidebar) {
+    if (closeBtn && sidebar && !closeBtn.dataset.bound) {
+      closeBtn.dataset.bound = "true";
       closeBtn.addEventListener("click", () => {
         sidebar.classList.remove("open");
         if (overlay) overlay.classList.remove("active");
       });
     }
 
-    if (overlay && sidebar) {
+    if (overlay && sidebar && !overlay.dataset.bound) {
+      overlay.dataset.bound = "true";
       overlay.addEventListener("click", () => {
         sidebar.classList.remove("open");
         overlay.classList.remove("active");
@@ -1451,18 +1455,39 @@ const TeacherTestScheduler = {
 
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
     const profileMenu = document.getElementById("profile-dropdown-menu");
-    if (profileTrigger && profileMenu) {
+    if (profileTrigger && profileMenu && !profileTrigger.dataset.dropdownBound) {
+      profileTrigger.dataset.dropdownBound = "true";
       profileTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
         profileMenu.classList.toggle("show");
         profileTrigger.classList.toggle("active");
       });
+
+      document.addEventListener("click", (e) => {
+        if (!profileMenu.contains(e.target) && !profileTrigger.contains(e.target)) {
+          profileMenu.classList.remove("show");
+          profileTrigger.classList.remove("active");
+        }
+      });
     }
 
-    document.addEventListener("click", () => {
-      if (profileMenu) profileMenu.classList.remove("show");
-      if (profileTrigger) profileTrigger.classList.remove("active");
-    });
+    if (typeof window.handleLogout !== "function") {
+      window.handleLogout = () => {
+        try {
+          if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === "function") {
+            window.ERP_AUTH.logout();
+            return;
+          }
+        } catch (_) {}
+        try {
+          ["erp_token", "erp_role", "erp_user", "ssgmce_token", "ssgmce_user", "ssgmce_erp_session", "currentUser"].forEach(k => {
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+          });
+        } catch (_) {}
+        window.location.href = "login.html?logout=true";
+      };
+    }
   },
 
   ensureModalsExist() {

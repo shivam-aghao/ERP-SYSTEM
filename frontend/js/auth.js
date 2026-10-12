@@ -100,6 +100,18 @@
       localStorage.setItem(STORAGE_USER_KEY, userJson);
       localStorage.setItem(STORAGE_ACTIVE_ROLE, role);
       localStorage.setItem('user_role', role);
+      if (role === 'teacher') {
+        localStorage.setItem('ssgmce_active_teacher', userJson);
+        sessionStorage.setItem('ssgmce_active_teacher', userJson);
+        var empCode = user.emp_code || user.empCode || user.employeeId || '';
+        if (empCode) {
+          localStorage.setItem('ssgmce_selected_faculty', empCode);
+          sessionStorage.setItem('ssgmce_selected_faculty', empCode);
+        } else {
+          localStorage.removeItem('ssgmce_selected_faculty');
+          sessionStorage.removeItem('ssgmce_selected_faculty');
+        }
+      }
 
       // Return standardized payload
       return {
@@ -394,14 +406,19 @@
 
       // 2. Asynchronously verify with server
       var self = this;
+      var teacherRoles = ['teacher', 'faculty', 'hod', 'employee', 'staff', 'instructor'];
       this.verifySession()
         .then(function (verifiedUser) {
           var authoritativeRole = String(verifiedUser.role || '').toLowerCase();
-          if (authoritativeRole === 'faculty') authoritativeRole = 'teacher';
+          if (teacherRoles.indexOf(authoritativeRole) !== -1) {
+            authoritativeRole = 'teacher';
+          }
 
           if (expectedRole && expectedRole !== 'any') {
             var exp = expectedRole.toLowerCase();
-            if (exp === 'faculty') exp = 'teacher';
+            if (teacherRoles.indexOf(exp) !== -1) {
+              exp = 'teacher';
+            }
 
             // Universal admin bypass for administrative roles
             if (authoritativeRole === 'super_admin' || authoritativeRole === 'admin') {
@@ -410,10 +427,10 @@
 
             // Role mismatch check
             if (exp !== authoritativeRole) {
-              console.error('[ERPAuth] Privilege escalation blocked. True Role: ' + authoritativeRole + ', Attempted Page: ' + exp);
-              var authorizedHome = self.getRedirectForRole(authoritativeRole);
-              alert('Access Denied: You do not have permission to access this portal.');
-              window.location.replace(authorizedHome);
+              console.warn('[ERPAuth] Role mismatch. True Role: ' + authoritativeRole + ', Attempted Page: ' + exp);
+              // Cleanly redirect to login page prompting for the required persona instead of a disruptive blocking alert
+              self.clearLocalSession();
+              window.location.replace('login.html?role=' + encodeURIComponent(exp) + '&redirect=' + encodeURIComponent(curPath));
             }
           }
         })
@@ -433,6 +450,13 @@
   // Expose globally
   window.ERP_AUTH = ERP_AUTH;
   window.ERPAuth = ERP_AUTH;
+  window.handleLogout = function () {
+    if (window.ERP_AUTH && typeof window.ERP_AUTH.logout === 'function') {
+      window.ERP_AUTH.logout();
+    } else {
+      window.location.replace('login.html?logout=true');
+    }
+  };
 
   // Auto-init AuthGuard integration if loaded
   if (window.AuthGuard) {

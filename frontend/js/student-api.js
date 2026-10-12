@@ -26,12 +26,29 @@
   }
 
   function getActiveStudentCode() {
-    if (typeof window !== 'undefined' && window.ERP_AUTH) {
-      const user = window.ERP_AUTH.getCurrentUser();
-      if (user && (user.student_code || user.studentCode || user.id)) {
-        return user.student_code || user.studentCode || user.id;
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const urlCode = params.get('student_code') || params.get('code') || params.get('student_id');
+        if (urlCode) return urlCode;
       }
-    }
+      if (typeof window !== 'undefined' && window.ERP_AUTH) {
+        const user = window.ERP_AUTH.getCurrentUser();
+        if (user && (!user.role || String(user.role).toLowerCase() === 'student')) {
+          const code = user.student_code || user.studentCode || user.identifier || user.roll_no || user.user_id || user.id;
+          if (code) return code;
+        }
+      }
+      const raw = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ssgmce_user')) ||
+                  (typeof localStorage !== 'undefined' && localStorage.getItem('ssgmce_user'));
+      if (raw) {
+        const user = JSON.parse(raw);
+        if (user && (!user.role || String(user.role).toLowerCase() === 'student')) {
+          const code = user.student_code || user.studentCode || user.identifier || user.roll_no || user.user_id || user.id;
+          if (code) return code;
+        }
+      }
+    } catch (e) {}
     return '';
   }
 

@@ -34,26 +34,22 @@
       try {
         var verifiedUser = await window.AuthClient.verifySession();
         var authoritativeRole = String(verifiedUser.role || '').toLowerCase();
-        if (authoritativeRole === 'faculty' || authoritativeRole === 'employee') {
+        var teacherRoles = ['teacher', 'faculty', 'hod', 'employee', 'staff', 'instructor'];
+        if (teacherRoles.indexOf(authoritativeRole) !== -1) {
           authoritativeRole = 'teacher';
         }
 
         // 3. Super Admin has universal access
-        var isSuperAdmin = (authoritativeRole === 'super_admin');
+        var isSuperAdmin = (authoritativeRole === 'super_admin' || authoritativeRole === 'admin');
         var isAuthorized = isSuperAdmin || (normalizedAllowed.indexOf(authoritativeRole) !== -1);
 
         if (!isAuthorized) {
-          console.error('[AuthGuard] Privilege escalation attempt detected. User role:', authoritativeRole, 'Required:', allowedRoles);
-
-          var targetRedirect = 'student-dashboard.html';
-          if (authoritativeRole === 'teacher' || authoritativeRole === 'hod') {
-            targetRedirect = 'teacher-dashboard.html';
-          } else if (authoritativeRole === 'admin') {
-            targetRedirect = 'admin-dashboard.html';
+          console.warn('[AuthGuard] Role mismatch. User role:', authoritativeRole, 'Required:', allowedRoles);
+          var currentPath = window.location.pathname.split('/').pop() || 'index.html';
+          if (window.AuthClient && window.AuthClient.clearSession) {
+            window.AuthClient.clearSession();
           }
-
-          alert('Access Denied: You do not have permission to access this portal. Redirecting to your authorized home.');
-          window.location.replace(targetRedirect);
+          window.location.replace('login.html?role=' + encodeURIComponent(normalizedAllowed[0] || '') + '&redirect=' + encodeURIComponent(currentPath));
           return;
         }
 

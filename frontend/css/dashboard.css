@@ -690,8 +690,13 @@ img {
   transition: color var(--transition-fast);
 }
 
-.sidebar-link .nav-label { flex: 1; }
-.sidebar-link .nav-expand-icon { width: 14px; height: 14px; color: #64748B; }
+.sidebar-link .nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-link .nav-expand-icon { width: 14px; height: 14px; color: #64748B; flex-shrink: 0; }
 
 .sidebar-link:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -6038,7 +6043,7 @@ img {
 .dropdown-arrow-icon { width: 14px; height: 14px; transition: transform var(--transition-fast); }
 .footer-left { font-size: 0.8rem; color: var(--muted); }
 .header-action-group { display: flex; align-items: center; gap: 8px; }
-.nav-badge-pill { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #E2E8F0; margin-left: auto; }
+.nav-badge-pill { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #E2E8F0; margin-left: auto; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; line-height: 1.2; }
 .nav-badge-pill.pct-pill { background: rgba(0, 166, 214, 0.2); color: #38BDF8; }
 .notif-panel { width: 340px; }
 .notif-info { display: flex; flex-direction: column; gap: 2px; }

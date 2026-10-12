@@ -1051,6 +1051,18 @@
               </a>
             </li>
 
+            <!-- Online Quiz (Active) -->
+            <li class="sidebar-item" data-module="quiz">
+              <a href="student-quiz.html" class="sidebar-link active" data-nav="quiz" aria-current="page">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span class="nav-label">Online Quiz</span>
+                <span class="nav-badge-pill" id="sidebarQuizBadge" style="background:#00A6D6; color:#fff;">Live</span>
+              </a>
+            </li>
+
             <!-- 5. Fees -->
             <li class="sidebar-item" data-module="fees">
               <a href="student-dashboard.html#fees" class="sidebar-link" data-nav="fees">
@@ -1122,9 +1134,9 @@
               </a>
             </li>
 
-            <!-- 11. Examination / Online Quiz (ACTIVE) -->
+            <!-- 11. Examination -->
             <li class="sidebar-item" data-module="examination">
-              <a href="student-quiz.html" class="sidebar-link active" data-nav="examination" aria-current="page">
+              <a href="student-dashboard.html#examination" class="sidebar-link" data-nav="examination">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
@@ -1132,8 +1144,7 @@
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-                <span class="nav-label">Quiz &amp; Examination</span>
-                <span class="nav-badge-pill" id="sidebarQuizBadge" style="background:#00A6D6; color:#fff;">Live</span>
+                <span class="nav-label">Examination</span>
               </a>
             </li>
 
@@ -1788,16 +1799,11 @@
     // 1b. Authenticated Student Resolution (Strict Single-User Identity)
 
     async function resolveAuthenticatedStudent() {
-
       // 1. Check URL parameters (?student_code= or ?student_id=)
-
       const urlParams = new URLSearchParams(window.location.search);
-
       const urlCode = urlParams.get('student_code') || urlParams.get('code') || urlParams.get('student_id') || urlParams.get('id');
 
-
-
-      // 2. Check authenticated session from AuthClient / window.verifiedUser
+      // 2. Check authenticated session from AuthClient / window.verifiedUser / localStorage
       let authUser = (typeof window.AuthClient !== 'undefined' && window.AuthClient.getCurrentUser()) || window.verifiedUser || null;
       if (!authUser) {
         try {
@@ -1806,33 +1812,31 @@
         } catch (e) {}
       }
 
+      // Only treat authUser as student identity if role is student (or unspecified) unless overridden by URL
+      const isStudentSession = authUser && (!authUser.role || String(authUser.role).toLowerCase() === 'student');
+      const sessionCode = isStudentSession
+        ? (authUser.student_code || authUser.studentCode || authUser.identifier || authUser.roll_no || authUser.user_id || authUser.id || '')
+        : '';
 
+      const initialCode = urlCode || sessionCode || localStorage.getItem('ssgmce_student_code') || '';
 
       // 3. Check Student ERP Backend
-
       let backendStudent = null;
-
       try {
-
         const apiBase = (window.ERP_CONFIG && window.ERP_CONFIG.API_BASE) || '/api/v1';
         const fetchFn = (window.AuthClient && window.AuthClient.fetchWithAuth) ? window.AuthClient.fetchWithAuth : fetch;
-        const res = await fetchFn(`${apiBase}/student/profile`);
-
+        const profileUrl = initialCode
+          ? `${apiBase}/student/profile?student_code=${encodeURIComponent(initialCode)}`
+          : `${apiBase}/student/profile`;
+        const res = await fetchFn(profileUrl);
         if (res.ok) {
-
           const json = await res.json();
-
           if (json.data) backendStudent = json.data;
-
         }
-
       } catch (e) {}
 
-
-
-      const candidateCode = urlCode || 
-        (authUser && (authUser.user_id || authUser.student_code || authUser.studentCode || authUser.roll_no)) || 
-        (backendStudent && (backendStudent.studentCode || backendStudent.student_code || backendStudent.rollNo)) || 
+      const candidateCode = initialCode ||
+        (backendStudent && (backendStudent.studentCode || backendStudent.student_code || backendStudent.rollNo || backendStudent.roll_no)) ||
         '';
 
       // 4. Resolve authoritative student record from Quiz API
@@ -1860,32 +1864,27 @@
       } else if (backendStudent) {
         currentStudent = {
           id: backendStudent.id || null,
-          student_code: backendStudent.studentCode || candidateCode || '',
-          full_name: backendStudent.fullName || 'Student',
-          roll_no: backendStudent.rollNo || 0,
-          class_id: null,
-          class_name: backendStudent.className || ''
+          student_code: backendStudent.studentCode || backendStudent.student_code || candidateCode || '',
+          full_name: backendStudent.fullName || backendStudent.full_name || 'Student',
+          roll_no: backendStudent.rollNo || backendStudent.roll_no || 0,
+          class_id: backendStudent.classId || backendStudent.class_id || null,
+          class_name: backendStudent.className || backendStudent.class_name || ''
         };
         currentStudentClass = currentStudent.class_name;
       } else {
         currentStudent = {
           id: null,
           student_code: candidateCode || '',
-          full_name: (loginData && (loginData.full_name || loginData.name)) || 'Student',
-          roll_no: 0,
+          full_name: (isStudentSession && (authUser.full_name || authUser.name)) || 'Student',
+          roll_no: (isStudentSession && authUser.roll_no) || 0,
           class_id: null,
-          class_name: ''
+          class_name: (isStudentSession && (authUser.class_name || authUser.className)) || ''
         };
-        currentStudentClass = '';
+        currentStudentClass = currentStudent.class_name || '';
       }
 
-
-
       updateHeaderStudentBadge();
-
     }
-
-
 
     function updateHeaderStudentBadge() {
       if (!currentStudent) return;
@@ -1918,129 +1917,87 @@
       if (classDisp) classDisp.textContent = currentStudentClass;
     }
 
-
-
     async function loadStudentPortalData() {
-
       try {
-
-        // Fetch class-restricted quizzes
-
-        currentQuizzes = await QuizAPI.getStudentQuizzes(currentStudentClass, currentStudent ? currentStudent.id : null);
+        // Fetch class-restricted quizzes using both class_name and student_code
+        const stIdentifier = currentStudent ? (currentStudent.student_code || currentStudent.id) : null;
+        const fetchedQuizzes = await QuizAPI.getStudentQuizzes(currentStudentClass, stIdentifier);
+        // Strictly filter quizzes to only the student's enrolled class
+        currentQuizzes = (fetchedQuizzes || []).filter(q => {
+          if (!currentStudentClass) return true;
+          const qClass = String(q.class_name || q.class_id || '').trim().toUpperCase();
+          const sClass = String(currentStudentClass).trim().toUpperCase();
+          return !qClass || qClass === sClass;
+        });
 
         renderAvailableQuizzes();
-
         loadNotifications(currentStudentClass);
-
         populateLeaderboardQuizSelect();
-
         renderPerformanceChart();
-
       } catch (err) {
-
         console.warn('Failed to load student data:', err);
-
       }
-
     }
-
-
 
     // 2. Navigation Tabs
-
     function switchStudentTab(tab) {
-
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-
       document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
 
-
-
       if (tab === 'available') {
-
         document.querySelectorAll('.nav-tab')[0].classList.add('active');
-
         document.getElementById('view-available').classList.add('active');
-
         renderAvailableQuizzes();
-
       } else if (tab === 'performance') {
-
         document.querySelectorAll('.nav-tab')[1].classList.add('active');
-
         document.getElementById('view-performance').classList.add('active');
-
         renderPerformanceChart();
-
       } else if (tab === 'leaderboards') {
-
         document.querySelectorAll('.nav-tab')[2].classList.add('active');
-
         document.getElementById('view-leaderboards').classList.add('active');
-
         renderLeaderboard(currentLeaderboardType);
-
       }
-
       lucide.createIcons();
-
     }
 
-
-
     // 3. Render Available Quizzes with Strict Class Isolation
-
     function renderAvailableQuizzes() {
-
       const grid = document.getElementById('studentQuizGrid');
-
       if (!grid) return;
-
       grid.innerHTML = '';
 
+      const classFilteredQuizzes = (currentQuizzes || []).filter(quiz => {
+        if (!currentStudentClass) return true;
+        const qClass = String(quiz.class_name || quiz.class_id || '').trim().toUpperCase();
+        const sClass = String(currentStudentClass).trim().toUpperCase();
+        return !qClass || qClass === sClass;
+      });
 
-
-      if (!currentQuizzes || currentQuizzes.length === 0) {
-
+      if (classFilteredQuizzes.length === 0) {
         grid.innerHTML = `
-
           <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: 12px; border: 1px dashed var(--border-color);">
-
             <i data-lucide="shield-alert" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
-
             <h3 style="margin: 0; color: var(--navy);">No Active Quizzes for Class ${currentStudentClass}</h3>
-
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
-
               You belong to ${currentStudentClass}. Quizzes created for other classes (e.g. 2R1 or 3R) are strictly isolated and restricted.
-
             </p>
-
           </div>
-
         `;
-
         lucide.createIcons();
-
         return;
-
       }
 
-
-
-      currentQuizzes.forEach(quiz => {
-
+      classFilteredQuizzes.forEach(quiz => {
         const card = document.createElement('div');
-
         card.className = 'quiz-card';
 
         const qCount = quiz.question_count || (quiz.questions ? quiz.questions.length : 5);
 
         const subject = quiz.subject || quiz.subject_name || 'Assessment';
 
-        const isSubmitted = quiz.attempt_status === 'submitted' || quiz.attempt_status === 'auto_submitted';
+        const isSubmitted = ['submitted', 'auto_submitted', 'evaluated', 'SUBMITTED'].includes(quiz.attempt_status);
 
-        const isReleased = Boolean(quiz.is_result_released);
+        const isReleased = (quiz.is_result_released !== false) && (quiz.result_published !== false);
 
 
 
@@ -2195,12 +2152,8 @@
 
 
         activeAttemptId = startData.attempt_id;
-
-        activeQuiz = startData.quiz;
-
+        activeQuiz = startData.quiz || (quizzes && quizzes.find(x => x.id === quizId)) || startData || {};
         activeQuizQuestions = startData.questions || [];
-
-
 
         currentQuestionIdx = 0;
         visitedQuestions = new Set([0]);
@@ -2225,7 +2178,7 @@
         if (startData.remaining_seconds !== undefined && startData.remaining_seconds !== null) {
           remainingSeconds = Math.max(0, parseInt(startData.remaining_seconds));
         } else {
-          remainingSeconds = (activeQuiz.duration_minutes || 20) * 60;
+          remainingSeconds = ((activeQuiz && activeQuiz.duration_minutes) || 20) * 60;
         }
 
         latestReviewData = [];
@@ -2235,8 +2188,11 @@
         if (revBtn) revBtn.innerHTML = '<i data-lucide="file-text"></i> Review Questions';
 
         // Populate Runner Header
-        document.getElementById('runnerQuizTitle').textContent = activeQuiz.title;
-        document.getElementById('runnerQuizSubtitle').textContent = `Class ${currentStudentClass} • ${activeQuiz.subject_name || activeQuiz.subject || 'Assessment'} • -${activeQuiz.negative_marks || 0} Neg Marks`;
+        const qTitle = (activeQuiz && activeQuiz.title) || startData.title || 'Quiz Assessment';
+        const qSub = (activeQuiz && (activeQuiz.subject_name || activeQuiz.subject)) || 'Assessment';
+        const qNeg = (activeQuiz && (activeQuiz.negative_marks || activeQuiz.negative_marks_per_question)) || 0;
+        document.getElementById('runnerQuizTitle').textContent = qTitle;
+        document.getElementById('runnerQuizSubtitle').textContent = `Class ${currentStudentClass} • ${qSub} • -${qNeg} Neg Marks`;
         setAutosaveStatus('saved', 'All Saved');
 
         // Switch View
@@ -2542,15 +2498,16 @@
 
 
 
-        const isReleased = Boolean(result.results_released);
+        const isReleased = (result.results_released !== false) && (result.is_released !== false);
 
         const score = typeof result.score === 'number' ? result.score : 0;
 
         const totMarks = result.total_marks || (activeQuiz ? activeQuiz.total_marks : 10);
 
-        const accuracy = result.percentage || Math.round((result.correct_count / (activeQuizQuestions.length || 1)) * 100);
+        const accuracy = result.percentage !== undefined ? result.percentage : Math.round(((result.correct_count || 0) / (activeQuizQuestions.length || 1)) * 100);
 
-        const timeSpentSecs = (activeQuiz.duration_minutes * 60) - remainingSeconds;
+        const durationMins = (activeQuiz && activeQuiz.duration_minutes) || 20;
+        const timeSpentSecs = Math.max(0, (durationMins * 60) - remainingSeconds);
 
         const timeStr = `${Math.floor(timeSpentSecs / 60)}m ${timeSpentSecs % 60}s`;
 
@@ -2578,7 +2535,7 @@
 
           if (heading) heading.textContent = 'Quiz Completed Successfully!';
 
-          if (subheading) subheading.textContent = 'Server-side evaluation calculated via Supabase/FastAPI';
+          if (subheading) subheading.textContent = 'Official scorecard and question-by-question solution breakdown';
 
 
 
@@ -2600,22 +2557,24 @@
 
 
 
-          // Store Review Data from Server
+          // Store & Auto-Display Review Data from Server
 
           latestReviewData = result.review || [];
 
           const revContainer = document.getElementById('resultReviewContainer');
 
-          if (revContainer) revContainer.style.display = 'none';
-
           const revBtn = document.getElementById('btnToggleReview');
 
-          if (revBtn) {
-
-            revBtn.innerHTML = '<i data-lucide="file-text"></i> Review Questions';
-
-            revBtn.style.display = latestReviewData.length > 0 ? 'inline-flex' : 'none';
-
+          if (latestReviewData.length > 0) {
+            renderReviewQuestions();
+            if (revContainer) revContainer.style.display = 'block';
+            if (revBtn) {
+              revBtn.innerHTML = '<i data-lucide="eye-off"></i> Hide Review';
+              revBtn.style.display = 'inline-flex';
+            }
+          } else {
+            if (revContainer) revContainer.style.display = 'none';
+            if (revBtn) revBtn.style.display = 'none';
           }
 
         } else {
@@ -2704,7 +2663,7 @@
 
 
 
-        if (!res.results_released) {
+        if (res.results_released === false) {
 
           showToast('Results for this quiz have not been released by the teacher yet.', 'warning', 'Results Pending');
 
@@ -2772,16 +2731,18 @@
 
         const revContainer = document.getElementById('resultReviewContainer');
 
-        if (revContainer) revContainer.style.display = 'none';
-
         const revBtn = document.getElementById('btnToggleReview');
 
-        if (revBtn) {
-
-          revBtn.innerHTML = '<i data-lucide="file-text"></i> Review Questions';
-
-          revBtn.style.display = latestReviewData.length > 0 ? 'inline-flex' : 'none';
-
+        if (latestReviewData.length > 0) {
+          renderReviewQuestions();
+          if (revContainer) revContainer.style.display = 'block';
+          if (revBtn) {
+            revBtn.innerHTML = '<i data-lucide="eye-off"></i> Hide Review';
+            revBtn.style.display = 'inline-flex';
+          }
+        } else {
+          if (revContainer) revContainer.style.display = 'none';
+          if (revBtn) revBtn.style.display = 'none';
         }
 
 
