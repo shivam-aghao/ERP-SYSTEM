@@ -19,15 +19,17 @@ Clean Canonical API Architecture under /api/v1:
 """
 
 import os
+import sys
 import logging
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, Request, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import RequestValidationError
-from sqlalchemy import text
+# Ensure project root is in sys.path so direct execution (python backend/main.py) works seamlessly
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_CURRENT_DIR)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+if _CURRENT_DIR not in sys.path:
+    sys.path.insert(0, _CURRENT_DIR)
 
 # Configure Logging
 logging.basicConfig(
@@ -35,6 +37,13 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s"
 )
 logger = logging.getLogger("ssgmce_erp_backend")
+
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy import text
 
 # Core Database & Security Imports
 from backend.config.settings import settings
