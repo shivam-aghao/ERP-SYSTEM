@@ -833,18 +833,18 @@ def get_timetable_tests(class_code: Optional[str] = Query(None), student_code: O
             if role in ["faculty", "teacher", "admin"] or "teach_token" in auth_header:
                 is_faculty = True
         except Exception:
-            pass
+            db.rollback()
 
     enrolled_classes = set()
     if isinstance(student_code, str) and student_code.strip():
         try:
-            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
+            st_row = db.execute(text("SELECT s.*, c.class_name, c.code as c_code FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"), {"c": student_code}).fetchone()
             if st_row:
                 m = dict(st_row._mapping)
                 if m.get("class_name"): enrolled_classes.add(m["class_name"].strip().lower())
                 if m.get("c_code"): enrolled_classes.add(m["c_code"].strip().lower())
         except Exception:
-            pass
+            db.rollback()
 
     if isinstance(class_code, str) and class_code.strip():
         cc_clean = class_code.strip().lower()
@@ -1585,9 +1585,30 @@ def get_student_overview(student_code: Optional[str] = Query(None), db: Session 
     from datetime import datetime
     today_name = datetime.now().strftime("%A")
     today_iso = datetime.now().strftime("%Y-%m-%d")
-    tt_rows = db.execute(text("SELECT * FROM timetable_entries WHERE LOWER(day) = LOWER(:d) ORDER BY period_num ASC"), {"d": today_name}).fetchall()
+    
+    std_class_code = "3R"
+    if st_dict:
+        raw_c = str(st_dict.get("class_name") or "")
+        if "3R" in raw_c:
+            std_class_code = "3R"
+        elif "2R1" in raw_c:
+            std_class_code = "2R1"
+        elif "2R2" in raw_c:
+            std_class_code = "2R2"
+        elif "4R" in raw_c:
+            std_class_code = "4R"
+
+    tt_rows = db.execute(text("""
+        SELECT * FROM timetable_entries 
+        WHERE LOWER(day) = LOWER(:d) AND (UPPER(class_code) = UPPER(:cls) OR class_code IS NULL) 
+        ORDER BY slot_index ASC, period_num ASC
+    """), {"d": today_name, "cls": std_class_code}).fetchall()
     if not tt_rows:
-        tt_rows = db.execute(text("SELECT * FROM timetable_entries ORDER BY period_num ASC LIMIT 5")).fetchall()
+        tt_rows = db.execute(text("""
+            SELECT * FROM timetable_entries 
+            WHERE (UPPER(class_code) = UPPER(:cls) OR class_code IS NULL) 
+            ORDER BY slot_index ASC, period_num ASC LIMIT 6
+        """), {"cls": std_class_code}).fetchall()
 
     today_timetable = []
     for t in tt_rows:
@@ -1694,10 +1715,43 @@ def get_academic_metrics(student_code: Optional[str] = Query(None), db: Session 
 
 @api.get("/student/timetable", tags=["Student Portal"])
 @api.get("/timetable", tags=["Student Portal"])
-def get_student_timetable(day: Optional[str] = None, db: Session = Depends(get_db)):
-    clause = "WHERE LOWER(day) = LOWER(:d)" if day else ""
-    params = {"d": day} if day else {}
-    rows = db.execute(text(f"SELECT * FROM timetable_entries {clause} ORDER BY period_num ASC"), params).fetchall()
+def get_student_timetable(
+    day: Optional[str] = None,
+    class_code: Optional[str] = None,
+    student_code: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    conditions = []
+    params = {}
+    if day:
+        conditions.append("LOWER(day) = LOWER(:d)")
+        params["d"] = day
+
+    # Resolve target class code
+    target_class = (class_code or "").strip().upper()
+    if not target_class and student_code:
+        st_row = db.execute(text("""
+            SELECT s.*, COALESCE(c.class_name, c.name, '2R2') as cls_name 
+            FROM students s 
+            LEFT JOIN classes c ON s.class_id = c.id 
+            WHERE LOWER(s.student_code) = LOWER(:sc) OR LOWER(s.roll_no) = LOWER(:sc) 
+            LIMIT 1
+        """), {"sc": student_code}).fetchone()
+        if st_row:
+            raw_c = str(st_row._mapping.get("cls_name") or "")
+            if "2R2" in raw_c: target_class = "2R2"
+            elif "2R1" in raw_c: target_class = "2R1"
+            elif "3R" in raw_c: target_class = "3R"
+            elif "4R" in raw_c: target_class = "4R"
+
+    if not target_class:
+        target_class = "2R2"
+
+    conditions.append("(UPPER(class_code) = :clscode OR class_code IS NULL)")
+    params["clscode"] = target_class
+
+    where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
+    rows = db.execute(text(f"SELECT * FROM timetable_entries {where_sql} ORDER BY slot_index ASC, period_num ASC"), params).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 @api.get("/student/attendance", tags=["Student Portal"])

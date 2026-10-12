@@ -580,32 +580,144 @@
           token = 'teach_token_' + facultyCode;
         }
       } else {
-        // Student query (307001, 308637, 308638, or any student ID)
+        // Student query (308653, gargi, 307001, shivam, 3R, 2R1, 2R2, 4R, or generic student)
         role = 'student';
-        var isDefaultStudent = cleanUid === '307001' || cleanUid === '308637' || cleanUid === 'student' || cleanUid.includes('shivam');
-        var studentName = isDefaultStudent ? 'Shivam Aghao' : (rawUid ? ('Student ' + rawUid) : 'Shivam Aghao');
-        var studentCode = rawUid || '307001';
+        var isGargi = cleanUid === '308653' ||
+                      cleanUid === '3r9' ||
+                      cleanUid === '4r9' ||
+                      cleanUid === '2ra9' ||
+                      cleanUid === '2rb9' ||
+                      cleanUid === '312225e143' ||
+                      cleanUid.includes('gargi') ||
+                      cleanUid.includes('mane') ||
+                      cleanUid === 'student' ||
+                      cleanUid === '';
 
-        matchedUser = {
-          id: studentCode,
-          student_code: studentCode,
-          studentCode: studentCode,
-          name: studentName,
-          full_name: studentName,
-          fullName: studentName,
-          email: (cleanUid && cleanUid.includes('@')) ? cleanUid : 'shivam.aghao@ssgmce.ac.in',
-          class_name: '3N',
-          className: '3N',
-          class_code: '3N',
-          classCode: '3N',
-          roll_no: '01',
-          rollNo: '01',
-          department: 'Computer Science & Engineering',
-          department_code: 'CSE',
-          department_name: 'Computer Science & Engineering',
-          role: 'student'
-        };
-        token = 'stud_token_' + studentCode;
+        var is2R1 = cleanUid === '307001' || cleanUid === '2r1' || cleanUid.includes('shivam') || cleanUid.includes('aghao');
+        var is2R2 = cleanUid === '2r2';
+        var is3R = cleanUid === '3r';
+        var is4R = cleanUid === '4r';
+
+        if (isGargi) {
+          matchedUser = {
+            id: '0086f6eb-0d55-4b92-b5df-e6bac0958cab',
+            student_code: '308653',
+            studentCode: '308653',
+            name: 'Mane Gargi Manoj',
+            full_name: 'Mane Gargi Manoj',
+            fullName: 'Mane Gargi Manoj',
+            shortName: 'Gargi Mane',
+            initials: 'GM',
+            email: '308653@ssgmce.ac.in',
+            class_name: '2R2',
+            className: '2R2',
+            class_code: '2R2',
+            classCode: '2R2',
+            roll_no: '2RB9',
+            rollNo: '2RB9',
+            semester: 'III',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE',
+            department_name: 'Computer Science & Engineering',
+            role: 'student'
+          };
+          token = 'stud_token_308653';
+        } else if (is2R1) {
+          matchedUser = {
+            id: '307001',
+            student_code: '307001',
+            studentCode: '307001',
+            name: 'Shivam Aghao',
+            full_name: 'Shivam Aghao',
+            fullName: 'Shivam Aghao',
+            shortName: 'Shivam',
+            initials: 'SA',
+            email: 'shivam.aghao@ssgmce.ac.in',
+            class_name: '2R1',
+            className: '2R1',
+            class_code: '2R1',
+            classCode: '2R1',
+            roll_no: '21',
+            rollNo: '21',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE',
+            department_name: 'Computer Science & Engineering',
+            role: 'student'
+          };
+          token = 'stud_token_307001';
+        } else if (is2R2) {
+          matchedUser = {
+            id: '307050',
+            student_code: '307050',
+            studentCode: '307050',
+            name: 'Student 2R2',
+            full_name: 'Student 2R2',
+            fullName: 'Student 2R2',
+            shortName: 'Student 2R2',
+            initials: '2R',
+            email: 'student.2r2@ssgmce.ac.in',
+            class_name: '2R2',
+            className: '2R2',
+            class_code: '2R2',
+            classCode: '2R2',
+            roll_no: '01',
+            rollNo: '01',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE',
+            department_name: 'Computer Science & Engineering',
+            role: 'student'
+          };
+          token = 'stud_token_2r2';
+        } else if (is4R) {
+          matchedUser = {
+            id: '306001',
+            student_code: '306001',
+            studentCode: '306001',
+            name: 'Student 4R',
+            full_name: 'Student 4R',
+            fullName: 'Student 4R',
+            shortName: 'Student 4R',
+            initials: '4R',
+            email: 'student.4r@ssgmce.ac.in',
+            class_name: '4R',
+            className: '4R',
+            class_code: '4R',
+            classCode: '4R',
+            roll_no: '01',
+            rollNo: '01',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE',
+            department_name: 'Computer Science & Engineering',
+            role: 'student'
+          };
+          token = 'stud_token_4r';
+        } else {
+          var studentCode = rawUid || '308653';
+          var studentName = rawUid ? ('Student ' + rawUid) : 'Mane Gargi Manoj';
+          var cName = (cleanUid.includes('2r1') ? '2R1' : (cleanUid.includes('2r2') ? '2R2' : (cleanUid.includes('4r') ? '4R' : '3R')));
+          matchedUser = {
+            id: studentCode,
+            student_code: studentCode,
+            studentCode: studentCode,
+            name: studentName,
+            full_name: studentName,
+            fullName: studentName,
+            shortName: studentName,
+            initials: 'ST',
+            email: (cleanUid && cleanUid.includes('@')) ? cleanUid : (studentCode + '@ssgmce.ac.in'),
+            class_name: cName,
+            className: cName,
+            class_code: cName,
+            classCode: cName,
+            roll_no: cName === '3R' ? '3R9' : '01',
+            rollNo: cName === '3R' ? '3R9' : '01',
+            department: 'Computer Science & Engineering',
+            department_code: 'CSE',
+            department_name: 'Computer Science & Engineering',
+            role: 'student'
+          };
+          token = 'stud_token_' + studentCode;
+        }
       }
 
       this.setSession(matchedUser, token);

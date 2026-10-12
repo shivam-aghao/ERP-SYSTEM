@@ -5,14 +5,581 @@
    Read-Only Timetable & Scheduled Test/Assessment Display
    ======================================================== */
 
+// ========================================================
+// OFFICIAL SSGMCE CLASS TIMETABLE DATASETS (3R, 2R1, 2R2, 4R)
+// Sourced directly from SSGMCE Academic Department
+// Primary focus: Class 3R (Third Year B.Tech CSE • Gargi Mane)
+// ========================================================
+const SSGMCE_CLASS_TIMETABLES = {
+  "3R": {
+    code: "3R",
+    label: "Class 3R (Third Year • Section A)",
+    fullTitle: "Third Year B.Tech CSE — Section A (3R)",
+    classRoom: "B206",
+    term: "Semester – V",
+    semester: "Semester – V • Autumn 2026-2027",
+    wef: "21/07/2026",
+    rev: "01",
+    sessionYear: "Session: 2026-2027 (Autumn)",
+    scheduleRows: [
+      {
+        day: "Monday",
+        dayShort: "Mon",
+        part1: [
+          { subject: "CA&O", faculty: "RAZ", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "CD", faculty: "CMM", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS Lab (D) / CD Lab (B)", faculty: "JMP / CMM", batch: "Batches D, B", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM#3 / ICS", faculty: "CMM / VSM", batch: "C1 / DBMS Lab", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "PE-I DSS", faculty: "PKB", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Tuesday",
+        dayShort: "Tue",
+        part1: [
+          { subject: "DBMS", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "CD", faculty: "CMM", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS(B) / CD(A) / DSS(G)", faculty: "JMP / CMM / PKB", batch: "Batches B, A, G", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM#3 / ICS", faculty: "CMM / VSM", batch: "C1 / DBMS Lab", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "PE-I DSS", faculty: "PKB", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Wednesday",
+        dayShort: "Wed",
+        part1: [
+          { subject: "DBMS", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "CA&O", faculty: "RAZ", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "ICS Lab (H) / DSS Lab (E)", faculty: "VSM / PKB", batch: "Batches H, E", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM#4", faculty: "RAZ", batch: "Lecture • C2", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "Off / Prep", faculty: "", batch: "Self Study / Library", isFree: true, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Thursday",
+        dayShort: "Thu",
+        part1: [
+          { subject: "CA&O", faculty: "RAZ", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "CD", faculty: "CMM", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS Lab (C) / CD Lab (D)", faculty: "JMP / CMM", batch: "Batches C, D", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "MDM#4", faculty: "RAZ", batch: "Lecture • C2", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "Off / Prep", faculty: "", batch: "Self Study / Library", isFree: true, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Friday",
+        dayShort: "Fri",
+        part1: [
+          { subject: "ICS / PE-I DSS", faculty: "VSM / PKB", batch: "DBMS Lab / B206", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DBMS", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DBMS Lab (A) / CD Lab (C)", faculty: "JMP / CMM", batch: "Batches A, C", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "DSS Lab (Batch F)", faculty: "PKB", batch: "ET Lab I", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      }
+    ],
+    saturdayRow: {
+      day: "Saturday",
+      dayShort: "Sat",
+      part1: [
+        { subject: "MDM Lab -I (WT-B1)", faculty: "RAZ", batch: "Lab 01 (Batch B1)", isLab: true, colspan: 2, slotIndices: [0, 1] }
+      ],
+      part2: [
+        { subject: "MDM Lab -I (WT-B4)", faculty: "KPS", batch: "Lab 04 (Batch B4)", isLab: true, colspan: 2, slotIndices: [2, 3] }
+      ],
+      part3: [
+        { subject: "Off / Prep", faculty: "", batch: "Self Study / Library", isFree: true, colspan: 2, slotIndices: [4, 5] }
+      ]
+    },
+    facultyKey: [
+      { abbr: "JMP", name: "Dr. J. M. Patil", desig: "Professor & Head, CSE" },
+      { abbr: "CMM", name: "Prof. C. M. Mankar", desig: "Assistant Professor" },
+      { abbr: "RAZ", name: "Dr. R. A. Zamare", desig: "Assistant Professor" },
+      { abbr: "RVD", name: "Prof. R. V. Deshmukh", desig: "Assistant Professor" },
+      { abbr: "VSM", name: "Dr. V. S. Mahalle", desig: "Assistant Professor" },
+      { abbr: "PKB", name: "Dr. P. K. Bharne", desig: "Assistant Professor" },
+      { abbr: "KPS", name: "Prof. K. P. Sable", desig: "Assistant Professor" }
+    ],
+    subjectKey: [
+      { abbr: "CA&O", name: "Computer Architecture & Organization", code: "5CS201PC" },
+      { abbr: "CD", name: "Compiler Design (Theory & Lab)", code: "5CS202PC" },
+      { abbr: "DBMS", name: "Database Management Systems (Theory & Lab)", code: "5CS203PC" },
+      { abbr: "MDM#3 / #4", name: "Multidisciplinary Minor III & IV", code: "5CS228MD" },
+      { abbr: "ICS", name: "Information & Cyber Security", code: "5CS204PE" },
+      { abbr: "PE-I DSS", name: "Decision Support Systems (Theory & Lab)", code: "5CS204PE" },
+      { abbr: "WT", name: "Web Technology Lab (MDM Lab-I)", code: "5CS229ML" }
+    ],
+    practicalsTable: [
+      { code: "5CS202PC", name: "Compiler Design Lab (CD Lab)", lab: "Lab 02 / B206" },
+      { code: "5CS203PC", name: "Database Management Systems Lab", lab: "DBMS Lab" },
+      { code: "5CS204PE", name: "Decision Support Systems Lab / ICS Lab", lab: "ET Lab I / DBMS Lab" },
+      { code: "5CS229ML", name: "Web Technology Lab (MDM Lab-I)", lab: "Lab 01 / Lab 04" }
+    ],
+    batchesTable: [
+      { batch: "A", rolls: "01-20" },
+      { batch: "B", rolls: "21-40" },
+      { batch: "C", rolls: "41-60" },
+      { batch: "D", rolls: "61-80" }
+    ],
+    signDate: "18/07/2026",
+    signatories: ["Time Table Coordinator", "Head of Department", "Dean (Academics)", "Principal"]
+  },
+
+  "2R1": {
+    code: "2R1",
+    label: "Class 2R1 (Second Year • Section A)",
+    fullTitle: "Second Year B.Tech CSE — Section A (2R 1)",
+    classRoom: "B007/B108/B206",
+    term: "Semester – III",
+    semester: "Semester – III • Autumn 2026-2027",
+    wef: "17/08/2026",
+    rev: "02",
+    sessionYear: "Session:2026-2027 (Autumn)",
+    scheduleRows: [
+      {
+        day: "Monday",
+        dayShort: "Mon",
+        part1: [
+          { subject: "DS", faculty: "KPS", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "OOP", faculty: "SBP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "MDM#1", faculty: "-", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Tuesday",
+        dayShort: "Tue",
+        part1: [
+          { subject: "DS", faculty: "KPS", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "OOP", faculty: "SBP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "MDM#1", faculty: "-", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "OOP(A) / CEP(B) / DS(C) / CEP(D)", faculty: "SBP / RAZ / KPS / KVK", batch: "Batches A, B, C, D", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Wednesday",
+        dayShort: "Wed",
+        part1: [
+          { subject: "DS", faculty: "KPS", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "OOP", faculty: "SBP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "OOP(D) / CEP(A) / DS(B) / CEP(C)", faculty: "SBP / SMJ / KPS / CMM", batch: "Batches D, A, B, C", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Thursday",
+        dayShort: "Thu",
+        part1: [
+          { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DSGT", faculty: "TAP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "OOP", faculty: "SBP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "OOP(B) / CEP(A) / DS(D) / CEP(C)", faculty: "SBP / SMJ / KPS / CMM", batch: "Batches B, A, D, C", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Friday",
+        dayShort: "Fri",
+        part1: [
+          { subject: "OOP(C) / CEP(B) / DS(A) / CEP(D)", faculty: "SBP / RAZ / KPS / KVK", batch: "Batches C, B, A, D", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "DS", faculty: "KPS", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "ES", faculty: "KVK", batch: "Lecture • B108", isLab: false, colspan: 2, slotIndices: [4, 5] }
+        ]
+      }
+    ],
+    saturdayRow: {
+      day: "Saturday",
+      dayShort: "Sat",
+      part1: [
+        { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [0, 1] }
+      ],
+      part2: [
+        { subject: "ED(D5)", faculty: "VVP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [2] },
+        { subject: "Off / Prep", faculty: "", batch: "-", isFree: true, colspan: 1, slotIndices: [3] }
+      ],
+      part3: [
+        { subject: "Off / Prep", faculty: "", batch: "-", isFree: true, colspan: 2, slotIndices: [4, 5] }
+      ]
+    },
+    facultyKey: [
+      { abbr: "TAP", name: "Prof. T. A. Puranik", desig: "Assistant Professor" },
+      { abbr: "SBP", name: "Prof. S. B. Bagrut", desig: "Assistant Professor" },
+      { abbr: "KPS", name: "Prof. Ms. K. P. Sable", desig: "Assistant Professor" },
+      { abbr: "VVP", name: "Prof. V. V. Patil", desig: "Assistant Professor" },
+      { abbr: "KVK", name: "Prof. K. V. Karale", desig: "Assistant Professor" },
+      { abbr: "RAZ", name: "Dr. R. A. Zamare", desig: "Assistant Professor" },
+      { abbr: "SMJ", name: "Prof. S. M. Jain", desig: "Assistant Professor" },
+      { abbr: "CMM", name: "Prof. C. M. Mankar", desig: "Assistant Professor" }
+    ],
+    subjectKey: [
+      { abbr: "3CS200PC", name: "Discrete Structure & Graph Theory", faculty: "Prof. T. A. Puranik" },
+      { abbr: "3CS201PC", name: "Object Oriented Programming", faculty: "Prof. S. B. Bagrut" },
+      { abbr: "3CS202PC", name: "Data Structures", faculty: "Prof. Ms. K. P. Sable" },
+      { abbr: "3CS205MD", name: "Multi-disciplinary Minor#1 (MDM#1)", faculty: "-" },
+      { abbr: "3CS206OE", name: "Open Elective -I", faculty: "-" },
+      { abbr: "3CS207EM", name: "Entrepreneurship Development", faculty: "Prof. V. V. Patil" },
+      { abbr: "3SH208VE", name: "Environmental Science", faculty: "Prof. K. V. Karale" }
+    ],
+    practicalsTable: [
+      { code: "3CS203PC", name: "Object Oriented Programming Lab", lab: "OOP Lab" },
+      { code: "3CS204PC", name: "Data Structures", lab: "OS Lab" },
+      { code: "3CS400EL", name: "Comm. Engag. Project/ Field Project", lab: "Data Science Lab & ML & IOT Lab" }
+    ],
+    batchesTable: [
+      { batch: "A", rolls: "01-23" },
+      { batch: "B", rolls: "24-46" },
+      { batch: "C", rolls: "47-69" },
+      { batch: "D", rolls: "For Diploma Students" }
+    ],
+    signDate: "13/08/2026",
+    signatories: ["Time Table Coordinator", "Head of Department", "Dean (Academics)", "Principal"]
+  },
+
+  "2R2": {
+    code: "2R2",
+    label: "Class 2R2 (Second Year • Section B)",
+    fullTitle: "Second Year B.Tech CSE — Section B (2R 2)",
+    classRoom: "B007/B108/B206",
+    term: "Semester – III",
+    semester: "Semester – III • Autumn 2026-2027",
+    wef: "03/08/2026",
+    rev: "01",
+    sessionYear: "Session:2026-2027 (Autumn)",
+    scheduleRows: [
+      {
+        day: "Monday",
+        dayShort: "Mon",
+        part1: [
+          { subject: "OOP(D) / CEP(B) / DS(A) / CEP(C)", faculty: "VSM / TAP / NNF / RVD", batch: "Batches D, B, A, C", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "OOP", faculty: "VSM", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "MDM", faculty: "-", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "ES", faculty: "KVK", batch: "Lecture • B007", isLab: false, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Tuesday",
+        dayShort: "Tue",
+        part1: [
+          { subject: "OOP(B) / CEP(A) / DS(C) / CEP(D)", faculty: "VSM / VSK / NNF / NMK", batch: "Batches B, A, C, D", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "OOP", faculty: "VSM", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "MDM", faculty: "-", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "DSGT", faculty: "TAP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "DS", faculty: "NNF", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Wednesday",
+        dayShort: "Wed",
+        part1: [
+          { subject: "OOP(C) / CEP(A) / DS(D) / CEP(B)", faculty: "VSM / VSK / NNF / TAP", batch: "Batches C, A, D, B", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "DS", faculty: "NNF", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "OOP", faculty: "VSM", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Thursday",
+        dayShort: "Thu",
+        part1: [
+          { subject: "OOP(A) / CEP(D) / DS(B) / CEP(C)", faculty: "VSM / NMK / NNF / RVD", batch: "Batches A, D, B, C", isLab: true, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "DS", faculty: "NNF", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [4] },
+          { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 1, slotIndices: [5] }
+        ]
+      },
+      {
+        day: "Friday",
+        dayShort: "Fri",
+        part1: [
+          { subject: "DS", faculty: "NNF", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "DS&GT", faculty: "TAP", batch: "Lecture • B108", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "OOP", faculty: "VSM", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "OE-I", faculty: "-", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [4, 5] }
+        ]
+      }
+    ],
+    saturdayRow: {
+      day: "Saturday",
+      dayShort: "Sat",
+      part1: [
+        { subject: "Skill Development", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [0, 1] }
+      ],
+      part2: [
+        { subject: "ED(D5)", faculty: "VVP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [2] },
+        { subject: "Off / Prep", faculty: "", batch: "-", isFree: true, colspan: 1, slotIndices: [3] }
+      ],
+      part3: [
+        { subject: "Off / Prep", faculty: "", batch: "-", isFree: true, colspan: 2, slotIndices: [4, 5] }
+      ]
+    },
+    facultyKey: [
+      { abbr: "TAP", name: "Prof. T. A. Puranik", desig: "Assistant Professor" },
+      { abbr: "VSM", name: "Dr. V. S. Mahalle", desig: "Assistant Professor" },
+      { abbr: "NNF", name: "Prof. N. N. Fatkar", desig: "Assistant Professor" },
+      { abbr: "VVP", name: "Prof. V. V. Patil", desig: "Assistant Professor" },
+      { abbr: "KVK", name: "Prof. K. V. Karale", desig: "Assistant Professor" },
+      { abbr: "VSK", name: "Prof. V. S. Kanherkar", desig: "Assistant Professor" },
+      { abbr: "NMK", name: "Dr. N. M. Kandoi", desig: "Associate Professor" },
+      { abbr: "RVD", name: "Prof. R. V. Deshmukh", desig: "Assistant Professor" }
+    ],
+    subjectKey: [
+      { abbr: "3CS200PC", name: "Discrete Structure & Graph Theory", faculty: "Prof. T. A. Puranik" },
+      { abbr: "3CS201PC", name: "Object Oriented Programming", faculty: "Dr. V. S. Mahalle" },
+      { abbr: "3CS202PC", name: "Data Structures", faculty: "Prof. N. N. Fatkar" },
+      { abbr: "3CS205MD", name: "Multi-disciplinary Minor#1 (MDM#1)", faculty: "-" },
+      { abbr: "3CS206OE", name: "Open Elective -I", faculty: "-" },
+      { abbr: "3CS207EM", name: "Entrepreneurship Development", faculty: "Prof. V. V. Patil" },
+      { abbr: "3SH208VE", name: "Environmental Science", faculty: "Prof. K. V. Karale" }
+    ],
+    practicalsTable: [
+      { code: "3CS203PC", name: "Object Oriented Programming Lab", lab: "OOP Lab" },
+      { code: "3CS204PC", name: "Data Structure", lab: "DBMS Lab" },
+      { code: "3CS400EL", name: "Comm. Engag. Project/ Field Project", lab: "Data Science Lab & ML & IOT Lab" }
+    ],
+    batchesTable: [
+      { batch: "A", rolls: "01-23" },
+      { batch: "B", rolls: "24-46" },
+      { batch: "C", rolls: "47-69" },
+      { batch: "D", rolls: "For Diploma Students" }
+    ],
+    signDate: "31/07/2026",
+    signatories: ["Time Table Coordinator", "Head of Department", "Dean (Academics)", "Principal"]
+  },
+
+  "4R": {
+    code: "4R",
+    label: "Class 4R (Final Year • Section A)",
+    fullTitle: "Final Year B.Tech CSE — Section A (4R)",
+    classRoom: "B007/B206",
+    term: "Semester – VII",
+    semester: "Semester – VII • Autumn 2026-2027",
+    wef: "21/07/2026",
+    rev: "01",
+    sessionYear: "Session: 2026-2027 (Autumn)",
+    scheduleRows: [
+      {
+        day: "Monday",
+        dayShort: "Mon",
+        part1: [
+          { subject: "CC", faculty: "JMP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "BF", faculty: "NMK", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "SSEE", faculty: "KPS", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "PE - III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • B6/B206", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "CG (C) / BF (B) / Project & Seminar (A & D)", faculty: "RVD / NMK", batch: "Batches C, B, A & D", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Tuesday",
+        dayShort: "Tue",
+        part1: [
+          { subject: "CC", faculty: "JMP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "PE – III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • DBMS Lab/B007", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "SSEE", faculty: "KPS", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "CG", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "CG (D) / BF (C) / Project & Seminar (A & B)", faculty: "RVD / NMK", batch: "Batches D, C, A & B", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Wednesday",
+        dayShort: "Wed",
+        part1: [
+          { subject: "CC", faculty: "JMP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "BF", faculty: "NMK", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "SSEE", faculty: "KPS", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "CG", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "CG (B) / BF (A) / ET Lab III-DW&M (G)", faculty: "RVD / NMK / PKB", batch: "Batches B, A, G", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Thursday",
+        dayShort: "Thu",
+        part1: [
+          { subject: "Project", faculty: "Department Faculty", batch: "Major Project Work", isFree: false, isLab: false, colspan: 2, slotIndices: [0, 1] }
+        ],
+        part2: [
+          { subject: "CG", faculty: "RVD", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [2] },
+          { subject: "PE - III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • B2/B206", isLab: false, colspan: 1, slotIndices: [3] }
+        ],
+        part3: [
+          { subject: "ET Lab III – DW&M (F)", faculty: "PKB", batch: "Batch F (DW&M)", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      },
+      {
+        day: "Friday",
+        dayShort: "Fri",
+        part1: [
+          { subject: "CC", faculty: "JMP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [0] },
+          { subject: "BF", faculty: "NMK", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [1] }
+        ],
+        part2: [
+          { subject: "ET Lab III – DF (H) / DW&M (E)", faculty: "SBP / PKB", batch: "Batches H, E", isLab: true, colspan: 2, slotIndices: [2, 3] }
+        ],
+        part3: [
+          { subject: "CG (A) / BF (D) / Project & Seminar (B & C)", faculty: "RVD / NMK", batch: "Batches A, D, B & C", isLab: true, colspan: 2, slotIndices: [4, 5] }
+        ]
+      }
+    ],
+    saturdayRow: {
+      day: "Saturday",
+      dayShort: "Sat",
+      part1: [{ subject: "Skill Development Program", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [0, 1] }],
+      part2: [{ subject: "Skill Development Program", faculty: "SDP Mentor", batch: "All Batches", isLab: false, colspan: 2, slotIndices: [2, 3] }],
+      part3: [{ subject: "Off / Prep", faculty: "", batch: "-", isFree: true, colspan: 2, slotIndices: [4, 5] }]
+    },
+    facultyKey: [
+      { abbr: "JMP", name: "Dr. J. M. Patil", desig: "Head Of Department & Professor" },
+      { abbr: "NMK", name: "Dr. N. M. Kandoi", desig: "Associate Professor" },
+      { abbr: "RVD", name: "Prof. R. V. Deshmukh", desig: "Assistant Professor" },
+      { abbr: "KPS", name: "Prof. K. P. Sable", desig: "Assistant Professor" },
+      { abbr: "SBP", name: "Prof. S. B. Pagrut", desig: "Assistant Professor" },
+      { abbr: "PKB", name: "Dr. P. K. Bharne", desig: "Assistant Professor" }
+    ],
+    subjectKey: [
+      { abbr: "7KS01", name: "Social Science & Engineering Economics", faculty: "Prof. K. P. Sable" },
+      { abbr: "7KS02", name: "Computer Graphics", faculty: "Prof. R. V. Deshmukh" },
+      { abbr: "7KS03", name: "Cloud Computing", faculty: "Dr. J. M. Patil" },
+      { abbr: "7KS04", name: "PE III - Digital Forensics / Data Warehousing & Mining", faculty: "Prof. S. B. Pagrut / Dr. P. K. Bharne" },
+      { abbr: "7KS05", name: "Professional Elective-IV (Blockchain Fundamentals)", faculty: "Dr. N. M. Kandoi" }
+    ],
+    practicalsTable: [
+      { code: "7KS06", name: "Computer Graphics - CG", lab: "DBMS Lab" },
+      { code: "7KS07", name: "Emerging Technology Lab III: DW&M and DF", lab: "DW&M – Project Lab / DF – Data Science Lab" },
+      { code: "7KS08", name: "Emerging Technology Lab IV: BF", lab: "SS Lab" },
+      { code: "7KS09", name: "Project & Seminar", lab: "--" }
+    ],
+    batchesTable: [
+      { batch: "A", rolls: "01-20" },
+      { batch: "B", rolls: "21-40" },
+      { batch: "C", rolls: "41-60" },
+      { batch: "D", rolls: "61-80" },
+      { batch: "E-DW&M", rolls: "1-19 (17)" },
+      { batch: "F-DW&M", rolls: "20-40 (16)" },
+      { batch: "G-DW&M", rolls: "41-79 (18)" },
+      { batch: "DF", rolls: "28" }
+    ],
+    signDate: "18/07/2026",
+    signatories: ["Time Table Coordinator", "Head of Department", "Dean (Academics)", "Principal"]
+  }
+};
+
 const StudentTimetableApp = {
   selectedTimetableDate: null,
+  selectedClassCode: null,
   tests: [],
   timetableEntries: [],
   studentSession: null,
   serverTimeOffsetMs: 0,
   realtimeChannel: null,
   _tickerInterval: null,
+
+  getClassCode() {
+    if (this.selectedClassCode) return this.selectedClassCode;
+    try {
+      const storedCls = sessionStorage.getItem('ssgmce_selected_timetable_class') || localStorage.getItem('ssgmce_selected_timetable_class');
+      if (storedCls && SSGMCE_CLASS_TIMETABLES[storedCls]) return storedCls;
+    } catch (_) {}
+
+    const s = this.studentSession;
+    if (s) {
+      const raw = String(s.className || s.class_name || s.class_code || s.classCode || '').trim().toUpperCase();
+      if (raw.includes('2R2')) return '2R2';
+      if (raw.includes('2R1')) return '2R1';
+      if (raw.includes('3R')) return '3R';
+      if (raw.includes('4R')) return '4R';
+    }
+    return '2R2'; // Default to 2R2
+  },
+
+  switchClass(classCode) {
+    const validCode = (classCode || "").toUpperCase();
+    if (!validCode || !SSGMCE_CLASS_TIMETABLES[validCode]) return;
+    this.selectedClassCode = validCode;
+    try {
+      sessionStorage.setItem('ssgmce_selected_timetable_class', validCode);
+    } catch (_) {}
+    this.loadTests(); // Refresh assessments for newly selected class
+    this.renderTimetableView();
+    this.initLucideIcons();
+    this.showToast(`Active Timetable switched to Class ${validCode}`, 'info');
+  },
 
   init() {
     this.loadStudentSession();
@@ -77,15 +644,16 @@ const StudentTimetableApp = {
   // LOAD REAL STUDENT TIMETABLE FROM BACKEND API
   // ----------------------------------------------------
   async loadTimetable() {
+    const activeClass = this.getClassCode();
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      let res = await fetch(`${this.getApiBase()}/student/timetable`, { signal: controller.signal });
+      let res = await fetch(`${this.getApiBase()}/student/timetable?class_code=${encodeURIComponent(activeClass)}`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (!res.ok) {
         const c2 = new AbortController();
         const t2 = setTimeout(() => c2.abort(), 1500);
-        res = await fetch(`${this.getApiBase()}/timetable`, { signal: c2.signal });
+        res = await fetch(`${this.getApiBase()}/timetable?class_code=${encodeURIComponent(activeClass)}`, { signal: c2.signal });
         clearTimeout(t2);
       }
       if (res.ok) {
@@ -118,7 +686,36 @@ const StudentTimetableApp = {
       const stored = localStorage.getItem('ssgmce_erp_session') || localStorage.getItem('ssgmce_user');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.role === 'student' || parsed.studentCode || parsed.rollNo) {
+        if (parsed.role === 'student' || parsed.studentCode || parsed.rollNo || parsed.className) {
+          const nameStr = String(parsed.fullName || parsed.full_name || parsed.name || "");
+          const isGargi = nameStr.toLowerCase().includes("gargi") || nameStr.toLowerCase().includes("mane") || String(parsed.studentCode) === "308653" || String(parsed.rollNo).toUpperCase() === "3R9";
+          
+          let rawClass = String(parsed.className || parsed.class_name || parsed.classCode || parsed.class_code || "").toUpperCase();
+          if (rawClass.includes("2R2") || isGargi) {
+            parsed.className = "2R2";
+            parsed.classCode = "2R2";
+            parsed.class_name = "2R2";
+            parsed.fullName = parsed.fullName || "Mane Gargi Manoj";
+            parsed.shortName = parsed.shortName || "Gargi Mane";
+            parsed.initials = "GM";
+            parsed.rollNo = parsed.rollNo && parsed.rollNo.toUpperCase().includes("2RB") ? parsed.rollNo : "2RB9";
+            parsed.studentCode = parsed.studentCode || "308653";
+            parsed.email = parsed.email || "308653@ssgmce.ac.in";
+            parsed.semester = "III";
+          } else if (rawClass.includes("2R1")) {
+            parsed.className = "2R1";
+            parsed.classCode = "2R1";
+          } else if (rawClass.includes("3R")) {
+            parsed.className = "3R";
+            parsed.classCode = "3R";
+          } else if (rawClass.includes("4R")) {
+            parsed.className = "4R";
+            parsed.classCode = "4R";
+          } else {
+            parsed.className = "2R2";
+            parsed.classCode = "2R2";
+          }
+
           this.studentSession = parsed;
           return;
         }
@@ -127,17 +724,22 @@ const StudentTimetableApp = {
       console.warn("Could not parse student session:", e);
     }
 
-    // Default student context from ERP model (CSE 2R1)
+    // Default student context from ERP model: Gargi Mane (Class 2R2)
     this.studentSession = {
-      fullName: "Shivam Aghao",
-      shortName: "Shivam",
-      initials: "SA",
-      rollNo: "21",
-      studentCode: "307001",
-      className: "2R1",
+      id: "0086f6eb-0d55-4b92-b5df-e6bac0958cab",
+      fullName: "Mane Gargi Manoj",
+      shortName: "Gargi Mane",
+      initials: "GM",
+      rollNo: "2RB9",
+      studentCode: "308653",
+      className: "2R2",
+      classCode: "2R2",
+      semester: "III",
+      academicYear: "2026-2027",
       department: "Computer Science & Engineering",
       departmentCode: "CSE",
-      email: "shivam.aghao@ssgmce.ac.in"
+      email: "308653@ssgmce.ac.in",
+      role: "student"
     };
   },
 
@@ -161,8 +763,8 @@ const StudentTimetableApp = {
 
     // 2. Backend REST API with fast timeout
     try {
-      let classCode = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode)) || '2R1';
-      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '307001';
+      let classCode = this.getClassCode();
+      const studentCode = (this.studentSession && (this.studentSession.studentCode || this.studentSession.student_code || this.studentSession.id)) || '308653';
 
       const params = new URLSearchParams();
       if (classCode) params.append('class_code', classCode);
@@ -533,22 +1135,22 @@ const StudentTimetableApp = {
     }
   },
 
-  isTargetedForCurrentStudent(test) {
+  isTargetedForCurrentStudent(test, targetClassCode) {
     if (!test) return false;
-    const rawClass = (this.studentSession && (this.studentSession.className || this.studentSession.class_name || this.studentSession.classCode || '2R1')) || '2R1';
+    const rawClass = targetClassCode || this.getClassCode() || '3R';
     const studentClass = rawClass.trim().toLowerCase();
-    const targetClass = (test.class_code || test.class || '').trim().toLowerCase();
+    const testClass = (test.class_code || test.class || '').trim().toLowerCase();
 
-    if (!targetClass || targetClass === 'all' || targetClass === 'any' || targetClass === 'global') return true;
-    if (targetClass === studentClass) return true;
+    if (!testClass || testClass === 'all' || testClass === 'any' || testClass === 'global') return true;
+    if (testClass === studentClass) return true;
 
     const extractToken = (s) => (s.match(/[1-4][a-z][1-2]?/g) || []);
-    const tTokens = extractToken(targetClass);
+    const tTokens = extractToken(testClass);
     const sTokens = extractToken(studentClass);
     if (tTokens.length > 0 && sTokens.length > 0) {
       return tTokens.some(t => sTokens.includes(t));
     }
-    return targetClass.includes(studentClass) || studentClass.includes(targetClass);
+    return testClass.includes(studentClass) || studentClass.includes(testClass);
   },
 
   // ----------------------------------------------------
@@ -800,102 +1402,16 @@ const StudentTimetableApp = {
     });
     const includeSunday = hasSundayTest || currentDayName.toLowerCase() === "sunday";
 
-    // Official 3N Timetable Dataset from SSGMCE Academic Department
-    const scheduleRows = [
-      {
-        day: "Monday",
-        dayShort: "Mon",
-        part1: [
-          { subject: "DSS LAB(D)", faculty: "AGS", batch: "Batch D", isLab: true, colspan: 2, slotIndices: [0, 1] }
-        ],
-        part2: [
-          { subject: "DBMS(A)/DSS(B)/OS(C)", faculty: "FIK/AGS/SNK", batch: "Batches A, B, C", isLab: true, colspan: 2, slotIndices: [2, 3] }
-        ],
-        part3: [
-          { subject: "MDM-III", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
-          { subject: "DSS", faculty: "AGS", batch: "B4", isLab: false, colspan: 1, slotIndices: [5] }
-        ]
-      },
-      {
-        day: "Tuesday",
-        dayShort: "Tue",
-        part1: [
-          { subject: "OS", faculty: "SNK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
-          { subject: "DSS", faculty: "AGS", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
-        ],
-        part2: [
-          { subject: "DBMS(B)/DSS(C)/OS(D)", faculty: "FIK/AGS/SNK", batch: "Batches B, C, D", isLab: true, colspan: 2, slotIndices: [2, 3] }
-        ],
-        part3: [
-          { subject: "MDM-III", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
-          { subject: "DBMS", faculty: "FIK", batch: "B4", isLab: false, colspan: 1, slotIndices: [5] }
-        ]
-      },
-      {
-        day: "Wednesday",
-        dayShort: "Wed",
-        part1: [
-          { subject: "OS", faculty: "SNK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
-          { subject: "TOC", faculty: "SSM", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
-        ],
-        part2: [
-          { subject: "DBMS(C)/OS (A)", faculty: "FIK/SNK", batch: "Batches C, A", isLab: true, colspan: 2, slotIndices: [2, 3] }
-        ],
-        part3: [
-          { subject: "MDM-IV", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
-          { subject: "OE-III", faculty: "", batch: "Open Elective", isLab: false, colspan: 1, slotIndices: [5] }
-        ]
-      },
-      {
-        day: "Thursday",
-        dayShort: "Thu",
-        part1: [
-          { subject: "DBMS", faculty: "FIK", batch: "B2", isLab: false, colspan: 1, slotIndices: [0] },
-          { subject: "TOC", faculty: "SSM", batch: "B2", isLab: false, colspan: 1, slotIndices: [1] }
-        ],
-        part2: [
-          { subject: "DBMS(D)/OS Lab(B)", faculty: "FIK/SNK", batch: "Batches D, B", isLab: true, colspan: 2, slotIndices: [2, 3] }
-        ],
-        part3: [
-          { subject: "MDM-IV", faculty: "", batch: "", isLab: false, colspan: 1, slotIndices: [4] },
-          { subject: "OE-III", faculty: "", batch: "Open Elective", isLab: false, colspan: 1, slotIndices: [5] }
-        ]
-      },
-      {
-        day: "Friday",
-        dayShort: "Fri",
-        part1: [
-          { subject: "DBMS", faculty: "FIK", batch: "B4", isLab: false, colspan: 1, slotIndices: [0] },
-          { subject: "DSS", faculty: "AGS", batch: "B4", isLab: false, colspan: 1, slotIndices: [1] }
-        ],
-        part2: [
-          { subject: "TOC", faculty: "SSM", batch: "B4", isLab: false, colspan: 1, slotIndices: [2] },
-          { subject: "OS", faculty: "SNK", batch: "B4", isLab: false, colspan: 1, slotIndices: [3] }
-        ],
-        part3: [
-          { subject: "DSS LAB(A)", faculty: "AGS", batch: "Batch A", isLab: true, colspan: 2, slotIndices: [4, 5] }
-        ]
-      }
-    ];
-
-    const saturdayRow = {
-      day: "Saturday",
-      dayShort: "Sat",
-      part1: [
-        { subject: "MDM Lab -I (OOP Lab)", faculty: "", batch: "M-I (A), M-I (B)", isLab: true, colspan: 2, slotIndices: [0, 1] }
-      ],
-      part2: [
-        { subject: "MDM Lab -I (C(OOP Lab))", faculty: "", batch: "M-I (C), M-I (D)", isLab: true, colspan: 2, slotIndices: [2, 3] }
-      ],
-      part3: [
-        { subject: "Off / Prep", faculty: "", batch: "", isFree: true, colspan: 2, slotIndices: [4, 5] }
-      ]
-    };
+    // Resolve active class and timetable dataset (3R, 2R1, 2R2, 4R)
+    const activeClass = this.getClassCode() || '3R';
+    const classData = SSGMCE_CLASS_TIMETABLES[activeClass] || SSGMCE_CLASS_TIMETABLES['3R'];
+    const scheduleRows = classData.scheduleRows || [];
+    const saturdayRow = classData.saturdayRow;
 
     // Compute upcoming assessments for alert strip
     const upcomingTests = (this.tests || []).filter(t => {
       if (!t.date) return false;
-      if (!this.isTargetedForCurrentStudent(t)) return false;
+      if (!this.isTargetedForCurrentStudent(t, activeClass)) return false;
       const st = this.getTestStatus(t);
       if (st.status === "Ended") return false;
 
@@ -1010,7 +1526,7 @@ const StudentTimetableApp = {
       // Find tests scheduled for this day & slot from backend data
       const slotTests = (this.tests || []).filter(t => {
         if (!t.date || !t.start) return false;
-        if (!this.isTargetedForCurrentStudent(t)) return false;
+        if (!this.isTargetedForCurrentStudent(t, activeClass)) return false;
         const [y, m, d] = t.date.split("-").map(Number);
         const testDateObj = new Date(y, m - 1, d, 12, 0, 0);
         const testDayName = testDateObj.toLocaleDateString("en-US", { weekday: "long" });
@@ -1147,7 +1663,8 @@ const StudentTimetableApp = {
       `;
     };
 
-    const saturdayHeaderRowHTML = `
+    const isSaturdayStandardTimes = (classData.code === '2R1' || classData.code === '2R2');
+    const saturdayHeaderRowHTML = isSaturdayStandardTimes ? '' : `
       <tr class="saturday-time-header-row" role="row">
         <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy); text-align:center;">Day</th>
         <th scope="col" style="background:#EEF2F6; font-weight:700; color:var(--tt-navy);">8.30 am - 9.30 am</th>
@@ -1192,10 +1709,14 @@ const StudentTimetableApp = {
             </div>
             <div class="official-tt-submeta">
               <div class="submeta-left">
-                <span>Class: <span class="class-tag">3N</span></span>
+                ${classData.classRoom ? `<span>Class Room: <strong style="color:var(--tt-navy);">${classData.classRoom}</strong></span> <span style="margin: 0 8px; opacity:0.4;">|</span>` : ''}
+                <span>Class: <span class="class-tag">${classData.code}</span></span>
+                ${classData.term ? `<span style="margin: 0 8px; opacity:0.4;">|</span><span style="font-weight:700; color:#334155;">${classData.term}</span>` : ''}
+                <span class="submeta-div-desc" style="margin-left: 10px; font-weight:600; color:var(--tt-navy); font-size:12px;">${classData.fullTitle}</span>
               </div>
               <div class="submeta-right">
-                <span>w.e.f.: <span class="wef-tag">21/07/2026</span></span>
+                ${classData.rev ? `<span>rev: <strong style="color:#475569;">${classData.rev}</strong></span> <span style="margin: 0 8px; opacity:0.4;">|</span>` : ''}
+                <span>w.e.f.: <span class="wef-tag">${classData.wef}</span></span>
               </div>
             </div>
           </div>
@@ -1205,11 +1726,28 @@ const StudentTimetableApp = {
             <div class="schedule-meta">
               <span class="schedule-term-badge">
                 <i data-lucide="graduation-cap" style="width:13px;height:13px;"></i>
-                Academic Term: 2026-2027 • Autumn Semester
+                Academic Term: ${classData.semester || '2026-2027 • Autumn Semester'}
               </span>
             </div>
 
             <div class="schedule-controls">
+              <!-- Class Selector Toolbar (Supports 2R2, 2R1, 3R, 4R) -->
+              <div class="class-selector-control">
+                <label for="student-timetable-class-select" class="date-control-label">
+                  <i data-lucide="layers" style="width:14px;height:14px;"></i>
+                  <span>Class:</span>
+                </label>
+                <select id="student-timetable-class-select"
+                        class="class-select-dropdown"
+                        aria-label="Select Class Timetable"
+                        onchange="StudentTimetableApp.switchClass(this.value)">
+                  <option value="2R2" ${activeClass === '2R2' ? 'selected' : ''}>Class 2R2 (Second Year Sec B • Gargi Mane)</option>
+                  <option value="2R1" ${activeClass === '2R1' ? 'selected' : ''}>Class 2R1 (Second Year Sec A)</option>
+                  <option value="3R" ${activeClass === '3R' ? 'selected' : ''}>Class 3R (Third Year Sec A)</option>
+                  <option value="4R" ${activeClass === '4R' ? 'selected' : ''}>Class 4R (Final Year Sec A)</option>
+                </select>
+              </div>
+
               <div class="date-control">
                 <label for="student-timetable-date-input" class="date-control-label">
                   <i data-lucide="calendar" style="width:14px;height:14px;"></i>
@@ -1330,28 +1868,110 @@ const StudentTimetableApp = {
 
         <!-- ==================== OFFICIAL FOOTER & LEGEND ==================== -->
         <div class="official-legend-container">
-          <div class="official-legend-grid">
-            <div class="legend-box faculty-legend">
-              <h5 class="legend-box-title"><i data-lucide="users" style="width:13px;height:13px;"></i> Faculty Key:</h5>
-              <div class="legend-tag-list">
-                <span class="faculty-tag"><strong>AGS:</strong> Prof. A. G. Sharma</span>
-                <span class="faculty-tag"><strong>FIK:</strong> Prof. F. I. Khan</span>
-                <span class="faculty-tag"><strong>SNK:</strong> Prof. S. N. Kale</span>
-                <span class="faculty-tag"><strong>SSM:</strong> Prof. S. S. Mohod</span>
+          ${classData.practicalsTable && classData.batchesTable ? `
+            <div class="official-tables-stack" style="margin-bottom:16px;">
+              <!-- Subject & Code Table -->
+              <div class="official-subtable-card" style="margin-bottom:12px;">
+                <h5 style="font-size:12.5px; font-weight:800; color:var(--tt-navy); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="book-open" style="width:14px;height:14px;"></i> Subject &amp; Code:
+                </h5>
+                <div style="overflow-x:auto;">
+                  <table class="tt-subtable" style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #CBD5E1;">
+                    <thead>
+                      <tr style="background:#F1F5F9; font-weight:700; color:#1E293B; text-align:left;">
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px; width:85px; text-align:center;">Code</th>
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px;">Name of Subject (Full Name)</th>
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px;">Name of Faculty</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(classData.subjectKey || []).map(s => `
+                        <tr>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; font-weight:700; text-align:center; background:#F8FAFC; color:var(--tt-navy);">${s.abbr}</td>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; font-weight:600;">${s.name}</td>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; color:#475569;">${s.faculty || '-'}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Practical Table -->
+              <div class="official-subtable-card" style="margin-bottom:12px;">
+                <h5 style="font-size:12.5px; font-weight:800; color:var(--tt-navy); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="flask-conical" style="width:14px;height:14px;"></i> Practical:
+                </h5>
+                <div style="overflow-x:auto;">
+                  <table class="tt-subtable" style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #CBD5E1;">
+                    <thead>
+                      <tr style="background:#F1F5F9; font-weight:700; color:#1E293B; text-align:left;">
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px; width:85px; text-align:center;">Code</th>
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px;">Name of Subject</th>
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px;">Name of Lab</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(classData.practicalsTable || []).map(p => `
+                        <tr>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; font-weight:700; text-align:center; background:#F8FAFC; color:var(--tt-navy);">${p.code}</td>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; font-weight:600;">${p.name}</td>
+                          <td style="border:1px solid #CBD5E1; padding:5px 10px; color:#475569;">${p.lab}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Practical Batches Table -->
+              <div class="official-subtable-card" style="margin-bottom:12px;">
+                <h5 style="font-size:12.5px; font-weight:800; color:var(--tt-navy); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="users" style="width:14px;height:14px;"></i> Practical Batches:
+                </h5>
+                <div style="overflow-x:auto;">
+                  <table class="tt-subtable" style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #CBD5E1; text-align:center;">
+                    <thead>
+                      <tr style="background:#F1F5F9; font-weight:700; color:#1E293B;">
+                        <th style="border:1px solid #CBD5E1; padding:6px 10px; width:95px; background:#EEF2F6;">Batch</th>
+                        ${(classData.batchesTable || []).map(b => `<th style="border:1px solid #CBD5E1; padding:6px 10px; font-weight:700;">${b.batch}</th>`).join('')}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="border:1px solid #CBD5E1; padding:6px 10px; font-weight:700; background:#F8FAFC; color:var(--tt-navy);">Roll No.</td>
+                        ${(classData.batchesTable || []).map(b => `<td style="border:1px solid #CBD5E1; padding:6px 10px; font-weight:600; color:#334155;">${b.rolls}</td>`).join('')}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Official Signatures Footer -->
+              <div class="tt-sign-footer" style="display:flex; justify-content:space-between; align-items:flex-end; padding:16px 12px 8px 12px; border-top:1px dashed #CBD5E1; margin-top:14px; font-size:12.5px; font-weight:700; color:#334155; flex-wrap:wrap; gap:16px;">
+                <div><span>Date: <strong style="color:var(--tt-navy);">${classData.signDate || '18/07/2026'}</strong></span></div>
+                <div><span>Time Table Coordinator</span></div>
+                <div><span>Head of Department</span></div>
+                <div><span>Dean (Academics)</span></div>
+                <div><span>Principal</span></div>
               </div>
             </div>
-            <div class="legend-box subject-legend">
-              <h5 class="legend-box-title"><i data-lucide="book-open" style="width:13px;height:13px;"></i> Subject Key:</h5>
-              <div class="legend-tag-list">
-                <span class="subject-tag"><strong>OS:</strong> Operating Systems</span>
-                <span class="subject-tag"><strong>DSS:</strong> Decision Support Systems</span>
-                <span class="subject-tag"><strong>DBMS:</strong> Database Management Systems</span>
-                <span class="subject-tag"><strong>TOC:</strong> Theory of Computation</span>
-                <span class="subject-tag"><strong>MDM:</strong> Multidisciplinary Minor (MDM-III, MDM-IV, OOP Lab)</span>
-                <span class="subject-tag"><strong>OE:</strong> Open Elective III</span>
+          ` : `
+            <div class="official-legend-grid">
+              <div class="legend-box faculty-legend">
+                <h5 class="legend-box-title"><i data-lucide="users" style="width:13px;height:13px;"></i> Faculty Key (${classData.code}):</h5>
+                <div class="legend-tag-list">
+                  ${(classData.facultyKey || []).map(f => `<span class="faculty-tag"><strong>${f.abbr}:</strong> ${f.name}</span>`).join('')}
+                </div>
+              </div>
+              <div class="legend-box subject-legend">
+                <h5 class="legend-box-title"><i data-lucide="book-open" style="width:13px;height:13px;"></i> Subject Key (${classData.code}):</h5>
+                <div class="legend-tag-list">
+                  ${(classData.subjectKey || []).map(s => `<span class="subject-tag"><strong>${s.abbr}:</strong> ${s.name}</span>`).join('')}
+                </div>
               </div>
             </div>
-          </div>
+          `}
           <div class="timetable-legend-bar" style="border-top:1px solid #E2E8F0; padding-top:10px;">
             <div class="legend-items">
               <span class="legend-title">Legend:</span>

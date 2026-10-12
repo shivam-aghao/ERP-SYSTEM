@@ -221,6 +221,41 @@
   cursor: pointer;
 }
 
+/* Class Selector Dropdown Toolbar Control */
+.class-selector-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tt-gray-bg);
+  border: 1px solid var(--tt-gray-border);
+  border-radius: var(--tt-radius-md);
+  padding: 6px 12px;
+  transition: var(--tt-transition);
+}
+
+.class-selector-control:hover,
+.class-selector-control:focus-within {
+  border-color: var(--tt-blue);
+  box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.08);
+}
+
+.class-select-dropdown {
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tt-navy);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.class-select-dropdown option {
+  font-weight: 600;
+  color: var(--tt-dark-text);
+  background: #ffffff;
+}
+
 /* Today Button */
 .today-button {
   display: inline-flex;

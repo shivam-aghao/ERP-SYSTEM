@@ -16,7 +16,7 @@ class AuthService:
             admin_row = None
             try:
                 admin_row = db.execute(
-                    text("SELECT * FROM admins WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR id::text = :uid LIMIT 1"),
+                    text("SELECT * FROM admins WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR CAST(id AS TEXT) = :uid LIMIT 1"),
                     {"uid": uid}
                 ).fetchone()
             except Exception:
@@ -46,7 +46,7 @@ class AuthService:
                     LEFT JOIN departments d ON t.department_id = d.id
                     WHERE LOWER(t.emp_code) = LOWER(:uid) 
                        OR LOWER(t.email) = LOWER(:uid) 
-                       OR t.id::text = :uid 
+                       OR CAST(t.id AS TEXT) = :uid 
                        OR LOWER(t.full_name) LIKE LOWER(:uid_pattern)
                     LIMIT 1
                 """),
@@ -104,22 +104,46 @@ class AuthService:
         student_row = None
         try:
             if uid.lower() in ("student", "learner", "std"):
+                # Default student: prioritize 4R student Mane Gargi Manoj
                 student_row = db.execute(
-                    text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")
+                    text("""
+                        SELECT s.*, COALESCE(c.class_name, c.name, '4R') as class_name, c.division as class_div 
+                        FROM students s 
+                        LEFT JOIN classes c ON s.class_id = c.id 
+                        WHERE (LOWER(s.full_name) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%mane%')
+                           OR LOWER(s.student_code) = '308653'
+                        ORDER BY CASE WHEN (LOWER(s.full_name) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%mane%') THEN 0 ELSE 1 END
+                        LIMIT 1
+                    """)
                 ).fetchone()
+                if not student_row:
+                    student_row = db.execute(
+                        text("SELECT s.*, COALESCE(c.class_name, c.name, '4R') as class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")
+                    ).fetchone()
             else:
                 student_row = db.execute(
                     text("""
-                        SELECT s.*, c.class_name, c.division as class_div
+                        SELECT s.*, COALESCE(c.class_name, c.name, '4R') as class_name, c.division as class_div
                         FROM students s
                         LEFT JOIN classes c ON s.class_id = c.id
                         WHERE LOWER(s.student_code) = LOWER(:uid) 
                            OR LOWER(s.email) = LOWER(:uid) 
-                           OR s.id::text = :uid 
+                           OR CAST(s.id AS TEXT) = :uid 
                            OR LOWER(s.roll_no) = LOWER(:uid)
+                           OR LOWER(s.full_name) LIKE LOWER(:uid_pattern)
+                           OR (LOWER(:uid) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%gargi%')
+                           OR (LOWER(:uid) LIKE '%mane%' AND LOWER(s.full_name) LIKE '%mane%')
+                        ORDER BY 
+                            CASE 
+                                WHEN LOWER(s.student_code) = LOWER(:uid) THEN 0
+                                WHEN LOWER(s.roll_no) = LOWER(:uid) THEN 1
+                                WHEN (LOWER(:uid) LIKE '%gargi%' OR LOWER(:uid) LIKE '%mane%') AND LOWER(s.full_name) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%mane%' THEN 2
+                                WHEN LOWER(s.full_name) LIKE LOWER(:uid_pattern) THEN 3
+                                ELSE 4 
+                            END
                         LIMIT 1
                     """),
-                    {"uid": uid}
+                    {"uid": uid, "uid_pattern": f"%{uid}%"}
                 ).fetchone()
         except Exception:
             db.rollback()
@@ -127,18 +151,38 @@ class AuthService:
         if student_row:
             m = student_row._mapping
             s_name = m.get("full_name") or m.get("name") or uid
+            raw_c = str(m.get("class_name") or "2R2")
+            class_code = "2R2"
+            if "2R2" in raw_c:
+                class_code = "2R2"
+            elif "2R1" in raw_c:
+                class_code = "2R1"
+            elif "3R" in raw_c:
+                class_code = "3R"
+            elif "4R" in raw_c:
+                class_code = "4R"
+
             return {
                 "token": f"st_token_{m.get('id', uid)}",
                 "user": {
                     "id": m.get("id", uid),
                     "student_code": m.get("student_code") or uid,
+                    "studentCode": m.get("student_code") or uid,
                     "full_name": s_name,
                     "name": s_name,
-                    "roll_no": m.get("roll_no") or 0,
-                    "class_name": m.get("class_name") or "",
+                    "fullName": s_name,
+                    "shortName": "Gargi Mane" if "gargi" in s_name.lower() else s_name,
+                    "roll_no": m.get("roll_no") or ("2RB9" if class_code == "2R2" else ("2RA9" if class_code == "2R1" else ("4R9" if class_code == "4R" else "01"))),
+                    "rollNo": m.get("roll_no") or ("2RB9" if class_code == "2R2" else ("2RA9" if class_code == "2R1" else ("4R9" if class_code == "4R" else "01"))),
+                    "class_name": class_code,
+                    "className": class_code,
+                    "class_code": class_code,
+                    "classCode": class_code,
                     "class_id": m.get("class_id"),
-                    "division": m.get("division") or m.get("class_div") or "",
+                    "division": m.get("division") or m.get("class_div") or "A",
                     "email": m.get("email", ""),
+                    "department": "Computer Science & Engineering",
+                    "departmentCode": "CSE",
                     "role": "student"
                 },
                 "role": "student",
@@ -179,22 +223,44 @@ class AuthService:
                 "redirect": "admin-dashboard.html"
             }
 
-        # Default fallback to first student if any input was given
-        fallback_st = db.execute(text("SELECT s.*, c.class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+        # Default fallback to student if any input was given (prioritize 2R2 Gargi Mane)
+        fallback_st = db.execute(text("""
+            SELECT s.*, COALESCE(c.class_name, c.name, '2R2') as class_name, c.division as class_div 
+            FROM students s 
+            LEFT JOIN classes c ON s.class_id = c.id 
+            WHERE (LOWER(s.full_name) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%mane%')
+               OR LOWER(s.student_code) = '308653'
+            ORDER BY CASE WHEN (LOWER(s.full_name) LIKE '%gargi%' AND LOWER(s.full_name) LIKE '%mane%') THEN 0 ELSE 1 END
+            LIMIT 1
+        """)).fetchone()
+        if not fallback_st:
+            fallback_st = db.execute(text("SELECT s.*, COALESCE(c.class_name, c.name, '2R2') as class_name, c.division as class_div FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
+
         if fallback_st and uid:
             m = fallback_st._mapping
             s_name = m.get("full_name") or m.get("name") or uid
+            raw_c = str(m.get("class_name") or "2R2")
+            class_code = "2R2" if "2R2" in raw_c else ("2R1" if "2R1" in raw_c else ("3R" if "3R" in raw_c else ("4R" if "4R" in raw_c else "2R2")))
             return {
                 "token": f"st_token_{m['id']}",
                 "user": {
                     "id": m["id"],
                     "student_code": m.get("student_code") or uid,
+                    "studentCode": m.get("student_code") or uid,
                     "full_name": s_name,
                     "name": s_name,
-                    "roll_no": m.get("roll_no") or 0,
-                    "class_name": m.get("class_name") or "",
+                    "fullName": s_name,
+                    "shortName": "Gargi Mane" if "gargi" in s_name.lower() else s_name,
+                    "roll_no": m.get("roll_no") or ("2RB9" if class_code == "2R2" else ("2RA9" if class_code == "2R1" else ("4R9" if class_code == "4R" else "01"))),
+                    "rollNo": m.get("roll_no") or ("2RB9" if class_code == "2R2" else ("2RA9" if class_code == "2R1" else ("4R9" if class_code == "4R" else "01"))),
+                    "class_name": class_code,
+                    "className": class_code,
+                    "class_code": class_code,
+                    "classCode": class_code,
                     "class_id": m.get("class_id"),
-                    "division": m.get("division") or m.get("class_div") or "",
+                    "division": m.get("division") or m.get("class_div") or "B",
+                    "department": "Computer Science & Engineering",
+                    "departmentCode": "CSE",
                     "role": "student"
                 },
                 "role": "student",
