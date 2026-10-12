@@ -48,9 +48,9 @@
     login: async function (userId, password, roleHint, rememberMe) {
       var apiBase = getApiBase();
       var payload = {
-        user_id: String(userId || '').trim(),
-        username: String(userId || '').trim(),
-        password: String(password || '').trim(),
+        user_id: rawUid,
+        username: rawUid,
+        password: rawPwd,
         role: roleHint || ''
       };
 

@@ -1,0 +1,1535 @@
+{
+  "3R": {
+    "Monday": [
+      {
+        "slot": 1,
+        "subject": "CA&O (Computer Arch & Org)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "CD (Compiler Design)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "CD Lab (Batch B)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "DBMS Lab (Batch D)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "CD Lab (Batch B)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "DBMS Lab (Batch D)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "MDM#3",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "C1",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "ICS",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "DBMS Lab",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 6,
+        "subject": "PE-I DSS",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Tuesday": [
+      {
+        "slot": 1,
+        "subject": "DBMS",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "CD (Compiler Design)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "CD Lab (Batch A)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "DBMS Lab (Batch B)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "ET Lab-I DSS (Batch G)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "G",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "CD Lab (Batch A)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "DBMS Lab (Batch B)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "ET Lab-I DSS (Batch G)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "G",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "MDM#3",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "C1",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "ICS",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "DBMS Lab",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 6,
+        "subject": "PE-I DSS",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Wednesday": [
+      {
+        "slot": 1,
+        "subject": "DBMS",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "CA&O (Computer Arch & Org)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "ET Lab-I DSS (Batch E)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "E",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "ET Lab: ICS (Batch H)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "ET Lab I",
+        "batch": "H",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "ET Lab-I DSS (Batch E)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "E",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "ET Lab: ICS (Batch H)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "ET Lab I",
+        "batch": "H",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "MDM#4",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "C2",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Thursday": [
+      {
+        "slot": 1,
+        "subject": "CA&O (Computer Arch & Org)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "CD (Compiler Design)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "DBMS Lab (Batch C)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "CD Lab (Batch D)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "DBMS Lab (Batch C)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "CD Lab (Batch D)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "MDM#4",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "C2",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Friday": [
+      {
+        "slot": 1,
+        "subject": "ICS",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "DBMS Lab",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 1,
+        "subject": "PE-I DSS",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "DBMS",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "DBMS Lab (Batch A)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "CD Lab (Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "DBMS Lab (Batch A)",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "DBMS Lab",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "CD Lab (Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "ET Lab-I DSS (Batch F)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "F",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "ET Lab-I DSS (Batch F)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab I",
+        "batch": "F",
+        "is_lab": true
+      }
+    ],
+    "Saturday": [
+      {
+        "slot": 1,
+        "subject": "MDM (WT-B1)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Lab 01",
+        "batch": "B1",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "MDM (WT-B1)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Lab 01",
+        "batch": "B1",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "MDM (WT-B4)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 04",
+        "batch": "B4",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "MDM (WT-B4)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 04",
+        "batch": "B4",
+        "is_lab": true
+      }
+    ]
+  },
+  "2R1": {
+    "Monday": [
+      {
+        "slot": 1,
+        "subject": "DS (Data Structures)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "OOP (2R1)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "DS&GT (2R1)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "MDM#1",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "C2",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "MDM#1",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "A4",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Tuesday": [
+      {
+        "slot": 1,
+        "subject": "DS (Data Structures)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "DS&GT (2R1)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "OOP (2R1)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "MDM#1",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "C2",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "MDM#1",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "A4",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "OOP Lab (2R1 Batch A)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch B)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Room 201",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "DS Lab (2R1 Batch C)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch D)",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "OOP Lab (2R1 Batch A)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch B)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Room 201",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "DS Lab (2R1 Batch C)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch D)",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      }
+    ],
+    "Wednesday": [
+      {
+        "slot": 1,
+        "subject": "DS (Data Structures)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "OOP (2R1)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "DS&GT (2R1)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "OE-I",
+        "faculty": "Prof. M. D. Rakhonde",
+        "venue": "A3",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch A)",
+        "faculty": "Prof. S. M. Jawake",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "DS Lab (2R1 Batch B)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Room 201",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "OOP Lab (2R1 Batch D)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch A)",
+        "faculty": "Prof. S. M. Jawake",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "DS Lab (2R1 Batch B)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Room 201",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "OOP Lab (2R1 Batch D)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      }
+    ],
+    "Thursday": [
+      {
+        "slot": 2,
+        "subject": "DSGT (2R1)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "OOP (2R1)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "OE-I",
+        "faculty": "Prof. M. D. Rakhonde",
+        "venue": "A3",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch A)",
+        "faculty": "Prof. S. M. Jawake",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "OOP Lab (2R1 Batch B)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CEP (2R1 Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Room 201",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "DS Lab (2R1 Batch D)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch A)",
+        "faculty": "Prof. S. M. Jawake",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "OOP Lab (2R1 Batch B)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CEP (2R1 Batch C)",
+        "faculty": "Prof. C. M. Mankar",
+        "venue": "Room 201",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "DS Lab (2R1 Batch D)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "D",
+        "is_lab": true
+      }
+    ],
+    "Friday": [
+      {
+        "slot": 1,
+        "subject": "DS Lab (2R1 Batch A)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R1 Batch B)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Room 201",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "OOP Lab (2R1 Batch C)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R1 Batch D)",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "DS Lab (2R1 Batch A)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Lab 01",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R1 Batch B)",
+        "faculty": "Dr. R. A. Zamare",
+        "venue": "Room 201",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "OOP Lab (2R1 Batch C)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R1 Batch D)",
+        "faculty": "Mr. Krushan. V. Kulthe",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "DS (Data Structures)",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "OE-I",
+        "faculty": "Prof. M. D. Rakhonde",
+        "venue": "A3",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Saturday": []
+  },
+  "2R2": {
+    "Monday": [
+      {
+        "slot": 1,
+        "subject": "DS Lab (2R2 Batch A)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch B)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "Seminar Hall",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Room 305",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "OOP Lab (Batch D)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "DS Lab (2R2 Batch A)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch B)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "Seminar Hall",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Room 305",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "OOP Lab (Batch D)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "OOP",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Tuesday": [
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch A)",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "OOP Lab (Batch B)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "DS Lab (2R2 Batch C)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch A)",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "OOP Lab (Batch B)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "DS Lab (2R2 Batch C)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "OOP",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "DSGT (2R2)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 6,
+        "subject": "DS (2R2)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Wednesday": [
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch A)",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch B)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "Seminar Hall",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "OOP Lab (Batch C)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "DS Lab (2R2 Batch D)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch A)",
+        "faculty": "Prof. V. S. Kanherkar",
+        "venue": "Seminar Hall",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch B)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "Seminar Hall",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "OOP Lab (Batch C)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "DS Lab (2R2 Batch D)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "DS (2R2)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "OOP",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "DS&GT (2R2)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Thursday": [
+      {
+        "slot": 1,
+        "subject": "OOP Lab (Batch A)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "DS Lab (2R2 Batch B)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (2R2 Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Room 305",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 1,
+        "subject": "CEP (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "OOP Lab (Batch A)",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "Computer Lab 1",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "DS Lab (2R2 Batch B)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "Lab 02",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (2R2 Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Room 305",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 2,
+        "subject": "CEP (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "Seminar Hall",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "DS (2R2)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "DS&GT (2R2)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Friday": [
+      {
+        "slot": 1,
+        "subject": "DS (2R2)",
+        "faculty": "Prof. N. N. Fatkar",
+        "venue": "B108",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "DS&GT (2R2)",
+        "faculty": "Prof. T. A. Puranik",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "OOP",
+        "faculty": "Dr. V. S. Mahalle",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      }
+    ],
+    "Saturday": []
+  },
+  "4R": {
+    "Monday": [
+      {
+        "slot": 1,
+        "subject": "CC",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "BF",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "SSEE",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Room 402",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "DWM",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "PE-III DF (Batch B6)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Room 402",
+        "batch": "B6",
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "BF Lab (Batch B)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CG Lab (Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "BF Lab (Batch B)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CG Lab (Batch C)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "C",
+        "is_lab": true
+      }
+    ],
+    "Tuesday": [
+      {
+        "slot": 1,
+        "subject": "CC",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "DWM",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "PE-III DF",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Room 402",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "SSEE",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Room 402",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "CG (Computer Graphics)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "BF Lab (Batch C)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CG Lab (Batch D)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "BF Lab (Batch C)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "C",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CG Lab (Batch D)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "D",
+        "is_lab": true
+      }
+    ],
+    "Wednesday": [
+      {
+        "slot": 1,
+        "subject": "CC",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "BF",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "SSEE",
+        "faculty": "Prof. K. P. Sable",
+        "venue": "Room 402",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "BF Lab (Batch A)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "CG (Computer Graphics)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "BF Lab (Batch A)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CG Lab (Batch B)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "ET Lab III - DW&M (Batch G)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "G",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CG Lab (Batch B)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "B",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "ET Lab III - DW&M (Batch G)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "G",
+        "is_lab": true
+      }
+    ],
+    "Thursday": [
+      {
+        "slot": 3,
+        "subject": "CG (Computer Graphics)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "DWM",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "B206",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 4,
+        "subject": "PE-III DF (Batch B2)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "Room 402",
+        "batch": "B2",
+        "is_lab": false
+      },
+      {
+        "slot": 5,
+        "subject": "ET Lab III- DWM (Batch F)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "F",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "ET Lab III- DWM (Batch F)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "F",
+        "is_lab": true
+      }
+    ],
+    "Friday": [
+      {
+        "slot": 1,
+        "subject": "CC",
+        "faculty": "Dr. J. M. Patil",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 2,
+        "subject": "BF",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "B007",
+        "batch": null,
+        "is_lab": false
+      },
+      {
+        "slot": 3,
+        "subject": "ET Lab III - DW&M (Batch E)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "E",
+        "is_lab": true
+      },
+      {
+        "slot": 3,
+        "subject": "ET Lab III - DF (Batch H)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "ET Lab III",
+        "batch": "H",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "ET Lab III - DW&M (Batch E)",
+        "faculty": "Dr. P. K. Bharne",
+        "venue": "ET Lab III",
+        "batch": "E",
+        "is_lab": true
+      },
+      {
+        "slot": 4,
+        "subject": "ET Lab III - DF (Batch H)",
+        "faculty": "Prof. S. B. Pagrut",
+        "venue": "ET Lab III",
+        "batch": "H",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "CG Lab (Batch A)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 5,
+        "subject": "BF Lab (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "D",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "CG Lab (Batch A)",
+        "faculty": "Prof. R. V. Deshmukh",
+        "venue": "Graphics Lab",
+        "batch": "A",
+        "is_lab": true
+      },
+      {
+        "slot": 6,
+        "subject": "BF Lab (Batch D)",
+        "faculty": "Dr. N. M. Kandoi",
+        "venue": "ET Lab IV",
+        "batch": "D",
+        "is_lab": true
+      }
+    ],
+    "Saturday": []
+  }
+}

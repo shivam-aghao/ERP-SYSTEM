@@ -59,7 +59,10 @@ try:
         _con.execute(text("""
             CREATE TABLE IF NOT EXISTS timetable_assessments (
                 id VARCHAR(36) PRIMARY KEY,
-                teacher_id VARCHAR(36),
+                teacher_id VARCHAR(50),
+                faculty_id VARCHAR(50),
+                faculty_name VARCHAR(150),
+                created_by VARCHAR(50),
                 type VARCHAR(30) NOT NULL,
                 subject VARCHAR(150) NOT NULL,
                 title VARCHAR(250) NOT NULL,
@@ -72,6 +75,16 @@ try:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
+        for col_def in [
+            ("teacher_id", "VARCHAR(50)"),
+            ("faculty_id", "VARCHAR(50)"),
+            ("faculty_name", "VARCHAR(150)"),
+            ("created_by", "VARCHAR(50)")
+        ]:
+            try:
+                _con.execute(text(f"ALTER TABLE timetable_assessments ADD COLUMN {col_def[0]} {col_def[1]}"))
+            except Exception:
+                pass
         _con.commit()
 except Exception as _e:
     logger.warning("Notice on timetable_assessments check: %s", _e)
@@ -258,6 +271,38 @@ logger.info(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
+<<<<<<< HEAD
+=======
+
+# Include modular routers under /api/v1
+try:
+    from backend.routes.admin import router as admin_router
+    from backend.routes.faculty import router as faculty_router
+    from backend.routes.attendance import router as attendance_router
+    from backend.routes.student import router as student_router
+    from backend.routes.syllabus import router as syllabus_router
+    from backend.routes.student_records import router as student_records_router
+    from backend.routes.notifications import router as notifications_router
+    from backend.routes.academic_wallet import router as academic_wallet_router
+    from backend.routes.management import router as management_router
+    app.include_router(admin_router, prefix="/api/v1")
+    app.include_router(faculty_router, prefix="/api/v1")
+    app.include_router(attendance_router, prefix="/api/v1")
+    app.include_router(student_router, prefix="/api/v1")
+    app.include_router(syllabus_router, prefix="/api/v1")
+    app.include_router(student_records_router, prefix="/api/v1")
+    app.include_router(notifications_router, prefix="/api/v1")
+    app.include_router(academic_wallet_router, prefix="/api/v1")
+    app.include_router(management_router, prefix="/api/v1")
+    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet, management) included under /api/v1")
+except Exception as e:
+    logger.warning("Could not load some modular routers: %s", e)
+
+# ==============================================================================
+# 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
+# Serves the frontend directory so everything is available on port 8000!
+# ==============================================================================
+>>>>>>> e196c6a98037ab5eb0af5cef4a5ffcc040010390
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
 
@@ -295,6 +340,22 @@ def student_dashboard_underscore():
 @app.get("/admin_dashboard.html", include_in_schema=False)
 def admin_dashboard_underscore():
     return RedirectResponse(url="/admin-dashboard.html")
+
+@app.get("/teacher-test-schedule", include_in_schema=False)
+@app.get("/teacher_test_schedule", include_in_schema=False)
+@app.get("/test-schedule", include_in_schema=False)
+def teacher_test_schedule_route():
+    return RedirectResponse(url="/teacher-test-schedule.html")
+
+@app.get("/teacher-timetable", include_in_schema=False)
+@app.get("/teacher_timetable", include_in_schema=False)
+def teacher_timetable_route():
+    return RedirectResponse(url="/teacher-timetable.html")
+
+@app.get("/student-timetable", include_in_schema=False)
+@app.get("/student_timetable", include_in_schema=False)
+def student_timetable_route():
+    return RedirectResponse(url="/student-timetable.html")
 
 
 if os.path.isdir(FRONTEND_DIR):
