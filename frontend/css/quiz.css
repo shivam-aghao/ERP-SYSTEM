@@ -1,6 +1,13 @@
-/* SSGMCE Quiz Portal Stylesheet */
+/**
+ * SSGMCE College ERP — Production Central Quiz & Examination Stylesheet
+ * Shri Sant Gajanan Maharaj College of Engineering, Shegaon
+ * Unified styles for Gateway, Teacher Portal, and Student Exam Runner.
+ */
+
 :root {
   --primary: #0B5CAD;
+  --primary-hover: #094b8f;
+  --primary-light: #EFF6FF;
   --navy: #0B1F3A;
   --navy-light: #15325b;
   --accent: #00A6D6;
@@ -10,10 +17,30 @@
   --text-main: #1E293B;
   --text-muted: #64748B;
   --success: #10B981;
+  --success-bg: #DCFCE7;
+  --danger: #EF4444;
+  --danger-bg: #FEE2E2;
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
+  --purple: #8B5CF6;
+  --purple-bg: #EDE9FE;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 28px rgba(11,31,58,0.12);
+}
+
+/* Base resets & typography */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg);
   color: var(--text-main);
   min-height: 100vh;
@@ -21,6 +48,9 @@ body {
   flex-direction: column;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Top Header & Navigation                                                    */
+/* -------------------------------------------------------------------------- */
 .top-header {
   background: var(--navy);
   color: #FFFFFF;
@@ -29,4 +59,491 @@ body {
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: white;
+}
+
+.brand-logo {
+  height: 44px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.college-info h1 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.college-info p {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  color: white;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Buttons & Badges                                                           */
+/* -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: white;
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+.btn-danger:hover {
+  background: #DC2626;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.badge-published, .badge-active {
+  background: var(--success-bg);
+  color: #15803D;
+  border: 1px solid #86EFAC;
+}
+
+.badge-draft {
+  background: var(--warning-bg);
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badge-scheduled {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.badge-closed, .badge-archived {
+  background: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #CBD5E1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Dashboard Metrics Grid                                                     */
+/* -------------------------------------------------------------------------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-num {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Examination Runner Interface                                               */
+/* -------------------------------------------------------------------------- */
+.exam-runner-header {
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FCD34D;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+.timer-pill.urgent {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FCA5A5;
+  animation: pulse-danger 1s infinite alternate;
+}
+
+@keyframes pulse-danger {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  100% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* Autosave Indicator Pill */
+.autosave-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+.autosave-pill.saved {
+  background: var(--success-bg);
+  color: #15803D;
+  border: 1px solid #86EFAC;
+}
+.autosave-pill.saving {
+  background: var(--warning-bg);
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+.autosave-pill.error {
+  background: var(--danger-bg);
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+}
+
+/* Option Cards */
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 1.5rem 0;
+}
+
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.option-card:hover {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+}
+.option-card.selected {
+  border-color: var(--primary);
+  background: #F0F7FF;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.option-key {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+.option-card.selected .option-key {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.option-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-main);
+  flex: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 5-State Question Navigator                                                 */
+/* -------------------------------------------------------------------------- */
+.q-navigator-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.q-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.q-nav-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background: #F8FAFC;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.q-nav-btn:hover {
+  transform: scale(1.06);
+}
+.q-nav-btn.current {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* State 1: Not Visited */
+.q-nav-btn.not-visited {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #64748B;
+}
+
+/* State 2: Visited, Not Answered */
+.q-nav-btn.not-answered {
+  background: #FEE2E2;
+  border-color: #F87171;
+  color: #DC2626;
+}
+
+/* State 3: Answered */
+.q-nav-btn.answered {
+  background: #DCFCE7;
+  border-color: #4ADE80;
+  color: #15803D;
+}
+
+/* State 4: Marked for Review */
+.q-nav-btn.review {
+  background: #EDE9FE;
+  border-color: #A78BFA;
+  color: #7C3AED;
+}
+
+/* State 5: Answered and Marked for Review */
+.q-nav-btn.answered-review {
+  background: #EDE9FE;
+  border-color: #4ADE80;
+  color: #7C3AED;
+  box-shadow: inset 0 -3px 0 0 #15803D;
+}
+
+/* Navigator Legend */
+.nav-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.85rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+}
+.legend-dot.not-visited { background: #F1F5F9; border-color: #CBD5E1; }
+.legend-dot.not-answered { background: #FEE2E2; border-color: #F87171; }
+.legend-dot.answered { background: #DCFCE7; border-color: #4ADE80; }
+.legend-dot.review { background: #EDE9FE; border-color: #A78BFA; }
+.legend-dot.answered-review { background: #EDE9FE; border-color: #4ADE80; }
+
+/* -------------------------------------------------------------------------- */
+/* Pre-Submission Review Modal                                                */
+/* -------------------------------------------------------------------------- */
+.quiz-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 31, 58, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.quiz-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.quiz-modal-box {
+  background: white;
+  border-radius: var(--radius-lg);
+  max-width: 540px;
+  width: 90%;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(12px);
+  transition: transform 0.25s ease;
+}
+.quiz-modal-backdrop.active .quiz-modal-box {
+  transform: translateY(0);
+}
+
+.modal-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.modal-stat-box {
+  padding: 1rem 0.75rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+.modal-stat-box.answered { background: var(--success-bg); border-color: #86EFAC; color: #15803D; }
+.modal-stat-box.unanswered { background: var(--danger-bg); border-color: #FCA5A5; color: #DC2626; }
+.modal-stat-box.review { background: var(--purple-bg); border-color: #DDD6FE; color: #7C3AED; }
+
+.modal-stat-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.modal-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }

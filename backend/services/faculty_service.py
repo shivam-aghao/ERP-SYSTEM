@@ -206,22 +206,359 @@ class FacultyService:
             except Exception:
                 pass
 
-        # If local entries are empty, attempt reading from Cloud Supabase REST API
+        # If local entries are empty, build from official timetable specs
         if not entries:
-            try:
-                import httpx, os
-                supa_url = os.getenv("SUPABASE_URL", "https://gftqvclenyplnuoocbwe.supabase.co")
-                supa_key = os.getenv("SUPABASE_ANON_KEY", "")
-                if supa_key:
-                    with httpx.Client(timeout=3.0) as client:
-                        resp = client.get(
-                            f"{supa_url}/rest/v1/timetable_entries?or=(teacher_id.eq.{tid},emp_code.eq.{emp_code})&order=slot_index.asc",
-                            headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"}
-                        )
-                        if resp.status_code == 200:
-                            entries = resp.json()
-            except Exception:
-                pass
+            is_kulthe = (emp_code == "EMP-CSE-1015") or ("kulthe" in (t_name or "").lower()) or ("krushan" in (t_name or "").lower())
+            is_rakhonde = (emp_code == "EMP-CSE-1014") or ("rakhonde" in (t_name or "").lower())
+            is_fatkar = (emp_code == "EMP-CSE-1013") or ("fatkar" in (t_name or "").lower())
+            is_kanherkar = (emp_code == "EMP-CSE-1012") or ("kanherkar" in (t_name or "").lower())
+            is_puranik = (emp_code == "EMP-CSE-1011") or ("puranik" in (t_name or "").lower())
+            is_jawake = (emp_code == "EMP-CSE-1010") or ("jawake" in (t_name or "").lower())
+            is_deshmukh = (emp_code == "EMP-CSE-1009") or ("deshmukh" in (t_name or "").lower())
+            is_zamare = (emp_code == "EMP-CSE-1008") or ("zamare" in (t_name or "").lower())
+            is_pagrut = (emp_code == "EMP-CSE-1007") or ("pagrut" in (t_name or "").lower())
+            is_sable = (emp_code == "EMP-CSE-1006") or ("sable" in (t_name or "").lower())
+            is_bharne = (emp_code == "EMP-CSE-1005") or ("bharne" in (t_name or "").lower())
+            is_mahalle = (emp_code == "EMP-CSE-1004") or ("mahalle" in (t_name or "").lower())
+            is_mankar = (emp_code == "EMP-CSE-1003") or ("mankar" in (t_name or "").lower())
+            is_kandoi = (emp_code == "EMP-CSE-1002") or ("kandoi" in (t_name or "").lower())
+            if is_kulthe:
+                # Official Timetable for Mr. Krushan. V. Kulthe (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "MDM#1", "venue": "A4", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "MDM#1", "venue": "A4", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "CEP(2R1-D)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "CEP(2R1-D)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R1-D)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R1-D)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                ]
+            elif is_rakhonde:
+                # Official Timetable for Prof. M. D. Rakhonde (Assistant Professor, CSE)
+                entries = [
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 4, "period_num": 4, "course_name": "OE1", "venue": "A3", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "(MDM#4)", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "OE1", "venue": "A3", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "(MDM#4)", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Friday
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "OE1", "venue": "A3", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 1, "period_num": 1, "course_name": "MDM(WT-B5)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B5"},
+                    {"day": "Saturday", "slot_index": 2, "period_num": 2, "course_name": "MDM(WT-B5)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B5"},
+                    {"day": "Saturday", "slot_index": 3, "period_num": 3, "course_name": "MDM(WT-8)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B8"},
+                    {"day": "Saturday", "slot_index": 4, "period_num": 4, "course_name": "MDM(WT-8)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B8"},
+                ]
+            elif is_fatkar:
+                # Official Timetable for Prof. N. N. Fatkar (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "DS(2R2-A)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "DS(2R2-A)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "DS(2R2-C)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "DS(2R2-C)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "DS(2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "DS(2R2-D)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "DS(2R2-D)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "DS(2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "OE-III", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 1, "period_num": 1, "course_name": "DS(2R2-B)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "DS(2R2-B)", "venue": "Lab 02", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Thursday", "slot_index": 3, "period_num": 3, "course_name": "DS(2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "OE-III", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "DS(2R2)", "venue": "B108", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 1, "period_num": 1, "course_name": "MDM(WT-B6)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B6"},
+                    {"day": "Saturday", "slot_index": 2, "period_num": 2, "course_name": "MDM(WT-B6)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B6"},
+                    {"day": "Saturday", "slot_index": 3, "period_num": 3, "course_name": "MDM(WT-B7)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B7"},
+                    {"day": "Saturday", "slot_index": 4, "period_num": 4, "course_name": "MDM(WT-B7)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B7"},
+                ]
+            elif is_kanherkar:
+                # Official Timetable for Prof. V. S. Kanherkar (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "MDM#1", "venue": "C2", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-A)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-A)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "MDM#1", "venue": "C2", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-A)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-A)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 1, "period_num": 1, "course_name": "MDM(WT-B3)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B3"},
+                    {"day": "Saturday", "slot_index": 2, "period_num": 2, "course_name": "MDM(WT-B3)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B3"},
+                ]
+            elif is_puranik:
+                # Official Timetable for Prof. T. A. Puranik (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-B)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-B)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Monday", "slot_index": 3, "period_num": 3, "course_name": "DS&GT(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "DS&GT(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "DSGT(2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-B)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-B)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "DS&GT(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "DS&GT (2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "DSGT(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "DS&GT (2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Friday
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "DS&GT(2R2)", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                ]
+            elif is_jawake:
+                # Official Timetable for Prof. S. M. Jawake (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 5, "period_num": 5, "course_name": "MDM#3", "venue": "C2", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "MDM#3", "venue": "C2", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "CEP(2R1-A)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "CEP(2R1-A)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "CEP(2R1-A)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "CEP(2R1-A)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 3, "period_num": 3, "course_name": "MDM(WT-B2)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B2"},
+                    {"day": "Saturday", "slot_index": 4, "period_num": 4, "course_name": "MDM(WT-B2)", "venue": "Lab 02", "class_code": "3N", "is_lab": True, "batch": "Batch B2"},
+                ]
+            elif is_deshmukh:
+                # Official Timetable for Prof. R. V. Deshmukh (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-C)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-C)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Monday", "slot_index": 5, "period_num": 5, "course_name": "CG (C)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Monday", "slot_index": 6, "period_num": 6, "course_name": "CG (C)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch C"},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "DMS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "CG", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "CG (D)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "CG (D)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch D"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "DMS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 4, "period_num": 4, "course_name": "CG", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "CG (B)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "CG (B)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch B"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R2-C)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R2-C)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Thursday", "slot_index": 3, "period_num": 3, "course_name": "CG", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
+                    # Friday
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "DMS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Friday", "slot_index": 5, "period_num": 5, "course_name": "CG (A)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Friday", "slot_index": 6, "period_num": 6, "course_name": "CG (A)", "venue": "Graphics Lab", "class_code": "4R", "is_lab": True, "batch": "Batch A"},
+                ]
+            elif is_zamare:
+                # Official Timetable for Dr. R. A. Zamare (Associate Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "CA&O", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "CEP(2R1-B)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "CEP(2R1-B)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "CA&O", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "MDM#4", "venue": "C2", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 1, "period_num": 1, "course_name": "CA&O", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "MDM#4", "venue": "C2", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "CEP(2R1-B)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "CEP(2R1-B)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 1, "period_num": 1, "course_name": "MDM(WT-B1)", "venue": "Lab 01", "class_code": "3N", "is_lab": True, "batch": "Batch B1"},
+                    {"day": "Saturday", "slot_index": 2, "period_num": 2, "course_name": "MDM(WT-B1)", "venue": "Lab 01", "class_code": "3N", "is_lab": True, "batch": "Batch B1"},
+                ]
+            elif is_pagrut:
+                # Official Timetable for Prof. S. B. Pagrut (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "OOP(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "PE - III DF(B6)", "venue": "Room 402", "class_code": "4R", "is_lab": False, "batch": "B6"},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "PE - III DF", "venue": "Room 402", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "OOP(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "OOP(2R1-A)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "OOP(2R1-A)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "OOP(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "OOP(2R1-D)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "OOP(2R1-D)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 3, "period_num": 3, "course_name": "OOP(2R1)", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "PE - III DF (B2)", "venue": "Room 402", "class_code": "4R", "is_lab": False, "batch": "B2"},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "OOP(2R1-B)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "OOP(2R1-B)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "OOP(2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "OOP(2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III – DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III – DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
+                ]
+            elif is_sable:
+                # Official Timetable for Prof. K. P. Sable (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "DS", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 3, "period_num": 3, "course_name": "SSEE", "venue": "B108", "class_code": "4R", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "DS", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "SSEE", "venue": "B108", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "DS (2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "DS (2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "DS", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "SSEE", "venue": "B108", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "DS (2R1-B)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "DS (2R1-B)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch B"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "DS (2R1-D)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "DS (2R1-D)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch D"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "DS (2R1-A)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "DS (2R1-A)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "DS", "venue": "B108", "class_code": "2R1", "is_lab": False, "batch": None},
+                    # Saturday
+                    {"day": "Saturday", "slot_index": 3, "period_num": 3, "course_name": "MDM (WT-B4)", "venue": "Lab 04", "class_code": "3N", "is_lab": True, "batch": "Batch B4"},
+                    {"day": "Saturday", "slot_index": 4, "period_num": 4, "course_name": "MDM (WT-B4)", "venue": "Lab 04", "class_code": "3N", "is_lab": True, "batch": "Batch B4"},
+                ]
+            elif is_bharne:
+                # Official Timetable for Dr. P. K. Bharne (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "DWM", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 6, "period_num": 6, "course_name": "PE - 1 DSS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "DWM", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab-I DSS (G)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch G"},
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab-I DSS (G)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch G"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "PE - 1 DSS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab-I DSS (E)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Wednesday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab-I DSS (E)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab III – DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab III – DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "DWM", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab III- DWM(F)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch F"},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab III- DWM(F)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch F"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "PE - 1 DSS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III – DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III – DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Friday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab-I DSS (F)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch F"},
+                    {"day": "Friday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab-I DSS (F)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch F"},
+                ]
+            elif is_mahalle:
+                # Official Timetable for Dr. V. S. Mahalle (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "OOP (2R2-D)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "OOP (2R2-D)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Monday", "slot_index": 3, "period_num": 3, "course_name": "OOP", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 6, "period_num": 6, "course_name": "ICS", "venue": "DBMS Lab", "class_code": "3R", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "OOP 2R2-(B)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "OOP 2R2-(B)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "OOP", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "ICS", "venue": "DBMS Lab", "class_code": "3R", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "OOP (2R2-C)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "OOP (2R2-C)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab: ICS (H)", "venue": "ET Lab I", "class_code": "3R", "is_lab": True, "batch": "Batch H"},
+                    {"day": "Wednesday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab: ICS (H)", "venue": "ET Lab I", "class_code": "3R", "is_lab": True, "batch": "Batch H"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "OOP", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 1, "period_num": 1, "course_name": "OOP 2R2-(A)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "OOP 2R2-(A)", "venue": "Lab", "class_code": "2R2", "is_lab": True, "batch": "Batch A"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "ICS", "venue": "DBMS Lab", "class_code": "3R", "is_lab": False, "batch": None},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "OOP", "venue": "B007", "class_code": "2R2", "is_lab": False, "batch": None},
+                ]
+            elif is_mankar:
+                # Official Timetable for Prof. C. M. Mankar (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "CD", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 3, "period_num": 3, "course_name": "CD (B)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "CD (B)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Monday", "slot_index": 5, "period_num": 5, "course_name": "MDM#3", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "CD", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "CD (A)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "CD (A)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "MDM#3", "venue": "C1", "class_code": "3N", "is_lab": False, "batch": None},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "CEP (2R1-C)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "CEP (2R1-C)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "CD", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
+                    {"day": "Thursday", "slot_index": 3, "period_num": 3, "course_name": "CD (D)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "CD (D)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "CEP (2R1-C)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "CEP (2R1-C)", "venue": "Seminar Hall", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "CD (C)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "CD (C)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch C"},
+                ]
+            elif is_kandoi:
+                # Official Timetable for Dr. N. M. Kandoi (Assistant Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 2, "period_num": 2, "course_name": "BF", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 5, "period_num": 5, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Monday", "slot_index": 6, "period_num": 6, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch B"},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "CEP(D-2R2)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Tuesday", "slot_index": 2, "period_num": 2, "course_name": "CEP(D-2R2)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Tuesday", "slot_index": 5, "period_num": 5, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Tuesday", "slot_index": 6, "period_num": 6, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch C"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 2, "period_num": 2, "course_name": "BF", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch A"},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 1, "period_num": 1, "course_name": "CEP(D-2R2)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Thursday", "slot_index": 2, "period_num": 2, "course_name": "CEP(D-2R2)", "venue": "Seminar Hall", "class_code": "2R2", "is_lab": True, "batch": "Batch D"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "BF", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Friday", "slot_index": 5, "period_num": 5, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Friday", "slot_index": 6, "period_num": 6, "course_name": "ET LAB IV BF", "venue": "ET Lab IV", "class_code": "4R", "is_lab": True, "batch": "Batch D"},
+                ]
+            else:
+                # Official Timetable for Dr. J. M. Patil (Head of Department & Professor, CSE)
+                entries = [
+                    # Monday
+                    {"day": "Monday", "slot_index": 1, "period_num": 1, "course_name": "CC", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Monday", "slot_index": 3, "period_num": 3, "course_name": "DMS(D)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch D"},
+                    {"day": "Monday", "slot_index": 4, "period_num": 4, "course_name": "DMS(D)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch D"},
+                    # Tuesday
+                    {"day": "Tuesday", "slot_index": 1, "period_num": 1, "course_name": "CC", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Tuesday", "slot_index": 3, "period_num": 3, "course_name": "DMS(B)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch B"},
+                    {"day": "Tuesday", "slot_index": 4, "period_num": 4, "course_name": "DMS(B)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch B"},
+                    # Wednesday
+                    {"day": "Wednesday", "slot_index": 1, "period_num": 1, "course_name": "CC", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    # Thursday
+                    {"day": "Thursday", "slot_index": 3, "period_num": 3, "course_name": "DMS(C)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch C"},
+                    {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "DMS(C)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch C"},
+                    # Friday
+                    {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "CC", "venue": "B007", "class_code": "4R", "is_lab": False, "batch": None},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "DMS(A)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch A"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "DMS(A)", "venue": "Adv Systems Lab", "class_code": "3N", "is_lab": True, "batch": "Batch A"},
+                ]
 
         # Construct structured 6-slot weekly grid
         day_map = {d: {s: None for s in range(1, 7)} for d in DAYS_ORDER}

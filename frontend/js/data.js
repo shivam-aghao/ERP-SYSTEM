@@ -373,7 +373,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 3,
+          "slot": 5,
           "subject": "BF Lab (Batch A)",
           "class": "4R",
           "venue": "ET Lab IV",
@@ -381,7 +381,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": "A"
         },
         {
-          "slot": 4,
+          "slot": 6,
           "subject": "BF Lab (Batch A)",
           "class": "4R",
           "venue": "ET Lab IV",
@@ -677,7 +677,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "ICS",
           "class": "3R",
           "venue": "DBMS Lab",
@@ -711,7 +711,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": null
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "ICS",
           "class": "3R",
           "venue": "DBMS Lab",
@@ -753,7 +753,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "batch": "H"
         },
         {
-          "slot": 5,
+          "slot": 6,
           "subject": "OOP",
           "class": "2R2",
           "venue": "B007",
@@ -809,7 +809,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "PE-I DSS",
         "theory": 3,
         "practical": 6,
-        "total": 18
+        "total": 9
       },
       {
         "semester": "VII",
@@ -983,11 +983,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "III",
-        "code": "3CS202PC",
+        "code": "3CS202PC / 3CS204PC",
         "abbr": "DS",
         "theory": 4,
         "practical": 8,
-        "total": 17
+        "total": 12
       },
       {
         "semester": "VII",
@@ -1166,7 +1166,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "OOP",
         "theory": 4,
         "practical": 8,
-        "total": 17
+        "total": 12
       },
       {
         "semester": "VII",
@@ -1336,7 +1336,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "CAO",
         "theory": 3,
         "practical": 0,
-        "total": 17
+        "total": 3
       },
       {
         "semester": "III",
@@ -1475,7 +1475,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "CG (Computer Graphics)",
         "theory": 3,
         "practical": 8,
-        "total": 18
+        "total": 11
       },
       {
         "semester": "V",
@@ -1657,18 +1657,34 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "I",
-        "code": "CP-101",
-        "abbr": "CP (Computer Prog)",
+        "code": "1FY-CP",
+        "abbr": "CP (Computer Programming)",
         "theory": 4,
         "practical": 6,
-        "total": 18
+        "total": 10
       },
       {
         "semester": "V",
         "code": "5CS227MD",
-        "abbr": "DBMS",
+        "abbr": "MDM#3",
         "theory": 2,
         "practical": 0,
+        "total": 2
+      },
+      {
+        "semester": "III",
+        "code": "3CS400EL",
+        "abbr": "Community / Field Project",
+        "theory": 0,
+        "practical": 4,
+        "total": 4
+      },
+      {
+        "semester": "V",
+        "code": "5CS229ML",
+        "abbr": "MDM#5 (Web Tech Lab)",
+        "theory": 0,
+        "practical": 2,
         "total": 2
       }
     ],
@@ -1677,7 +1693,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#3",
-          "class": "3R",
+          "class": "3N",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1687,7 +1703,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#3",
-          "class": "3R",
+          "class": "3N",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1698,7 +1714,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1706,7 +1722,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1716,7 +1732,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1724,7 +1740,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch A)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1734,7 +1750,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 3,
           "subject": "MDM (WT-B2)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B2"
@@ -1742,7 +1758,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM (WT-B2)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B2"
@@ -1759,7 +1775,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "DSGT-R1",
         "theory": 4,
         "practical": 0,
-        "total": 19
+        "total": 4
       },
       {
         "semester": "III",
@@ -1771,7 +1787,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
       },
       {
         "semester": "I",
-        "code": "SKL-101",
+        "code": "1FY-SKL",
         "abbr": "Skill lab-I",
         "theory": 1,
         "practical": 6,
@@ -1792,7 +1808,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1800,7 +1816,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1836,7 +1852,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1844,7 +1860,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "B"
         },
@@ -1901,11 +1917,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "II",
-        "code": "1AL102ES",
+        "code": "1AL102ES / 1AL105ES",
         "abbr": "CP",
         "theory": 4,
         "practical": 6,
-        "total": 18
+        "total": 10
       },
       {
         "semester": "III",
@@ -1937,7 +1953,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM#1",
-          "class": "3R",
+          "class": "2R1",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1948,7 +1964,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1956,14 +1972,14 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
         {
           "slot": 4,
           "subject": "MDM#1",
-          "class": "3R",
+          "class": "2R1",
           "venue": "C2",
           "is_lab": false,
           "batch": null
@@ -1974,7 +1990,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         },
@@ -1982,7 +1998,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Room 305",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "A"
         }
@@ -1993,16 +2009,16 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B3)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B3"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B3)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B3"
         }
@@ -2014,11 +2030,11 @@ const SSGMCE_FACULTY_TIMETABLES = {
     "teaching_load": [
       {
         "semester": "III",
-        "code": "3CS202PC",
+        "code": "3CS202PC / 3CS204PC",
         "abbr": "DS-R2",
         "theory": 4,
         "practical": 8,
-        "total": 18
+        "total": 12
       },
       {
         "semester": "V",
@@ -2043,7 +2059,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "A"
         },
@@ -2051,7 +2067,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch A)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "A"
         }
@@ -2061,7 +2077,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch C)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "C"
         },
@@ -2069,7 +2085,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch C)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "C"
         },
@@ -2087,7 +2103,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch D)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "D"
         },
@@ -2095,7 +2111,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch D)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "D"
         },
@@ -2110,7 +2126,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 6,
           "subject": "OE-III",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2121,7 +2137,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "DS Lab (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B"
         },
@@ -2129,7 +2145,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "DS Lab (2R2 Batch B)",
           "class": "2R2",
-          "venue": "Lab 01",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B"
         },
@@ -2144,7 +2160,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 6,
           "subject": "OE-III",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2164,23 +2180,23 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B6)",
-          "class": "3R",
-          "venue": "Lab 01",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B6"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B6)",
-          "class": "3R",
-          "venue": "Lab 01",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B6"
         },
         {
           "slot": 3,
           "subject": "MDM (WT-B7)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B7"
@@ -2188,7 +2204,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 4,
           "subject": "MDM (WT-B7)",
-          "class": "3R",
+          "class": "3N",
           "venue": "Lab 02",
           "is_lab": true,
           "batch": "B7"
@@ -2205,7 +2221,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "(MDM#4)",
         "theory": 2,
         "practical": 0,
-        "total": 16
+        "total": 2
       },
       {
         "semester": "V",
@@ -2247,7 +2263,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#4",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2265,7 +2281,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 5,
           "subject": "MDM#4",
-          "class": "3R",
+          "class": "3N",
           "venue": "C1",
           "is_lab": false,
           "batch": null
@@ -2285,34 +2301,34 @@ const SSGMCE_FACULTY_TIMETABLES = {
         {
           "slot": 1,
           "subject": "MDM (WT-B5)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B5"
         },
         {
           "slot": 2,
           "subject": "MDM (WT-B5)",
-          "class": "3R",
-          "venue": "Lab 03",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
           "batch": "B5"
         },
         {
           "slot": 3,
           "subject": "MDM (WT-8)",
-          "class": "3R",
-          "venue": "Lab 04",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
-          "batch": "WT-8"
+          "batch": "B8"
         },
         {
           "slot": 4,
           "subject": "MDM (WT-8)",
-          "class": "3R",
-          "venue": "Lab 04",
+          "class": "3N",
+          "venue": "Lab 02",
           "is_lab": true,
-          "batch": "WT-8"
+          "batch": "B8"
         }
       ]
     }
@@ -2326,7 +2342,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
         "abbr": "WS(R2)",
         "theory": 1,
         "practical": 6,
-        "total": 13
+        "total": 7
       },
       {
         "semester": "III",
@@ -2369,7 +2385,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 5,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         },
@@ -2377,7 +2393,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 6,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         }
@@ -2389,7 +2405,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 1,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         },
@@ -2397,7 +2413,7 @@ const SSGMCE_FACULTY_TIMETABLES = {
           "slot": 2,
           "subject": "CEP (2R1 Batch D)",
           "class": "2R1",
-          "venue": "Room 201",
+          "venue": "Seminar Hall",
           "is_lab": true,
           "batch": "D"
         }
@@ -2576,16 +2592,43 @@ const TeacherERPData = {
     if (!facData || !facData.schedule) return [];
 
     const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const slotTimeMap = {
+      1: "11:00 AM - 12:00 PM",
+      2: "12:00 PM - 01:00 PM",
+      3: "01:15 PM - 02:15 PM",
+      4: "02:15 PM - 03:15 PM",
+      5: "03:45 PM - 04:45 PM",
+      6: "04:45 PM - 05:45 PM"
+    };
+
     return daysOrder.map(day => {
       const daySlots = facData.schedule[day] || [];
-      const slotsArr = ["Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot", "Free Slot"];
+      const slotsArr = Array.from({ length: 6 }, (_, i) => ({
+        slot: i + 1,
+        time: slotTimeMap[i + 1] || "11:00 AM - 12:00 PM",
+        status: "free",
+        subject: "",
+        room: "",
+        classId: ""
+      }));
+
       daySlots.forEach(s => {
         const slotIdx = (s.slot || 1) - 1;
         if (slotIdx >= 0 && slotIdx < 6) {
-          const venue = s.venue ? ` (${s.venue})` : '';
-          slotsArr[slotIdx] = `${s.subject}${venue}`;
+          slotsArr[slotIdx] = {
+            slot: s.slot,
+            time: slotTimeMap[s.slot] || "11:00 AM - 12:00 PM",
+            status: "scheduled",
+            subject: s.subject,
+            room: s.venue || "Room 201",
+            classId: s.class || "2R1",
+            classCode: s.class || "2R1",
+            isLab: Boolean(s.is_lab),
+            batch: s.batch || null
+          };
         }
       });
+
       return {
         day: day,
         slots: slotsArr
@@ -2685,26 +2728,220 @@ const TeacherERPData = {
 
   syllabus: [
     {
-      subject: "Data Structures (CS302)",
-      classCode: "CSE 2R1",
-      progress: 68,
+      facultyId: "EMP-CSE-1001",
+      facultyName: "Dr. Rohan Deshmukh",
+      subjectId: "SUB-DS-2R1",
+      subjectCode: "CS302",
+      subjectName: "Data Structures",
+      classId: "2R1",
+      totalLecturesPlanned: 60,
+      totalLecturesTaken: 42,
+      progress: 70,
       units: [
-        { name: "Unit 1: Linear Data Structures & Stacks", percent: 100 },
-        { name: "Unit 2: Queues & Linked Lists", percent: 100 },
-        { name: "Unit 3: Binary Trees & BST", percent: 75 },
-        { name: "Unit 4: Graph Algorithms & Traversals", percent: 35 },
-        { name: "Unit 5: Hashing & File Structures", percent: 0 }
+        {
+          unitId: "U1",
+          unitName: "UNIT-I: Linear Data Structures & Arrays",
+          estimatedLectures: 12,
+          lecturesTaken: 12,
+          status: "Completed",
+          topics: [
+            { topicId: "T1", topicName: "Introduction to Arrays", topicDescription: "1D & 2D array representation in memory, row/column major ordering", noOfLectures: 2, estimatedLectures: 2, lecturesTaken: 2, weightage: 1, weightagePercent: 12, status: "Completed" },
+            { topicId: "T2", topicName: "Array Operations & Complexities", topicDescription: "Insertion, deletion, traversal, searching (linear & binary)", noOfLectures: 2, estimatedLectures: 2, lecturesTaken: 2, weightage: 1, weightagePercent: 12, status: "Completed" },
+            { topicId: "T3", topicName: "Sparse Matrices", topicDescription: "Triplet representation and fast transpose algorithms", noOfLectures: 2, estimatedLectures: 2, lecturesTaken: 2, weightage: 2, weightagePercent: 12, status: "Completed" },
+            { topicId: "T4", topicName: "Stack Concepts & Implementation", topicDescription: "LIFO principle, push/pop/peek operations using arrays & pointers", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 12, status: "Completed" },
+            { topicId: "T5", topicName: "Stack Applications", topicDescription: "Infix to postfix/prefix conversion and expression evaluation", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 12, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U2",
+          unitName: "UNIT-II: Linked Lists & Queues",
+          estimatedLectures: 14,
+          lecturesTaken: 14,
+          status: "Completed",
+          topics: [
+            { topicId: "T6", topicName: "Singly Linked Lists", topicDescription: "Node structure, dynamic allocation, insertion and deletion at ends/middle", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 4, weightage: 1, weightagePercent: 14, status: "Completed" },
+            { topicId: "T7", topicName: "Circular & Doubly Linked Lists", topicDescription: "Two-way traversal, header nodes and circular queue using list", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 14, status: "Completed" },
+            { topicId: "T8", topicName: "Queue Structures & Circular Queues", topicDescription: "FIFO principle, linear queue drawback, circular queue wrapping", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 4, weightage: 1, weightagePercent: 14, status: "Completed" },
+            { topicId: "T9", topicName: "Priority Queues & Deque", topicDescription: "Double-ended queues, ascending/descending priority queues and applications", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 2, weightagePercent: 14, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U3",
+          unitName: "UNIT-III: Non-Linear Structures: Trees & BST",
+          estimatedLectures: 14,
+          lecturesTaken: 11,
+          status: "In Progress",
+          topics: [
+            { topicId: "T10", topicName: "Tree Terminology & Binary Trees", topicDescription: "Root, leaf, height, depth, strict/complete binary tree properties", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 16, status: "Completed" },
+            { topicId: "T11", topicName: "Binary Tree Traversals", topicDescription: "Inorder, preorder, postorder traversals with recursive & iterative algorithms", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 4, weightage: 2, weightagePercent: 16, status: "Completed" },
+            { topicId: "T12", topicName: "Binary Search Trees (BST)", topicDescription: "BST property, insertion, deletion cases and search complexities", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 4, weightage: 2, weightagePercent: 16, status: "Completed" },
+            { topicId: "T13", topicName: "Balanced Trees & AVL Concepts", topicDescription: "Balance factor, LL/RR/LR/RL rotations and self-balancing BSTs", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 0, weightage: 1, weightagePercent: 16, status: "Not Started" }
+          ]
+        },
+        {
+          unitId: "U4",
+          unitName: "UNIT-IV: Graph Theory & Algorithms",
+          estimatedLectures: 10,
+          lecturesTaken: 5,
+          status: "In Progress",
+          topics: [
+            { topicId: "T14", topicName: "Graph Representations", topicDescription: "Adjacency matrix, adjacency list, incidence matrix and space comparisons", noOfLectures: 2, estimatedLectures: 2, lecturesTaken: 2, weightage: 1, weightagePercent: 18, status: "Completed" },
+            { topicId: "T15", topicName: "Graph Traversals (BFS & DFS)", topicDescription: "Breadth-First and Depth-First Search with visited array and stack/queue", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 18, status: "Completed" },
+            { topicId: "T16", topicName: "Spanning Trees (Prim & Kruskal)", topicDescription: "Minimum cost spanning trees and greedy strategy", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 0, weightage: 2, weightagePercent: 18, status: "Not Started" },
+            { topicId: "T17", topicName: "Shortest Path Algorithms", topicDescription: "Dijkstra single-source shortest path and Bellman-Ford relaxation", noOfLectures: 2, estimatedLectures: 2, lecturesTaken: 0, weightage: 2, weightagePercent: 18, status: "Not Started" }
+          ]
+        },
+        {
+          unitId: "U5",
+          unitName: "UNIT-V: Searching, Sorting & Hashing",
+          estimatedLectures: 10,
+          lecturesTaken: 0,
+          status: "Not Started",
+          topics: [
+            { topicId: "T18", topicName: "Advanced Sorting Techniques", topicDescription: "Merge sort, Quick sort, Heap sort with divide-and-conquer recurrences", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" },
+            { topicId: "T19", topicName: "Hashing & Collision Resolution", topicDescription: "Hash functions, linear probing, quadratic probing and chaining", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 0, weightage: 1, weightagePercent: 20, status: "Not Started" },
+            { topicId: "T20", topicName: "File Structures & B-Trees", topicDescription: "Sequential access, indexed sequential files, B-tree search and insertion intro", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 0, weightage: 1, weightagePercent: 20, status: "Not Started" }
+          ]
+        }
       ]
     },
     {
-      subject: "Java Programming (CS304)",
-      classCode: "CSE 2R2",
-      progress: 55,
+      facultyId: "EMP-CSE-1001",
+      facultyName: "Dr. Rohan Deshmukh",
+      subjectId: "SUB-DM-2R1",
+      subjectCode: "CS301",
+      subjectName: "Discrete Mathematics",
+      classId: "2R1",
+      totalLecturesPlanned: 45,
+      totalLecturesTaken: 28,
+      progress: 62,
       units: [
-        { name: "Unit 1: OOP Principles & Classes", percent: 100 },
-        { name: "Unit 2: Inheritance & Interfaces", percent: 80 },
-        { name: "Unit 3: Exception Handling & Multithreading", percent: 40 },
-        { name: "Unit 4: Java Collections Framework", percent: 0 }
+        {
+          unitId: "U1",
+          unitName: "UNIT-I: Mathematical Logic & Proofs",
+          estimatedLectures: 9,
+          lecturesTaken: 9,
+          status: "Completed",
+          topics: [
+            { topicId: "DM-T1", topicName: "Propositions & Truth Tables", topicDescription: "Compound propositions, logical connectives, tautology and contradiction", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T2", topicName: "Predicates & Quantifiers", topicDescription: "Universal and existential quantification, nested quantifiers", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T3", topicName: "Methods of Proof", topicDescription: "Direct proof, proof by contradiction, mathematical induction", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 2, weightagePercent: 20, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U2",
+          unitName: "UNIT-II: Set Theory & Relations",
+          estimatedLectures: 9,
+          lecturesTaken: 9,
+          status: "Completed",
+          topics: [
+            { topicId: "DM-T4", topicName: "Sets, Subsets & Power Sets", topicDescription: "Set operations, Venn diagrams, principle of inclusion-exclusion", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T5", topicName: "Relations & Properties", topicDescription: "Reflexive, symmetric, transitive relations, equivalence relations", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T6", topicName: "Partitions & Partial Orders", topicDescription: "Posets, Hasse diagrams, lattices and extremal elements", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 2, weightagePercent: 20, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U3",
+          unitName: "UNIT-III: Combinatorics & Recurrences",
+          estimatedLectures: 9,
+          lecturesTaken: 6,
+          status: "In Progress",
+          topics: [
+            { topicId: "DM-T7", topicName: "Permutations & Combinations", topicDescription: "Counting principles, binomial theorem and coefficients", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T8", topicName: "Pigeonhole Principle", topicDescription: "Generalized pigeonhole principle with applications", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 3, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "DM-T9", topicName: "Recurrence Relations", topicDescription: "Linear homogeneous recurrences with constant coefficients", noOfLectures: 3, estimatedLectures: 3, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" }
+          ]
+        },
+        {
+          unitId: "U4",
+          unitName: "UNIT-IV: Algebraic Structures",
+          estimatedLectures: 9,
+          lecturesTaken: 4,
+          status: "In Progress",
+          topics: [
+            { topicId: "DM-T10", topicName: "Groups & Semigroups", topicDescription: "Binary operations, monoids, subgroups, cyclic groups", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 4, weightage: 2, weightagePercent: 20, status: "In Progress" },
+            { topicId: "DM-T11", topicName: "Rings & Fields Intro", topicDescription: "Ring definitions, integral domains and field axioms", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" }
+          ]
+        },
+        {
+          unitId: "U5",
+          unitName: "UNIT-V: Graph Theory & Boolean Algebra",
+          estimatedLectures: 9,
+          lecturesTaken: 0,
+          status: "Not Started",
+          topics: [
+            { topicId: "DM-T12", topicName: "Eulerian & Hamiltonian Graphs", topicDescription: "Cycles, paths, planar graphs, Kuratowski theorem", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" },
+            { topicId: "DM-T13", topicName: "Boolean Algebra & Gates", topicDescription: "Boolean expressions, Karnaugh maps, logic circuit minimization", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" }
+          ]
+        }
+      ]
+    },
+    {
+      facultyId: "EMP-CSE-1001",
+      facultyName: "Dr. Rohan Deshmukh",
+      subjectId: "SUB-JAVA-2R2",
+      subjectCode: "CS304",
+      subjectName: "OOP with Java",
+      classId: "2R2",
+      totalLecturesPlanned: 50,
+      totalLecturesTaken: 35,
+      progress: 70,
+      units: [
+        {
+          unitId: "U1",
+          unitName: "UNIT-I: Java Language Essentials",
+          estimatedLectures: 10,
+          lecturesTaken: 10,
+          status: "Completed",
+          topics: [
+            { topicId: "JV-T1", topicName: "JVM Architecture & Bytecode", topicDescription: "JDK, JRE, JVM, garbage collection, data types and operators", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 4, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "JV-T2", topicName: "Classes, Objects & Constructors", topicDescription: "Encapsulation, constructor overloading, this keyword", noOfLectures: 6, estimatedLectures: 6, lecturesTaken: 6, weightage: 2, weightagePercent: 20, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U2",
+          unitName: "UNIT-II: Inheritance & Polymorphism",
+          estimatedLectures: 10,
+          lecturesTaken: 10,
+          status: "Completed",
+          topics: [
+            { topicId: "JV-T3", topicName: "Inheritance Types & Super", topicDescription: "Single, multilevel, hierarchical inheritance and super keyword", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 5, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "JV-T4", topicName: "Abstract Classes & Interfaces", topicDescription: "Dynamic method dispatch, interface implementation, default methods", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 5, weightage: 2, weightagePercent: 20, status: "Completed" }
+          ]
+        },
+        {
+          unitId: "U3",
+          unitName: "UNIT-III: Exceptions & Multithreading",
+          estimatedLectures: 10,
+          lecturesTaken: 9,
+          status: "In Progress",
+          topics: [
+            { topicId: "JV-T5", topicName: "Exception Hierarchy & Handling", topicDescription: "Try, catch, finally, throw, throws, custom exception classes", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 5, weightage: 1, weightagePercent: 20, status: "Completed" },
+            { topicId: "JV-T6", topicName: "Thread Lifecycle & Synchronization", topicDescription: "Runnable interface, Thread class, synchronized blocks and deadlocks", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 4, weightage: 2, weightagePercent: 20, status: "In Progress" }
+          ]
+        },
+        {
+          unitId: "U4",
+          unitName: "UNIT-IV: Java Collections Framework",
+          estimatedLectures: 10,
+          lecturesTaken: 6,
+          status: "In Progress",
+          topics: [
+            { topicId: "JV-T7", topicName: "List, Set & Map Interfaces", topicDescription: "ArrayList, LinkedList, HashSet, TreeSet, HashMap, TreeMap", noOfLectures: 6, estimatedLectures: 6, lecturesTaken: 6, weightage: 2, weightagePercent: 20, status: "Completed" },
+            { topicId: "JV-T8", topicName: "Generics & Streams API", topicDescription: "Type safety, generic methods, lambda expressions, stream filtering", noOfLectures: 4, estimatedLectures: 4, lecturesTaken: 0, weightage: 1, weightagePercent: 20, status: "Not Started" }
+          ]
+        },
+        {
+          unitId: "U5",
+          unitName: "UNIT-V: GUI Programming with JavaFX",
+          estimatedLectures: 10,
+          lecturesTaken: 0,
+          status: "Not Started",
+          topics: [
+            { topicId: "JV-T9", topicName: "JavaFX Stage, Scene & Panes", topicDescription: "Layout panes, UI controls, FXML design", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 0, weightage: 1, weightagePercent: 20, status: "Not Started" },
+            { topicId: "JV-T10", topicName: "Event Handling & Database Connectivity", topicDescription: "Action events, listeners, JDBC Driver and PreparedStatement", noOfLectures: 5, estimatedLectures: 5, lecturesTaken: 0, weightage: 2, weightagePercent: 20, status: "Not Started" }
+          ]
+        }
       ]
     }
   ],
@@ -2781,7 +3018,353 @@ const TeacherERPData = {
       unread: false,
       icon: "book-open"
     }
-  ]
+  ],
+
+  leaves: [
+    {
+      id: "LEAVE-001",
+      facultyId: "T-002",
+      empCode: "EMP-CSE-1002",
+      facultyName: "Prof. Priya Kulkarni",
+      facultyEmail: "pkulkarni@ssgmce.ac.in",
+      phone: "9822198765",
+      startDate: "2026-10-12",
+      endDate: "2026-10-16",
+      daysCount: 5,
+      reason: "Attending IEEE International Conference on AI & Cloud Computing.",
+      status: "Approved",
+      createdAt: "2026-10-08T09:30:00Z"
+    }
+  ],
+
+  engagements: [
+    {
+      id: "ENG-001",
+      originalFacultyId: "T-002",
+      originalEmpCode: "EMP-CSE-1002",
+      originalFacultyName: "Prof. Priya Kulkarni",
+      engagingFacultyId: "T-001",
+      engagingEmpCode: "EMP-CSE-1001",
+      engagingFacultyName: "Dr. Rohan Deshmukh",
+      classId: "2R1",
+      date: "2026-10-12",
+      day: "Monday",
+      timeSlot: "09:00 - 10:30 AM",
+      subject: "Data Structures",
+      room: "Room 201",
+      status: "Engaged",
+      createdAt: "2026-10-08T11:00:00Z"
+    }
+  ],
+
+  applyForLeave(leaveData) {
+    if (!this.leaves) this.leaves = [];
+    const newLeave = {
+      id: `LEAVE-${Date.now()}`,
+      facultyId: leaveData.facultyId || "T-001",
+      empCode: leaveData.empCode || "EMP-CSE-1001",
+      facultyName: leaveData.facultyName || "Faculty Member",
+      facultyEmail: leaveData.facultyEmail || "faculty@ssgmce.ac.in",
+      phone: leaveData.phone || "",
+      startDate: leaveData.startDate,
+      endDate: leaveData.endDate,
+      daysCount: leaveData.startDate && leaveData.endDate
+        ? Math.max(1, Math.round((new Date(leaveData.endDate) - new Date(leaveData.startDate)) / (1000 * 60 * 60 * 24)) + 1)
+        : 1,
+      reason: leaveData.reason || "",
+      status: "Approved",
+      createdAt: new Date().toISOString()
+    };
+    this.leaves.unshift(newLeave);
+
+    const notif = {
+      id: `notif-leave-${Date.now()}`,
+      title: "Leave Application Approved",
+      description: `Your leave application from ${newLeave.startDate} to ${newLeave.endDate} has been approved. Your scheduled classes are now open for faculty substitution.`,
+      time: "Just now",
+      unread: true,
+      icon: "calendar"
+    };
+    if (this.notifications) this.notifications.unshift(notif);
+
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("ssgmce_leaves", JSON.stringify(this.leaves));
+        window.dispatchEvent(new CustomEvent("leaves:updated", { detail: { leave: newLeave, leaves: this.leaves } }));
+      } catch (_) {}
+    }
+    return newLeave;
+  },
+
+  getFacultyLeaves(empOrId) {
+    if (!this.leaves) return [];
+    if (!empOrId) return this.leaves;
+    const target = String(empOrId).toUpperCase();
+    return this.leaves.filter(l =>
+      (l.facultyId && l.facultyId.toUpperCase() === target) ||
+      (l.empCode && l.empCode.toUpperCase() === target)
+    );
+  },
+
+  isFacultyOnLeave(empOrId, dateOrDay) {
+    if (!this.leaves) return false;
+    const target = String(empOrId || "").toUpperCase();
+    const activeLeaves = this.leaves.filter(l =>
+      l.status === "Approved" &&
+      (!empOrId || (l.facultyId && l.facultyId.toUpperCase() === target) || (l.empCode && l.empCode.toUpperCase() === target))
+    );
+    if (activeLeaves.length === 0) return false;
+    if (!dateOrDay) return activeLeaves.length > 0;
+
+    const dateStr = String(dateOrDay);
+    if (dateStr.includes("-") && dateStr.length === 10) {
+      return activeLeaves.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
+    }
+    return activeLeaves.length > 0;
+  },
+
+  engageClass(data) {
+    if (!this.engagements) this.engagements = [];
+    const newEng = {
+      id: `ENG-${Date.now()}`,
+      originalFacultyId: data.originalFacultyId || "T-002",
+      originalEmpCode: data.originalEmpCode || "EMP-CSE-1002",
+      originalFacultyName: data.originalFacultyName || "Original Faculty",
+      engagingFacultyId: data.engagingFacultyId || "T-001",
+      engagingEmpCode: data.engagingEmpCode || "EMP-CSE-1001",
+      engagingFacultyName: data.engagingFacultyName || "Engaging Faculty",
+      classId: data.classId || "2R1",
+      date: data.date || new Date().toISOString().split("T")[0],
+      day: data.day || "Monday",
+      timeSlot: data.timeSlot || "09:00 - 10:30 AM",
+      subject: data.subject || "Data Structures",
+      room: data.room || "Room 201",
+      status: "Engaged",
+      createdAt: new Date().toISOString()
+    };
+    this.engagements.unshift(newEng);
+
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("ssgmce_engagements", JSON.stringify(this.engagements));
+        window.dispatchEvent(new CustomEvent("engagements:updated", { detail: { engagement: newEng, engagements: this.engagements } }));
+      } catch (_) {}
+    }
+    return newEng;
+  },
+
+  getClassEngagement(empOrId, day, timeSlot, date) {
+    if (!this.engagements || this.engagements.length === 0) return null;
+    const target = String(empOrId || "").toUpperCase();
+    return this.engagements.find(eng => {
+      const facMatch = !empOrId ||
+        (eng.originalFacultyId && eng.originalFacultyId.toUpperCase() === target) ||
+        (eng.originalEmpCode && eng.originalEmpCode.toUpperCase() === target) ||
+        (eng.engagingFacultyId && eng.engagingFacultyId.toUpperCase() === target) ||
+        (eng.engagingEmpCode && eng.engagingEmpCode.toUpperCase() === target);
+      const dayMatch = !day || (eng.day && eng.day.toLowerCase() === String(day).toLowerCase());
+      const slotMatch = !timeSlot || eng.timeSlot === timeSlot || eng.timeSlot.includes(String(timeSlot).split(" ")[0]);
+      return facMatch && dayMatch && slotMatch;
+    });
+  },
+
+  canMarkAttendance(activeEmpOrId, classSession) {
+    if (!activeEmpOrId || !classSession) return { allowed: true };
+    const active = String(activeEmpOrId).toUpperCase();
+    const origFac = String(classSession.facultyId || classSession.empCode || classSession.originalFacultyId || "").toUpperCase();
+
+    const eng = this.getClassEngagement(
+      origFac || active,
+      classSession.day,
+      classSession.timeSlot || classSession.time,
+      classSession.date
+    );
+
+    if (eng) {
+      const engFac = String(eng.engagingFacultyId || eng.engagingEmpCode || "").toUpperCase();
+      if (active === engFac || active.includes("1001") && engFac.includes("1001") || active === "T-001" && engFac.includes("1001")) {
+        return { allowed: true, isEngaged: true, isSubstitute: true, engagingFacultyName: eng.engagingFacultyName };
+      }
+      if (active === String(eng.originalFacultyId).toUpperCase() || active === String(eng.originalEmpCode).toUpperCase()) {
+        return {
+          allowed: false,
+          isEngaged: true,
+          onLeave: true,
+          reason: `You are on leave for this class. Attendance is being managed by ${eng.engagingFacultyName}.`,
+          engagingFacultyName: eng.engagingFacultyName
+        };
+      }
+      return {
+        allowed: false,
+        isEngaged: true,
+        reason: `Attendance for this class is being managed by substitute faculty: ${eng.engagingFacultyName}.`,
+        engagingFacultyName: eng.engagingFacultyName
+      };
+    }
+
+    if (this.isFacultyOnLeave(origFac || active, classSession.date || classSession.day)) {
+      if (active === origFac || !origFac) {
+        return {
+          allowed: false,
+          onLeave: true,
+          reason: "You are on leave for this class. Attendance marking is disabled."
+        };
+      }
+    }
+
+    return { allowed: true };
+  },
+
+  loadSyllabusData() {
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        const stored = window.localStorage.getItem("ssgmce_syllabus_data");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            this.syllabus = parsed;
+            return parsed;
+          }
+        }
+      } catch (_) {}
+    }
+    return this.syllabus;
+  },
+
+  saveSyllabusData(syllabusList) {
+    this.syllabus = syllabusList;
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("ssgmce_syllabus_data", JSON.stringify(syllabusList));
+      } catch (_) {}
+    }
+    return syllabusList;
+  },
+
+  getSyllabusForTeacher(empCode) {
+    const all = this.loadSyllabusData();
+    const target = String(empCode || this.getActiveTeacherEmpCode()).toUpperCase();
+    const filtered = all.filter(s => String(s.facultyId).toUpperCase() === target);
+    return filtered.length > 0 ? filtered : all.filter(s => s.facultyId === "EMP-CSE-1001");
+  },
+
+  getSubjectSyllabus(subjectId) {
+    const all = this.loadSyllabusData();
+    return all.find(s => s.subjectId === subjectId) || all[0];
+  },
+
+  recalculateSubjectTotals(subjectObj) {
+    let subjectTaken = 0;
+    let subjectPlanned = 0;
+
+    subjectObj.units = (subjectObj.units || []).map(unit => {
+      let unitTaken = 0;
+      let unitPlanned = 0;
+
+      unit.topics = (unit.topics || []).map(topic => {
+        const planned = Number(topic.noOfLectures || topic.estimatedLectures || 1);
+        const taken = Number(topic.lecturesTaken || 0);
+
+        let status = "Not Started";
+        if (taken >= planned && taken > 0) {
+          status = "Completed";
+        } else if (taken > 0) {
+          status = "In Progress";
+        }
+
+        unitTaken += taken;
+        unitPlanned += planned;
+
+        return {
+          ...topic,
+          noOfLectures: planned,
+          estimatedLectures: planned,
+          lecturesTaken: taken,
+          status
+        };
+      });
+
+      let unitStatus = "Not Started";
+      if (unitTaken >= unitPlanned && unitPlanned > 0) {
+        unitStatus = "Completed";
+      } else if (unitTaken > 0) {
+        unitStatus = "In Progress";
+      }
+
+      const unitProgress = unitPlanned > 0 ? Math.min(100, Math.round((unitTaken / unitPlanned) * 100)) : 0;
+
+      subjectTaken += unitTaken;
+      subjectPlanned += unitPlanned;
+
+      return {
+        ...unit,
+        estimatedLectures: unitPlanned,
+        lecturesTaken: unitTaken,
+        status: unitStatus,
+        progress: unitProgress
+      };
+    });
+
+    subjectObj.totalLecturesPlanned = subjectPlanned || subjectObj.totalLecturesPlanned || 60;
+    subjectObj.totalLecturesTaken = subjectTaken;
+    subjectObj.progress = subjectObj.totalLecturesPlanned > 0
+      ? Math.min(100, Math.round((subjectTaken / subjectObj.totalLecturesPlanned) * 100))
+      : 0;
+    subjectObj.completionPercentage = subjectObj.progress;
+
+    return subjectObj;
+  },
+
+  markTopicCovered(subjectId, unitId, topicId, count = 1) {
+    const all = this.loadSyllabusData();
+    const subjectIndex = all.findIndex(s => s.subjectId === subjectId);
+    if (subjectIndex === -1) return null;
+
+    const subject = JSON.parse(JSON.stringify(all[subjectIndex]));
+    const unit = subject.units.find(u => u.unitId === unitId);
+    if (!unit) return null;
+
+    const topic = unit.topics.find(t => t.topicId === topicId);
+    if (!topic) return null;
+
+    const planned = Number(topic.noOfLectures || topic.estimatedLectures || 1);
+    const current = Number(topic.lecturesTaken || 0);
+    const nextTaken = Math.min(planned, current + count);
+    topic.lecturesTaken = nextTaken;
+    topic.lastCoveredDate = new Date().toISOString().split("T")[0];
+
+    const updatedSubject = this.recalculateSubjectTotals(subject);
+    all[subjectIndex] = updatedSubject;
+    this.saveSyllabusData(all);
+
+    return updatedSubject;
+  },
+
+  undoTopicCovered(subjectId, unitId, topicId, count = 1) {
+    const all = this.loadSyllabusData();
+    const subjectIndex = all.findIndex(s => s.subjectId === subjectId);
+    if (subjectIndex === -1) return null;
+
+    const subject = JSON.parse(JSON.stringify(all[subjectIndex]));
+    const unit = subject.units.find(u => u.unitId === unitId);
+    if (!unit) return null;
+
+    const topic = unit.topics.find(t => t.topicId === topicId);
+    if (!topic) return null;
+
+    const current = Number(topic.lecturesTaken || 0);
+    const nextTaken = Math.max(0, current - count);
+    topic.lecturesTaken = nextTaken;
+    if (nextTaken === 0) {
+      topic.lastCoveredDate = null;
+    }
+
+    const updatedSubject = this.recalculateSubjectTotals(subject);
+    all[subjectIndex] = updatedSubject;
+    this.saveSyllabusData(all);
+
+    return updatedSubject;
+  }
 };
 
 if (typeof window !== 'undefined') {
@@ -2791,3 +3374,4 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { AcademicDateUtils, TeacherERPData };
 }
+

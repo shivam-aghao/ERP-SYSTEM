@@ -526,3 +526,168 @@
     justify-content: flex-start;
   }
 }
+
+/* --------------------------------------------------------------------------
+   9. Scheduled Test / Exam Styling & Modals
+   -------------------------------------------------------------------------- */
+.timetable-test-slot {
+  background: #FFF7ED !important;
+  border: 1.5px solid #F97316 !important;
+  border-left: 5px solid #DC2626 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12) !important;
+  transition: all 0.18s ease !important;
+}
+
+.timetable-test-slot:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.22) !important;
+  border-color: #EA580C !important;
+}
+
+.btn-schedule-test-prominent {
+  background: #EA580C !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  padding: 7px 15px !important;
+  border-radius: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-schedule-test-prominent:hover {
+  background: #C2410C !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.45) !important;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Click-to-Mark Interactive Hover & Status Color Coding
+   -------------------------------------------------------------------------- */
+.timetable-slot.slot-clickable {
+  cursor: pointer !important;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.15s ease !important;
+}
+
+.timetable-slot.slot-clickable:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 20px rgba(11, 92, 173, 0.18) !important;
+  border-left-width: 5px !important;
+  z-index: 2;
+}
+
+.timetable-slot.slot-pending {
+  background: #FEFCE8 !important;
+  border: 1.5px solid #FDE047 !important;
+  border-left: 4px solid #F59E0B !important;
+  color: #713F12 !important;
+}
+
+.timetable-slot.slot-pending:hover {
+  border-color: #EAB308 !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.22) !important;
+}
+
+.slot-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FEF08A;
+  color: #854D0E;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  border: 1px solid #FACC15;
+}
+
+.slot-pending-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F59E0B;
+  display: inline-block;
+  animation: pulse-yellow 2s infinite;
+}
+
+@keyframes pulse-yellow {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.timetable-slot.slot-completed {
+  background: #F0FDF4 !important;
+  border: 1.5px solid #BBF7D0 !important;
+  border-left: 4px solid #10B981 !important;
+  color: #14532D !important;
+}
+
+.timetable-slot.slot-completed:hover {
+  border-color: #10B981 !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2) !important;
+}
+
+.slot-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+}
+
+.timetable-slot.slot-future {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-left: 3.5px solid #94A3B8 !important;
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  color: #64748B !important;
+  filter: grayscale(15%);
+}
+
+.slot-future-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 600;
+  background: #E2E8F0;
+  color: #64748B;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+}
+
+/* Today's row subtle highlight */
+.timetable-table tr.today-row {
+  background: #F0F7FF !important;
+}
+
+.timetable-table td.today-cell {
+  background: #DBEAFE !important;
+  border-left: 4px solid #0B5CAD !important;
+}
+
+

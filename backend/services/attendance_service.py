@@ -737,7 +737,17 @@ class AttendanceService:
                 "absent_periods": a_per,
                 "attendance_percentage": pct,
                 "status": "ELIGIBLE" if not is_sub_shortage else "SHORTAGE",
-                "classes_needed_to_75": sub_classes_needed
+                "classes_needed_to_75": sub_classes_needed,
+                "code": sm["subject_code"],
+                "name": sm["subject_name"],
+                "total": t_per,
+                "present": p_per,
+                "attended": p_per,
+                "absent": a_per,
+                "percentage": pct,
+                "faculty": sm.get("faculty_name") or "Faculty",
+                "type": "TH" if (sm.get("subject_type") or "THEORY").upper().startswith("TH") else "PR",
+                "typeName": "Theory" if (sm.get("subject_type") or "THEORY").upper().startswith("TH") else "Practical"
             }
             subjects_list.append(sub_item)
             tot_conducted += t_per
@@ -829,6 +839,7 @@ class AttendanceService:
             "warning_message": warning_msg,
             "subjects": subjects_list,
             "subject_wise": subjects_list,
+            "subjectWise": subjects_list,
             "shortage_subjects": shortage_subjects,
             "monthly_attendance": monthly_list,
             "lecture_history": lecture_history

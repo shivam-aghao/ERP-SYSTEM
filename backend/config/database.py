@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Optional
 from sqlalchemy import create_engine
@@ -6,13 +7,25 @@ from backend.config.settings import settings
 
 logger = logging.getLogger("ssgmce_erp_backend.database")
 
-# Initialize PostgreSQL engine connected directly to Supabase Cloud
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=False
-)
+# Initialize PostgreSQL engine connected directly to Supabase Cloud with SQLite fallback
+try:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        echo=False
+    )
+    # Test connection
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    logger.warning("PostgreSQL direct connection fallback: %s. Using SQLite engine.", e)
+    sqlite_path = os.path.join(settings.BASE_DIR, "erp.db")
+    engine = create_engine(
+        f"sqlite:///{sqlite_path}",
+        connect_args={"check_same_thread": False},
+        echo=False
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

@@ -790,49 +790,268 @@
 
 
 
-  <!-- Top Master SSGMCE Header -->
-
-  <header class="top-header">
-
-    <div class="header-brand">
-
-      <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Logo" class="brand-logo">
-
-      <div class="college-info">
-
-        <h1>Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
-
-        <p>Autonomous Institute â€¢ Teacher ERP Quiz Module</p>
-
-      </div>
-
-    </div>
-
-    <div class="header-user">
-
-      <div class="user-badge" style="cursor: pointer;" onclick="window.location.href='teacher-dashboard.html#profile'" title="View Faculty Profile">
-
-        <div class="user-avatar" id="teacherAvatar">--</div>
-
-        <span><strong id="teacherName">Loading Faculty...</strong> (<span id="teacherDept">CSE</span>)</span>
-
-      </div>
-
-      <a href="teacher-dashboard.html" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-
-        <i data-lucide="arrow-left"></i> Back to ERP
-
-      </a>
-
-      <button onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(220,38,38,0.1); color: #ef4444; border-color: rgba(220,38,38,0.3); cursor: pointer;">
-
-        <i data-lucide="log-out"></i> Logout
-
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="hamburger-btn" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
 
+      <a href="teacher-dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Home">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
+        </div>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
+        </div>
+      </a>
+
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
+      </div>
     </div>
 
+    <!-- Right Controls: Status, Notifications & Teacher Profile -->
+    <div class="header-right header-right-controls">
+      <div id="backend-status-pill" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" onclick="refreshQuizzes()" title="Live connection status">
+        <span id="backend-status-dot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
+        <span id="backend-status-text">🟢 Backend: Connected</span>
+      </div>
+
+      <div class="notif-wrapper" id="notifWrapper">
+        <a href="teacher-dashboard.html#notifications" class="header-icon-btn" id="notifBtn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge">4</span>
+        </a>
+      </div>
+
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="avatar-circle profile-avatar" id="teacherAvatar">
+            <span>--</span>
+          </div>
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="teacherName">Faculty</span>
+            <span class="student-meta profile-dept" id="teacherDept">Department Faculty</span>
+          </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Faculty Member</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Faculty Portal</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">SSGMCE Faculty Record</div>
+          </div>
+          <div class="p-links">
+            <a href="teacher-dashboard.html#profile" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>View Profile</span>
+            </a>
+            <a href="teacher-timetable.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Timetable</span>
+            </a>
+            <a href="teacher-dashboard.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </a>
+            <div class="p-divider"></div>
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer;" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
+
+  <div class="app-wrapper">
+    <!-- Off-canvas Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- LEFT SIDEBAR (Dark Navy #0B1F3A) -->
+    <aside class="app-sidebar dashboard-sidebar" id="app-sidebar" aria-label="Faculty Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="dashboard">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- TEACHER MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">TEACHER MODULE</span>
+              </div>
+            </li>
+
+            <!-- 2. Attendance -->
+            <li class="sidebar-item">
+              <a href="teacher-attendance.html" class="nav-item sidebar-link" data-view="attendance">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+              </a>
+            </li>
+
+            <!-- 3. Timetable -->
+            <li class="sidebar-item">
+              <a href="teacher-timetable.html" class="nav-item sidebar-link" data-view="timetable">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Timetable</span>
+              </a>
+            </li>
+
+            <!-- 4. Test Scheduler -->
+            <li class="sidebar-item">
+              <a href="teacher_test_schedule.html" class="nav-item sidebar-link" data-view="test-schedule">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label">Test Scheduler</span>
+              </a>
+            </li>
+
+            <!-- 5. Classes -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#classes" class="nav-item sidebar-link" data-view="classes">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h20"></path>
+                  <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+                  <path d="m7 21 5-5 5 5"></path>
+                </svg>
+                <span class="nav-label">Classes</span>
+              </a>
+            </li>
+
+            <!-- 6. Students -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#students" class="nav-item sidebar-link" data-view="students">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="nav-label">Students</span>
+              </a>
+            </li>
+
+            <!-- 7. Syllabus -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#syllabus" class="nav-item sidebar-link" data-view="syllabus">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+              </a>
+            </li>
+
+            <!-- 8. Results -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#results" class="nav-item sidebar-link" data-view="results">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="nav-label">Results</span>
+              </a>
+            </li>
+
+            <!-- 9. Quiz Management (ACTIVE) -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link active" href="teacher-quiz.html" style="color: var(--primary);">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label" style="font-weight: 700;">Quiz Management</span>
+                <span class="nav-badge" style="background:#2563EB; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:10px; margin-left:auto;">Live</span>
+              </a>
+            </li>
+
+            <!-- Preferences & Info Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Preferences &amp; Info</span>
+            </li>
+
+            <!-- 10. Profile -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#profile" class="nav-item sidebar-link" data-view="profile">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
+
+            <!-- 11. Information -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#information" class="nav-item sidebar-link" data-view="information">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="nav-label">Information</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="main-content-layout" style="flex:1; min-width:0; overflow-y:auto; display:flex; flex-direction:column;">
 
 
 
@@ -892,26 +1111,52 @@
 
     <section id="sec-quizzes" class="view-section active">
 
+      <!-- Metrics Overview Cards -->
+      <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 1.25rem;">
+        <div class="stat-card">
+          <div class="stat-num" id="metricTotalQuizzes" style="color: var(--primary);">0</div>
+          <div class="stat-label">Total Quizzes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="metricActiveQuizzes" style="color: #16A34A;">0</div>
+          <div class="stat-label">Active / Published</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="metricDraftQuizzes" style="color: #D97706;">0</div>
+          <div class="stat-label">Draft Quizzes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="metricScheduledQuizzes" style="color: #2563EB;">0</div>
+          <div class="stat-label">Scheduled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="metricClosedQuizzes" style="color: #64748B;">0</div>
+          <div class="stat-label">Closed / Ended</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="metricTotalAttempts" style="color: var(--navy);">0</div>
+          <div class="stat-label">Total Submissions</div>
+        </div>
+      </div>
+
       <div class="action-bar">
-
         <div>
-
           <h2 class="page-title">Class-Restricted Quizzes</h2>
-
           <p class="page-desc">Quizzes assigned to specific departments and classes (e.g. CSE 1R1, 2R1, 3R)</p>
-
         </div>
-
-        <div style="display: flex; gap: 0.75rem;">
-
-          <select id="filterClass" class="form-control" style="width: 180px;" onchange="renderQuizzes()">
-
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="searchQuiz" class="form-control" style="width: 200px;" placeholder="Search title or subject..." oninput="renderQuizzes()">
+          <select id="filterClass" class="form-control" style="width: 160px;" onchange="renderQuizzes()">
             <option value="ALL">All Classes</option>
-
           </select>
-
+          <select id="filterStatus" class="form-control" style="width: 140px;" onchange="renderQuizzes()">
+            <option value="ALL">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="closed">Closed</option>
+          </select>
         </div>
-
       </div>
 
 
@@ -1244,6 +1489,8 @@
     </section>
 
   </main>
+    </div><!-- /.main-content-layout -->
+  </div><!-- /.app-wrapper -->
 
 
 
@@ -1666,109 +1913,114 @@
 
 
     function renderQuizzes() {
+      // 1. Calculate and update dashboard metric cards
+      let totalQ = quizzes.length;
+      let activeQ = 0;
+      let draftQ = 0;
+      let schedQ = 0;
+      let closedQ = 0;
+      let totalAtt = 0;
 
+      quizzes.forEach(q => {
+        const s = (q.status || 'draft').toLowerCase();
+        if (s === 'active' || s === 'published') activeQ++;
+        else if (s === 'draft') draftQ++;
+        else if (s === 'scheduled') schedQ++;
+        else if (s === 'closed' || s === 'archived') closedQ++;
+        totalAtt += (q.attempts_count || q.attempt_count || 0);
+      });
+
+      const mTot = document.getElementById('metricTotalQuizzes');
+      const mAct = document.getElementById('metricActiveQuizzes');
+      const mDrf = document.getElementById('metricDraftQuizzes');
+      const mSch = document.getElementById('metricScheduledQuizzes');
+      const mCls = document.getElementById('metricClosedQuizzes');
+      const mAtt = document.getElementById('metricTotalAttempts');
+      if (mTot) mTot.textContent = totalQ;
+      if (mAct) mAct.textContent = activeQ;
+      if (mDrf) mDrf.textContent = draftQ;
+      if (mSch) mSch.textContent = schedQ;
+      if (mCls) mCls.textContent = closedQ;
+      if (mAtt) mAtt.textContent = totalAtt;
+
+      // 2. Filter quizzes
       const tbody = document.getElementById('quizTableBody');
-
-      const filter = document.getElementById('filterClass').value;
+      const filterClass = (document.getElementById('filterClass') && document.getElementById('filterClass').value) || 'ALL';
+      const filterStatus = (document.getElementById('filterStatus') && document.getElementById('filterStatus').value) || 'ALL';
+      const searchQuery = (document.getElementById('searchQuiz') && document.getElementById('searchQuiz').value.trim().toLowerCase()) || '';
 
       tbody.innerHTML = '';
 
-
-
-      const filtered = quizzes.filter(q => filter === 'ALL' || q.class_name === filter);
-
-
+      const filtered = quizzes.filter(q => {
+        const s = (q.status || 'draft').toLowerCase();
+        const matchesClass = (filterClass === 'ALL' || q.class_name === filterClass);
+        const matchesStatus = (filterStatus === 'ALL' || s === filterStatus || (filterStatus === 'active' && s === 'published'));
+        const matchesSearch = !searchQuery || 
+          (q.title && q.title.toLowerCase().includes(searchQuery)) ||
+          ((q.subject || q.subject_name || '').toLowerCase().includes(searchQuery));
+        return matchesClass && matchesStatus && matchesSearch;
+      });
 
       if (filtered.length === 0) {
-
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No quizzes found for selected class filter. Click <strong>+ Create New Quiz</strong> to assign one.</td></tr>`;
-
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No quizzes match the selected filters. Click <strong>+ Create New Quiz</strong> to assign one.</td></tr>`;
         return;
-
       }
 
 
 
       filtered.forEach(q => {
-
-        const badgeClass = q.status === 'PUBLISHED' ? 'badge-published' : (q.status === 'DRAFT' ? 'badge-draft' : 'badge-closed');
-
-        const qCount = q.question_count !== undefined ? q.question_count : 0;
+        const rawStatus = (q.status || 'draft').toLowerCase();
+        const isPublished = (rawStatus === 'active' || rawStatus === 'published');
+        const badgeClass = isPublished ? 'badge-published' : (rawStatus === 'draft' ? 'badge-draft' : 'badge-closed');
+        const displayStatus = isPublished ? 'Active' : (rawStatus === 'draft' ? 'Draft' : rawStatus.toUpperCase());
+        const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
 
         const tr = document.createElement('tr');
-
         tr.innerHTML = `
-
           <td><strong>${q.title}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">${qCount} Questions</div></td>
-
           <td><span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700;">${q.class_name}</span></td>
-
           <td>${q.subject || q.subject_name || 'General'}</td>
-
           <td>${q.duration_minutes} mins</td>
-
           <td>${q.total_marks} marks</td>
-
-          <td><span class="badge ${badgeClass}">${q.status}</span></td>
-
-          <td><strong>${q.attempts_count || 0}</strong> submissions</td>
-
+          <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
+          <td><strong>${q.attempts_count || q.attempt_count || 0}</strong> submissions</td>
           <td style="text-align: right; white-space: nowrap;">
-
             <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="viewQuizResultsDirect('${q.id}')" title="View Full Class Results & Export">
-
-              <i data-lucide="file-spreadsheet"></i> Results (${q.attempts_count || 0})
-
+              <i data-lucide="file-spreadsheet"></i> Results (${q.attempts_count || q.attempt_count || 0})
             </button>
-
             <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="openManageQuestions('${q.id}')">
-
               <i data-lucide="help-circle"></i> Questions (${qCount})
-
             </button>
-
-            <button class="btn ${q.status === 'PUBLISHED' ? 'btn-secondary' : 'btn-success'}" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="togglePublish('${q.id}')">
-
-              ${q.status === 'PUBLISHED' ? 'Close' : 'Publish'}
-
+            <button class="btn ${isPublished ? 'btn-secondary' : 'btn-success'}" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="togglePublish('${q.id}', ${isPublished})" title="${isPublished ? 'Unpublish quiz back to Draft' : 'Publish quiz for students'}">
+              ${isPublished ? 'Unpublish' : 'Publish'}
             </button>
-
             <button class="btn btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.8rem; color: #EF4444;" onclick="handleDeleteQuiz('${q.id}')" title="Delete Quiz">
-
               <i data-lucide="trash-2"></i>
-
             </button>
-
           </td>
-
         `;
-
         tbody.appendChild(tr);
-
       });
-
       lucide.createIcons();
-
     }
 
-
-
-    async function togglePublish(quizId) {
-
+    async function togglePublish(quizId, isCurrentlyPublished) {
       try {
+        const q = quizzes.find(x => x.id === quizId);
+        const qCount = q ? (q.question_count || q.total_questions || 0) : 0;
+        if (!isCurrentlyPublished && qCount === 0) {
+          alert('Cannot publish a quiz with 0 questions! Please add questions first.');
+          openManageQuestions(quizId);
+          return;
+        }
 
-        await QuizAPI.togglePublish(quizId);
-
+        const res = await QuizAPI.togglePublish(quizId);
         await refreshQuizzes();
-
-        alert('Quiz publication status toggled! Automatic student notification was triggered.');
-
+        const actionLabel = (res && res.is_published) ? 'published and active for students' : 'set to draft';
+        alert(`Quiz is now ${actionLabel}!`);
       } catch (err) {
-
-        alert('Failed to toggle status: ' + err.message);
-
+        alert('Failed to update status: ' + err.message);
       }
-
     }
 
 
@@ -1835,50 +2087,34 @@
 
 
 
+      const totalMarksVal = Math.max(1, marks * 5);
+      const passingMarksVal = Math.round(totalMarksVal * 0.4);
+
       const payload = {
-
         title,
-
         subject,
-
         class_id: classId,
-
         class_name: className,
-
         duration_minutes: duration,
-
-        total_marks: marks * 5,
-
+        total_marks: totalMarksVal,
+        passing_marks: passingMarksVal,
         marks_per_question: marks,
-
         negative_marks: negMarks,
-
+        negative_marks_per_question: negMarks,
+        negative_marking: negMarks > 0,
         description: desc,
-
-        status: 'PUBLISHED',
-
+        status: 'draft',
         questions: []
-
       };
 
-
-
       try {
-
         const created = await QuizAPI.createQuiz(payload);
-
         closeCreateQuizModal();
-
         await refreshQuizzes();
-
-        alert(`Quiz created and class ${className} has been notified! Now you can add questions.`);
-
+        alert(`Quiz '${title}' created as Draft! Now add questions to it before publishing.`);
         openManageQuestions(created.id);
-
       } catch (err) {
-
         alert('Failed to create quiz: ' + err.message);
-
       }
 
     }
@@ -2531,15 +2767,50 @@
     }
 
     // Init
-
     document.addEventListener('DOMContentLoaded', () => {
-
       loadInitialData();
-
       lucide.createIcons();
 
-    });
+      // Mobile hamburger & sidebar drawer
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      const sidebar = document.getElementById('app-sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+      if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('active');
+          if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+        });
+      }
+      if (sidebarOverlay && sidebar) {
+        sidebarOverlay.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        });
+      }
+      if (sidebarCloseBtn && sidebar) {
+        sidebarCloseBtn.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        });
+      }
 
+      // Profile menu dropdown toggle
+      const profileTrigger = document.getElementById('profile-dropdown-trigger');
+      const profilePanel = document.getElementById('profile-panel');
+      if (profileTrigger && profilePanel) {
+        profileTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profilePanel.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+          if (!profilePanel.contains(e.target) && !profileTrigger.contains(e.target)) {
+            profilePanel.classList.remove('show');
+          }
+        });
+      }
+    });
   </script>
 
 

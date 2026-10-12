@@ -59,7 +59,10 @@ try:
         _con.execute(text("""
             CREATE TABLE IF NOT EXISTS timetable_assessments (
                 id VARCHAR(36) PRIMARY KEY,
-                teacher_id VARCHAR(36),
+                teacher_id VARCHAR(50),
+                faculty_id VARCHAR(50),
+                faculty_name VARCHAR(150),
+                created_by VARCHAR(50),
                 type VARCHAR(30) NOT NULL,
                 subject VARCHAR(150) NOT NULL,
                 title VARCHAR(250) NOT NULL,
@@ -72,6 +75,16 @@ try:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
+        for col_def in [
+            ("teacher_id", "VARCHAR(50)"),
+            ("faculty_id", "VARCHAR(50)"),
+            ("faculty_name", "VARCHAR(150)"),
+            ("created_by", "VARCHAR(50)")
+        ]:
+            try:
+                _con.execute(text(f"ALTER TABLE timetable_assessments ADD COLUMN {col_def[0]} {col_def[1]}"))
+            except Exception:
+                pass
         _con.commit()
 except Exception as _e:
     logger.warning("Notice on timetable_assessments check: %s", _e)
@@ -162,6 +175,7 @@ async def standard_validation_exception_handler(request: Request, exc: RequestVa
 
 @app.get("/health", tags=["System Diagnostics"])
 @app.get("/api/health", tags=["System Diagnostics"])
+@app.get("/api/v1/health", tags=["System Diagnostics"])
 def health_check():
     return {
         "status": "healthy",
@@ -173,6 +187,20 @@ def health_check():
         "supabase_url": settings.SUPABASE_URL,
         "port": 8000
     }
+
+
+@app.get("/server-time", tags=["System Diagnostics"])
+@app.get("/api/v1/server-time", tags=["System Diagnostics"])
+def get_server_time():
+    import time
+    from datetime import datetime, timezone
+    now_ms = int(time.time() * 1000)
+    iso_str = datetime.now(timezone.utc).isoformat()
+    return success_response({
+        "server_time": iso_str,
+        "timestamp_ms": now_ms,
+        "timezone": "UTC"
+    })
 
 
 # ==============================================================================
@@ -193,12 +221,20 @@ from backend.routes.documents import router as documents_router
 from backend.routes.notifications import router as notifications_router
 from backend.routes.master import router as master_router
 from backend.routes.compat import router as compat_router
+from backend.routes.management import router as management_router
+from backend.routes.syllabus import router as syllabus_router
+from backend.routes.academic_wallet import router as academic_wallet_router
+from backend.routes.profile import router as profile_router
 
 # Mount all canonical routers
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(students_router, prefix="/api/v1")
 app.include_router(teachers_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
+app.include_router(management_router, prefix="/api/v1")
+app.include_router(syllabus_router, prefix="/api/v1")
+app.include_router(academic_wallet_router, prefix="/api/v1")
+app.include_router(profile_router, prefix="/api/v1")
 app.include_router(attendance_router, prefix="/api/v1")
 app.include_router(timetable_router, prefix="/api/v1")
 app.include_router(quizzes_router, prefix="/api/v1")
@@ -216,6 +252,8 @@ logger.info(
     "  • /api/v1/students\n"
     "  • /api/v1/teachers\n"
     "  • /api/v1/admin\n"
+    "  • /api/v1/management\n"
+    "  • /api/v1/syllabus\n"
     "  • /api/v1/attendance\n"
     "  • /api/v1/timetable\n"
     "  • /api/v1/quizzes\n"
@@ -233,6 +271,7 @@ logger.info(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
+
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
 
@@ -270,6 +309,22 @@ def student_dashboard_underscore():
 @app.get("/admin_dashboard.html", include_in_schema=False)
 def admin_dashboard_underscore():
     return RedirectResponse(url="/admin-dashboard.html")
+
+@app.get("/teacher-test-schedule", include_in_schema=False)
+@app.get("/teacher_test_schedule", include_in_schema=False)
+@app.get("/test-schedule", include_in_schema=False)
+def teacher_test_schedule_route():
+    return RedirectResponse(url="/teacher-test-schedule.html")
+
+@app.get("/teacher-timetable", include_in_schema=False)
+@app.get("/teacher_timetable", include_in_schema=False)
+def teacher_timetable_route():
+    return RedirectResponse(url="/teacher-timetable.html")
+
+@app.get("/student-timetable", include_in_schema=False)
+@app.get("/student_timetable", include_in_schema=False)
+def student_timetable_route():
+    return RedirectResponse(url="/student-timetable.html")
 
 
 if os.path.isdir(FRONTEND_DIR):

@@ -247,9 +247,14 @@ def delete_quiz(
     current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """DELETE /api/v1/quizzes/{quiz_id} - Deletes a quiz and its questions."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_DELETE.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.delete' required.")
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        is_allowed = (
+            user_role in ("teacher", "faculty", "hod", "admin", "super_admin")
+            or RBACService.has_permission(current_user, Permission.QUIZ_DELETE.value)
+        )
+        if not is_allowed:
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.delete' required.")
 
     # Clean up associated records
     db.execute(text("DELETE FROM question_options WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id = :id)"), {"id": quiz_id})
@@ -263,25 +268,76 @@ def delete_quiz(
 
 
 @router.put("/{quiz_id}/publish")
+@router.post("/{quiz_id}/publish")
 def publish_quiz(
     quiz_id: str,
+    action: Optional[str] = Query(None),
     current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """PUT /api/v1/quizzes/{quiz_id}/publish - Publishes or unpublishes quiz."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_PUBLISH.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.publish' required.")
-    q = db.execute(text("SELECT status, result_published FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
+    """PUT/POST /api/v1/quizzes/{quiz_id}/publish - Publishes or unpublishes quiz."""
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        is_allowed = (
+            user_role in ("teacher", "faculty", "hod", "admin", "super_admin")
+            or RBACService.has_permission(current_user, Permission.QUIZ_PUBLISH.value)
+        )
+        if not is_allowed:
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.publish' required.")
+
+    q = db.execute(text("SELECT id, title, class_id, duration_minutes, status, result_published FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
     if not q:
         return error_response("Quiz not found", 404)
 
-    curr_stat = (q[0] or "").lower()
-    is_pub = curr_stat in ("active", "published")
-    new_stat = "draft" if is_pub else "active"
+    curr_stat = (q._mapping.get("status") or "").lower()
+    is_currently_published = curr_stat in ("active", "published")
+
+    if action == "publish":
+        new_stat = "active"
+    elif action == "unpublish":
+        new_stat = "draft"
+    else:
+        new_stat = "draft" if is_currently_published else "active"
+
+    # Validate that quiz has at least 1 question before making it active
+    q_cnt = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id}).scalar() or 0
+    if new_stat == "active" and q_cnt == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot publish a quiz with 0 questions. Please add at least one question first."
+        )
 
     db.execute(text("UPDATE quizzes SET status = :s, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"s": new_stat, "id": quiz_id})
     db.commit()
-    return success_response({"id": quiz_id, "is_published": (new_stat == "active"), "status": new_stat}, f"Quiz status updated to '{new_stat}'")
+
+    # If publishing, push real-time assessment notification to the class
+    if new_stat == "active":
+        try:
+            cid = q._mapping.get("class_id")
+            c_info = db.execute(text("SELECT class_name FROM classes WHERE id = :cid"), {"cid": cid}).fetchone() if cid else None
+            c_name = c_info[0] if c_info else "Target Class"
+            nid = str(uuid.uuid4())
+            import json as _json
+            meta_json = _json.dumps({"class_id": str(cid) if cid else None, "class_name": c_name})
+            db.execute(text("""
+                INSERT INTO notifications (id, notification_type, title, message, entity_type, entity_id, metadata, created_at)
+                VALUES (:id, 'quiz', :title, :msg, 'quiz', :eid, :meta::jsonb, CURRENT_TIMESTAMP)
+            """), {
+                "id": nid,
+                "title": f"Quiz Published: {q._mapping.get('title')}",
+                "msg": f"A new quiz '{q._mapping.get('title')}' is now active for {c_name}. Duration: {q._mapping.get('duration_minutes', 30)} mins.",
+                "eid": quiz_id,
+                "meta": meta_json
+            })
+            db.commit()
+        except Exception:
+            db.rollback()
+    return success_response({
+        "id": quiz_id,
+        "is_published": (new_stat == "active"),
+        "status": new_stat,
+        "question_count": q_cnt
+    }, f"Quiz status updated to '{new_stat}'")
 
 
 @router.post("/{quiz_id}/close")
