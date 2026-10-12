@@ -271,38 +271,7 @@ logger.info(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
-<<<<<<< HEAD
-=======
 
-# Include modular routers under /api/v1
-try:
-    from backend.routes.admin import router as admin_router
-    from backend.routes.faculty import router as faculty_router
-    from backend.routes.attendance import router as attendance_router
-    from backend.routes.student import router as student_router
-    from backend.routes.syllabus import router as syllabus_router
-    from backend.routes.student_records import router as student_records_router
-    from backend.routes.notifications import router as notifications_router
-    from backend.routes.academic_wallet import router as academic_wallet_router
-    from backend.routes.management import router as management_router
-    app.include_router(admin_router, prefix="/api/v1")
-    app.include_router(faculty_router, prefix="/api/v1")
-    app.include_router(attendance_router, prefix="/api/v1")
-    app.include_router(student_router, prefix="/api/v1")
-    app.include_router(syllabus_router, prefix="/api/v1")
-    app.include_router(student_records_router, prefix="/api/v1")
-    app.include_router(notifications_router, prefix="/api/v1")
-    app.include_router(academic_wallet_router, prefix="/api/v1")
-    app.include_router(management_router, prefix="/api/v1")
-    logger.info("Modular routers (admin, faculty, attendance, student, syllabus, student_records, notifications, academic_wallet, management) included under /api/v1")
-except Exception as e:
-    logger.warning("Could not load some modular routers: %s", e)
-
-# ==============================================================================
-# 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
-# Serves the frontend directory so everything is available on port 8000!
-# ==============================================================================
->>>>>>> e196c6a98037ab5eb0af5cef4a5ffcc040010390
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
 

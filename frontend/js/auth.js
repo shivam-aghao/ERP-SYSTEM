@@ -47,6 +47,8 @@
      */
     login: async function (userId, password, roleHint, rememberMe) {
       var apiBase = getApiBase();
+      var rawUid = String(userId || '').trim();
+      var rawPwd = String(password || '');
       var payload = {
         user_id: rawUid,
         username: rawUid,
@@ -253,6 +255,21 @@
       window.verifiedUser = user;
       window.currentUser = user;
       window.activeUser = user;
+    },
+
+    /**
+     * Stores user profile and auth token in active browser storage
+     */
+    setSession: function (user, token) {
+      if (token) {
+        var storage = getStorage();
+        storage.setItem(STORAGE_ACCESS_TOKEN, token);
+        localStorage.setItem(STORAGE_ACCESS_TOKEN, token);
+        localStorage.setItem('ssgmce_token', token);
+      }
+      if (user) {
+        this.syncVerifiedSession(user);
+      }
     },
 
     /**
