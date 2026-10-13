@@ -181,9 +181,9 @@ class RBACService:
                 # Checks teacher_assignments or teacher_subjects or timetable
                 rows = db.execute(text("""
                     SELECT count(*) FROM teacher_assignments ta
-                    WHERE (ta.teacher_id::text = :tid OR ta.teacher_id = (SELECT id FROM teachers WHERE emp_code = :tcode LIMIT 1))
-                      AND (:cid IS NULL OR ta.class_id::text = :cid OR ta.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
-                      AND (:sid IS NULL OR ta.subject_id::text = :sid OR ta.subject_id = (SELECT id FROM subjects WHERE code = :sid LIMIT 1))
+                    WHERE (CAST(ta.teacher_id AS TEXT) = :tid OR ta.teacher_id = (SELECT id FROM teachers WHERE emp_code = :tcode LIMIT 1))
+                      AND (:cid IS NULL OR CAST(ta.class_id AS TEXT) = :cid OR ta.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
+                      AND (:sid IS NULL OR CAST(ta.subject_id AS TEXT) = :sid OR ta.subject_id = (SELECT id FROM subjects WHERE code = :sid LIMIT 1))
                 """), {
                     "tid": effective_user.id,
                     "tcode": effective_user.identifier,
@@ -196,8 +196,8 @@ class RBACService:
                     # Check fallback: check if teacher is assigned to class in classes or timetable
                     tt_count = db.execute(text("""
                         SELECT count(*) FROM timetable_slots ts
-                        WHERE (ts.faculty_emp_code = :tcode OR ts.faculty_id::text = :tid)
-                          AND (:cid IS NULL OR ts.class_id::text = :cid OR ts.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
+                        WHERE (ts.faculty_emp_code = :tcode OR CAST(ts.faculty_id AS TEXT) = :tid)
+                          AND (:cid IS NULL OR CAST(ts.class_id AS TEXT) = :cid OR ts.class_id = (SELECT id FROM classes WHERE class_name = :cid LIMIT 1))
                     """), {"tid": effective_user.id, "tcode": effective_user.identifier, "cid": class_id}).scalar() or 0
                     
                     if tt_count == 0:

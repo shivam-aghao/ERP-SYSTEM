@@ -46,20 +46,20 @@ def resolve_student_code(
 def get_all_students(
     class_name: Optional[str] = Query(None),
     class_id: Optional[str] = Query(None),
+    class_code: Optional[str] = Query(None),
+    classCode: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
     GET /api/v1/students
     List enrolled students with optional class filter.
     """
+    target = class_name or class_id or class_code or classCode
     clause = ""
     params = {}
-    if class_id:
-        clause = "WHERE s.class_id::text = :cid"
-        params["cid"] = class_id
-    elif class_name:
-        clause = "WHERE c.class_name = :cname OR s.class_name = :cname"
-        params["cname"] = class_name
+    if target:
+        clause = "WHERE c.class_name = :target OR s.class_name = :target OR CAST(s.class_id AS TEXT) = :target OR c.id = :target"
+        params["target"] = target
 
     rows = db.execute(text(f"""
         SELECT s.*, c.class_name, c.division
@@ -102,7 +102,7 @@ def get_students_by_class(class_id: str, db: Session = Depends(get_db)):
         SELECT s.*, COALESCE(c.class_name, s.class_name) as class_name, c.division
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE s.class_id::text = :cid OR c.class_name = :cid OR s.class_name = :cid
+        WHERE CAST(s.class_id AS TEXT) = :cid OR c.class_name = :cid OR s.class_name = :cid
         ORDER BY s.roll_no ASC
     """), {"cid": class_id}).fetchall()
     data = [dict(r._mapping) for r in rows]

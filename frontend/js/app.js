@@ -15,14 +15,21 @@ const TeacherApp = {
     try { this.renderHeaderProfile(); } catch (e) { console.warn('renderHeaderProfile:', e); }
     try { this.renderDynamicDates(); } catch (e) { console.warn('renderDynamicDates:', e); }
     try { this.renderDashboardData(); } catch (e) { console.warn('renderDashboardData:', e); }
+    try { this.renderClassesView(); } catch (e) { console.warn('renderClassesView:', e); }
     try { this.renderTimetableView(); } catch (e) { console.warn('renderTimetableView:', e); }
     try { this.renderStudentsView(); } catch (e) { console.warn('renderStudentsView:', e); }
     try { this.renderSyllabusView(); } catch (e) { console.warn('renderSyllabusView:', e); }
     try { this.renderResultsView(); } catch (e) { console.warn('renderResultsView:', e); }
+<<<<<<< HEAD
     try { this.renderLeaveView(); } catch (e) { console.warn('renderLeaveView:', e); }
+=======
+    try { this.renderBasicProfileView(); } catch (e) { console.warn('renderBasicProfileView:', e); }
+    try { this.renderInformationView(); } catch (e) { console.warn('renderInformationView:', e); }
+>>>>>>> 7b58cb3 (Update ERP system)
     try { this.renderNotificationsList(); } catch (e) { console.warn('renderNotificationsList:', e); }
     try { this.initLucideIcons(); } catch (e) { console.warn('initLucideIcons:', e); }
     try { this.initHashRouting(); } catch (e) { console.warn('initHashRouting:', e); }
+    try { this.loadDynamicData(); } catch (e) { console.warn('loadDynamicData:', e); }
     if (typeof window.AttendanceMarkingManager !== 'undefined') {
       try { window.AttendanceMarkingManager.init(); } catch (e) {}
     }
@@ -358,16 +365,28 @@ const TeacherApp = {
     const teacher = this.getLoggedInTeacher();
     if (!teacher) return;
 
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const profile = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getProfileData === 'function')
+      ? TeacherERPData.getProfileData(facultyId)
+      : null;
+
+    const displayName = (profile && profile.name) || teacher.name || "Faculty Member";
     let initials = teacher.avatarInitials;
-    if (!initials && teacher.name) {
-      const cleanName = teacher.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
+    if (!initials && displayName) {
+      const cleanName = displayName.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
       const parts = cleanName.split(/\s+/);
       initials = parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
     }
 
+    const photoUrl = (profile && (profile.profileImageUrl || profile.profilePhoto)) || teacher.profileImageUrl || teacher.profilePhoto || null;
+
     const avatarElem = document.getElementById("header-profile-avatar");
     if (avatarElem) {
-      avatarElem.innerHTML = `<span>${initials || "FM"}</span>`;
+      if (photoUrl) {
+        avatarElem.innerHTML = `<img src="${photoUrl}" alt="${displayName}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;" onerror="this.onerror=null; this.parentElement.innerHTML='<span>${initials || 'FM'}</span>';">`;
+      } else {
+        avatarElem.innerHTML = `<span>${initials || "FM"}</span>`;
+      }
     }
 
     const nameElem = document.getElementById("header-profile-name");
@@ -707,7 +726,7 @@ const TeacherApp = {
           profView.classList.add("active");
         }
         setHeaderBadge("Faculty Profile");
-        this.renderHeaderProfile();
+        this.renderBasicProfileView();
         break;
       }
       case 'academics':
@@ -788,6 +807,7 @@ const TeacherApp = {
       case 'classes':
         document.getElementById("classes-view").style.display = "block";
         setHeaderBadge("Assigned Classes");
+        this.renderClassesView();
         break;
       case 'students':
         document.getElementById("students-view").style.display = "block";
@@ -820,13 +840,13 @@ const TeacherApp = {
         break;
       }
       case 'information': {
-        const profView = document.getElementById("profile-view");
-        if (profView) {
-          profView.style.display = "block";
-          profView.classList.add("active");
+        const infoView = document.getElementById("information-view");
+        if (infoView) {
+          infoView.style.display = "block";
+          infoView.classList.add("active");
         }
-        setHeaderBadge("Faculty Information");
-        this.renderHeaderProfile();
+        setHeaderBadge("Faculty Information & Portfolio");
+        this.renderInformationView();
         break;
       }
       default:
@@ -835,6 +855,146 @@ const TeacherApp = {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.initLucideIcons();
+  },
+
+  // ----------------------------------------------------
+  // DYNAMIC BACKEND SYNCHRONIZATION
+  // ----------------------------------------------------
+  async loadDynamicData() {
+    const teacher = (typeof this.getLoggedInTeacher === 'function') ? this.getLoggedInTeacher() : null;
+    const empCode = teacher?.employeeId || teacher?.empCode || (typeof TeacherERPData !== 'undefined' && TeacherERPData.getActiveTeacherEmpCode ? TeacherERPData.getActiveTeacherEmpCode() : 'EMP-CSE-1001');
+
+    try {
+      // 1. Fetch live teacher dashboard data (classes, stats, today's schedule)
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/teachers/dashboard?identifier=${encodeURIComponent(empCode)}`);
+      if (res.ok) {
+        const json = await res.json();
+        const data = json.data;
+        if (data && data.stats) {
+          if (TeacherERPData) {
+            TeacherERPData.stats = {
+              totalClasses: data.stats.totalClasses || 2,
+              todayClasses: data.stats.todayClasses || 0,
+              totalStudents: data.stats.totalStudents || 159,
+              attendancePending: data.stats.attendancePending || 0,
+              attendancePendingCount: data.stats.attendancePending || 0,
+              attendanceCompletedCount: data.stats.attendanceCompleted || 0,
+              attendancePercent: data.stats.todayClasses > 0 
+                ? Math.round(((data.stats.attendanceCompleted || 0) / data.stats.todayClasses) * 100) 
+                : 100
+            };
+
+            if (Array.isArray(data.classes) && data.classes.length > 0) {
+              TeacherERPData.assignedClasses = data.classes.map(c => ({
+                department: c.department || 'Computer Science & Engineering',
+                classCode: c.class_code || c.class_name,
+                subject: c.subject || 'Curriculum Course',
+                studentsCount: c.students_count || 60,
+                venue: c.venue || 'Lecture Hall',
+                attendanceStatus: c.attendance_status || 'Pending'
+              }));
+            }
+
+            if (Array.isArray(data.today_schedule) && data.today_schedule.length > 0) {
+              TeacherERPData.todayClasses = data.today_schedule.map((item, idx) => ({
+                id: item.id || `cls-${idx}`,
+                time: item.period_time || '10:00 AM - 11:00 AM',
+                subject: item.subject_name || item.course_name || 'Subject',
+                classCode: item.class_code || item.class_id,
+                department: 'Computer Science',
+                room: item.room || item.venue || 'Classroom',
+                attendanceStatus: item.att_label?.includes('Completed') ? 'Completed' : 'Pending',
+                isCurrent: idx === 0
+              }));
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('loadDynamicData teacher dashboard:', err);
+    }
+
+    // 2. Fetch live notifications
+    try {
+      if (TeacherERPData && typeof TeacherERPData.loadLiveNotifications === 'function') {
+        await TeacherERPData.loadLiveNotifications();
+      }
+    } catch (e) {
+      console.warn('loadLiveNotifications:', e);
+    }
+
+    // 3. Pre-fetch students for first assigned class
+    try {
+      const firstClass = (TeacherERPData && TeacherERPData.assignedClasses && TeacherERPData.assignedClasses[0]?.classCode) || '2R1';
+      if (TeacherERPData && typeof TeacherERPData.loadLiveStudents === 'function') {
+        await TeacherERPData.loadLiveStudents(firstClass);
+      }
+    } catch (e) {}
+
+    // 4. Refresh active views
+    try { this.renderDashboardData(); } catch (e) {}
+    try { this.renderClassesView(); } catch (e) {}
+    try { this.renderNotificationsList(); } catch (e) {}
+    try { this.initLucideIcons(); } catch (e) {}
+  },
+
+  // ----------------------------------------------------
+  // CLASSES MODULE VIEW
+  // ----------------------------------------------------
+  renderClassesView() {
+    const grid = document.getElementById("all-classes-grid");
+    if (!grid) return;
+
+    const classesList = (TeacherERPData && TeacherERPData.assignedClasses) || [];
+    if (classesList.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; padding:36px; text-align:center; color:var(--text-muted);">
+          <i data-lucide="book-x" style="width:40px;height:40px; opacity:0.4; margin-bottom:12px;"></i>
+          <h4 style="margin:0 0 6px; color:var(--dark-navy);">No Classes Assigned</h4>
+          <p style="margin:0; font-size:13px;">No academic teaching allocations found for the active semester.</p>
+        </div>
+      `;
+      this.initLucideIcons();
+      return;
+    }
+
+    grid.innerHTML = classesList.map(cls => `
+      <div class="class-card" style="cursor:default;">
+        <div class="class-card-top">
+          <span class="dept-badge">${cls.department || 'Computer Science & Engineering'}</span>
+          <span class="badge ${cls.attendanceStatus === 'Completed' ? 'badge-completed' : 'badge-pending'}">
+            <i data-lucide="${cls.attendanceStatus === 'Completed' ? 'check-circle-2' : 'clock'}" style="width:12px;height:12px;"></i>
+            ${cls.attendanceStatus}
+          </span>
+        </div>
+
+        <div class="class-card-middle" style="margin:14px 0;">
+          <div class="class-name-large" style="font-size:22px; font-weight:800; color:var(--dark-navy);">${cls.classCode}</div>
+          <div class="class-subject-name" style="font-size:14px; font-weight:600; color:var(--primary-blue); margin-top:2px;">${cls.subject}</div>
+        </div>
+
+        <div class="class-card-bottom" style="margin-bottom:16px;">
+          <div class="class-students-count">
+            <i data-lucide="users" style="width:14px;height:14px;"></i>
+            ${cls.studentsCount} Enrolled Students
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">
+            <i data-lucide="map-pin" style="width:12px;height:12px; display:inline-block; vertical-align:middle;"></i> ${cls.venue || 'Lecture Hall'}
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; border-top:1px solid #F1F5F9; padding-top:14px;">
+          <button class="quick-action-btn primary" style="font-size:12px; padding:7px 10px; justify-content:center;" onclick="TeacherApp.openAttendanceForClass('${cls.classCode}', '${cls.subject}')">
+            <i data-lucide="check-square" style="width:13px;height:13px;"></i> Attendance
+          </button>
+          <button class="quick-action-btn secondary" style="font-size:12px; padding:7px 10px; justify-content:center;" onclick="TeacherApp.switchView('students'); TeacherApp.changeRosterClass('${cls.classCode}');">
+            <i data-lucide="users" style="width:13px;height:13px;"></i> View Roster
+          </button>
+        </div>
+      </div>
+    `).join('');
+
     this.initLucideIcons();
   },
 
@@ -1196,7 +1356,11 @@ const TeacherApp = {
         const sub = rawHash.includes('roster') ? 'roster' : 'marking';
         this.switchView('attendance', sub);
       } else {
+<<<<<<< HEAD
         const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings', 'notifications', 'information', 'leave'];
+=======
+        const validViews = ['dashboard', 'profile', 'information', 'leave', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
+>>>>>>> 7b58cb3 (Update ERP system)
         if (validViews.includes(rawHash)) {
           this.switchView(rawHash);
         }
@@ -1212,6 +1376,7 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
+<<<<<<< HEAD
   // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
   // ----------------------------------------------------
   async renderNotificationsList() {
@@ -1275,6 +1440,87 @@ const TeacherApp = {
                   <span class="activity-time" style="font-size:12px; color:#94A3B8;">${timeText}</span>
                 </div>
                 <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
+=======
+  // NOTIFICATIONS HUB & ANNOUNCEMENT BROADCASTING
+  // ----------------------------------------------------
+  renderNotificationsList() {
+    const list = (TeacherERPData && TeacherERPData.notifications) || [];
+    const unreadCount = list.filter(n => n.unread).length;
+
+    // 1. Update unread badge counter in header
+    const badge = document.getElementById("notif-badge-count");
+    if (badge) {
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.style.display = "inline-flex";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
+    // 2. Header dropdown list (#notification-items-list)
+    const container = document.getElementById("notification-items-list");
+    if (container) {
+      if (list.length === 0) {
+        container.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No notifications at this time</div>`;
+      } else {
+        container.innerHTML = list.slice(0, 8).map(notif => `
+          <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
+            <div class="notif-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EBF3FC'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
+              <i data-lucide="${notif.icon || 'bell'}" style="width:16px;height:16px;"></i>
+            </div>
+            <div class="notif-content">
+              <div class="notif-title">${notif.title}</div>
+              <div class="notif-desc">${notif.description}</div>
+              <div class="notif-time">${notif.time}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 3. Full Notifications Hub View (#notifications-full-list)
+    const fullContainer = document.getElementById("notifications-full-list");
+    if (fullContainer) {
+      if (list.length === 0) {
+        fullContainer.innerHTML = `
+          <div style="padding:48px; text-align:center; color:var(--text-muted);">
+            <i data-lucide="bell-off" style="width:40px;height:40px; opacity:0.4; margin-bottom:12px;"></i>
+            <h4 style="margin:0 0 6px 0; color:var(--dark-navy);">No Circulars or Notifications</h4>
+            <p style="margin:0; font-size:13px;">You have no active departmental notices or class alerts.</p>
+          </div>
+        `;
+      } else {
+        fullContainer.innerHTML = list.map(notif => {
+          const priorityBadge = notif.priority === 'urgent'
+            ? `<span class="badge" style="background:#FEE2E2; color:#DC2626; font-size:11px; font-weight:700;">URGENT</span>`
+            : (notif.priority === 'high'
+              ? `<span class="badge" style="background:#FEF3C7; color:#D97706; font-size:11px; font-weight:700;">HIGH PRIORITY</span>`
+              : `<span class="badge" style="background:#E2E8F0; color:#475569; font-size:11px; font-weight:700;">NORMAL</span>`);
+
+          return `
+            <div class="activity-item" style="padding:16px; border-bottom:1px solid #F1F5F9; background:${notif.unread ? '#F8FAFC' : '#ffffff'};">
+              <div class="activity-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EFF6FF'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
+                <i data-lucide="${notif.icon || 'bell'}" style="width:18px;height:18px;"></i>
+              </div>
+              <div class="activity-content" style="flex:1;">
+                <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="activity-title" style="font-size:14px; font-weight:700; color:var(--dark-navy);">${notif.title}</span>
+                    ${priorityBadge}
+                    ${notif.unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#00A6D6;display:inline-block;" title="Unread"></span>' : ''}
+                  </div>
+                  <span class="activity-time" style="font-size:12px; color:var(--text-muted);">${notif.time}</span>
+                </div>
+                <div class="activity-desc" style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:8px;">${notif.description}</div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                  ${notif.unread ? `
+                    <button type="button" style="background:none; border:none; color:var(--primary-blue); font-size:12px; font-weight:600; cursor:pointer; padding:0;" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
+                      Mark as Read ✓
+                    </button>
+                  ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
+                </div>
+>>>>>>> 7b58cb3 (Update ERP system)
               </div>
             </div>
           `;
@@ -1282,6 +1528,7 @@ const TeacherApp = {
       }
     }
 
+<<<<<<< HEAD
     if (container && notifs) {
       container.innerHTML = notifs.slice(0, 5).map(notif => `
         <div class="notification-item ${!notif.is_read ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id || ''}')">
@@ -1380,6 +1627,100 @@ const TeacherApp = {
         this.renderNotificationsList();
         this.showToast(`Viewing: ${notif.title}`);
       }
+=======
+    this.initLucideIcons();
+  },
+
+  async handleNotificationClick(id) {
+    const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
+    if (notif) {
+      notif.unread = false;
+      try {
+        if (window.TeacherAPI && typeof window.TeacherAPI.markNotificationRead === 'function') {
+          await window.TeacherAPI.markNotificationRead(id);
+        }
+      } catch (_) {}
+      this.renderNotificationsList();
+      this.showToast(`Viewing: ${notif.title}`);
+>>>>>>> 7b58cb3 (Update ERP system)
+    }
+  },
+
+  async dispatchClassAnnouncement() {
+    const targetClass = document.getElementById("teacherNotifClass")?.value || "2R1";
+    const priority = document.getElementById("teacherNotifPriority")?.value || "normal";
+    const title = (document.getElementById("teacherNotifTitle")?.value || "").trim();
+    const msg = (document.getElementById("teacherNotifMsg")?.value || "").trim();
+
+    if (!title || !msg) {
+      if (typeof this.showToast === 'function') {
+        this.showToast('Please provide both headline and message details.', 'error');
+      }
+      return;
+    }
+
+    const teacher = (typeof this.getLoggedInTeacher === 'function') ? this.getLoggedInTeacher() : null;
+    const empCode = teacher?.employeeId || teacher?.empCode || 'EMP-CSE-1001';
+
+    try {
+      if (window.TeacherAPI && typeof window.TeacherAPI.createNotification === 'function') {
+        await window.TeacherAPI.createNotification({
+          notification_type: 'announcement',
+          title: `[Class ${targetClass}] ${title}`,
+          message: msg,
+          priority: priority,
+          target_type: 'class',
+          target_id: targetClass,
+          sender_id: empCode
+        });
+      }
+    } catch (e) {
+      console.warn('API announcement error:', e);
+    }
+
+    // Add directly to local list for immediate visual responsiveness
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      title: `[Class ${targetClass}] ${title}`,
+      description: msg,
+      time: 'Just now',
+      icon: priority === 'urgent' ? 'alert-triangle' : 'bell',
+      priority: priority,
+      unread: false
+    };
+
+    if (TeacherERPData && TeacherERPData.notifications) {
+      TeacherERPData.notifications.unshift(newNotif);
+    }
+
+    // Reset form & hide composer
+    const composer = document.getElementById("teacherCreateNotifCard");
+    if (composer) composer.style.display = "none";
+    const tInput = document.getElementById("teacherNotifTitle");
+    if (tInput) tInput.value = "";
+    const mInput = document.getElementById("teacherNotifMsg");
+    if (mInput) mInput.value = "";
+
+    this.renderNotificationsList();
+    if (typeof this.showToast === 'function') {
+      this.showToast(`Notice successfully broadcast to Class ${targetClass}!`, 'success');
+    }
+  },
+
+  async markAllTeacherNotificationsRead() {
+    try {
+      if (window.TeacherAPI && typeof window.TeacherAPI.markAllNotificationsRead === 'function') {
+        await window.TeacherAPI.markAllNotificationsRead();
+      }
+    } catch (e) {}
+
+    if (TeacherERPData && TeacherERPData.notifications) {
+      TeacherERPData.notifications.forEach(n => { n.unread = false; });
+    }
+
+    this.renderNotificationsList();
+    if (typeof this.showToast === 'function') {
+      this.showToast('All faculty circulars marked as read.', 'info');
     }
   },
 
@@ -1549,78 +1890,139 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-  // STUDENTS ROSTER VIEW
+  // STUDENTS ROSTER VIEW (DYNAMIC & DATABASE-CONNECTED)
   // ----------------------------------------------------
-  renderStudentsView() {
+  _activeRosterClass: '2R1',
+
+  async renderStudentsView() {
     const container = document.getElementById("students-content");
     if (!container) return;
 
-    const allStudents = (TeacherERPData && TeacherERPData.students && TeacherERPData.students["2R1"]) 
-      || (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass("2R1") : []) 
-      || [];
+    const assigned = (TeacherERPData && TeacherERPData.assignedClasses) || [];
+    let classCodes = Array.from(new Set(assigned.map(c => c.classCode).filter(Boolean)));
+    if (classCodes.length === 0) classCodes = ['2R1', '2R2', '3R', '4R'];
+
+    if (!this._activeRosterClass || !classCodes.includes(this._activeRosterClass)) {
+      this._activeRosterClass = classCodes[0] || '2R1';
+    }
+
+    // Get or load students for active class
+    let students = (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass(this._activeRosterClass) : []);
+    if (!students || students.length === 0) {
+      if (TeacherERPData && typeof TeacherERPData.loadLiveStudents === 'function') {
+        students = await TeacherERPData.loadLiveStudents(this._activeRosterClass);
+      }
+    }
+
+    const currentSubject = (assigned.find(a => a.classCode === this._activeRosterClass)?.subject) || 'Curriculum Course';
 
     container.innerHTML = `
-      <div class="card" style="padding:20px;">
-        <div class="students-roster-controls">
-          <div style="display:flex; gap:12px; align-items:center;">
-            <input type="text" id="roster-filter-input" class="roster-search-input" 
-                   placeholder="Filter student name or roll..." oninput="TeacherApp.filterStudentRoster(this.value)">
-            <select style="padding:8px 12px; border:1px solid var(--border-light); border-radius:var(--radius-sm);" 
-                    onchange="TeacherApp.changeRosterClass(this.value)">
-              <option value="2R1">CSE 2R1 (Data Structures)</option>
-              <option value="2R2">CSE 2R2 (Java Programming)</option>
-              <option value="3R">CSE 3R (Database Management)</option>
-            </select>
+      <div class="card" style="padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;">
+          <div>
+            <h3 style="font-size:17px; margin:0; color:var(--dark-navy); font-weight:700;">Authorized Student Directory</h3>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0;">Official enrolled students, institutional emails, and real-time attendance compliance from SSGMCE database.</p>
           </div>
-          <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceModule()">
-            <i data-lucide="check-square" style="width:14px;height:14px;"></i> Take Attendance for Batch
-          </button>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceForClass('${this._activeRosterClass}', '${currentSubject}')">
+              <i data-lucide="check-square" style="width:14px;height:14px;"></i> Mark Attendance for ${this._activeRosterClass}
+            </button>
+          </div>
         </div>
 
-        <table class="roster-table" id="students-roster-table">
-          <thead>
-            <tr>
-              <th>Roll No</th>
-              <th>Student Full Name</th>
-              <th>Institute Email</th>
-              <th>Attendance Rate</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="roster-table-body">
-            ${this.generateRosterRows(allStudents)}
-          </tbody>
-        </table>
+        <div class="students-roster-controls" style="margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; gap:12px; align-items:center; flex:1; max-width:650px;">
+            <input type="text" id="roster-filter-input" class="roster-search-input" 
+                   placeholder="Search student by name, roll no, or code..." oninput="TeacherApp.filterStudentRoster(this.value)"
+                   style="flex:1; padding:9px 14px; border:1px solid var(--border-light); border-radius:6px; font-size:13px;">
+            <select id="roster-class-select" style="padding:9px 14px; border:1px solid var(--border-light); border-radius:6px; font-size:13px; font-weight:600; color:var(--dark-navy); background:#F8FAFC;" 
+                    onchange="TeacherApp.changeRosterClass(this.value)">
+              ${classCodes.map(c => {
+                const sub = (assigned.find(a => a.classCode === c)?.subject) || 'Curriculum Course';
+                return `<option value="${c}" ${c === this._activeRosterClass ? 'selected' : ''}>Class ${c} (${sub})</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <div style="font-size:13px; font-weight:700; color:var(--primary-blue);" id="roster-student-count-badge">
+            ${students.length} Students Enrolled
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="roster-table" id="students-roster-table">
+            <thead>
+              <tr>
+                <th style="width:90px;">Roll No</th>
+                <th>Student Full Name</th>
+                <th>Student Code</th>
+                <th>Institute Email</th>
+                <th style="width:160px;">Attendance Rate</th>
+                <th style="width:110px;">Status</th>
+                <th style="width:110px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="roster-table-body">
+              ${this.generateRosterRows(students)}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
+
+    this.initLucideIcons();
+  },
+
+  async changeRosterClass(classCode) {
+    this._activeRosterClass = classCode;
+    const select = document.getElementById("roster-class-select");
+    if (select && select.value !== classCode) select.value = classCode;
+
+    let students = (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass(classCode) : []);
+    if (!students || students.length === 0) {
+      if (TeacherERPData && typeof TeacherERPData.loadLiveStudents === 'function') {
+        const tbody = document.getElementById("roster-table-body");
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">Loading students from database...</td></tr>`;
+        students = await TeacherERPData.loadLiveStudents(classCode);
+      }
+    }
+
+    const tbody = document.getElementById("roster-table-body");
+    if (tbody) {
+      tbody.innerHTML = this.generateRosterRows(students);
+    }
+    const badge = document.getElementById("roster-student-count-badge");
+    if (badge) {
+      badge.textContent = `${students.length} Students Enrolled`;
+    }
+    this.initLucideIcons();
   },
 
   generateRosterRows(students) {
     if (!Array.isArray(students) || students.length === 0) {
-      return `<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-muted);">No student records found in database</td></tr>`;
+      return `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No student records found in database for this class</td></tr>`;
     }
     return students.map(st => `
       <tr>
         <td style="font-weight:700; color:var(--primary-blue);">ROLL ${st.rollNo}</td>
         <td style="font-weight:600; color:var(--dark-navy);">${st.name}</td>
-        <td style="color:var(--text-muted);">${st.email}</td>
+        <td style="color:#64748B; font-family:monospace; font-size:12px;">${st.studentCode || '--'}</td>
+        <td style="color:var(--text-muted); font-size:12.5px;">${st.email}</td>
         <td>
           <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:70px; height:6px; background:#E2E8F0; border-radius:10px; overflow:hidden;">
-              <div style="width:${st.attendance}%; height:100%; background:${st.attendance >= 85 ? 'var(--primary-blue)' : 'var(--warning)'};"></div>
+            <div style="flex:1; height:6px; background:#E2E8F0; border-radius:10px; overflow:hidden;">
+              <div style="width:${st.attendance}%; height:100%; background:${st.attendance >= 75 ? 'var(--primary-blue)' : 'var(--warning)'};"></div>
             </div>
-            <span style="font-weight:700; font-size:12px;">${st.attendance}%</span>
+            <span style="font-weight:700; font-size:12px; min-width:32px;">${st.attendance}%</span>
           </div>
         </td>
         <td>
-          <span class="badge ${st.attendance >= 85 ? 'badge-completed' : 'badge-pending'}">
-            ${st.attendance >= 85 ? 'Eligible' : 'Low Attendance'}
+          <span class="badge ${st.attendance >= 75 ? 'badge-completed' : 'badge-pending'}">
+            ${st.attendance >= 75 ? 'Eligible' : 'Low Att.'}
           </span>
         </td>
-        <td>
-          <button style="font-size:12px; color:var(--primary-blue); font-weight:600;" 
-                  onclick="TeacherApp.showToast('Student academic record opened for ${st.name}')">
+        <td style="text-align:center;">
+          <button style="font-size:12px; color:var(--primary-blue); font-weight:600; background:none; border:none; cursor:pointer;" 
+                  onclick="TeacherApp.showToast('Student profile: ${st.name} (${st.studentCode || st.rollNo})')">
             View Details
           </button>
         </td>
@@ -1629,7 +2031,7 @@ const TeacherApp = {
   },
 
   filterStudentRoster(query) {
-    const q = query.toLowerCase();
+    const q = (query || '').toLowerCase().trim();
     const rows = document.querySelectorAll("#roster-table-body tr");
     rows.forEach(row => {
       const text = row.textContent.toLowerCase();
@@ -1637,20 +2039,531 @@ const TeacherApp = {
     });
   },
 
-  changeRosterClass(classCode) {
-    const list = TeacherERPData.students[classCode] || TeacherERPData.students["2R1"];
-    const tbody = document.getElementById("roster-table-body");
-    if (tbody) {
-      tbody.innerHTML = this.generateRosterRows(list);
-    }
-  },
+  // ----------------------------------------------------
+  // ----------------------------------------------------
+  // DYNAMIC SYLLABUS COVERAGE & LECTURE TRACKING MODULE
+  // ----------------------------------------------------
+  selectedSyllabusSubjectId: null,
 
-  // ----------------------------------------------------
-  // DYNAMIC SYLLABUS COVERAGE TRACKING MODULE
-  // ----------------------------------------------------
   selectSyllabusSubject(subjectId) {
     this.selectedSyllabusSubjectId = subjectId;
     this.renderSyllabusView();
+  },
+
+
+  _addLectureModalState: null,
+  syllabusActiveTab: 'curriculum',
+  syllabusHistorySearch: '',
+
+  switchSyllabusTab(tab) {
+    this.syllabusActiveTab = tab;
+    this.renderSyllabusView();
+  },
+
+  filterSyllabusHistory(query) {
+    this.syllabusHistorySearch = query;
+    this.renderSyllabusView();
+  },
+
+  openAddLectureModal(subjectId, unitId, topicId) {
+    const all = TeacherERPData.loadSyllabusData();
+    const subject = all.find(s => s.subjectId === subjectId);
+    const unit = subject?.units?.find(u => u.unitId === unitId);
+    const topic = unit?.topics?.find(t => t.topicId === topicId);
+    if (!topic) return;
+
+    const nextLectureNo = (topic.lectures ? topic.lectures.length : 0) + 1;
+    const today = (typeof AcademicDateUtils !== 'undefined' && AcademicDateUtils.getTodayISO)
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+
+    const desc = topic.topicDescription || topic.topicName;
+    const suggestions = desc
+      .split(/[,;•\n]/)
+      .map(s => s.trim())
+      .filter(s => s.length > 2 && !s.toLowerCase().startsWith('such as') && !s.toLowerCase().startsWith('e.g.'));
+
+    const initialTag = suggestions.length > 0 ? (suggestions[(nextLectureNo - 1) % suggestions.length] || topic.topicName) : topic.topicName;
+
+    this._addLectureModalState = {
+      subjectId,
+      unitId,
+      topicId,
+      subjectName: subject.subjectName,
+      unitName: unit.unitName,
+      topicName: topic.topicName,
+      nextLectureNo,
+      suggestions,
+      tags: [initialTag]
+    };
+
+    let modalEl = document.getElementById("addLectureModal");
+    if (!modalEl) {
+      modalEl = document.createElement("div");
+      modalEl.id = "addLectureModal";
+      document.body.appendChild(modalEl);
+    }
+
+    modalEl.innerHTML = `
+      <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(11,31,58,0.7); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:999999; padding:16px;">
+        <div style="background:#fff; border-radius:14px; width:100%; max-width:640px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(0,0,0,0.25); overflow:hidden;">
+          <!-- Header -->
+          <div style="background:#0B1F3A; color:#fff; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span style="background:#0B5CAD; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:4px; letter-spacing:0.5px;">LECTURE ${nextLectureNo}</span>
+                <h3 style="margin:0; font-size:17px; font-weight:800; color:#fff;">Record New Lecture</h3>
+              </div>
+              <p style="margin:0; font-size:12.5px; color:#94A3B8;">
+                <strong>${subject.subjectName}</strong> • ${unit.unitName.split(':')[0]} • <strong>${topic.topicName}</strong>
+              </p>
+            </div>
+            <button type="button" onclick="TeacherApp.closeAddLectureModal()" style="background:transparent; border:none; color:#94A3B8; font-size:22px; cursor:pointer; line-height:1;">✕</button>
+          </div>
+
+          <!-- Body -->
+          <div style="flex:1; overflow-y:auto; padding:22px 24px;">
+            <!-- Date & Time Slot -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:18px;">
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Date of Lecture *</label>
+                <input type="date" id="addLectureDate" value="${today}" style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:13px; color:#0B1F3A; box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Class Time Slot</label>
+                <select id="addLectureTimeSlot" style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:13px; color:#0B1F3A; background:#fff; box-sizing:border-box;">
+                  <option value="09:00 - 10:30 AM">09:00 - 10:30 AM (Slot 1)</option>
+                  <option value="11:00 - 12:30 PM">11:00 - 12:30 PM (Slot 2)</option>
+                  <option value="01:15 - 02:15 PM">01:15 - 02:15 PM (Slot 3)</option>
+                  <option value="02:15 - 03:15 PM">02:15 - 03:15 PM (Slot 4)</option>
+                  <option value="03:30 - 05:00 PM">03:30 - 05:00 PM (Slot 5)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Topics Covered Tags -->
+            <div style="margin-bottom:18px;">
+              <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Topics Covered in This Lecture *</label>
+              <p style="margin:0 0 8px 0; font-size:11.5px; color:#64748B;">
+                Specify concepts/modules delivered. Type and press <strong>Enter</strong> or click <strong>+ Add Topic</strong>.
+              </p>
+              <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="addLectureTagInput" placeholder="e.g., Row-Major Ordering, Base Address calculation..." onkeydown="if(event.key==='Enter'){event.preventDefault();TeacherApp.addModalLectureTag();}" style="flex:1; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:13px; box-sizing:border-box;">
+                <button type="button" onclick="TeacherApp.addModalLectureTag()" style="background:#0B5CAD; color:#fff; border:none; padding:9px 18px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer;">
+                  + Add Topic
+                </button>
+              </div>
+
+              <!-- Tags container -->
+              <div id="addLectureTagsList" style="min-height:44px; padding:8px 12px; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+              </div>
+
+              <!-- Suggestions -->
+              ${suggestions.length > 0 ? `
+                <div style="margin-top:8px;">
+                  <span style="font-size:11px; color:#64748B; font-weight:600;">Quick add from curriculum:</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+                    ${suggestions.slice(0, 4).map(s => `
+                      <button type="button" onclick="TeacherApp.selectModalSuggestion('${s.replace(/'/g, "\\'")}')" style="background:#fff; border:1px solid #CBD5E1; border-radius:12px; padding:3px 8px; font-size:11px; color:#475569; cursor:pointer; font-weight:600;">
+                        + ${s}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Notes -->
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">Lecture Delivery Notes (Optional)</label>
+              <textarea id="addLectureNotes" rows="3" placeholder="e.g. Completed slide deck 4, student exercise assigned, homework assigned." style="width:100%; padding:9px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:12.5px; color:#0B1F3A; box-sizing:border-box; resize:vertical;"></textarea>
+            </div>
+
+            <!-- Notice -->
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; padding:10px 14px; font-size:12px; color:#166534; display:flex; align-items:center; gap:8px;">
+              <span>💡</span>
+              <span>Once this lecture is saved, student attendance can be marked immediately from the curriculum card or history log.</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding:14px 24px; border-top:1px solid #E2E8F0; display:flex; justify-content:flex-end; gap:12px; background:#F8FAFC;">
+            <button type="button" onclick="TeacherApp.closeAddLectureModal()" style="background:#fff; color:#64748B; border:1px solid #CBD5E1; padding:8px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">
+              Cancel
+            </button>
+            <button type="button" onclick="TeacherApp.submitAddLecture('${subjectId}', '${unitId}', '${topicId}')" style="background:#0B5CAD; color:#fff; border:none; padding:8px 22px; border-radius:6px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(11,92,173,0.25);">
+              + Record &amp; Add Lecture
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.renderModalTagsList();
+  },
+
+  renderModalTagsList() {
+    const listEl = document.getElementById("addLectureTagsList");
+    if (!listEl || !this._addLectureModalState) return;
+    const tags = this._addLectureModalState.tags || [];
+
+    if (tags.length === 0) {
+      listEl.innerHTML = '<span style="font-size:12px; color:#94A3B8;">No topic tags added yet. Please add at least one topic covered.</span>';
+      return;
+    }
+
+    listEl.innerHTML = tags.map(tag => `
+      <span style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; padding:4px 10px; border-radius:16px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+        🏷️ ${tag}
+        <button type="button" onclick="TeacherApp.removeModalLectureTag('${tag.replace(/'/g, "\\'")}')" style="background:transparent; border:none; color:#1D4ED8; cursor:pointer; padding:0; font-size:14px; line-height:1; font-weight:bold;">×</button>
+      </span>
+    `).join('');
+  },
+
+  addModalLectureTag() {
+    const input = document.getElementById("addLectureTagInput");
+    if (!input || !this._addLectureModalState) return;
+    const val = input.value.trim();
+    if (val && !this._addLectureModalState.tags.includes(val)) {
+      this._addLectureModalState.tags.push(val);
+      this.renderModalTagsList();
+    }
+    input.value = "";
+  },
+
+  removeModalLectureTag(tag) {
+    if (!this._addLectureModalState) return;
+    this._addLectureModalState.tags = this._addLectureModalState.tags.filter(t => t !== tag);
+    this.renderModalTagsList();
+  },
+
+  selectModalSuggestion(tag) {
+    if (!this._addLectureModalState) return;
+    if (!this._addLectureModalState.tags.includes(tag)) {
+      this._addLectureModalState.tags.push(tag);
+      this.renderModalTagsList();
+    }
+  },
+
+  closeAddLectureModal() {
+    const el = document.getElementById("addLectureModal");
+    if (el) el.innerHTML = "";
+    this._addLectureModalState = null;
+  },
+
+  submitAddLecture(subjectId, unitId, topicId) {
+    const dateInput = document.getElementById("addLectureDate");
+    const slotInput = document.getElementById("addLectureTimeSlot");
+    const notesInput = document.getElementById("addLectureNotes");
+
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+    const timeSlot = slotInput ? slotInput.value : '09:00 - 10:30 AM';
+    const notes = notesInput ? notesInput.value.trim() : '';
+    const tags = (this._addLectureModalState && this._addLectureModalState.tags.length > 0)
+      ? this._addLectureModalState.tags
+      : [(this._addLectureModalState ? this._addLectureModalState.topicName : 'Core Lecture Delivery')];
+
+    const res = TeacherERPData.addLectureToTopic(subjectId, unitId, topicId, {
+      date,
+      timeSlot,
+      topicsCovered: tags,
+      notes
+    });
+
+    this.closeAddLectureModal();
+
+    if (res && res.newLecture) {
+      if (typeof this.showToast === 'function') {
+        this.showToast(`✓ Lecture ${res.newLecture.lectureNo} added for "${res.newLecture.topicName}" (${tags.length} topics covered). You can now mark attendance.`, 'success');
+      }
+      this.renderSyllabusView();
+    } else {
+      if (typeof this.showToast === 'function') {
+        this.showToast('Could not add lecture to topic.', 'error');
+      }
+    }
+  },
+
+  addLectureToTopic(subjectId, unitId, topicId) {
+    const today = (typeof AcademicDateUtils !== 'undefined' && AcademicDateUtils.getTodayISO)
+      ? AcademicDateUtils.getTodayISO()
+      : new Date().toISOString().split('T')[0];
+    const res = TeacherERPData.addLectureToTopic(subjectId, unitId, topicId, { date: today });
+    if (res && res.newLecture) {
+      if (typeof this.showToast === 'function') {
+        this.showToast(`✓ Lecture ${res.newLecture.lectureNo} added for "${res.newLecture.topicName}". You can now mark attendance.`, 'success');
+      }
+      this.renderSyllabusView();
+    } else {
+      if (typeof this.showToast === 'function') {
+        this.showToast('Could not add lecture to topic.', 'error');
+      }
+    }
+  },
+
+  undoLectureFromTopic(subjectId, unitId, topicId) {
+    const res = TeacherERPData.undoLectureFromTopic(subjectId, unitId, topicId);
+    if (res && res.removedLecture) {
+      if (typeof this.showToast === 'function') {
+        this.showToast(`↩ Lecture ${res.removedLecture.lectureNo} removed.`, 'info');
+      }
+      this.renderSyllabusView();
+    } else {
+      if (typeof this.showToast === 'function') {
+        this.showToast('No lectures to remove for this topic.', 'warning');
+      }
+    }
+  },
+
+  openLectureAttendanceModal(subjectId, unitId, topicId, lectureIdOrNo, date, classId, topicName, subjectName) {
+    const all = TeacherERPData.loadSyllabusData();
+    const subject = all.find(s => s.subjectId === subjectId);
+    const unit = subject?.units?.find(u => u.unitId === unitId);
+    const topic = unit?.topics?.find(t => t.topicId === topicId);
+    const lecture = topic?.lectures?.find(l => l.id === lectureIdOrNo || l.lectureNo === Number(lectureIdOrNo));
+    if (!lecture) return;
+
+    const roster = (TeacherERPData.students && TeacherERPData.students[classId]) ||
+                   (TeacherERPData.students && TeacherERPData.students["2R1"]) || [
+      { rollNo: 1, name: "Aarav Sharma", prn: "PRN2024001" },
+      { rollNo: 2, name: "Aditi Patil", prn: "PRN2024002" },
+      { rollNo: 3, name: "Amit Kumar", prn: "PRN2024003" },
+      { rollNo: 4, name: "Ananya Deshmukh", prn: "PRN2024004" },
+      { rollNo: 5, name: "Chetan Joshi", prn: "PRN2024005" },
+      { rollNo: 6, name: "Devika Rao", prn: "PRN2024006" },
+      { rollNo: 7, name: "Gaurav Shinde", prn: "PRN2024007" },
+      { rollNo: 8, name: "Isha Kulkarni", prn: "PRN2024008" }
+    ];
+
+    // Existing records or default to present
+    const prevMap = {};
+    if (Array.isArray(lecture.records)) {
+      lecture.records.forEach(r => { prevMap[r.rollNo] = r.status; });
+    }
+
+    const modalId = "lectureAttendanceModal";
+    let modalEl = document.getElementById(modalId);
+    if (!modalEl) {
+      modalEl = document.createElement("div");
+      modalEl.id = modalId;
+      document.body.appendChild(modalEl);
+    }
+
+    const totalStudents = roster.length;
+
+    modalEl.innerHTML = `
+      <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(11,31,58,0.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:999999; padding:16px;">
+        <div style="background:#fff; border-radius:14px; width:100%; max-width:740px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(0,0,0,0.3); overflow:hidden;">
+          <div style="background:#0B1F3A; color:#fff; padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span style="background:#0B5CAD; color:#fff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:4px;">LECTURE ${lecture.lectureNo}</span>
+                <h3 style="margin:0; font-size:17px; font-weight:800; color:#fff;">Mark Lecture Attendance</h3>
+              </div>
+              <p style="margin:0; font-size:12.5px; color:#94A3B8;">
+                <strong>${subjectName || subject.subjectName}</strong> • Topic: <strong>${topicName || topic.topicName}</strong> • Class: <strong>${classId}</strong> • Date: <strong>${date || lecture.date}</strong>
+              </p>
+              ${Array.isArray(lecture.topicsCovered) && lecture.topicsCovered.length > 0 ? `
+                <div style="display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                  <span style="font-size:11px; color:#CBD5E1; font-weight:600;">Topics Covered:</span>
+                  ${lecture.topicsCovered.map(t => `
+                    <span style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:1px 8px; border-radius:12px; font-size:11px; font-weight:600;">
+                      🏷️ ${t}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+            <button type="button" onclick="TeacherApp.closeLectureAttendanceModal()" style="background:transparent; border:none; color:#94A3B8; font-size:24px; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
+          </div>
+
+          <div style="background:#F8FAFC; padding:12px 24px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="font-size:12.5px; color:#475569;">
+              Enrolled: <strong style="color:#0B1F3A;">${totalStudents}</strong> •
+              Status: <span id="modalAttendanceSummary" style="font-weight:700; color:${lecture.attendanceMarked ? '#15803D' : '#D97706'};">${lecture.attendanceMarked ? '✓ Previously Marked' : 'Ready to mark'}</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" onclick="TeacherApp.setAllModalAttendance('present')" style="background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; padding:5px 12px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                ✓ All Present
+              </button>
+              <button type="button" onclick="TeacherApp.setAllModalAttendance('absent')" style="background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5; padding:5px 12px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                ✕ All Absent
+              </button>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; padding:16px 24px;">
+            <table style="width:100%; border-collapse:collapse; text-align:left;">
+              <thead>
+                <tr style="border-bottom:2px solid #E2E8F0; color:#64748B; font-size:12px;">
+                  <th style="padding:8px 10px; width:80px;">Roll No</th>
+                  <th style="padding:8px 10px;">Student Name</th>
+                  <th style="padding:8px 10px; text-align:center; width:180px;">Attendance Status</th>
+                </tr>
+              </thead>
+              <tbody id="lectureAttendanceRosterTbody">
+                ${roster.map(st => {
+                  const currStatus = prevMap[st.rollNo] || 'present';
+                  const isPres = currStatus === 'present';
+                  return `
+                    <tr data-roll="${st.rollNo}" data-id="${st.id || `ST-${st.rollNo}`}" data-name="${st.name}" style="border-bottom:1px solid #F1F5F9; background:${isPres ? '#F0FDF4' : '#FEF2F2'};">
+                      <td style="padding:10px; font-size:13px; font-weight:700; color:#0B1F3A;">${st.rollFormatted || st.rollNo}</td>
+                      <td style="padding:10px; font-size:13px; font-weight:600; color:#334155;">${st.name}</td>
+                      <td style="padding:10px; text-align:center;">
+                        <div style="display:inline-flex; gap:6px;">
+                          <button type="button" onclick="TeacherApp.toggleModalStatus('${st.rollNo}', 'present')" class="btn-att-p" style="background:${isPres ? '#15803D' : '#F1F5F9'}; color:${isPres ? '#fff' : '#475569'}; border:${isPres ? 'none' : '1px solid #CBD5E1'}; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer;">
+                            Present
+                          </button>
+                          <button type="button" onclick="TeacherApp.toggleModalStatus('${st.rollNo}', 'absent')" class="btn-att-a" style="background:${!isPres ? '#B91C1C' : '#F1F5F9'}; color:${!isPres ? '#fff' : '#475569'}; border:${!isPres ? 'none' : '1px solid #CBD5E1'}; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer;">
+                            Absent
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="background:#F8FAFC; padding:14px 24px; border-top:1px solid #E2E8F0; display:flex; justify-content:flex-end; align-items:center; gap:12px;">
+            <button type="button" onclick="TeacherApp.closeLectureAttendanceModal()" style="background:#fff; color:#64748B; border:1px solid #CBD5E1; padding:8px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">
+              Cancel
+            </button>
+            <button type="button" onclick="TeacherApp.saveLectureAttendance('${subjectId}', '${unitId}', '${topicId}', '${lecture.id}')" style="background:#0B5CAD; color:#fff; border:none; padding:8px 22px; border-radius:6px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(11,92,173,0.3);">
+              Save &amp; Lock Attendance
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  closeLectureAttendanceModal() {
+    const modalEl = document.getElementById("lectureAttendanceModal");
+    if (modalEl) modalEl.innerHTML = "";
+  },
+
+  toggleModalStatus(rollNo, status) {
+    const row = document.querySelector(`#lectureAttendanceRosterTbody tr[data-roll='${rollNo}']`);
+    if (!row) return;
+    const btnP = row.querySelector('.btn-att-p');
+    const btnA = row.querySelector('.btn-att-a');
+    if (status === 'present') {
+      row.style.background = '#F0FDF4';
+      if (btnP) {
+        btnP.style.background = '#15803D';
+        btnP.style.color = '#fff';
+        btnP.style.border = 'none';
+      }
+      if (btnA) {
+        btnA.style.background = '#F1F5F9';
+        btnA.style.color = '#475569';
+        btnA.style.border = '1px solid #CBD5E1';
+      }
+    } else {
+      row.style.background = '#FEF2F2';
+      if (btnA) {
+        btnA.style.background = '#B91C1C';
+        btnA.style.color = '#fff';
+        btnA.style.border = 'none';
+      }
+      if (btnP) {
+        btnP.style.background = '#F1F5F9';
+        btnP.style.color = '#475569';
+        btnP.style.border = '1px solid #CBD5E1';
+      }
+    }
+  },
+
+  setAllModalAttendance(status) {
+    const rows = document.querySelectorAll('#lectureAttendanceRosterTbody tr');
+    rows.forEach(r => {
+      const roll = r.getAttribute('data-roll');
+      this.toggleModalStatus(roll, status);
+    });
+  },
+
+  saveLectureAttendance(subjectId, unitId, topicId, lectureId) {
+    const rows = document.querySelectorAll('#lectureAttendanceRosterTbody tr');
+    const records = [];
+    rows.forEach(r => {
+      const btnP = r.querySelector('.btn-att-p');
+      const isPresent = btnP && (
+        btnP.style.background.includes('rgb(21, 128, 61)') ||
+        btnP.style.background.includes('#15803D') ||
+        btnP.style.color === 'rgb(255, 255, 255)' ||
+        btnP.style.color === '#fff'
+      );
+      records.push({
+        studentId: r.getAttribute('data-id'),
+        rollNo: Number(r.getAttribute('data-roll')),
+        name: r.getAttribute('data-name'),
+        status: isPresent ? 'present' : 'absent'
+      });
+    });
+
+    const presentCount = records.filter(r => r.status === 'present').length;
+    const absentCount = records.filter(r => r.status === 'absent').length;
+
+    TeacherERPData.markLectureAttendance(subjectId, unitId, topicId, lectureId, {
+      presentCount,
+      absentCount,
+      records
+    });
+
+    this.closeLectureAttendanceModal();
+    if (typeof this.showToast === 'function') {
+      this.showToast(`✓ Attendance marked (${presentCount}/${records.length} Present). Saved to syllabus records.`, 'success');
+    }
+    this.renderSyllabusView();
+  },
+
+  exportSyllabusCsv(subjectId) {
+    const all = TeacherERPData.loadSyllabusData();
+    const activeSubject = all.find(s => s.subjectId === subjectId);
+    if (!activeSubject) return;
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += `Subject Name,${activeSubject.subjectName}\r\n`;
+    csvContent += `Class,${activeSubject.classId}\r\n`;
+    csvContent += `Faculty Name,${activeSubject.facultyName || 'Faculty'}\r\n`;
+    csvContent += `Total Planned Lectures,${activeSubject.totalLecturesPlanned || 60}\r\n`;
+    csvContent += `Total Lectures Engaged,${activeSubject.totalLecturesTaken || 0}\r\n`;
+    csvContent += `Overall Coverage,${activeSubject.progress || 0}%\r\n\r\n`;
+    csvContent += "Lecture No,Date,Unit,Topic,Topics Covered,Attendance Status,Attendance ID,Notes\r\n";
+
+    (activeSubject.units || []).forEach(unit => {
+      (unit.topics || []).forEach(topic => {
+        (topic.lectures || []).forEach(lec => {
+          const lNo = lec.lectureNo;
+          const date = lec.date || '';
+          const uName = `"${(unit.unitName || '').replace(/"/g, '""')}"`;
+          const tName = `"${(topic.topicName || '').replace(/"/g, '""')}"`;
+          const covered = `"${(Array.isArray(lec.topicsCovered) ? lec.topicsCovered.join('; ') : (lec.topicsCovered || '')).replace(/"/g, '""')}"`;
+          const status = lec.attendanceMarked ? 'Marked' : 'Not Marked';
+          const attId = lec.attendanceId || '';
+          const notes = `"${(lec.notes || '').replace(/"/g, '""')}"`;
+          csvContent += `${lNo},${date},${uName},${tName},${covered},${status},${attId},${notes}\r\n`;
+        });
+      });
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Syllabus_Lectures_${activeSubject.subjectCode || 'SUB'}_${activeSubject.classId || 'CLASS'}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (typeof this.showToast === 'function') {
+      this.showToast(`Syllabus report for ${activeSubject.subjectName} exported!`, 'success');
+    }
+  },
+
+  downloadSyllabusReport(subjectId) {
+    this.exportSyllabusCsv(subjectId);
   },
 
   markSyllabusTopic(subjectId, unitId, topicId, count = 1) {
@@ -1658,9 +2571,13 @@ const TeacherApp = {
     if (updated) {
       this.renderSyllabusView();
       const pct = updated.progress !== undefined ? updated.progress : Math.round((updated.totalLecturesTaken / updated.totalLecturesPlanned) * 100);
-      this.showToast(`Lecture marked as covered (+${count}). Subject coverage: ${pct}%`, 'success');
+      if (typeof this.showToast === 'function') {
+        this.showToast(`Lecture marked as covered (+${count}). Subject coverage: ${pct}%`, 'success');
+      }
     } else {
-      this.showToast('Failed to update syllabus topic.', 'error');
+      if (typeof this.showToast === 'function') {
+        this.showToast('Failed to update syllabus topic.', 'error');
+      }
     }
   },
 
@@ -1669,362 +2586,689 @@ const TeacherApp = {
     if (updated) {
       this.renderSyllabusView();
       const pct = updated.progress !== undefined ? updated.progress : Math.round((updated.totalLecturesTaken / updated.totalLecturesPlanned) * 100);
-      this.showToast(`Topic progress reverted (-${count} lect). Coverage: ${pct}%`, 'info');
+      if (typeof this.showToast === 'function') {
+        this.showToast(`Topic progress reverted (-${count} lect). Coverage: ${pct}%`, 'info');
+      }
     } else {
-      this.showToast('Failed to revert topic progress.', 'error');
+      if (typeof this.showToast === 'function') {
+        this.showToast('Failed to revert topic progress.', 'error');
+      }
     }
-  },
-
-  downloadSyllabusReport(subjectId) {
-    const subject = TeacherERPData.getSubjectSyllabus(subjectId);
-    if (!subject) {
-      this.showToast('Unable to export: syllabus not found.', 'error');
-      return;
-    }
-    const pct = subject.progress !== undefined ? subject.progress : Math.round((subject.totalLecturesTaken / subject.totalLecturesPlanned) * 100);
-    const rows = [
-      ["SSGMCE COLLEGE ERP - SYLLABUS COVERAGE & LECTURE TRACKING REPORT"],
-      ["Subject Name", `"${subject.subjectName}"`],
-      ["Subject Code", `"${subject.subjectCode}"`],
-      ["Class / Batch", `"${subject.classId}"`],
-      ["Faculty In-Charge", `"${subject.facultyName}"`],
-      ["Total Planned Lectures", subject.totalLecturesPlanned],
-      ["Total Engaged Lectures", subject.totalLecturesTaken],
-      ["Overall Coverage", `${pct}%`],
-      ["Curriculum Pace", `"${subject.pace || 'On Track'}"`],
-      ["Generated Date", `"${new Date().toLocaleDateString('en-GB')}"`],
-      [],
-      ["Unit Name", "Topic Name", "Topic Description", "No of Lect (Planned)", "Lectures Taken", "Weightage", "Weightage %", "Status"]
-    ];
-
-    (subject.units || []).forEach(unit => {
-      (unit.topics || []).forEach(topic => {
-        const desc = (topic.topicDescription || '').replace(/"/g, '""');
-        rows.push([
-          `"${unit.unitName}"`,
-          `"${topic.topicName}"`,
-          `"${desc}"`,
-          topic.noOfLectures || topic.estimatedLectures || 0,
-          topic.lecturesTaken || 0,
-          topic.weightage || 0,
-          `"${topic.weightagePercent || 0}%"`,
-          `"${topic.status || 'Not Started'}"`
-        ]);
-      });
-    });
-
-    const csvContent = "\uFEFF" + rows.map(r => r.join(",")).join("\r\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Syllabus_Report_${subject.subjectCode || 'SUB'}_${subject.classId || 'CLASS'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    this.showToast(`Syllabus report for ${subject.subjectName} exported!`, 'success');
   },
 
   renderSyllabusView() {
     const container = document.getElementById("syllabus-content");
     if (!container) return;
 
-    const teacherCode = TeacherERPData.getActiveTeacherEmpCode ? TeacherERPData.getActiveTeacherEmpCode() : 'EMP-CSE-1001';
-    const subjects = TeacherERPData.getSyllabusForTeacher(teacherCode);
+    // 1. Strict Faculty-Specific Subjects Filter
+    const teacher = (typeof this.getLoggedInTeacher === 'function') ? this.getLoggedInTeacher() : null;
+    const empCode = teacher?.employeeId || teacher?.empCode || (typeof TeacherERPData !== 'undefined' && TeacherERPData.getActiveTeacherEmpCode ? TeacherERPData.getActiveTeacherEmpCode() : 'EMP-CSE-1001');
+    const subjects = TeacherERPData.getSyllabusForTeacher(empCode);
 
     if (!subjects || subjects.length === 0) {
       container.innerHTML = `
-        <div class="card" style="padding:48px; text-align:center; color:var(--text-muted);">
-          <i data-lucide="book-open" style="width:48px;height:48px;margin-bottom:12px;opacity:0.4;"></i>
-          <h3>No Syllabus Records Available</h3>
-          <p>No active courses or syllabus plans assigned to this faculty profile.</p>
+        <div class="card" style="padding:48px; text-align:center; color:var(--text-muted, #64748B);">
+          <i data-lucide="book-open" style="width:48px; height:48px; margin-bottom:12px; opacity:0.4;"></i>
+          <h3 style="margin:0 0 8px 0; color:var(--dark-navy, #0B1F3A);">No Subjects Assigned</h3>
+          <p style="margin:0; font-size:13px;">There are no subjects assigned to faculty profile <strong>${empCode}</strong> for syllabus tracking.</p>
         </div>
       `;
-      this.initLucideIcons();
+      if (window.lucide) window.lucide.createIcons();
       return;
     }
 
+    // Default to first subject if none selected or selected is not in faculty's list
     if (!this.selectedSyllabusSubjectId || !subjects.some(s => s.subjectId === this.selectedSyllabusSubjectId)) {
       this.selectedSyllabusSubjectId = subjects[0].subjectId;
     }
 
-    const currentSubject = TeacherERPData.getSubjectSyllabus(this.selectedSyllabusSubjectId) || subjects[0];
-    const pct = currentSubject.progress !== undefined ? currentSubject.progress : Math.round((currentSubject.totalLecturesTaken / currentSubject.totalLecturesPlanned) * 100);
-    const pendingLectures = Math.max(0, currentSubject.totalLecturesPlanned - currentSubject.totalLecturesTaken);
-    const pace = currentSubject.pace || (pct >= 60 ? "Ahead of Schedule" : (pct >= 40 ? "On Track" : "Behind Schedule"));
-    const paceColor = pace === 'Ahead of Schedule' ? '#10B981' : (pace === 'On Track' ? '#0B5CAD' : '#F59E0B');
-    const paceBg = pace === 'Ahead of Schedule' ? '#DCFCE7' : (pace === 'On Track' ? '#EFF6FF' : '#FEF3C7');
-    const estDate = currentSubject.estimatedCompletionDate || "28 Nov 2026";
+    const currentSub = subjects.find(s => s.subjectId === this.selectedSyllabusSubjectId) || subjects[0];
 
-    // SVG Donut calculation: radius = 42, circumference = 2 * PI * 42 ≈ 263.89
-    const radius = 42;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (circumference * pct / 100);
-    const ringColor = pct >= 70 ? '#10B981' : (pct >= 40 ? '#0B5CAD' : '#F59E0B');
+    // Compute unit-wise, subject totals, and all-lectures list
+    let totalPlanned = 0;
+    let totalEngaged = 0;
+    const unitBreakdown = [];
+    const allLecturesList = [];
+
+    (currentSub.units || []).forEach((unit, idx) => {
+      let uPlanned = 0;
+      let uEngaged = 0;
+
+      (unit.topics || []).forEach(t => {
+        const p = Number(t.plannedLectures || t.noOfLectures || t.estimatedLectures || 0);
+        const lecs = Array.isArray(t.lectures) ? t.lectures : [];
+        const e = lecs.length || Number(t.engagedLectures || t.lecturesTaken || 0);
+        uPlanned += p;
+        uEngaged += e;
+
+        lecs.forEach(l => {
+          allLecturesList.push({
+            ...l,
+            unitId: unit.unitId,
+            unitName: unit.unitName,
+            topicId: t.topicId,
+            topicName: t.topicName,
+            subjectId: currentSub.subjectId,
+            subjectName: currentSub.subjectName,
+            classId: currentSub.classId
+          });
+        });
+      });
+
+      const uPct = uPlanned > 0 ? Math.min(100, Math.round((uEngaged / uPlanned) * 100)) : 0;
+      unitBreakdown.push({
+        unitId: unit.unitId,
+        unitName: unit.unitName ? unit.unitName.split(':')[0] : `Unit ${idx+1}`,
+        fullUnitName: unit.unitName,
+        planned: uPlanned,
+        engaged: uEngaged,
+        progress: uPct
+      });
+
+      totalPlanned += uPlanned;
+      totalEngaged += uEngaged;
+    });
+
+    // Sort all lectures descending
+    allLecturesList.sort((a, b) => (b.lectureNo || 0) - (a.lectureNo || 0));
+
+    totalPlanned = totalPlanned || Number(currentSub.totalLecturesPlanned || 60);
+    const remaining = Math.max(0, totalPlanned - totalEngaged);
+    const coveragePercent = totalPlanned > 0 ? Math.min(100, Math.round((totalEngaged / totalPlanned) * 100)) : 0;
+    const isOnTrack = coveragePercent >= 45;
+    const paceLabel = isOnTrack ? "On Track" : "Behind Schedule";
+
+    const activeTab = this.syllabusActiveTab || 'curriculum';
+    const searchQuery = (this.syllabusHistorySearch || '').toLowerCase().trim();
+
+    const filteredLectures = searchQuery
+      ? allLecturesList.filter(l => {
+          const topMatch = (l.topicName || '').toLowerCase().includes(searchQuery);
+          const unitMatch = (l.unitName || '').toLowerCase().includes(searchQuery);
+          const tagsMatch = Array.isArray(l.topicsCovered) && l.topicsCovered.some(t => t.toLowerCase().includes(searchQuery));
+          const dateMatch = (l.date || '').includes(searchQuery);
+          const numMatch = `lecture ${l.lectureNo}`.includes(searchQuery);
+          return topMatch || unitMatch || tagsMatch || dateMatch || numMatch;
+        })
+      : allLecturesList;
 
     container.innerHTML = `
-      <div class="syllabus-view-container">
-        <!-- TOP TOOLBAR & SUBJECT SELECTOR -->
-        <div class="syl-toolbar-card">
-          <div class="syl-title-wrap">
-            <h2>
-              <i data-lucide="book-open-check" style="color:var(--primary); width:24px; height:24px;"></i>
-              Syllabus Coverage Tracking System
-            </h2>
-            <p>Faculty: <strong>${currentSubject.facultyName || 'Faculty'}</strong> • Real-time topic completion, lecture engagement logs & weightage compliance.</p>
-          </div>
+      <!-- 1. Subject Selector Toolbar -->
+      <div class="card" style="padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
-            <button class="syl-btn-export" onclick="TeacherApp.downloadSyllabusReport('${currentSubject.subjectId}')">
-              <i data-lucide="download" style="width:16px;height:16px;"></i> Download Syllabus Report (.csv)
-            </button>
+            <label style="font-size:11px; font-weight:800; color:var(--text-muted, #64748B); text-transform:uppercase; display:block; margin-bottom:4px; letter-spacing:0.5px;">
+              Your Assigned Teaching Load (${subjects.length} Subjects)
+            </label>
+            <select onchange="TeacherApp.selectSyllabusSubject(this.value)" style="padding:8px 14px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; font-weight:700; background:#F8FAFC; color:var(--dark-navy, #0B1F3A); min-width:260px; cursor:pointer;">
+              ${subjects.map(s => `
+                <option value="${s.subjectId}" ${s.subjectId === currentSub.subjectId ? 'selected' : ''}>
+                  ${s.subjectName} (${s.classId})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+
+          <!-- Quick Subject Pills -->
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+            ${subjects.map(s => `
+              <button type="button" onclick="TeacherApp.selectSyllabusSubject('${s.subjectId}')" style="background:${s.subjectId === currentSub.subjectId ? 'var(--dark-navy, #0B1F3A)' : '#F1F5F9'}; color:${s.subjectId === currentSub.subjectId ? '#fff' : '#475569'}; border:1px solid ${s.subjectId === currentSub.subjectId ? 'var(--dark-navy, #0B1F3A)' : '#CBD5E1'}; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s ease;">
+                ${s.subjectName} (${s.classId})
+              </button>
+            `).join('')}
           </div>
         </div>
 
-        <!-- MULTI-SUBJECT SELECTOR -->
+        <div style="font-size:12.5px; color:var(--text-muted, #64748B);">
+          Faculty ID: <strong style="color:var(--dark-navy, #0B1F3A);">${empCode}</strong>
+        </div>
+      </div>
+
+      <!-- 2. Syllabus Coverage Analytics & Delivery Pace -->
+      <div class="card" style="padding:22px 24px; margin-bottom:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--dark-navy, #0B1F3A);">
+                Syllabus Coverage &amp; Lecture Delivery Analysis
+              </h3>
+              <span style="background:${isOnTrack ? '#DCFCE7' : '#FEF3C7'}; color:${isOnTrack ? '#15803D' : '#B45309'}; border:1px solid ${isOnTrack ? '#86EFAC' : '#FDE047'}; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:800;">
+                ● ${paceLabel}
+              </span>
+            </div>
+            <p style="margin:4px 0 0 0; font-size:13px; color:var(--text-muted, #64748B);">
+              Subject: <strong style="color:var(--dark-navy, #0B1F3A);">${currentSub.subjectName}</strong> (${currentSub.subjectCode || 'CS302'}) • Class: <strong style="color:var(--dark-navy, #0B1F3A);">${currentSub.classId}</strong>
+            </p>
+          </div>
+
+          <button type="button" onclick="TeacherApp.exportSyllabusCsv('${currentSub.subjectId}')" style="background:#F8FAFC; color:var(--primary-blue, #0B5CAD); border:1px solid #CBD5E1; padding:7px 14px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="download" style="width:14px;height:14px;"></i> Export Syllabus Report (CSV)
+          </button>
+        </div>
+
+        <!-- Metric Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase;">Overall Coverage</span>
+            <div style="font-size:24px; font-weight:800; color:${isOnTrack ? 'var(--success, #10B981)' : 'var(--primary-blue, #0B5CAD)'}; margin-top:2px;">
+              ${coveragePercent}%
+            </div>
+            <div style="width:100%; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden; margin-top:8px;">
+              <div style="width:${coveragePercent}%; height:100%; background:${isOnTrack ? 'var(--success, #10B981)' : 'var(--primary-blue, #0B5CAD)'};"></div>
+            </div>
+          </div>
+
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase;">Total Planned Lectures</span>
+            <div style="font-size:24px; font-weight:800; color:var(--dark-navy, #0B1F3A); margin-top:2px;">${totalPlanned}</div>
+            <span style="font-size:11.5px; color:var(--text-muted, #64748B);">Target academic syllabus</span>
+          </div>
+
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase;">Lectures Engaged</span>
+            <div style="font-size:24px; font-weight:800; color:var(--primary-blue, #0B5CAD); margin-top:2px;">${totalEngaged}</div>
+            <span style="font-size:11.5px; color:var(--success, #10B981); font-weight:600;">Delivered by faculty</span>
+          </div>
+
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase;">Remaining Lectures</span>
+            <div style="font-size:24px; font-weight:800; color:${remaining > 0 ? '#B45309' : '#10B981'}; margin-top:2px;">${remaining}</div>
+            <span style="font-size:11.5px; color:var(--text-muted, #64748B);">${remaining === 0 ? 'Syllabus finished!' : 'To be conducted'}</span>
+          </div>
+        </div>
+
+        <!-- Unit-wise Progress Breakdown -->
         <div>
-          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">
-            Select Teaching Subject / Course:
-          </div>
-          <div class="syl-subject-selector-bar">
-            ${subjects.map(s => {
-              const isActive = s.subjectId === currentSubject.subjectId;
-              const sPct = s.progress !== undefined ? s.progress : Math.round((s.totalLecturesTaken / s.totalLecturesPlanned) * 100);
-              return `
-                <button type="button" class="syl-subject-pill-btn ${isActive ? 'active' : ''}" onclick="TeacherApp.selectSyllabusSubject('${s.subjectId}')">
-                  <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <span class="syl-pill-code">${s.subjectCode}</span>
-                    <span style="font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; background:${isActive ? '#DBEAFE' : '#F1F5F9'}; color:${isActive ? '#1D4ED8' : '#475569'};">
-                      ${s.classId}
-                    </span>
-                  </div>
-                  <div class="syl-pill-name">${s.subjectName}</div>
-                  <div class="syl-pill-meta">
-                    <span>${s.totalLecturesTaken}/${s.totalLecturesPlanned} Lect</span>
-                    <strong style="color:${sPct >= 70 ? '#10B981' : (sPct >= 40 ? '#0B5CAD' : '#F59E0B')};">${sPct}%</strong>
-                  </div>
-                </button>
-              `;
-            }).join('')}
+          <h4 style="margin:0 0 10px 0; font-size:13px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase;">
+            Unit-wise Delivery Breakdown
+          </h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            ${unitBreakdown.map(u => `
+              <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span style="font-size:12px; font-weight:700; color:var(--dark-navy, #0B1F3A);">${u.unitName}</span>
+                  <span style="font-size:11.5px; font-weight:800; color:${u.progress >= 100 ? 'var(--success, #10B981)' : 'var(--primary-blue, #0B5CAD)'};">
+                    ${u.engaged}/${u.planned} (${u.progress}%)
+                  </span>
+                </div>
+                <div style="width:100%; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden;">
+                  <div style="width:${u.progress}%; height:100%; background:${u.progress >= 100 ? 'var(--success, #10B981)' : (u.progress > 0 ? 'var(--primary-blue, #0B5CAD)' : '#94A3B8')};"></div>
+                </div>
+              </div>
+            `).join('')}
           </div>
         </div>
+      </div>
 
-        <!-- ANALYTICS OVERVIEW (DONUT CHART & KPI STATS) -->
-        <div class="syl-analytics-grid">
-          <!-- DONUT CHART CARD -->
-          <div class="syl-chart-card">
-            <div style="font-size:13px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:0.5px;">
-              Syllabus Coverage
-            </div>
-            <div class="syl-donut-wrapper">
-              <svg width="140" height="140" viewBox="0 0 100 100" style="transform: rotate(-90deg);">
-                <circle cx="50" cy="50" r="${radius}" stroke="#E2E8F0" stroke-width="10" fill="transparent" />
-                <circle cx="50" cy="50" r="${radius}" stroke="${ringColor}" stroke-width="10" fill="transparent"
-                  stroke-dasharray="${circumference}"
-                  stroke-dashoffset="${strokeDashoffset}"
-                  stroke-linecap="round"
-                  style="transition: stroke-dashoffset 0.6s ease;"
-                />
-              </svg>
-              <div class="syl-donut-inner-text">
-                <div class="syl-donut-val">${pct}%</div>
-                <div class="syl-donut-lbl">Completed</div>
-              </div>
-            </div>
-            <div class="syl-donut-legend">
-              <div class="syl-donut-legend-item">
-                <span class="syl-legend-dot" style="background:${ringColor};"></span>
-                <span>Engaged: <strong>${currentSubject.totalLecturesTaken}</strong></span>
-              </div>
-              <div class="syl-donut-legend-item">
-                <span class="syl-legend-dot" style="background:#CBD5E1;"></span>
-                <span>Pending: <strong>${pendingLectures}</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- KPI 2x2 GRID -->
-          <div class="syl-kpi-grid">
-            <!-- 1. Lectures Engaged -->
-            <div class="syl-kpi-card">
-              <div class="syl-kpi-top">
-                <span class="syl-kpi-label">Lectures Engaged</span>
-                <div class="syl-kpi-icon-wrap" style="background:#EFF6FF; color:#1D4ED8;">
-                  <i data-lucide="check-circle" style="width:18px;height:18px;"></i>
-                </div>
-              </div>
-              <div class="syl-kpi-val">${currentSubject.totalLecturesTaken} <span style="font-size:14px; font-weight:500; color:var(--text-muted);">/ ${currentSubject.totalLecturesPlanned}</span></div>
-              <div class="syl-kpi-desc">Delivered vs. total planned sessions for semester</div>
-            </div>
-
-            <!-- 2. Pending Lectures -->
-            <div class="syl-kpi-card">
-              <div class="syl-kpi-top">
-                <span class="syl-kpi-label">Pending Lectures</span>
-                <div class="syl-kpi-icon-wrap" style="background:#FEF3C7; color:#B45309;">
-                  <i data-lucide="hourglass" style="width:18px;height:18px;"></i>
-                </div>
-              </div>
-              <div class="syl-kpi-val" style="color:#B45309;">${pendingLectures} <span style="font-size:14px; font-weight:500; color:var(--text-muted);">Sessions</span></div>
-              <div class="syl-kpi-desc">Remaining lectures needed to finish syllabus</div>
-            </div>
-
-            <!-- 3. Curriculum Pace -->
-            <div class="syl-kpi-card">
-              <div class="syl-kpi-top">
-                <span class="syl-kpi-label">Curriculum Pace</span>
-                <div class="syl-kpi-icon-wrap" style="background:#DCFCE7; color:#15803D;">
-                  <i data-lucide="trending-up" style="width:18px;height:18px;"></i>
-                </div>
-              </div>
-              <div>
-                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; background:${paceBg}; color:${paceColor};">
-                  <span style="width:7px; height:7px; border-radius:50%; background:${paceColor};"></span>
-                  ${pace}
-                </span>
-              </div>
-              <div class="syl-kpi-desc" style="margin-top:6px;">Delivery pace vs. academic schedule timeline</div>
-            </div>
-
-            <!-- 4. Estimated Completion -->
-            <div class="syl-kpi-card">
-              <div class="syl-kpi-top">
-                <span class="syl-kpi-label">Est. Completion</span>
-                <div class="syl-kpi-icon-wrap" style="background:#F3E8FF; color:#7E22CE;">
-                  <i data-lucide="calendar" style="width:18px;height:18px;"></i>
-                </div>
-              </div>
-              <div class="syl-kpi-val" style="font-size:20px;">${estDate}</div>
-              <div class="syl-kpi-desc">Forecasted date for 100% syllabus coverage</div>
-            </div>
-          </div>
+      <!-- 3. Navigation Tabs -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid #E2E8F0; padding-bottom:8px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:10px;">
+          <button type="button" onclick="TeacherApp.switchSyllabusTab('curriculum')" style="background:${activeTab === 'curriculum' ? 'var(--dark-navy, #0B1F3A)' : '#F1F5F9'}; color:${activeTab === 'curriculum' ? '#fff' : '#475569'}; border:none; padding:8px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">
+            📚 Curriculum &amp; Lecture Delivery (${currentSub.units?.length || 0} Units)
+          </button>
+          <button type="button" onclick="TeacherApp.switchSyllabusTab('history')" style="background:${activeTab === 'history' ? 'var(--dark-navy, #0B1F3A)' : '#F1F5F9'}; color:${activeTab === 'history' ? '#fff' : '#475569'}; border:none; padding:8px 18px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer;">
+            📋 Lecture Delivery History Log (${allLecturesList.length} Lectures)
+          </button>
         </div>
 
-        <!-- UNITS & TOPICS TABLES (MATCHING USER'S PDF FORMAT) -->
-        <div class="syl-units-container">
-          <div style="font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="layers" style="width:18px;height:18px; color:var(--primary);"></i>
-            Detailed Unit Modules & Topic-Level Coverage Tracker
-          </div>
+        ${activeTab === 'history' ? `
+          <input type="text" placeholder="Search lectures, topics covered, dates..." value="${this.syllabusHistorySearch || ''}" oninput="TeacherApp.filterSyllabusHistory(this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid #CBD5E1; font-size:12.5px; min-width:260px;">
+        ` : ''}
+      </div>
 
-          ${(currentSubject.units || []).map((unit, uIdx) => {
-            const unitPlanned = unit.estimatedLectures || unit.topics.reduce((a, t) => a + (t.noOfLectures || t.estimatedLectures || 0), 0);
-            const unitTaken = unit.lecturesTaken || unit.topics.reduce((a, t) => a + (t.lecturesTaken || 0), 0);
-            const unitPct = unitPlanned > 0 ? Math.min(100, Math.round((unitTaken / unitPlanned) * 100)) : 0;
-            const unitWeightage = unit.topics.reduce((a, t) => a + (t.weightage || 0), 0);
-            const unitStatusClass = unit.status === 'Completed' ? 'completed' : (unit.status === 'In Progress' ? 'in-progress' : 'not-started');
+      <!-- Tab Content: Curriculum vs History Log -->
+      ${activeTab === 'curriculum' ? `
+        <!-- Curriculum Units & Topics -->
+        <div>
+          ${(currentSub.units || []).map((unit) => {
+            let uPlan = 0;
+            let uEng = 0;
+            (unit.topics || []).forEach(t => {
+              uPlan += Number(t.plannedLectures || t.noOfLectures || t.estimatedLectures || 0);
+              const lCount = Array.isArray(t.lectures) ? t.lectures.length : Number(t.engagedLectures || t.lecturesTaken || 0);
+              uEng += lCount;
+            });
+            const uPct = uPlan > 0 ? Math.min(100, Math.round((uEng / uPlan) * 100)) : 0;
+            const uComp = uPct >= 100;
+            const uInProg = uPct > 0 && !uComp;
 
             return `
-              <div class="syl-unit-card">
-                <!-- UNIT HEADER -->
-                <div class="syl-unit-head">
-                  <div class="syl-unit-title">
-                    <span class="syl-unit-tag">${unit.unitId || `UNIT-${uIdx+1}`}</span>
-                    <span>${unit.unitName}</span>
-                  </div>
-                  <div class="syl-unit-badges">
-                    <span class="syl-status-pill ${unitStatusClass}">${unit.status || 'Not Started'}</span>
-                    <span style="font-size:12px; font-weight:700; padding:4px 10px; background:#F1F5F9; border-radius:999px; color:var(--navy);">
-                      ${unitTaken}/${unitPlanned} Lect (${unitPct}%)
+              <div class="card" style="margin-bottom:18px; border-radius:12px; overflow:hidden; padding:0;">
+                <!-- Unit Header -->
+                <div style="background:#F8FAFC; padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <h4 style="margin:0 0 3px 0; font-size:15px; font-weight:800; color:var(--dark-navy, #0B1F3A);">
+                      ${unit.unitName}
+                    </h4>
+                    <span style="font-size:12px; color:var(--text-muted, #64748B);">
+                      ${unit.topics?.length || 0} Topics • ${uEng} of ${uPlan} Lectures Engaged
                     </span>
-                    <span style="font-size:12px; font-weight:600; padding:4px 10px; background:#EFF6FF; border-radius:999px; color:var(--primary);">
-                      Weightage: ${unitWeightage} Marks
+                  </div>
+
+                  <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:120px; display:flex; flex-direction:column; gap:3px;">
+                      <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#475569;">
+                        <span>Progress</span>
+                        <span>${uPct}%</span>
+                      </div>
+                      <div style="width:100%; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden;">
+                        <div style="width:${uPct}%; height:100%; background:${uComp ? '#10B981' : (uInProg ? '#0B5CAD' : '#94A3B8')};"></div>
+                      </div>
+                    </div>
+
+                    <span style="background:${uComp ? '#DCFCE7' : (uInProg ? '#FEF3C7' : '#F1F5F9')}; color:${uComp ? '#15803D' : (uInProg ? '#B45309' : '#64748B')}; border:1px solid ${uComp ? '#86EFAC' : (uInProg ? '#FDE047' : '#CBD5E1')}; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800;">
+                      ${uComp ? 'Completed' : (uInProg ? 'In Progress' : 'Not Started')}
                     </span>
                   </div>
                 </div>
 
-                <!-- PROGRESS BAR -->
-                <div class="syl-progress-track">
-                  <div class="syl-progress-fill" style="width: ${unitPct}%;"></div>
-                </div>
+                <!-- Topics List -->
+                <div style="padding:16px 20px; background:#FAFAFA;">
+                  ${(unit.topics || []).map(topic => {
+                    const tPlanned = Number(topic.plannedLectures || topic.noOfLectures || topic.estimatedLectures || 1);
+                    const lecs = Array.isArray(topic.lectures) ? topic.lectures : [];
+                    const tEngaged = lecs.length || Number(topic.engagedLectures || topic.lecturesTaken || 0);
+                    const tComp = topic.status === 'Completed' || tEngaged >= tPlanned;
+                    const tInProg = topic.status === 'In Progress' || (tEngaged > 0 && !tComp);
+                    const tProgress = tPlanned > 0 ? Math.min(100, Math.round((tEngaged / tPlanned) * 100)) : 0;
 
-                <!-- TOPICS TABLE (EXACT PDF COLUMNS) -->
-                <div class="syl-table-wrap">
-                  <table class="syl-table">
-                    <thead>
-                      <tr>
-                        <th style="width:90px;">Unit Name</th>
-                        <th style="width:190px;">Topic Name</th>
-                        <th>Topic Description</th>
-                        <th style="text-align:center; width:95px;">No of Lect</th>
-                        <th style="text-align:center; width:85px;">Weightage</th>
-                        <th style="text-align:center; width:95px;">Weightage %</th>
-                        <th style="text-align:center; width:135px;">Status</th>
-                        <th style="text-align:right; width:170px;">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${(unit.topics || []).map(topic => {
-                        const planned = topic.noOfLectures || topic.estimatedLectures || 1;
-                        const taken = topic.lecturesTaken || 0;
-                        const isDone = taken >= planned && taken > 0;
-                        const isInProg = taken > 0 && taken < planned;
-                        const statusPillClass = isDone ? 'completed' : (isInProg ? 'in-progress' : 'not-started');
-                        const statusIcon = isDone ? 'check-circle-2' : (isInProg ? 'clock' : 'circle');
-
-                        return `
-                          <tr>
-                            <td>
-                              <span class="syl-unit-tag">${unit.unitId || `U${uIdx+1}`}</span>
-                            </td>
-                            <td>
-                              <div class="syl-topic-name">${topic.topicName}</div>
-                            </td>
-                            <td>
-                              <div class="syl-topic-desc">${topic.topicDescription || '—'}</div>
-                            </td>
-                            <td style="text-align:center;">
-                              <span class="syl-badge-lect">${planned}</span>
-                            </td>
-                            <td style="text-align:center; font-weight:600; color:var(--navy);">
-                              ${topic.weightage || 1}
-                            </td>
-                            <td style="text-align:center; font-weight:600; color:var(--primary);">
-                              ${topic.weightagePercent || 15}%
-                            </td>
-                            <td style="text-align:center;">
-                              <span class="syl-status-pill ${statusPillClass}">
-                                <i data-lucide="${statusIcon}" style="width:12px;height:12px;"></i>
-                                ${topic.status || (isDone ? 'Completed' : (isInProg ? 'In Progress' : 'Not Started'))}
-                                ${taken > 0 ? `(${taken}/${planned})` : ''}
+                    return `
+                      <div style="background:#fff; border:1px solid #E2E8F0; border-radius:10px; padding:16px 18px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <!-- Topic Title & Add Lecture Trigger -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                          <div style="flex:1 1 260px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                              <h5 style="margin:0; font-size:14.5px; font-weight:800; color:var(--dark-navy, #0B1F3A);">
+                                ${topic.topicName}
+                              </h5>
+                              <span style="background:${tComp ? '#DCFCE7' : (tInProg ? '#FEF3C7' : '#F1F5F9')}; color:${tComp ? '#15803D' : (tInProg ? '#B45309' : '#64748B')}; border:1px solid ${tComp ? '#86EFAC' : (tInProg ? '#FDE047' : '#CBD5E1')}; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700;">
+                                ${tComp ? 'Completed' : (tInProg ? 'In Progress' : 'Not Started')}
                               </span>
-                            </td>
-                            <td>
-                              <div class="syl-actions-cell">
-                                ${isDone ? `
-                                  <button type="button" class="syl-btn-undo" onclick="TeacherApp.undoSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Undo 1 lecture">
-                                    <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i> Undo
-                                  </button>
-                                ` : isInProg ? `
-                                  <button type="button" class="syl-btn-step" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Add 1 lecture">
-                                    <i data-lucide="plus" style="width:12px;height:12px;"></i> 1 Lect
-                                  </button>
-                                  <button type="button" class="syl-btn-cover" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', ${planned - taken})" title="Mark all remaining lectures complete">
-                                    <i data-lucide="check" style="width:12px;height:12px;"></i> Done
-                                  </button>
-                                  <button type="button" class="syl-btn-undo" onclick="TeacherApp.undoSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Undo 1 lecture">
-                                    <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i>
-                                  </button>
-                                ` : `
-                                  <button type="button" class="syl-btn-cover" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', ${planned})">
-                                    <i data-lucide="check" style="width:12px;height:12px;"></i> Mark Covered
-                                  </button>
-                                  <button type="button" class="syl-btn-step" onclick="TeacherApp.markSyllabusTopic('${currentSubject.subjectId}', '${unit.unitId}', '${topic.topicId}', 1)" title="Log 1 lecture">
-                                    <i data-lucide="plus" style="width:12px;height:12px;"></i> 1 Lect
-                                  </button>
-                                `}
-                              </div>
-                            </td>
-                          </tr>
-                        `;
-                      }).join('')}
-                    </tbody>
-                  </table>
+                            </div>
+                            ${topic.topicDescription ? `<p style="margin:0; font-size:12px; color:var(--text-muted, #64748B); line-height:1.4;">${topic.topicDescription}</p>` : ''}
+                          </div>
+
+                          <div style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" onclick="TeacherApp.openAddLectureModal('${currentSub.subjectId}', '${unit.unitId}', '${topic.topicId}')" style="background:var(--primary-blue, #0B5CAD); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(11,92,173,0.2);">
+                              <i data-lucide="plus" style="width:14px;height:14px;"></i> + Add Lecture
+                            </button>
+                            ${tEngaged > 0 ? `
+                              <button type="button" onclick="TeacherApp.undoLectureFromTopic('${currentSub.subjectId}', '${unit.unitId}', '${topic.topicId}')" title="Undo last added lecture" style="background:#F8FAFC; color:#64748B; border:1px solid #CBD5E1; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">
+                                ↩ Undo
+                              </button>
+                            ` : ''}
+                          </div>
+                        </div>
+
+                        <!-- Progress Summary -->
+                        <div style="background:#F8FAFC; border-radius:8px; padding:8px 12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                          <span style="font-size:12px; color:#475569;">
+                            Lectures Engaged: <strong style="color:var(--dark-navy, #0B1F3A);">${tEngaged}</strong> of <strong style="color:var(--dark-navy, #0B1F3A);">${tPlanned}</strong> planned
+                          </span>
+                          <div style="width:140px; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden;">
+                            <div style="width:${tProgress}%; height:100%; background:${tComp ? '#10B981' : (tInProg ? '#0B5CAD' : '#94A3B8')};"></div>
+                          </div>
+                        </div>
+
+                        <!-- Lectures List with Topics Covered Chips -->
+                        <div>
+                          <span style="font-size:11px; font-weight:700; color:var(--text-muted, #64748B); text-transform:uppercase; display:block; margin-bottom:6px;">
+                            Delivered Lectures &amp; Topics Covered (${lecs.length})
+                          </span>
+
+                          ${lecs.length === 0 ? `
+                            <div style="padding:10px; background:#FAFAFA; border:1px dashed #CBD5E1; border-radius:6px; text-align:center; font-size:12px; color:var(--text-muted, #64748B);">
+                              No lectures recorded yet. Click <strong>+ Add Lecture</strong> after conducting your class.
+                            </div>
+                          ` : `
+                            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">
+                              ${lecs.map(lec => {
+                                const isMarked = !!lec.attendanceMarked || lec.attendanceStatus === 'Marked';
+                                const covered = Array.isArray(lec.topicsCovered) && lec.topicsCovered.length > 0
+                                  ? lec.topicsCovered
+                                  : [topic.topicName];
+
+                                return `
+                                  <div style="background:${isMarked ? '#F0FDF4' : '#FFFBEB'}; border:1px solid ${isMarked ? '#BBF7D0' : '#FDE68A'}; border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+                                    <div>
+                                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                        <span style="font-size:13px; font-weight:800; color:${isMarked ? '#166534' : '#92400E'};">
+                                          Lecture ${lec.lectureNo}
+                                        </span>
+                                        ${isMarked ? `
+                                          <span style="background:#DCFCE7; color:#15803D; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:10px;">
+                                            ✓ Marked
+                                          </span>
+                                        ` : `
+                                          <span style="background:#FEF3C7; color:#B45309; font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:10px;">
+                                            Not Marked
+                                          </span>
+                                        `}
+                                      </div>
+                                      <span style="font-size:11.5px; color:#64748B; display:block; margin-bottom:6px;">
+                                        📅 ${lec.date} ${lec.timeSlot ? `• ${lec.timeSlot}` : ''}
+                                      </span>
+
+                                      <!-- Topics Covered Chips -->
+                                      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">
+                                        ${covered.map(t => `
+                                          <span style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; border-radius:12px; padding:1px 8px; font-size:10.5px; font-weight:600; line-height:1.3;">
+                                            🏷️ ${t}
+                                          </span>
+                                        `).join('')}
+                                      </div>
+
+                                      ${lec.notes ? `
+                                        <p style="margin:2px 0 0 0; font-size:11px; color:#475569; font-style:italic;">
+                                          📝 ${lec.notes}
+                                        </p>
+                                      ` : ''}
+                                    </div>
+
+                                    <div style="display:flex; justify-content:flex-end; padding-top:6px; border-top:${isMarked ? '1px solid #DCFCE7' : '1px solid #FEF3C7'};">
+                                      <button type="button" onclick="TeacherApp.openLectureAttendanceModal('${currentSub.subjectId}', '${unit.unitId}', '${topic.topicId}', '${lec.id}', '${lec.date}', '${currentSub.classId}', '${topic.topicName.replace(/'/g, "\\'")}', '${currentSub.subjectName.replace(/'/g, "\\'")}')" style="background:${isMarked ? '#FFFFFF' : 'var(--primary-blue, #0B5CAD)'}; color:${isMarked ? 'var(--primary-blue, #0B5CAD)' : '#FFFFFF'}; border:${isMarked ? '1px solid var(--primary-blue, #0B5CAD)' : 'none'}; padding:5px 12px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                                        ${isMarked ? 'View / Edit Attendance' : 'Mark Attendance'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                `;
+                              }).join('')}
+                            </div>
+                          `}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
             `;
           }).join('')}
+        </div>
+      ` : `
+        <!-- Tab Content: Lecture Delivery History Log -->
+        <div class="card" style="padding:20px; border-radius:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h4 style="margin:0; font-size:15px; font-weight:800; color:var(--dark-navy, #0B1F3A);">
+              Delivered Lectures &amp; Topics Covered Log
+            </h4>
+            <span style="font-size:12px; color:var(--text-muted, #64748B);">
+              Showing ${filteredLectures.length} of ${allLecturesList.length} total recorded lectures
+            </span>
+          </div>
+
+          ${filteredLectures.length === 0 ? `
+            <div style="padding:30px; text-align:center; background:#F8FAFC; border-radius:8px; color:#64748B; font-size:13px;">
+              No lectures found matching your filter. Click "+ Add Lecture" under any curriculum topic to record one.
+            </div>
+          ` : `
+            <div style="overflow-x:auto;">
+              <table style="width:100%; border-collapse:collapse; text-align:left;">
+                <thead>
+                  <tr style="background:#F8FAFC; border-bottom:2px solid #E2E8F0; color:#475569; font-size:12px; text-transform:uppercase;">
+                    <th style="padding:10px 12px; width:90px;">Lecture #</th>
+                    <th style="padding:10px 12px; width:110px;">Date</th>
+                    <th style="padding:10px 12px; width:160px;">Unit &amp; Topic</th>
+                    <th style="padding:10px 12px;">Topics Covered</th>
+                    <th style="padding:10px 12px; width:130px; textAlign:center;">Attendance</th>
+                    <th style="padding:10px 12px; width:130px; textAlign:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredLectures.map(lec => {
+                    const isMarked = !!lec.attendanceMarked || lec.attendanceStatus === 'Marked';
+                    const covered = Array.isArray(lec.topicsCovered) && lec.topicsCovered.length > 0
+                      ? lec.topicsCovered
+                      : [lec.topicName];
+
+                    return `
+                      <tr style="border-bottom:1px solid #F1F5F9; font-size:13px;">
+                        <td style="padding:12px; font-weight:800; color:#0B1F3A;">
+                          <span style="background:#EFF6FF; color:#1D4ED8; padding:2px 8px; border-radius:4px;">
+                            Lec ${lec.lectureNo}
+                          </span>
+                        </td>
+                        <td style="padding:12px; color:#475569;">
+                          ${lec.date}
+                        </td>
+                        <td style="padding:12px;">
+                          <div style="font-weight:700; color:#0B1F3A;">${lec.topicName}</div>
+                          <span style="font-size:11px; color:#64748B;">${lec.unitName ? lec.unitName.split(':')[0] : 'Unit'}</span>
+                        </td>
+                        <td style="padding:12px;">
+                          <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                            ${covered.map(t => `
+                              <span style="background:#F1F5F9; color:#1E293B; border:1px solid #CBD5E1; border-radius:12px; padding:1px 7px; font-size:11px; font-weight:600;">
+                                🏷️ ${t}
+                              </span>
+                            `).join('')}
+                          </div>
+                          ${lec.notes ? `
+                            <p style="margin:4px 0 0 0; font-size:11px; color:#64748B; font-style:italic;">
+                              📝 ${lec.notes}
+                            </p>
+                          ` : ''}
+                        </td>
+                        <td style="padding:12px; text-align:center;">
+                          ${isMarked ? `
+                            <span style="background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:800;">
+                              ✓ Marked
+                            </span>
+                          ` : `
+                            <span style="background:#FEF3C7; color:#B45309; border:1px solid #FDE047; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700;">
+                              Not Marked
+                            </span>
+                          `}
+                        </td>
+                        <td style="padding:12px; text-align:right;">
+                          <button type="button" onclick="TeacherApp.openLectureAttendanceModal('${lec.subjectId}', '${lec.unitId}', '${lec.topicId}', '${lec.id}', '${lec.date}', '${lec.classId}', '${lec.topicName.replace(/'/g, "\\'")}', '${lec.subjectName.replace(/'/g, "\\'")}')" style="background:${isMarked ? '#FFFFFF' : 'var(--primary-blue, #0B5CAD)'}; color:${isMarked ? 'var(--primary-blue, #0B5CAD)' : '#FFFFFF'}; border:${isMarked ? '1px solid var(--primary-blue, #0B5CAD)' : 'none'}; padding:5px 10px; border-radius:5px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                            ${isMarked ? 'View / Edit' : 'Mark Attendance'}
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      `}
+    `;
+
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // ----------------------------------------------------
+  // RESULTS & CONTINUOUS EVALUATION MARKSHEET MODULE
+  // ----------------------------------------------------
+  _resultsClass: null,
+  _resultsExam: 'IA-1',
+  _resultsData: {},
+
+  getResultsMaxMarks(examType) {
+    switch (examType) {
+      case 'IA-1':
+      case 'IA-2':
+        return 30;
+      case 'MID_SEM':
+        return 50;
+      case 'END_SEM':
+        return 100;
+      default:
+        return 30;
+    }
+  },
+
+  async renderResultsView() {
+    const container = document.getElementById("results-content");
+    if (!container) return;
+
+    const assigned = (TeacherERPData && TeacherERPData.assignedClasses) || [];
+    let classCodes = Array.from(new Set(assigned.map(c => c.classCode).filter(Boolean)));
+    if (classCodes.length === 0) classCodes = ['2R1', '2R2', '3R', '4R'];
+
+    if (!this._resultsClass || !classCodes.includes(this._resultsClass)) {
+      this._resultsClass = classCodes[0] || '2R1';
+    }
+
+    const currentClass = this._resultsClass;
+    const currentExam = this._resultsExam || 'IA-1';
+    const maxMarks = this.getResultsMaxMarks(currentExam);
+    const passMarks = Math.round(maxMarks * 0.4);
+
+    const currentSub = (assigned.find(a => a.classCode === currentClass)?.subject) || 'Curriculum Course';
+
+    // Load students for active class
+    let students = (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass(currentClass) : []);
+    if (!students || students.length === 0) {
+      if (TeacherERPData && typeof TeacherERPData.loadLiveStudents === 'function') {
+        students = await TeacherERPData.loadLiveStudents(currentClass);
+      }
+    }
+
+    // Retrieve stored marks from localStorage or initialize
+    const storageKey = `ssgmce_marks_${currentClass}_${currentExam}`;
+    let marksMap = {};
+    try {
+      marksMap = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    } catch (_) {}
+
+    // Initialize missing student marks
+    students.forEach((st, idx) => {
+      const sid = st.studentCode || st.id || `roll-${st.rollNo}`;
+      if (marksMap[sid] === undefined) {
+        const rollNum = parseInt(st.rollNo || idx + 1, 10);
+        const baseline = maxMarks * 0.75;
+        const variance = (rollNum % 7) - 2;
+        const calculated = Math.min(maxMarks, Math.max(passMarks - 2, Math.round(baseline + variance)));
+        marksMap[sid] = calculated;
+      }
+    });
+
+    this._resultsData[storageKey] = marksMap;
+
+    // Compute dynamic stats
+    const marksValues = students.map(st => {
+      const sid = st.studentCode || st.id || `roll-${st.rollNo}`;
+      return Number(marksMap[sid] !== undefined ? marksMap[sid] : 0);
+    });
+
+    const studentCount = students.length;
+    const totalScore = marksValues.reduce((sum, val) => sum + val, 0);
+    const avgScore = studentCount > 0 ? (totalScore / studentCount).toFixed(1) : '0.0';
+    const passingCount = marksValues.filter(m => m >= passMarks).length;
+    const passRate = studentCount > 0 ? ((passingCount / studentCount) * 100).toFixed(1) : '100.0';
+    const highestScore = marksValues.length > 0 ? Math.max(...marksValues) : maxMarks;
+
+    container.innerHTML = `
+      <div class="card" style="padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:16px;">
+          <div>
+            <h3 style="font-size:18px; margin:0; color:var(--dark-navy); font-weight:800;">Continuous Internal Assessment &amp; Marksheet</h3>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0;">Class ${currentClass} • ${currentSub} • Official Autonomous Moderation Grade Card</p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="quick-action-btn secondary" onclick="TeacherApp.exportResultsCsv()">
+              <i data-lucide="download" style="width:14px;height:14px;"></i> Export CSV
+            </button>
+            <button class="quick-action-btn primary" onclick="TeacherApp.saveResultsMarks()">
+              <i data-lucide="save" style="width:14px;height:14px;"></i> Save Marksheet
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls: Class & Exam Selection -->
+        <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:20px; background:#F8FAFC; padding:14px 18px; border-radius:8px; border:1px solid #E2E8F0;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">Target Class:</label>
+            <select id="results-class-select" style="padding:7px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; font-weight:600; color:var(--dark-navy); background:#fff;"
+                    onchange="TeacherApp.changeResultsClass(this.value)">
+              ${classCodes.map(c => `
+                <option value="${c}" ${c === currentClass ? 'selected' : ''}>Class ${c} (${(assigned.find(a => a.classCode === c)?.subject) || 'Curriculum'})</option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">Evaluation Phase:</label>
+            <select id="results-exam-select" style="padding:7px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; font-weight:600; color:var(--dark-navy); background:#fff;"
+                    onchange="TeacherApp.changeResultsExam(this.value)">
+              <option value="IA-1" ${currentExam === 'IA-1' ? 'selected' : ''}>Internal Assessment 1 (Max 30)</option>
+              <option value="IA-2" ${currentExam === 'IA-2' ? 'selected' : ''}>Internal Assessment 2 (Max 30)</option>
+              <option value="MID_SEM" ${currentExam === 'MID_SEM' ? 'selected' : ''}>Mid-Semester Exam (Max 50)</option>
+              <option value="END_SEM" ${currentExam === 'END_SEM' ? 'selected' : ''}>Semester End Theory (Max 100)</option>
+            </select>
+          </div>
+
+          <div style="margin-left:auto; font-size:12px; color:#64748B;">
+            <strong>Passing Criteria:</strong> ${passMarks} / ${maxMarks} marks (40%)
+          </div>
+        </div>
+
+        <!-- Dynamic Statistics Summary Cards -->
+        <div class="results-grid-summary" style="margin-bottom:24px;">
+          <div class="result-stat-box">
+            <div style="font-size:26px; font-weight:800; color:var(--primary-blue);" id="results-avg-score">${avgScore}</div>
+            <div style="font-size:12px; color:var(--text-muted);">Class Average (out of ${maxMarks})</div>
+          </div>
+          <div class="result-stat-box">
+            <div style="font-size:26px; font-weight:800; color:var(--success);" id="results-pass-rate">${passRate}%</div>
+            <div style="font-size:12px; color:var(--text-muted);">Passing Rate (${passingCount} / ${studentCount} students)</div>
+          </div>
+          <div class="result-stat-box">
+            <div style="font-size:26px; font-weight:800; color:var(--dark-navy);" id="results-highest-score">${highestScore} / ${maxMarks}</div>
+            <div style="font-size:12px; color:var(--text-muted);">Highest Marks Scored</div>
+          </div>
+        </div>
+
+        <!-- Interactive Student Marksheet Table -->
+        <div style="overflow-x:auto;">
+          <table class="roster-table" id="results-marksheet-table">
+            <thead>
+              <tr>
+                <th style="width:80px;">Roll No</th>
+                <th>Student Full Name</th>
+                <th>Student Code</th>
+                <th style="width:130px; text-align:center;">Marks (${maxMarks})</th>
+                <th style="width:100px; text-align:center;">Grade</th>
+                <th style="width:110px; text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="results-marksheet-tbody">
+              ${students.map(st => {
+                const sid = st.studentCode || st.id || `roll-${st.rollNo}`;
+                const val = marksMap[sid] !== undefined ? marksMap[sid] : 0;
+                const isPassed = val >= passMarks;
+                let grade = 'F';
+                const pct = (val / maxMarks) * 100;
+                if (pct >= 85) grade = 'A+';
+                else if (pct >= 75) grade = 'A';
+                else if (pct >= 60) grade = 'B';
+                else if (pct >= 40) grade = 'C';
+
+                return `
+                  <tr data-student-id="${sid}">
+                    <td style="font-weight:700; color:var(--primary-blue);">ROLL ${st.rollNo}</td>
+                    <td style="font-weight:600; color:var(--dark-navy);">${st.name}</td>
+                    <td style="color:#64748B; font-family:monospace; font-size:12px;">${st.studentCode || '--'}</td>
+                    <td style="text-align:center;">
+                      <input type="number" min="0" max="${maxMarks}" value="${val}"
+                             style="width:72px; padding:6px 8px; border:1px solid #CBD5E1; border-radius:5px; font-weight:700; text-align:center; font-size:13px; color:var(--dark-navy);"
+                             oninput="TeacherApp.handleMarksInputChange('${sid}', this.value, ${maxMarks})" />
+                    </td>
+                    <td style="text-align:center;">
+                      <span class="badge" style="background:#EFF6FF; color:var(--primary-blue); font-weight:700;" id="grade-${sid}">${grade}</span>
+                    </td>
+                    <td style="text-align:center;">
+                      <span class="badge ${isPassed ? 'badge-completed' : 'badge-pending'}" id="status-${sid}">
+                        ${isPassed ? 'Passed' : 'Backlog'}
+                      </span>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
     `;
@@ -2032,6 +3276,7 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
+<<<<<<< HEAD
   // ----------------------------------------------------
   // RESULTS VIEW & MARKS EVALUATION CONSOLE
   // ----------------------------------------------------
@@ -2632,6 +3877,105 @@ const TeacherApp = {
     if (modal) modal.style.display = 'none';
     if (this.currentView === 'results') {
       this.loadMarksRoster();
+=======
+  handleMarksInputChange(studentId, rawValue, maxMarks) {
+    const val = Math.min(maxMarks, Math.max(0, parseInt(rawValue, 10) || 0));
+    const currentClass = this._resultsClass || '2R1';
+    const currentExam = this._resultsExam || 'IA-1';
+    const storageKey = `ssgmce_marks_${currentClass}_${currentExam}`;
+
+    if (!this._resultsData[storageKey]) this._resultsData[storageKey] = {};
+    this._resultsData[storageKey][studentId] = val;
+
+    // Update grade and status badges for this student
+    const passMarks = Math.round(maxMarks * 0.4);
+    const isPassed = val >= passMarks;
+    let grade = 'F';
+    const pct = (val / maxMarks) * 100;
+    if (pct >= 85) grade = 'A+';
+    else if (pct >= 75) grade = 'A';
+    else if (pct >= 60) grade = 'B';
+    else if (pct >= 40) grade = 'C';
+
+    const gradeElem = document.getElementById(`grade-${studentId}`);
+    if (gradeElem) gradeElem.textContent = grade;
+
+    const statusElem = document.getElementById(`status-${studentId}`);
+    if (statusElem) {
+      statusElem.textContent = isPassed ? 'Passed' : 'Backlog';
+      statusElem.className = `badge ${isPassed ? 'badge-completed' : 'badge-pending'}`;
+    }
+
+    // Recalculate summary KPIs
+    const marksValues = Object.values(this._resultsData[storageKey]).map(Number);
+    if (marksValues.length > 0) {
+      const sum = marksValues.reduce((a, b) => a + b, 0);
+      const avg = (sum / marksValues.length).toFixed(1);
+      const passedCount = marksValues.filter(m => m >= passMarks).length;
+      const passPct = ((passedCount / marksValues.length) * 100).toFixed(1);
+      const high = Math.max(...marksValues);
+
+      const avgElem = document.getElementById("results-avg-score");
+      if (avgElem) avgElem.textContent = avg;
+      const passElem = document.getElementById("results-pass-rate");
+      if (passElem) passElem.textContent = `${passPct}%`;
+      const highElem = document.getElementById("results-highest-score");
+      if (highElem) highElem.textContent = `${high} / ${maxMarks}`;
+    }
+  },
+
+  changeResultsClass(classCode) {
+    this._resultsClass = classCode;
+    this.renderResultsView();
+  },
+
+  changeResultsExam(examType) {
+    this._resultsExam = examType;
+    this.renderResultsView();
+  },
+
+  saveResultsMarks() {
+    const currentClass = this._resultsClass || '2R1';
+    const currentExam = this._resultsExam || 'IA-1';
+    const storageKey = `ssgmce_marks_${currentClass}_${currentExam}`;
+
+    if (this._resultsData[storageKey]) {
+      localStorage.setItem(storageKey, JSON.stringify(this._resultsData[storageKey]));
+    }
+
+    if (typeof this.showToast === 'function') {
+      this.showToast(`Marksheet for ${currentClass} (${currentExam}) saved successfully!`, 'success');
+    }
+  },
+
+  exportResultsCsv() {
+    const currentClass = this._resultsClass || '2R1';
+    const currentExam = this._resultsExam || 'IA-1';
+    const storageKey = `ssgmce_marks_${currentClass}_${currentExam}`;
+    const marksMap = this._resultsData[storageKey] || {};
+
+    const students = (TeacherERPData && typeof TeacherERPData.getStudentsForClass === 'function' ? TeacherERPData.getStudentsForClass(currentClass) : []) || [];
+    const maxMarks = this.getResultsMaxMarks(currentExam);
+
+    let csv = "Roll No,Student Full Name,Student Code,Institute Email,Obtained Marks,Max Marks,Status\n";
+    students.forEach(st => {
+      const sid = st.studentCode || st.id || `roll-${st.rollNo}`;
+      const mark = marksMap[sid] !== undefined ? marksMap[sid] : 0;
+      const status = mark >= Math.round(maxMarks * 0.4) ? "Passed" : "Backlog";
+      csv += `"${st.rollNo}","${st.name}","${st.studentCode || ''}","${st.email}","${mark}","${maxMarks}","${status}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `SSGMCE_Marksheet_${currentClass}_${currentExam}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (typeof this.showToast === 'function') {
+      this.showToast(`Marksheet exported: SSGMCE_Marksheet_${currentClass}_${currentExam}.csv`, 'info');
+>>>>>>> 7b58cb3 (Update ERP system)
     }
   },
 
@@ -3086,6 +4430,2212 @@ const TeacherApp = {
       toast.style.transition = "opacity 0.3s ease";
       setTimeout(() => toast.remove(), 300);
     }, 3200);
+  },
+
+  /* ========================================================
+     BASIC FACULTY PROFILE MODULE IMPLEMENTATION (Minimal Glanceable Identity)
+     ======================================================== */
+  renderBasicProfileView() {
+    const container = document.getElementById("faculty-profile-container") || document.getElementById("profile-view");
+    if (!container) return;
+
+    // Strict faculty isolation: retrieve strictly the active logged-in teacher's profile
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+
+    const profile = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getProfileData === 'function')
+      ? TeacherERPData.getProfileData(facultyId)
+      : null;
+
+    const info = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getFacultyInfo === 'function')
+      ? TeacherERPData.getFacultyInfo(facultyId)
+      : null;
+
+    const completion = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.calculateProfileCompletion === 'function')
+      ? TeacherERPData.calculateProfileCompletion(info)
+      : { percentage: 75, missingItems: [] };
+
+    const p = profile || {
+      facultyId: facultyId,
+      name: teacher?.name || "Dr. Rohan Deshmukh",
+      designation: teacher?.designation || "Assistant Professor",
+      department: teacher?.department || "Computer Science & Engineering",
+      email: teacher?.email || "rdeshmukh@ssgmce.ac.in",
+      phone: teacher?.phone || "+91 94228 12345",
+      dateOfJoining: "2018-07-02",
+      profileImageUrl: null,
+      profilePhoto: null,
+      shortBio: "Assistant Professor in CSE specializing in Data Structures, Distributed Algorithms, and Machine Learning."
+    };
+
+    const photoUrl = p.profileImageUrl || p.profilePhoto || null;
+    const completionPct = completion.percentage || 75;
+    const progressColor = completionPct >= 80 ? '#10B981' : (completionPct >= 50 ? '#0B5CAD' : '#F59E0B');
+
+    let initials = (p.name || 'Faculty')
+      .replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '')
+      .trim()
+      .split(/\s+/)
+      .map(part => part[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+
+    const formattedJoiningDate = p.dateOfJoining
+      ? new Date(p.dateOfJoining).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : 'July 2, 2018';
+
+    container.innerHTML = `
+      <div style="max-width: 1040px; margin: 0 auto; padding: 6px 0 24px 0;">
+        
+        <!-- Header Title Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="font-size:24px; font-weight:800; color:#0B1F3A; margin:0 0 4px 0; letter-spacing:-0.02em;">Faculty Profile</h2>
+            <p style="color:#64748B; font-size:13.5px; margin:0;">Quick glanceable faculty identity, department designation, and personal contact details.</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700;">
+              <i data-lucide="shield-check" style="width:14px;height:14px;"></i> Verified Faculty Record
+            </span>
+          </div>
+        </div>
+
+        <!-- 1. Profile Completion Bar Card (Links directly to Information Module) -->
+        <div style="background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px solid #DBEAFE; border-radius: 14px; padding: 18px 24px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: 0 2px 6px rgba(11, 92, 173, 0.05);">
+          <div style="flex: 1 1 320px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.04em;">Profile Completion Status</span>
+              <span style="font-size: 13.5px; font-weight: 800; color: ${progressColor};">${completionPct}% Complete</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+              <div style="width: ${completionPct}%; height: 100%; background: ${progressColor}; border-radius: 4px; transition: width 0.4s ease;"></div>
+            </div>
+            <div style="font-size: 12px; color: #64748B; margin-top: 6px;">
+              ${completionPct >= 100 
+                ? 'Your faculty profile & portfolio are fully complete.' 
+                : 'Basic profile is set. Add your degrees, experience, awards & documents in the <strong>Information</strong> module for 100% completion.'}
+            </div>
+          </div>
+          <button onclick="TeacherApp.switchView('information')" style="background: #0B5CAD; color: #FFFFFF; border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(11, 92, 173, 0.2); transition: all 0.15s ease;">
+            <span>Open Detailed Information Module</span>
+            <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+
+        <!-- 2. Main Identity Profile Card -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05); overflow: hidden; margin-bottom: 22px;">
+          <!-- Cover Strip -->
+          <div style="height: 105px; background: linear-gradient(135deg, #0B1F3A 0%, #0B5CAD 60%, #0284C7 100%); position: relative;"></div>
+
+          <!-- Header Body -->
+          <div style="padding: 0 28px 24px 28px; margin-top: -48px;">
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 18px;">
+              
+              <!-- Avatar & Core Headings -->
+              <div style="display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
+                
+                <!-- Dynamic 120x120px Circular Frame with Hover Overlay & Buttons -->
+                <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                  <div
+                    class="profile-avatar-frame-120"
+                    onmouseenter="const ov = this.querySelector('.avatar-hover-overlay'); if (ov) ov.style.display='flex';"
+                    onmouseleave="const ov = this.querySelector('.avatar-hover-overlay'); if (ov) ov.style.display='none';"
+                    style="position:relative; width:120px; height:120px; border-radius:50%; overflow:hidden; border:4px solid #FFFFFF; box-shadow:0 6px 18px rgba(11,31,58,0.18); background:#F1F5F9; display:flex; align-items:center; justify-content:center; cursor:pointer;"
+                    title="Profile Photo Options"
+                  >
+                    ${photoUrl ? `
+                      <img src="${photoUrl}" alt="${p.name || 'Faculty Member'}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;background:#0B5CAD;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;\\'>${initials}</div>';">
+                    ` : `
+                      <div style="width:100%; height:100%; background:#0B5CAD; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:38px; font-weight:800;">
+                        ${initials}
+                      </div>
+                    `}
+
+                    <!-- Hover Overlay with Three Action Buttons: View, Upload/Change, Delete -->
+                    <div
+                      class="avatar-hover-overlay"
+                      style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(11,31,58,0.72); backdrop-filter:blur(2px); align-items:center; justify-content:center; gap:6px; border-radius:50%; z-index:5;"
+                    >
+                      <button
+                        type="button"
+                        onclick="event.stopPropagation(); TeacherApp.openViewPhotoModal();"
+                        title="View Photo"
+                        style="background:#FFFFFF; border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.3);"
+                      >👁️</button>
+                      <button
+                        type="button"
+                        onclick="event.stopPropagation(); TeacherApp.triggerProfilePhotoUpload();"
+                        title="Upload New Photo"
+                        style="background:#FFFFFF; border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.3);"
+                      >✏️</button>
+                      ${photoUrl ? `
+                        <button
+                          type="button"
+                          onclick="event.stopPropagation(); TeacherApp.openDeleteProfilePhotoModal();"
+                          title="Remove Photo"
+                          style="background:#FEE2E2; color:#DC2626; border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.3);"
+                        >🗑️</button>
+                      ` : ''}
+                    </div>
+                  </div>
+
+                  <!-- Below Image: Three Clean Action Buttons -->
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <button
+                      type="button"
+                      onclick="TeacherApp.openViewPhotoModal()"
+                      style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; color:#334155; cursor:pointer; display:inline-flex; align-items:center; gap:4px;"
+                      title="View Photo"
+                    >
+                      <span>👁️</span> View
+                    </button>
+                    <button
+                      type="button"
+                      onclick="TeacherApp.triggerProfilePhotoUpload()"
+                      style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; color:#1D4ED8; cursor:pointer; display:inline-flex; align-items:center; gap:4px;"
+                      title="Upload New Photo"
+                    >
+                      <span>📷</span> Upload
+                    </button>
+                    ${photoUrl ? `
+                      <button
+                        type="button"
+                        onclick="TeacherApp.openDeleteProfilePhotoModal()"
+                        style="background:#FEF2F2; border:1px solid #FECACA; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; color:#DC2626; cursor:pointer; display:inline-flex; align-items:center; gap:4px;"
+                        title="Remove Photo"
+                      >
+                        <span>🗑️</span> Remove
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <div style="padding-bottom: 4px;">
+                  <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 6px 0; color: #0F172A;">${p.name || 'Faculty Member'}</h2>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="background: #EFF6FF; color: #1D4ED8; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #BFDBFE;">
+                      ${p.designation || 'Faculty'}
+                    </span>
+                    <span style="background: #F1F5F9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                      ${p.department || 'Engineering'}
+                    </span>
+                    <span style="background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                      <span>ID: ${p.facultyId || facultyId}</span>
+                      <i data-lucide="lock" style="width:11px;height:11px;color:#B45309;"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Action Buttons (Edit Profile, Change Password, Logout) -->
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" onclick="TeacherApp.openEditBasicProfileModal()" style="background: #0B5CAD; color: #FFFFFF; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(11, 92, 173, 0.2);">
+                  <i data-lucide="edit-3" style="width:14px;height:14px;"></i> Edit Profile
+                </button>
+
+                <button type="button" onclick="TeacherApp.openChangePasswordModal()" style="background: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="key" style="width:14px;height:14px;"></i> Change Password
+                </button>
+
+                <button type="button" onclick="TeacherApp.openLogoutConfirmModal()" style="background: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <i data-lucide="log-out" style="width:14px;height:14px;"></i> Logout
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Short Bio (1-2 lines) -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
+              <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+                Short Bio
+              </div>
+              <p style="margin: 0; font-size: 13.5px; color: #334155; line-height: 1.55;">
+                ${p.shortBio || p.bio || 'No short bio provided. Click "Edit Profile" to write a 1-2 line summary.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Two-Column Glanceable Details Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 22px;">
+          
+          <!-- Card A: Official Institutional Information -->
+          <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 16px 0; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="building" style="width:16px;height:16px;color:#0B5CAD;"></i> Institutional Details
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Faculty / Employee ID</span>
+                <span style="font-size: 13px; font-weight: 700; color: #0F172A; display: inline-flex; align-items: center; gap: 4px;">
+                  ${p.facultyId || facultyId} <span style="font-size: 11px; color: #94A3B8;" title="Assigned by Administration (Read-Only)">🔒</span>
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Designation</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.designation || '—'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Department</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.department || '—'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Date of Joining</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${formattedJoiningDate}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding-bottom: 2px;">
+                <span style="font-size: 13px; color: #64748B;">Institution</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">SSGMCE Shegaon</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card B: Contact Information -->
+          <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 16px 0; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="phone-call" style="width:16px;height:16px;color:#0B5CAD;"></i> Contact & Location
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Official Email</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0B5CAD;">${p.email || '—'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Phone / Mobile</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.phone || '—'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
+                <span style="font-size: 13px; color: #64748B;">Academic Block / Cabin</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">CSE Block, Room 204</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding-bottom: 2px;">
+                <span style="font-size: 13px; color: #64748B;">Account Status</span>
+                <span style="font-size: 11px; font-weight: 700; color: #15803D; background: #DCFCE7; padding: 2px 8px; border-radius: 4px;">
+                  Active Faculty Member
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4. Module Distinction Callout (Strict Separation Between Profile and Information) -->
+        <div style="background: #F1F5F9; border: 1px dashed #CBD5E1; border-radius: 12px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #E2E8F0; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              📁
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #1E293B;">
+                Looking for your Degrees, Experience, Publications, or Certificates?
+              </div>
+              <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">
+                All comprehensive portfolio records, workshops attended/conducted, uploaded certificates vault, and yearly appraisal reports are maintained inside the <strong>Information</strong> module.
+              </div>
+            </div>
+          </div>
+          <button onclick="TeacherApp.switchView('information')" style="background: #FFFFFF; color: #0B5CAD; border: 1px solid #0B5CAD; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <span>Open Information Module</span>
+            <i data-lucide="arrow-right" style="width:13px;height:13px;"></i>
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    this.initLucideIcons();
+  },
+
+  openEditBasicProfileModal() {
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const profile = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getProfileData === 'function')
+      ? TeacherERPData.getProfileData(facultyId)
+      : null;
+
+    const p = profile || {
+      facultyId: facultyId,
+      name: teacher?.name || "Dr. Rohan Deshmukh",
+      designation: teacher?.designation || "Assistant Professor",
+      department: teacher?.department || "Computer Science & Engineering",
+      email: teacher?.email || "rdeshmukh@ssgmce.ac.in",
+      phone: teacher?.phone || "+91 94228 12345",
+      dateOfJoining: "2018-07-02",
+      profilePhoto: "",
+      shortBio: ""
+    };
+
+    const idInput = document.getElementById("editProfileFacultyId");
+    if (idInput) idInput.value = p.facultyId || facultyId;
+
+    const nameInput = document.getElementById("editProfileName");
+    if (nameInput) nameInput.value = p.name || "";
+
+    const desigInput = document.getElementById("editProfileDesignation");
+    if (desigInput) desigInput.value = p.designation || "";
+
+    const deptInput = document.getElementById("editProfileDepartment");
+    if (deptInput) deptInput.value = p.department || "";
+
+    const emailInput = document.getElementById("editProfileEmail");
+    if (emailInput) emailInput.value = p.email || "";
+
+    const phoneInput = document.getElementById("editProfilePhone");
+    if (phoneInput) phoneInput.value = p.phone || "";
+
+    const dojInput = document.getElementById("editProfileDateOfJoining");
+    if (dojInput) dojInput.value = p.dateOfJoining || "";
+
+    const photoInput = document.getElementById("editProfilePhotoUrl");
+    if (photoInput) photoInput.value = p.profilePhoto || "";
+
+    const bioInput = document.getElementById("editProfileBio");
+    if (bioInput) bioInput.value = p.shortBio || p.bio || "";
+
+    const modal = document.getElementById("editBasicProfileModal");
+    if (modal) {
+      modal.style.display = "flex";
+      this.initLucideIcons();
+    }
+  },
+
+  closeEditBasicProfileModal() {
+    const modal = document.getElementById("editBasicProfileModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  handlePhotoFileSelect(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const photoInput = document.getElementById("editProfilePhotoUrl");
+      if (photoInput) {
+        photoInput.value = e.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+  },
+
+  submitBasicProfile(event) {
+    if (event) event.preventDefault();
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+
+    const name = document.getElementById("editProfileName")?.value.trim();
+    const designation = document.getElementById("editProfileDesignation")?.value.trim();
+    const department = document.getElementById("editProfileDepartment")?.value.trim();
+    const email = document.getElementById("editProfileEmail")?.value.trim();
+    const phone = document.getElementById("editProfilePhone")?.value.trim();
+    const dateOfJoining = document.getElementById("editProfileDateOfJoining")?.value;
+    const profilePhoto = document.getElementById("editProfilePhotoUrl")?.value.trim();
+    const shortBio = document.getElementById("editProfileBio")?.value.trim();
+
+    if (!name) {
+      this.showToast("Faculty full name is required", "error");
+      return;
+    }
+    if (!email) {
+      this.showToast("Official email address is required", "error");
+      return;
+    }
+
+    const updated = {
+      name,
+      designation,
+      department,
+      email,
+      phone,
+      dateOfJoining,
+      profilePhoto,
+      shortBio
+    };
+
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.updateProfileData === 'function') {
+      TeacherERPData.updateProfileData(facultyId, updated);
+    }
+
+    // Sync session cache
+    try {
+      const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+      stored.name = name;
+      stored.email = email;
+      stored.phone = phone;
+      stored.designation = designation;
+      stored.department = department;
+      if (profilePhoto) stored.profilePhoto = profilePhoto;
+      localStorage.setItem('ssgmce_user', JSON.stringify(stored));
+    } catch (_) {}
+
+    this.closeEditBasicProfileModal();
+    this.renderBasicProfileView();
+    this.renderHeaderProfile();
+    this.showToast("Faculty profile updated successfully!", "success");
+  },
+
+  openChangePasswordModal() {
+    const modal = document.getElementById("changePasswordModal");
+    const alertBox = document.getElementById("changePasswordAlert");
+    if (alertBox) alertBox.style.display = "none";
+
+    const cInput = document.getElementById("currentPasswordInput");
+    const nInput = document.getElementById("newPasswordInput");
+    const cfInput = document.getElementById("confirmPasswordInput");
+    if (cInput) cInput.value = "";
+    if (nInput) nInput.value = "";
+    if (cfInput) cfInput.value = "";
+
+    if (modal) {
+      modal.style.display = "flex";
+      this.initLucideIcons();
+    }
+  },
+
+  closeChangePasswordModal() {
+    const modal = document.getElementById("changePasswordModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  submitChangePassword(event) {
+    if (event) event.preventDefault();
+    const cur = document.getElementById("currentPasswordInput")?.value;
+    const n1 = document.getElementById("newPasswordInput")?.value;
+    const n2 = document.getElementById("confirmPasswordInput")?.value;
+    const alertBox = document.getElementById("changePasswordAlert");
+
+    if (!cur) {
+      if (alertBox) {
+        alertBox.style.display = "block";
+        alertBox.style.background = "#FEE2E2";
+        alertBox.style.color = "#B91C1C";
+        alertBox.textContent = "Please enter current password.";
+      }
+      return;
+    }
+
+    if (!n1 || n1.length < 6) {
+      if (alertBox) {
+        alertBox.style.display = "block";
+        alertBox.style.background = "#FEE2E2";
+        alertBox.style.color = "#B91C1C";
+        alertBox.textContent = "New password must be at least 6 characters long.";
+      }
+      return;
+    }
+
+    if (n1 !== n2) {
+      if (alertBox) {
+        alertBox.style.display = "block";
+        alertBox.style.background = "#FEE2E2";
+        alertBox.style.color = "#B91C1C";
+        alertBox.textContent = "New passwords do not match. Please re-type.";
+      }
+      return;
+    }
+
+    if (alertBox) {
+      alertBox.style.display = "block";
+      alertBox.style.background = "#DCFCE7";
+      alertBox.style.color = "#15803D";
+      alertBox.textContent = "Password changed successfully!";
+    }
+
+    setTimeout(() => {
+      this.closeChangePasswordModal();
+      this.showToast("Account password updated securely!", "success");
+    }, 1100);
+  },
+
+  openLogoutConfirmModal() {
+    const modal = document.getElementById("logoutConfirmModal");
+    if (modal) modal.style.display = "flex";
+  },
+
+  closeLogoutConfirmModal() {
+    const modal = document.getElementById("logoutConfirmModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  confirmLogout() {
+    this.closeLogoutConfirmModal();
+    this.showToast("Signing out of Teacher ERP session...", "info");
+
+    try {
+      localStorage.removeItem("ssgmce_user");
+      localStorage.removeItem("ssgmce_token");
+      localStorage.removeItem("ssgmce_active_teacher");
+      localStorage.removeItem("token");
+      localStorage.removeItem("access_token");
+    } catch (_) {}
+
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 450);
+  },
+
+  /* ========================================================
+     DYNAMIC PROFILE IMAGE MANAGEMENT (View, Upload, Delete)
+     ======================================================== */
+  _pendingUploadPhotoUrl: null,
+  _pendingUploadPhotoFile: null,
+
+  openViewPhotoModal() {
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const profile = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getProfileData === 'function')
+      ? TeacherERPData.getProfileData(facultyId)
+      : null;
+
+    const displayName = (profile && profile.name) || (teacher && teacher.name) || "Faculty Member";
+    const photoUrl = (profile && (profile.profileImageUrl || profile.profilePhoto)) || (teacher && (teacher.profileImageUrl || teacher.profilePhoto)) || null;
+
+    let initials = teacher?.avatarInitials;
+    if (!initials && displayName) {
+      const cleanName = displayName.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
+      const parts = cleanName.split(/\s+/);
+      initials = parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    const bodyElem = document.getElementById("profileImageViewModalBody");
+    if (!bodyElem) return;
+
+    if (photoUrl) {
+      bodyElem.innerHTML = `
+        <div style="display:flex; justify-content:center; margin-bottom:20px;">
+          <div style="width:230px; height:230px; border-radius:50%; overflow:hidden; border:4px solid #0B5CAD; box-shadow:0 8px 24px rgba(11,92,173,0.2); background:#F8FAFC;">
+            <img src="${photoUrl}" alt="${displayName}" style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+        </div>
+        <h4 style="margin:0 0 4px 0; font-size:18px; font-weight:700; color:#0F172A;">${displayName}</h4>
+        <p style="margin:0 0 24px 0; font-size:13px; color:#64748B;">Current active faculty profile photograph</p>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button type="button" onclick="TeacherApp.closeViewPhotoModal(); TeacherApp.triggerProfilePhotoUpload();" style="background:#0B5CAD; color:#FFFFFF; border:none; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            ✏️ Upload New Photo
+          </button>
+          <button type="button" onclick="TeacherApp.closeViewPhotoModal(); TeacherApp.openDeleteProfilePhotoModal();" style="background:#FEF2F2; color:#DC2626; border:1px solid #FCA5A5; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            🗑️ Remove Photo
+          </button>
+          <button type="button" onclick="TeacherApp.closeViewPhotoModal()" style="background:#F1F5F9; color:#475569; border:none; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+            Close
+          </button>
+        </div>
+      `;
+    } else {
+      bodyElem.innerHTML = `
+        <div style="display:flex; justify-content:center; margin-bottom:18px;">
+          <div style="width:160px; height:160px; border-radius:50%; background:#0B5CAD; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:52px; font-weight:800; border:4px solid #E2E8F0; box-shadow:0 8px 24px rgba(0,0,0,0.1);">
+            ${initials || 'FM'}
+          </div>
+        </div>
+        <h4 style="margin:0 0 6px 0; font-size:17px; font-weight:700; color:#0F172A;">No Profile Photo Uploaded</h4>
+        <p style="margin:0 auto 22px auto; font-size:13.5px; color:#64748B; max-width:320px; line-height:1.45;">
+          Your default initials avatar is currently displayed across the ERP dashboard. Upload a picture to personalize your profile.
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button type="button" onclick="TeacherApp.closeViewPhotoModal(); TeacherApp.triggerProfilePhotoUpload();" style="background:#0B5CAD; color:#FFFFFF; border:none; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            📷 Upload Photo Now
+          </button>
+          <button type="button" onclick="TeacherApp.closeViewPhotoModal()" style="background:#F1F5F9; color:#475569; border:none; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+            Close
+          </button>
+        </div>
+      `;
+    }
+
+    const modal = document.getElementById("profileImageViewModal");
+    if (modal) modal.style.display = "flex";
+  },
+
+  closeViewPhotoModal() {
+    const modal = document.getElementById("profileImageViewModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  triggerProfilePhotoUpload() {
+    const fileInput = document.getElementById("profileImageFileInput");
+    if (fileInput) {
+      fileInput.value = "";
+      fileInput.click();
+    }
+  },
+
+  handlePhotoFileSelected(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    // Check file format: accept only image formats (JPG, PNG, JPEG, WEBP)
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.showToast("Please select a valid image format (JPG, PNG, JPEG, WEBP)", "error");
+      return;
+    }
+
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+    const isOversized = file.size > MAX_SIZE;
+
+    // Format file size
+    const formatBytes = (bytes) => {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      this._pendingUploadPhotoUrl = dataUrl;
+      this._pendingUploadPhotoFile = file;
+
+      // Populate preview modal
+      const previewImg = document.getElementById("uploadPhotoPreviewImg");
+      const previewBox = document.getElementById("uploadPhotoPreviewBox");
+      const nameElem = document.getElementById("uploadPhotoFileName");
+      const sizeElem = document.getElementById("uploadPhotoFileSize");
+      const alertElem = document.getElementById("uploadPhotoOversizeAlert");
+      const saveBtn = document.getElementById("btnSaveUploadedPhoto");
+
+      if (previewImg) previewImg.src = dataUrl;
+      if (nameElem) nameElem.textContent = file.name;
+      if (sizeElem) {
+        sizeElem.textContent = formatBytes(file.size) + (isOversized ? " (Exceeds 2MB Limit)" : "");
+        sizeElem.style.color = isOversized ? "#DC2626" : "#0B5CAD";
+      }
+
+      if (previewBox) {
+        previewBox.style.border = isOversized ? "4px solid #EF4444" : "4px solid #10B981";
+      }
+
+      if (alertElem) {
+        alertElem.style.display = isOversized ? "flex" : "none";
+      }
+
+      if (saveBtn) {
+        saveBtn.disabled = isOversized;
+        saveBtn.style.opacity = isOversized ? "0.6" : "1";
+        saveBtn.style.cursor = isOversized ? "not-allowed" : "pointer";
+      }
+
+      const modal = document.getElementById("profileImageUploadModal");
+      if (modal) modal.style.display = "flex";
+    };
+
+    reader.readAsDataURL(file);
+  },
+
+  closeUploadPhotoModal() {
+    this._pendingUploadPhotoUrl = null;
+    this._pendingUploadPhotoFile = null;
+    const modal = document.getElementById("profileImageUploadModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  saveUploadedPhoto() {
+    if (!this._pendingUploadPhotoUrl) return;
+
+    if (this._pendingUploadPhotoFile && this._pendingUploadPhotoFile.size > 2 * 1024 * 1024) {
+      this.showToast("File size exceeds 2MB limit. Please select an image smaller than 2MB.", "error");
+      return;
+    }
+
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const newImageUrl = this._pendingUploadPhotoUrl;
+
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.updateProfileImage === 'function') {
+      TeacherERPData.updateProfileImage(facultyId, newImageUrl);
+    }
+
+    // Sync session state
+    try {
+      const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+      stored.profileImageUrl = newImageUrl;
+      stored.profilePhoto = newImageUrl;
+      localStorage.setItem('ssgmce_user', JSON.stringify(stored));
+    } catch (_) {}
+
+    this.closeUploadPhotoModal();
+    this.renderBasicProfileView();
+    this.renderHeaderProfile();
+    this.showToast("Profile photo updated successfully.", "success");
+  },
+
+  openDeleteProfilePhotoModal() {
+    const modal = document.getElementById("profileImageDeleteModal");
+    if (modal) modal.style.display = "flex";
+  },
+
+  closeDeletePhotoModal() {
+    const modal = document.getElementById("profileImageDeleteModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  confirmDeletePhoto() {
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.deleteProfileImage === 'function') {
+      TeacherERPData.deleteProfileImage(facultyId);
+    }
+
+    // Sync session state
+    try {
+      const stored = JSON.parse(localStorage.getItem('ssgmce_user') || '{}');
+      stored.profileImageUrl = null;
+      stored.profilePhoto = null;
+      localStorage.setItem('ssgmce_user', JSON.stringify(stored));
+    } catch (_) {}
+
+    this.closeDeletePhotoModal();
+    this.renderBasicProfileView();
+    this.renderHeaderProfile();
+    this.showToast("Profile photo removed successfully.", "success");
+  },
+
+  /* ========================================================
+     FACULTY INFORMATION & PORTFOLIO MODULE IMPLEMENTATION
+     ======================================================== */
+  currentInfoTab: 'personal',
+  currentDocFilter: 'all',
+  currentDocSearch: '',
+  currentReportYear: '2026',
+  currentDocPreview: null,
+
+  renderInformationView(targetTab = null) {
+    if (targetTab) {
+      this.currentInfoTab = targetTab;
+    }
+    const container = document.getElementById("faculty-info-container");
+    if (!container) return;
+
+    // Strict faculty isolation: retrieve strictly the active logged-in teacher's profile
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const info = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getFacultyInfo === 'function')
+      ? TeacherERPData.getFacultyInfo(facultyId)
+      : null;
+
+    if (!info) {
+      container.innerHTML = `<div class="card" style="padding:24px; text-align:center; color:#64748B;">Unable to load faculty profile record for ID: ${facultyId}</div>`;
+      return;
+    }
+
+    const completion = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.calculateProfileCompletion === 'function')
+      ? TeacherERPData.calculateProfileCompletion(info)
+      : { percentage: 85, missingItems: [] };
+
+    const pd = info.personalDetails || {};
+    const cleanName = (pd.name || teacher.name || "Faculty").replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+/i, '').trim();
+    const initials = cleanName.split(/\s+/).map(p => p[0]).join('').substring(0, 2).toUpperCase() || "FM";
+    const completionColor = completion.percentage >= 80 ? "#10B981" : (completion.percentage >= 50 ? "#0B5CAD" : "#F59E0B");
+
+    container.innerHTML = `
+      <div class="faculty-portfolio-container">
+        <!-- Top Hero Card: Faculty Summary & Completion Progress -->
+        <div class="faculty-hero-card">
+          <div class="faculty-hero-top">
+            <div class="faculty-hero-profile">
+              <div class="faculty-hero-avatar-wrap">
+                <div class="faculty-hero-avatar">
+                  ${pd.profilePhoto ? `<img src="${pd.profilePhoto}" alt="${pd.name || 'Faculty'}">` : `<span>${initials}</span>`}
+                </div>
+                <span class="faculty-hero-badge-active" title="Active Verified Faculty Profile"></span>
+              </div>
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <h2 style="font-size:20px; font-weight:800; color:#0B1F3A; margin:0;">${pd.name || teacher.name || "Faculty Member"}</h2>
+                  <span style="font-size:11px; padding:3px 9px; border-radius:12px; background:#EFF6FF; color:#0B5CAD; font-weight:700; border:1px solid #BFDBFE;">${pd.facultyId || facultyId}</span>
+                </div>
+                <p style="font-size:13.5px; color:#0B5CAD; font-weight:600; margin:3px 0 0 0;">${pd.designation || "Assistant Professor"} • Department of ${pd.department || "Computer Science & Engineering"}</p>
+                <div style="display:flex; align-items:center; gap:16px; font-size:12px; color:#64748B; margin-top:6px; flex-wrap:wrap;">
+                  <span>📧 ${pd.email || (facultyId.toLowerCase() + '@ssgmce.ac.in')}</span>
+                  <span>📞 ${pd.phone || "+91 94228 12345"}</span>
+                  <span>🏛️ SSGMCE Shegaon</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Completion Progress Card -->
+            <div class="faculty-completion-box">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:700; color:#0B1F3A;">Profile Completion</span>
+                <span style="font-size:13px; font-weight:800; color:${completionColor};">${completion.percentage}% Complete</span>
+              </div>
+              <div class="completion-bar-track">
+                <div class="completion-bar-fill" style="width: ${completion.percentage}%; background:${completionColor};"></div>
+              </div>
+              ${completion.missingItems && completion.missingItems.length > 0 ? `
+                <div style="font-size:11.5px; color:#64748B; display:flex; align-items:center; gap:5px;">
+                  <span style="color:#F59E0B;">💡</span> <span>Tip: ${completion.missingItems[0]}</span>
+                </div>
+              ` : `
+                <div style="font-size:11.5px; color:#059669; font-weight:600;">
+                  ✓ Profile 100% complete & verified
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+
+        <!-- Portfolio Navigation Tab Bar (9 Tabs) -->
+        <div class="portfolio-tabs-nav" id="portfolioTabsNav">
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'personal' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('personal')">
+            <i data-lucide="user" style="width:14px;height:14px;"></i> Personal Details
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'education' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('education')">
+            <i data-lucide="graduation-cap" style="width:14px;height:14px;"></i> Education (${(info.education || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'experience' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('experience')">
+            <i data-lucide="briefcase" style="width:14px;height:14px;"></i> Experience (${(info.experience || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'achievements' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('achievements')">
+            <i data-lucide="award" style="width:14px;height:14px;"></i> Achievements (${(info.achievements || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'conducted' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('conducted')">
+            <i data-lucide="presentation" style="width:14px;height:14px;"></i> Conducted (${(info.sessionsConducted || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'attended' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('attended')">
+            <i data-lucide="book-open" style="width:14px;height:14px;"></i> Attended (${(info.sessionsAttended || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'publications' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('publications')">
+            <i data-lucide="file-text" style="width:14px;height:14px;"></i> Publications (${(info.publications || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'documents' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('documents')">
+            <i data-lucide="folder" style="width:14px;height:14px;"></i> Document Vault (${(info.documents || []).length})
+          </button>
+          <button type="button" class="portfolio-tab-item ${this.currentInfoTab === 'report' ? 'active' : ''}" onclick="TeacherApp.switchInformationTab('report')">
+            <i data-lucide="file-check" style="width:14px;height:14px;"></i> Yearly Report
+          </button>
+        </div>
+
+        <!-- Active Tab Content Area -->
+        <div class="portfolio-tab-content" id="faculty-tab-content">
+          ${this.renderInformationActiveTabContent(info)}
+        </div>
+      </div>
+    `;
+
+    this.initLucideIcons();
+  },
+
+  switchInformationTab(tabKey) {
+    this.currentInfoTab = tabKey;
+    try { localStorage.setItem('ssgmce_current_info_tab', tabKey); } catch (_) {}
+    this.renderInformationView();
+  },
+
+  renderInformationActiveTabContent(info) {
+    switch (this.currentInfoTab) {
+      case 'personal': return this.renderInfoTabPersonal(info);
+      case 'education': return this.renderInfoTabEducation(info);
+      case 'experience': return this.renderInfoTabExperience(info);
+      case 'achievements': return this.renderInfoTabAchievements(info);
+      case 'conducted': return this.renderInfoTabConducted(info);
+      case 'attended': return this.renderInfoTabAttended(info);
+      case 'publications': return this.renderInfoTabPublications(info);
+      case 'documents': return this.renderInfoTabDocuments(info);
+      case 'report': return this.renderInfoTabReport(info);
+      default: return this.renderInfoTabPersonal(info);
+    }
+  },
+
+  // 1. Personal Details Tab
+  renderInfoTabPersonal(info) {
+    const pd = info.personalDetails || {};
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Personal & Academic Profile</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Update your official identity, department designation, contact information, and biography.</p>
+          </div>
+        </div>
+
+        <form onsubmit="TeacherApp.saveInformationPersonalDetails(event)" style="display:flex; flex-direction:column; gap:16px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Full Name *</label>
+              <input type="text" id="piFullName" class="form-control" value="${pd.name || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Faculty / Employee ID</label>
+              <input type="text" id="piFacultyId" class="form-control" value="${pd.facultyId || info.facultyId || ''}" readonly style="width:100%; padding:9px 12px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px; background:#F8FAFC; color:#64748B;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Official Email *</label>
+              <input type="email" id="piEmail" class="form-control" value="${pd.email || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Phone Number *</label>
+              <input type="tel" id="piPhone" class="form-control" value="${pd.phone || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Department</label>
+              <input type="text" id="piDepartment" class="form-control" value="${pd.department || 'Computer Science & Engineering'}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Designation</label>
+              <select id="piDesignation" class="form-control" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                <option value="Assistant Professor" ${pd.designation === 'Assistant Professor' ? 'selected' : ''}>Assistant Professor</option>
+                <option value="Associate Professor" ${pd.designation === 'Associate Professor' ? 'selected' : ''}>Associate Professor</option>
+                <option value="Professor" ${pd.designation === 'Professor' ? 'selected' : ''}>Professor</option>
+                <option value="Professor & Head of Department" ${pd.designation === 'Professor & Head of Department' ? 'selected' : ''}>Professor & Head of Department</option>
+                <option value="Adjunct Faculty" ${pd.designation === 'Adjunct Faculty' ? 'selected' : ''}>Adjunct Faculty</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Date of Joining</label>
+              <input type="date" id="piDateOfJoining" class="form-control" value="${pd.dateOfJoining || '2018-07-02'}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Profile Photo (URL or Upload)</label>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="piProfilePhoto" class="form-control" value="${pd.profilePhoto || ''}" placeholder="https://..." style="flex:1; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                <label style="padding:9px 14px; background:#F1F5F9; border:1px solid #CBD5E1; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; color:#334155; display:inline-flex; align-items:center; gap:5px;">
+                  📁 Browse
+                  <input type="file" accept="image/*" style="display:none;" onchange="TeacherApp.handlePhotoUpload(event)">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Bio / About Me</label>
+            <textarea id="piBio" rows="4" class="form-control" placeholder="Share your academic specialization, research pursuits, and teaching philosophy..." style="width:100%; padding:10px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; line-height:1.5;">${pd.bio || ''}</textarea>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; border-top:1px solid #E2E8F0; padding-top:16px;">
+            <button type="submit" class="quick-action-btn primary" style="padding:10px 24px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13.5px; display:inline-flex; align-items:center; gap:8px;">
+              <i data-lucide="save" style="width:15px;height:15px;"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+  },
+
+  handlePhotoUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const input = document.getElementById("piProfilePhoto");
+      if (input) input.value = e.target.result;
+      this.showToast("Profile image loaded. Click 'Save Changes' to persist.", "info");
+    };
+    reader.readAsDataURL(file);
+  },
+
+  saveInformationPersonalDetails(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+
+    const updated = {
+      name: document.getElementById("piFullName")?.value.trim() || "",
+      email: document.getElementById("piEmail")?.value.trim() || "",
+      phone: document.getElementById("piPhone")?.value.trim() || "",
+      department: document.getElementById("piDepartment")?.value.trim() || "Computer Science & Engineering",
+      designation: document.getElementById("piDesignation")?.value || "Assistant Professor",
+      dateOfJoining: document.getElementById("piDateOfJoining")?.value || "",
+      profilePhoto: document.getElementById("piProfilePhoto")?.value.trim() || "",
+      bio: document.getElementById("piBio")?.value.trim() || ""
+    };
+
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.saveFacultyPersonalDetails === 'function') {
+      TeacherERPData.saveFacultyPersonalDetails(facultyId, updated);
+    }
+
+    this.showToast("Personal details updated successfully!", "success");
+    this.renderHeaderProfile();
+    this.renderInformationView();
+  },
+
+  // 2. Education Tab
+  renderInfoTabEducation(info) {
+    const list = info.education || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Education & Academic Qualifications</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Degrees, doctorates, postgraduate diplomas, and verified university credentials.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('education')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Qualification
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No education qualifications recorded. Click "+ Add Qualification" above.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(edu => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${edu.degree || 'Degree'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#ECFDF5; color:#047857; font-weight:700; border:1px solid #A7F3D0;">${edu.yearOfPassing || 'Completed'}</span>
+                    </div>
+                    <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${edu.specialization || 'Field of Study'}</p>
+                    <p style="font-size:12.5px; color:#64748B; margin:0;">${edu.university || 'University / Institution'} • Grade/Score: <strong>${edu.grade || 'N/A'}</strong></p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${edu.certificateUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${edu.degree} Certificate', '${edu.certificateUrl}', 'Education', '${edu.yearOfPassing}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Certificate
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('education', '${edu.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('education', '${edu.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 3. Experience Tab
+  renderInfoTabExperience(info) {
+    const list = info.experience || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Professional & Teaching Experience</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Academic appointments, industry research positions, and institution service timeline.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('experience')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Position
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No experience history recorded. Click "+ Add Position" above.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(exp => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${exp.designation || 'Position'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${exp.fromDate || ''} – ${exp.toDate || 'Present'}</span>
+                    </div>
+                    <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${exp.organization || 'Organization'}</p>
+                    <p style="font-size:12.5px; color:#475569; margin:4px 0 0 0; line-height:1.5;">${exp.responsibilities || 'Key responsibilities not specified'}</p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${exp.certificateUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${exp.organization} Experience Proof', '${exp.certificateUrl}', 'Experience', '${exp.fromDate}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Proof
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('experience', '${exp.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('experience', '${exp.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 4. Achievements & Awards Tab
+  renderInfoTabAchievements(info) {
+    const list = info.achievements || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Honors, Awards & Achievements</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Institutional accolades, state/national awards, competitive rankings, and recognitions.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('achievements')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Achievement
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No honors or awards recorded. Click "+ Add Achievement" above.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(ach => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">🏆 ${ach.title || 'Achievement'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#FEF3C7; color:#B45309; font-weight:700; border:1px solid #FDE68A;">${ach.year || ach.date || 'Recognized'}</span>
+                    </div>
+                    <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${ach.awardingBody || 'Awarding Organization'}</p>
+                    <p style="font-size:12.5px; color:#475569; margin:4px 0 0 0; line-height:1.5;">${ach.description || ''}</p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${ach.proofUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${ach.title} Citation', '${ach.proofUrl}', 'Achievement', '${ach.year || ach.date}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Citation
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('achievements', '${ach.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('achievements', '${ach.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 5. Sessions Conducted Tab
+  renderInfoTabConducted(info) {
+    const list = info.sessionsConducted || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Sessions, Workshops & FDPs Conducted</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Workshops organized, faculty development programs steered, and keynote sessions delivered.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('sessionsConducted')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Conducted Session
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No conducted sessions recorded. Click "+ Add Conducted Session" above.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(s => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${s.title || 'Session'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#F3E8FF; color:#7E22CE; font-weight:700; border:1px solid #E9D5FF;">${s.type || 'Workshop'}</span>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#ECFDF5; color:#047857; font-weight:700; border:1px solid #A7F3D0;">Role: ${s.role || 'Trainer'}</span>
+                    </div>
+                    <p style="font-size:12.5px; color:#64748B; margin:4px 0 2px 0;">
+                      📅 Date: <strong>${s.date || 'N/A'}</strong> (${s.duration || 'N/A'}) • 📍 Venue: <strong>${s.venue || 'SSGMCE'}</strong> • 👥 Participants: <strong>${s.participants || 'N/A'}</strong>
+                    </p>
+                    <p style="font-size:12.5px; color:#475569; margin:4px 0 0 0; line-height:1.5;">${s.description || ''}</p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${s.certificateUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${s.title} Report', '${s.certificateUrl}', 'Session', '${s.date}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Report
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('sessionsConducted', '${s.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('sessionsConducted', '${s.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 6. Sessions Attended Tab
+  renderInfoTabAttended(info) {
+    const list = info.sessionsAttended || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Sessions, Workshops & FDPs Attended</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">AICTE ATAL programs, IEEE conferences, pedagogy training, and industry development certifications.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('sessionsAttended')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Attended Session
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No attended training sessions recorded. Click "+ Add Attended Session" above.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(s => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${s.title || 'Attended Program'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#E0F2FE; color:#0369A1; font-weight:700; border:1px solid #BAE6FD;">${s.type || 'FDP'}</span>
+                    </div>
+                    <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">Organized by: ${s.organizedBy || 'Host Institute'}</p>
+                    <p style="font-size:12.5px; color:#64748B; margin:0;">📅 Date: <strong>${s.date || 'N/A'}</strong> • Duration: <strong>${s.duration || 'N/A'}</strong></p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${s.certificateUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${s.title} Participation Certificate', '${s.certificateUrl}', 'Session', '${s.date}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Certificate
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('sessionsAttended', '${s.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('sessionsAttended', '${s.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 7. Publications & Research Tab
+  renderInfoTabPublications(info) {
+    const list = info.publications || [];
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Publications & Research Papers</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Scopus, SCI, IEEE, and peer-reviewed international journals and conference papers.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('publications')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="plus-circle" style="width:15px;height:15px;"></i> Add Publication
+          </button>
+        </div>
+
+        ${list.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No research papers logged. Click "+ Add Publication" above to add your articles.
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${list.map(pub => `
+              <div class="portfolio-item-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">📄 ${pub.title || 'Paper Title'}</h4>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${pub.year || 'Published'}</span>
+                      ${pub.citations ? `<span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#FEF3C7; color:#B45309; font-weight:700;">★ ${pub.citations} Citations</span>` : ''}
+                    </div>
+                    <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${pub.journal || 'Journal / Conference'}</p>
+                    <p style="font-size:12.5px; color:#64748B; margin:0;">
+                      ${pub.doi ? `DOI: <a href="https://doi.org/${pub.doi}" target="_blank" style="color:#0B5CAD; text-decoration:underline;">${pub.doi}</a>` : 'Peer-reviewed'}
+                    </p>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${pub.proofUrl ? `
+                      <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${pub.title} Paper', '${pub.proofUrl}', 'Publication', '${pub.year}')" style="padding:5px 12px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:#0B5CAD; font-weight:600;">
+                        <i data-lucide="file-text" style="width:13px;height:13px;"></i> View Paper
+                      </button>
+                    ` : ''}
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.openInformationModal('publications', '${pub.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155;">
+                      <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+                    </button>
+                    <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationItem('publications', '${pub.id}')" style="padding:5px 10px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                      <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 8. Documents & Certificates Vault Tab
+  renderInfoTabDocuments(info) {
+    let docs = info.documents || [];
+
+    // Filter by Category
+    if (this.currentDocFilter && this.currentDocFilter !== 'all') {
+      docs = docs.filter(d => (d.category || '').toLowerCase() === this.currentDocFilter.toLowerCase());
+    }
+
+    // Filter by Search Query
+    if (this.currentDocSearch && this.currentDocSearch.trim()) {
+      const q = this.currentDocSearch.toLowerCase().trim();
+      docs = docs.filter(d => (d.name || '').toLowerCase().includes(q) || (d.category || '').toLowerCase().includes(q));
+    }
+
+    const categories = ['all', 'Education', 'Experience', 'Achievement', 'Session', 'Publication', 'Other'];
+
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Official Documents & Certificate Vault</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Unified repository of degrees, appraisal proofs, workshop certificates, and appointment orders.</p>
+          </div>
+          <button type="button" class="quick-action-btn primary" onclick="TeacherApp.openInformationModal('documents')" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+            <i data-lucide="upload-cloud" style="width:15px;height:15px;"></i> Upload New Document
+          </button>
+        </div>
+
+        <!-- Filter Pills & Search Input -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${categories.map(cat => `
+              <button type="button" class="vault-filter-chip ${this.currentDocFilter.toLowerCase() === cat.toLowerCase() ? 'active' : ''}" onclick="TeacherApp.filterInformationDocuments('${cat}')">
+                ${cat === 'all' ? 'All Files' : cat}
+              </button>
+            `).join('')}
+          </div>
+
+          <div style="display:flex; align-items:center; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:6px; padding:6px 12px; width:260px; max-width:100%;">
+            <i data-lucide="search" style="width:14px;height:14px;color:#94A3B8; margin-right:8px;"></i>
+            <input type="text" placeholder="Search files..." value="${this.currentDocSearch}" oninput="TeacherApp.searchInformationDocuments(this.value)" style="border:none; background:transparent; font-size:12.5px; outline:none; width:100%;">
+          </div>
+        </div>
+
+        ${docs.length === 0 ? `
+          <div style="text-align:center; padding:36px; color:#64748B; background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:10px;">
+            No documents found matching the filter criteria.
+          </div>
+        ` : `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+            ${docs.map(doc => `
+              <div class="portfolio-item-card" style="padding:16px;">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:38px; height:38px; border-radius:8px; background:#EFF6FF; color:#0B5CAD; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      <i data-lucide="file-check-2" style="width:20px;height:20px;"></i>
+                    </div>
+                    <div>
+                      <h4 style="font-size:13.5px; font-weight:700; color:#0B1F3A; margin:0 0 3px 0;">${doc.name || 'Document'}</h4>
+                      <div style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:#64748B;">
+                        <span style="padding:1px 6px; border-radius:8px; background:#F1F5F9; font-weight:600; color:#334155;">${doc.category || 'Other'}</span>
+                        <span>• ${doc.uploadedDate || 'Uploaded'}</span>
+                        <span>• ${doc.fileSize || '1.2 MB'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid #E2E8F0; padding-top:10px; margin-top:4px;">
+                  <button type="button" class="quick-action-btn" onclick="TeacherApp.openDocViewerModal('${doc.name}', '${doc.fileUrl}', '${doc.category}', '${doc.uploadedDate}')" style="padding:4px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#0B5CAD; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                    <i data-lucide="eye" style="width:12px;height:12px;"></i> View
+                  </button>
+                  <button type="button" class="quick-action-btn" onclick="TeacherApp.downloadDirectDocument('${doc.name}', '${doc.fileUrl}')" style="padding:4px 10px; font-size:12px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:5px; cursor:pointer; color:#334155; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                    <i data-lucide="download" style="width:12px;height:12px;"></i> Download
+                  </button>
+                  <button type="button" class="quick-action-btn" onclick="TeacherApp.deleteInformationDocument('${doc.id}')" style="padding:4px 8px; font-size:12px; border:1px solid #FEE2E2; background:#FEF2F2; color:#DC2626; border-radius:5px; cursor:pointer;">
+                    <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  filterInformationDocuments(category) {
+    this.currentDocFilter = category;
+    this.renderInformationView();
+  },
+
+  searchInformationDocuments(query) {
+    this.currentDocSearch = query;
+    this.renderInformationView();
+  },
+
+  deleteInformationDocument(docId) {
+    if (!confirm("Are you sure you want to delete this document from the vault?")) return;
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.deleteFacultyDocument === 'function') {
+      TeacherERPData.deleteFacultyDocument(facultyId, docId);
+    }
+    this.showToast("Document deleted from vault.");
+    this.renderInformationView();
+  },
+
+  // 9. Yearly Report Tab
+  renderInfoTabReport(info) {
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const reportYear = this.currentReportYear || "2026";
+    const report = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.generateYearlyReport === 'function')
+      ? TeacherERPData.generateYearlyReport(facultyId, reportYear)
+      : null;
+
+    const pd = (report && report.faculty) || info.personalDetails || {};
+    const stats = (report && report.statistics) || { achievementsCount: 0, conductedCount: 0, attendedCount: 0, publicationsCount: 0, totalActivityScore: 0 };
+
+    return `
+      <div>
+        <!-- Top Toolbar (Hidden during print) -->
+        <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 style="font-size:16px; margin:0; color:#0B1F3A; font-weight:800;">Annual Faculty Performance Appraisal Report</h3>
+            <p style="font-size:12.5px; color:#64748B; margin:4px 0 0 0;">Automated performance audit compiled according to SSGMCE autonomous academic regulations.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <select id="reportYearSelect" onchange="TeacherApp.changeReportYear(this.value)" style="padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; font-weight:600; color:#0B1F3A; background:#FFFFFF;">
+              <option value="2026" ${reportYear === '2026' ? 'selected' : ''}>Academic Year 2026-2027</option>
+              <option value="2025" ${reportYear === '2025' ? 'selected' : ''}>Academic Year 2025-2026</option>
+              <option value="2024" ${reportYear === '2024' ? 'selected' : ''}>Academic Year 2024-2025</option>
+            </select>
+            <button type="button" class="quick-action-btn primary" onclick="TeacherApp.printInformationYearlyReport()" style="padding:8px 16px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+              <i data-lucide="printer" style="width:15px;height:15px;"></i> Print Official Report
+            </button>
+            <button type="button" class="quick-action-btn" onclick="TeacherApp.downloadInformationYearlyReport()" style="padding:8px 16px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; color:#334155;">
+              <i data-lucide="download" style="width:15px;height:15px;"></i> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Official Report Container (Included in window.print) -->
+        <div id="yearlyReportPrintContainer" style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:32px; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <!-- Official Institute Letterhead -->
+          <div style="text-align:center; border-bottom:2px solid #0B1F3A; padding-bottom:16px; margin-bottom:24px;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:8px;">
+              <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" style="width:48px; height:48px;">
+              <div>
+                <h1 style="font-size:19px; font-weight:900; color:#0B1F3A; margin:0; letter-spacing:0.3px;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
+                <p style="font-size:12.5px; color:#0B5CAD; font-weight:700; margin:2px 0 0 0;">SHEGAON - 444 503, DIST. BULDANA (MAHARASHTRA) • AN AUTONOMOUS INSTITUTE</p>
+              </div>
+            </div>
+            <div style="display:inline-block; background:#0B1F3A; color:#FFFFFF; padding:4px 16px; border-radius:20px; font-size:12px; font-weight:700; margin-top:6px;">
+              ANNUAL FACULTY ACTIVITY & APPRAISAL DOSSIER — ACADEMIC YEAR ${report?.academicYear || '2026-2027'}
+            </div>
+          </div>
+
+          <!-- Faculty Profile Summary Grid -->
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:16px; margin-bottom:24px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:12.5px;">
+              <div><span style="color:#64748B;">Faculty Name:</span><br><strong style="color:#0B1F3A;">${pd.name || 'Faculty Member'}</strong></div>
+              <div><span style="color:#64748B;">Employee ID:</span><br><strong style="color:#0B1F3A;">${pd.facultyId || facultyId}</strong></div>
+              <div><span style="color:#64748B;">Department:</span><br><strong style="color:#0B1F3A;">${pd.department || 'Computer Science & Engineering'}</strong></div>
+              <div><span style="color:#64748B;">Designation:</span><br><strong style="color:#0B1F3A;">${pd.designation || 'Assistant Professor'}</strong></div>
+              <div><span style="color:#64748B;">Contact Email:</span><br><strong style="color:#0B1F3A;">${pd.email || ''}</strong></div>
+              <div><span style="color:#64748B;">Report Generated:</span><br><strong style="color:#0B1F3A;">${report?.generatedAt || new Date().toLocaleDateString()}</strong></div>
+            </div>
+          </div>
+
+          <!-- Performance Scoring Summary Box -->
+          <div style="margin-bottom:24px;">
+            <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; margin:0 0 10px 0; border-left:4px solid #0B5CAD; padding-left:8px;">1. Performance Index & Activity Score Card</h4>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+              <div style="border:1px solid #E2E8F0; padding:12px; border-radius:6px; background:#FFFFFF; text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:#0B5CAD;">${stats.achievementsCount}</div>
+                <div style="font-size:11px; color:#64748B; font-weight:600;">Achievements (10 pts ea)</div>
+              </div>
+              <div style="border:1px solid #E2E8F0; padding:12px; border-radius:6px; background:#FFFFFF; text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:#7E22CE;">${stats.conductedCount}</div>
+                <div style="font-size:11px; color:#64748B; font-weight:600;">Conducted (15 pts ea)</div>
+              </div>
+              <div style="border:1px solid #E2E8F0; padding:12px; border-radius:6px; background:#FFFFFF; text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:#059669;">${stats.attendedCount}</div>
+                <div style="font-size:11px; color:#64748B; font-weight:600;">Attended (5 pts ea)</div>
+              </div>
+              <div style="border:1px solid #E2E8F0; padding:12px; border-radius:6px; background:#FFFFFF; text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:#D97706;">${stats.publicationsCount}</div>
+                <div style="font-size:11px; color:#64748B; font-weight:600;">Papers (20 pts ea)</div>
+              </div>
+              <div style="border:1px solid #0B1F3A; padding:12px; border-radius:6px; background:#0B1F3A; color:#FFFFFF; text-align:center;">
+                <div style="font-size:20px; font-weight:800; color:#00A6D6;">${stats.totalActivityScore}</div>
+                <div style="font-size:11px; color:#CBD5E1; font-weight:600;">Appraisal Score Points</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Academic Qualifications Section -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; margin:0 0 8px 0; border-left:4px solid #0B5CAD; padding-left:8px;">2. Academic Qualifications</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="background:#F1F5F9; border-bottom:1px solid #CBD5E1; text-align:left;">
+                  <th style="padding:8px 10px;">Degree</th>
+                  <th style="padding:8px 10px;">Specialization</th>
+                  <th style="padding:8px 10px;">University / Institution</th>
+                  <th style="padding:8px 10px;">Year</th>
+                  <th style="padding:8px 10px;">Score / Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(report?.educationSummary || []).map(e => `
+                  <tr style="border-bottom:1px solid #E2E8F0;">
+                    <td style="padding:8px 10px; font-weight:600;">${e.degree}</td>
+                    <td style="padding:8px 10px;">${e.specialization}</td>
+                    <td style="padding:8px 10px;">${e.university}</td>
+                    <td style="padding:8px 10px;">${e.yearOfPassing}</td>
+                    <td style="padding:8px 10px;">${e.grade}</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="5" style="padding:10px; text-align:center; color:#94A3B8;">No records logged</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Publications in target year -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; margin:0 0 8px 0; border-left:4px solid #0B5CAD; padding-left:8px;">3. Research Publications in Academic Year ${reportYear}</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="background:#F1F5F9; border-bottom:1px solid #CBD5E1; text-align:left;">
+                  <th style="padding:8px 10px;">Title</th>
+                  <th style="padding:8px 10px;">Journal / Conference</th>
+                  <th style="padding:8px 10px;">DOI / Link</th>
+                  <th style="padding:8px 10px;">Citations</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(report?.publications || []).map(p => `
+                  <tr style="border-bottom:1px solid #E2E8F0;">
+                    <td style="padding:8px 10px; font-weight:600;">${p.title}</td>
+                    <td style="padding:8px 10px;">${p.journal}</td>
+                    <td style="padding:8px 10px;">${p.doi || 'Indexed'}</td>
+                    <td style="padding:8px 10px;">${p.citations || 0}</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="4" style="padding:10px; text-align:center; color:#94A3B8;">No publications recorded in ${reportYear}</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Sessions Conducted in target year -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; margin:0 0 8px 0; border-left:4px solid #0B5CAD; padding-left:8px;">4. Workshops & FDPs Conducted in Academic Year ${reportYear}</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="background:#F1F5F9; border-bottom:1px solid #CBD5E1; text-align:left;">
+                  <th style="padding:8px 10px;">Title / Topic</th>
+                  <th style="padding:8px 10px;">Type & Role</th>
+                  <th style="padding:8px 10px;">Venue</th>
+                  <th style="padding:8px 10px;">Date & Duration</th>
+                  <th style="padding:8px 10px;">Participants</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(report?.sessionsConducted || []).map(s => `
+                  <tr style="border-bottom:1px solid #E2E8F0;">
+                    <td style="padding:8px 10px; font-weight:600;">${s.title}</td>
+                    <td style="padding:8px 10px;">${s.type} (${s.role})</td>
+                    <td style="padding:8px 10px;">${s.venue || 'SSGMCE'}</td>
+                    <td style="padding:8px 10px;">${s.date} (${s.duration || ''})</td>
+                    <td style="padding:8px 10px;">${s.participants || '-'}</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="5" style="padding:10px; text-align:center; color:#94A3B8;">No sessions conducted in ${reportYear}</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Sessions Attended in target year -->
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:14px; font-weight:800; color:#0B1F3A; margin:0 0 8px 0; border-left:4px solid #0B5CAD; padding-left:8px;">5. Training & FDPs Attended in Academic Year ${reportYear}</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="background:#F1F5F9; border-bottom:1px solid #CBD5E1; text-align:left;">
+                  <th style="padding:8px 10px;">Title / Program</th>
+                  <th style="padding:8px 10px;">Type</th>
+                  <th style="padding:8px 10px;">Organizing Body</th>
+                  <th style="padding:8px 10px;">Date & Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(report?.sessionsAttended || []).map(s => `
+                  <tr style="border-bottom:1px solid #E2E8F0;">
+                    <td style="padding:8px 10px; font-weight:600;">${s.title}</td>
+                    <td style="padding:8px 10px;">${s.type}</td>
+                    <td style="padding:8px 10px;">${s.organizedBy}</td>
+                    <td style="padding:8px 10px;">${s.date} (${s.duration || ''})</td>
+                  </tr>
+                `).join('') || `<tr><td colspan="4" style="padding:10px; text-align:center; color:#94A3B8;">No sessions attended in ${reportYear}</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Official Verification Signatures -->
+          <div style="margin-top:40px; padding-top:20px; border-top:1px dashed #CBD5E1; display:flex; justify-content:space-between; align-items:flex-end; font-size:12.5px;">
+            <div style="text-align:center;">
+              <div style="height:32px;"></div>
+              <div style="border-top:1px solid #334155; width:180px; padding-top:4px;">Signature of Faculty</div>
+              <strong style="font-size:11.5px; color:#64748B;">(${pd.name || 'Faculty Member'})</strong>
+            </div>
+            <div style="text-align:center;">
+              <div style="height:32px;"></div>
+              <div style="border-top:1px solid #334155; width:180px; padding-top:4px;">Head of Department (CSE)</div>
+              <strong style="font-size:11.5px; color:#64748B;">SSGMCE Shegaon</strong>
+            </div>
+            <div style="text-align:center;">
+              <div style="height:32px;"></div>
+              <div style="border-top:1px solid #334155; width:180px; padding-top:4px;">Principal / Dean (Academic)</div>
+              <strong style="font-size:11.5px; color:#64748B;">SSGMCE Autonomous Council</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  changeReportYear(year) {
+    this.currentReportYear = year;
+    this.renderInformationView();
+  },
+
+  printInformationYearlyReport() {
+    window.print();
+  },
+
+  downloadInformationYearlyReport() {
+    const reportElem = document.getElementById("yearlyReportPrintContainer");
+    if (!reportElem) return;
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const blob = new Blob([`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Faculty Appraisal Report - ${facultyId}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #0B1F3A; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #CBD5E1; padding: 8px 10px; font-size: 12px; }
+          th { background: #F1F5F9; }
+        </style>
+      </head>
+      <body>
+        ${reportElem.innerHTML}
+      </body>
+      </html>
+    `], { type: 'text/html' });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `SSGMCE_Faculty_Appraisal_${facultyId}_${this.currentReportYear || '2026'}.html`;
+    a.click();
+    this.showToast("Appraisal report exported successfully!", "success");
+  },
+
+  // Modal Dialogs for Add/Edit
+  openInformationModal(sectionKey, itemId = null) {
+    const modal = document.getElementById("facultyInfoModal");
+    const titleElem = document.getElementById("facultyInfoModalTitle");
+    const bodyElem = document.getElementById("facultyModalBody");
+    const secKeyInput = document.getElementById("facultyModalSectionKey");
+    const itemIdInput = document.getElementById("facultyModalItemId");
+
+    if (!modal || !bodyElem) return;
+
+    secKeyInput.value = sectionKey;
+    itemIdInput.value = itemId || "";
+
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    const info = (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.getFacultyInfo === 'function')
+      ? TeacherERPData.getFacultyInfo(facultyId)
+      : null;
+
+    let existing = null;
+    if (itemId && info && Array.isArray(info[sectionKey])) {
+      existing = info[sectionKey].find(i => i.id === itemId);
+    }
+
+    const isEdit = Boolean(existing);
+
+    switch (sectionKey) {
+      case 'education': {
+        titleElem.textContent = isEdit ? "Edit Academic Qualification" : "Add Academic Qualification";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Degree Name *</label>
+              <input type="text" id="mEduDegree" class="form-control" placeholder="e.g. Ph.D. in Computer Engineering, M.Tech, B.E." value="${existing?.degree || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Specialization / Branch *</label>
+              <input type="text" id="mEduSpec" class="form-control" placeholder="e.g. Distributed Systems & Algorithms" value="${existing?.specialization || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">University / Institution *</label>
+              <input type="text" id="mEduUniv" class="form-control" placeholder="e.g. Sant Gadge Baba Amravati University" value="${existing?.university || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Year of Passing *</label>
+                <input type="text" id="mEduYear" class="form-control" placeholder="e.g. 2023" value="${existing?.yearOfPassing || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Grade / Percentage / CGPA</label>
+                <input type="text" id="mEduGrade" class="form-control" placeholder="e.g. 8.92 CGPA / First Class" value="${existing?.grade || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Degree Certificate (PDF / JPG / PNG)</label>
+              <input type="file" id="mEduFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'experience': {
+        titleElem.textContent = isEdit ? "Edit Experience Record" : "Add Professional Experience";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Organization / University Name *</label>
+              <input type="text" id="mExpOrg" class="form-control" placeholder="e.g. Shri Sant Gajanan Maharaj College of Engineering" value="${existing?.organization || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Designation *</label>
+              <input type="text" id="mExpDesig" class="form-control" placeholder="e.g. Assistant Professor" value="${existing?.designation || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">From Date *</label>
+                <input type="text" id="mExpFrom" class="form-control" placeholder="e.g. 2018-07-02" value="${existing?.fromDate || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">To Date (or Present) *</label>
+                <input type="text" id="mExpTo" class="form-control" placeholder="e.g. Present" value="${existing?.toDate || 'Present'}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Responsibilities / Roles</label>
+              <textarea id="mExpResp" rows="3" class="form-control" placeholder="Key courses taught, committees served, laboratory in-charge..." style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">${existing?.responsibilities || ''}</textarea>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Experience Certificate / Order</label>
+              <input type="file" id="mExpFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'achievements': {
+        titleElem.textContent = isEdit ? "Edit Achievement & Award" : "Add Achievement & Award";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Award / Honor Title *</label>
+              <input type="text" id="mAchTitle" class="form-control" placeholder="e.g. Best Faculty Researcher Award 2025" value="${existing?.title || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Awarding Body / Organization *</label>
+              <input type="text" id="mAchBody" class="form-control" placeholder="e.g. SSGMCE Autonomous Academic Council" value="${existing?.awardingBody || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Date / Year *</label>
+              <input type="text" id="mAchYear" class="form-control" placeholder="e.g. 2025" value="${existing?.year || existing?.date || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Description / Citation</label>
+              <textarea id="mAchDesc" rows="3" class="form-control" placeholder="Recognized for exceptional contribution in..." style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">${existing?.description || ''}</textarea>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Citation / Proof (PDF / Image)</label>
+              <input type="file" id="mAchFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'sessionsConducted': {
+        titleElem.textContent = isEdit ? "Edit Conducted Session" : "Add Conducted Session / Workshop";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Title / Topic of the Program *</label>
+              <input type="text" id="mCondTitle" class="form-control" placeholder="e.g. National FDP on Advanced Data Structures" value="${existing?.title || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Program Type</label>
+                <select id="mCondType" class="form-control" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                  <option value="Workshop" ${existing?.type === 'Workshop' ? 'selected' : ''}>Workshop</option>
+                  <option value="FDP" ${existing?.type === 'FDP' ? 'selected' : ''}>FDP (Faculty Development)</option>
+                  <option value="Seminar" ${existing?.type === 'Seminar' ? 'selected' : ''}>Seminar</option>
+                  <option value="Guest Lecture" ${existing?.type === 'Guest Lecture' ? 'selected' : ''}>Guest Lecture</option>
+                  <option value="Conference" ${existing?.type === 'Conference' ? 'selected' : ''}>Conference</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Role *</label>
+                <select id="mCondRole" class="form-control" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                  <option value="Resource Person & Lead Trainer" ${existing?.role === 'Resource Person & Lead Trainer' ? 'selected' : ''}>Resource Person</option>
+                  <option value="Coordinator" ${existing?.role === 'Coordinator' ? 'selected' : ''}>Coordinator</option>
+                  <option value="Speaker" ${existing?.role === 'Speaker' ? 'selected' : ''}>Speaker</option>
+                  <option value="Organizer" ${existing?.role === 'Organizer' ? 'selected' : ''}>Organizer</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Date *</label>
+                <input type="date" id="mCondDate" class="form-control" value="${existing?.date || '2026-02-14'}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Duration</label>
+                <input type="text" id="mCondDuration" class="form-control" placeholder="e.g. 5 Days" value="${existing?.duration || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Venue / Platform</label>
+                <input type="text" id="mCondVenue" class="form-control" placeholder="e.g. Seminar Hall 2 / Online" value="${existing?.venue || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Participants Count</label>
+                <input type="number" id="mCondParticipants" class="form-control" placeholder="68" value="${existing?.participants || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Description / Report</label>
+              <textarea id="mCondDesc" rows="2" class="form-control" placeholder="Summary of outcomes and coverage..." style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">${existing?.description || ''}</textarea>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Proof / Conduction Certificate</label>
+              <input type="file" id="mCondFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'sessionsAttended': {
+        titleElem.textContent = isEdit ? "Edit Attended Session" : "Add Attended Program";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Program Title / Course Name *</label>
+              <input type="text" id="mAttTitle" class="form-control" placeholder="e.g. AICTE ATAL FDP on Deep Learning" value="${existing?.title || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Program Type</label>
+              <select id="mAttType" class="form-control" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                <option value="FDP" ${existing?.type === 'FDP' ? 'selected' : ''}>FDP</option>
+                <option value="Conference" ${existing?.type === 'Conference' ? 'selected' : ''}>Conference</option>
+                <option value="Workshop" ${existing?.type === 'Workshop' ? 'selected' : ''}>Workshop</option>
+                <option value="Training" ${existing?.type === 'Training' ? 'selected' : ''}>Training</option>
+                <option value="Seminar" ${existing?.type === 'Seminar' ? 'selected' : ''}>Seminar</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Organized By / Host Institution *</label>
+              <input type="text" id="mAttOrg" class="form-control" placeholder="e.g. VNIT Nagpur / IIT Bombay" value="${existing?.organizedBy || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Date *</label>
+                <input type="date" id="mAttDate" class="form-control" value="${existing?.date || '2026-01-08'}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Duration</label>
+                <input type="text" id="mAttDuration" class="form-control" placeholder="e.g. 1 Week" value="${existing?.duration || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Attendance / Completion Certificate</label>
+              <input type="file" id="mAttFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'publications': {
+        titleElem.textContent = isEdit ? "Edit Research Publication" : "Add Research Publication";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Paper / Article Title *</label>
+              <input type="text" id="mPubTitle" class="form-control" placeholder="e.g. Optimized Graph Partitioning in Distributed Memory Architectures" value="${existing?.title || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Journal / Conference Name *</label>
+              <input type="text" id="mPubJournal" class="form-control" placeholder="e.g. IEEE Transactions on Parallel and Distributed Systems" value="${existing?.journal || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Publication Year *</label>
+                <input type="text" id="mPubYear" class="form-control" placeholder="e.g. 2025" value="${existing?.year || ''}" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Citations</label>
+                <input type="number" id="mPubCitations" class="form-control" placeholder="14" value="${existing?.citations || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">DOI / URL Link</label>
+              <input type="text" id="mPubDoi" class="form-control" placeholder="e.g. 10.1109/TPDS.2025.889214" value="${existing?.doi || ''}" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Upload Paper Copy / Acceptance Letter</label>
+              <input type="file" id="mPubFile" accept=".pdf,image/*" style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+      case 'documents': {
+        titleElem.textContent = "Upload Official Document";
+        bodyElem.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Document Name *</label>
+              <input type="text" id="mDocName" class="form-control" placeholder="e.g. Doctoral Degree Certificate" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Category *</label>
+              <select id="mDocCat" class="form-control" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+                <option value="Education">Education</option>
+                <option value="Experience">Experience</option>
+                <option value="Achievement">Achievement</option>
+                <option value="Session">Session</option>
+                <option value="Publication">Publication</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">Select File (PDF, PNG, JPG) *</label>
+              <input type="file" id="mDocFileInput" accept=".pdf,image/*" required style="width:100%; padding:8px; border:1px dashed #CBD5E1; border-radius:6px; font-size:12px; background:#F8FAFC;">
+            </div>
+          </div>
+        `;
+        break;
+      }
+    }
+
+    modal.style.display = "flex";
+    this.initLucideIcons();
+  },
+
+  closeInformationModal() {
+    const modal = document.getElementById("facultyInfoModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  submitInformationModal(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const sectionKey = document.getElementById("facultyModalSectionKey")?.value;
+    const itemId = document.getElementById("facultyModalItemId")?.value;
+
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+
+    if (!sectionKey || typeof TeacherERPData === 'undefined') return;
+
+    if (sectionKey === 'documents') {
+      const name = document.getElementById("mDocName")?.value.trim() || "Uploaded Document";
+      const cat = document.getElementById("mDocCat")?.value || "Other";
+      const fileInput = document.getElementById("mDocFileInput");
+      const file = fileInput?.files?.[0];
+      const fileSize = file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : "1.2 MB";
+      const fileUrl = file ? `/uploads/${file.name}` : "/certificates/document.pdf";
+
+      TeacherERPData.addFacultyDocument(facultyId, {
+        name,
+        category: cat,
+        fileUrl,
+        fileSize
+      });
+      this.showToast(`Document "${name}" added to vault!`, "success");
+      this.closeInformationModal();
+      this.renderInformationView();
+      return;
+    }
+
+    let itemData = {};
+
+    switch (sectionKey) {
+      case 'education': {
+        const file = document.getElementById("mEduFile")?.files?.[0];
+        itemData = {
+          degree: document.getElementById("mEduDegree")?.value.trim() || "",
+          specialization: document.getElementById("mEduSpec")?.value.trim() || "",
+          university: document.getElementById("mEduUniv")?.value.trim() || "",
+          yearOfPassing: document.getElementById("mEduYear")?.value.trim() || "",
+          grade: document.getElementById("mEduGrade")?.value.trim() || "",
+          certificateUrl: file ? `/certificates/${file.name}` : (itemId ? undefined : "/certificates/degree_certificate.pdf")
+        };
+        break;
+      }
+      case 'experience': {
+        const file = document.getElementById("mExpFile")?.files?.[0];
+        itemData = {
+          organization: document.getElementById("mExpOrg")?.value.trim() || "",
+          designation: document.getElementById("mExpDesig")?.value.trim() || "",
+          fromDate: document.getElementById("mExpFrom")?.value.trim() || "",
+          toDate: document.getElementById("mExpTo")?.value.trim() || "Present",
+          responsibilities: document.getElementById("mExpResp")?.value.trim() || "",
+          certificateUrl: file ? `/certificates/${file.name}` : undefined
+        };
+        break;
+      }
+      case 'achievements': {
+        const file = document.getElementById("mAchFile")?.files?.[0];
+        itemData = {
+          title: document.getElementById("mAchTitle")?.value.trim() || "",
+          awardingBody: document.getElementById("mAchBody")?.value.trim() || "",
+          year: document.getElementById("mAchYear")?.value.trim() || "",
+          date: document.getElementById("mAchYear")?.value.trim() || "",
+          description: document.getElementById("mAchDesc")?.value.trim() || "",
+          proofUrl: file ? `/certificates/${file.name}` : (itemId ? undefined : "/certificates/award_certificate.pdf")
+        };
+        break;
+      }
+      case 'sessionsConducted': {
+        const file = document.getElementById("mCondFile")?.files?.[0];
+        itemData = {
+          title: document.getElementById("mCondTitle")?.value.trim() || "",
+          type: document.getElementById("mCondType")?.value || "Workshop",
+          role: document.getElementById("mCondRole")?.value || "Trainer",
+          date: document.getElementById("mCondDate")?.value || "",
+          duration: document.getElementById("mCondDuration")?.value.trim() || "",
+          venue: document.getElementById("mCondVenue")?.value.trim() || "",
+          participants: Number(document.getElementById("mCondParticipants")?.value) || 0,
+          description: document.getElementById("mCondDesc")?.value.trim() || "",
+          certificateUrl: file ? `/certificates/${file.name}` : undefined
+        };
+        break;
+      }
+      case 'sessionsAttended': {
+        const file = document.getElementById("mAttFile")?.files?.[0];
+        itemData = {
+          title: document.getElementById("mAttTitle")?.value.trim() || "",
+          type: document.getElementById("mAttType")?.value || "FDP",
+          organizedBy: document.getElementById("mAttOrg")?.value.trim() || "",
+          date: document.getElementById("mAttDate")?.value || "",
+          duration: document.getElementById("mAttDuration")?.value.trim() || "",
+          certificateUrl: file ? `/certificates/${file.name}` : (itemId ? undefined : "/certificates/participation_certificate.pdf")
+        };
+        break;
+      }
+      case 'publications': {
+        const file = document.getElementById("mPubFile")?.files?.[0];
+        itemData = {
+          title: document.getElementById("mPubTitle")?.value.trim() || "",
+          journal: document.getElementById("mPubJournal")?.value.trim() || "",
+          year: document.getElementById("mPubYear")?.value.trim() || "",
+          doi: document.getElementById("mPubDoi")?.value.trim() || "",
+          citations: Number(document.getElementById("mPubCitations")?.value) || 0,
+          proofUrl: file ? `/certificates/${file.name}` : undefined
+        };
+        break;
+      }
+    }
+
+    if (itemId) {
+      TeacherERPData.updateFacultySectionItem(facultyId, sectionKey, itemId, itemData);
+      this.showToast("Record updated successfully!", "success");
+    } else {
+      TeacherERPData.addFacultySectionItem(facultyId, sectionKey, itemData);
+      this.showToast("New record saved to portfolio!", "success");
+    }
+
+    this.closeInformationModal();
+    this.renderInformationView();
+  },
+
+  deleteInformationItem(sectionKey, itemId) {
+    if (!confirm("Are you sure you want to remove this record from your portfolio?")) return;
+    const teacher = this.getLoggedInTeacher();
+    const facultyId = (teacher && teacher.employeeId) || "EMP-CSE-1001";
+    if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.deleteFacultySectionItem === 'function') {
+      TeacherERPData.deleteFacultySectionItem(facultyId, sectionKey, itemId);
+    }
+    this.showToast("Record deleted from portfolio.");
+    this.renderInformationView();
+  },
+
+  // Document Viewer Preview Modal
+  openDocViewerModal(docName, docUrl, category, docDate) {
+    this.currentDocPreview = { docName, docUrl, category, docDate };
+    const modal = document.getElementById("facultyDocViewerModal");
+    const titleElem = document.getElementById("docViewerTitle");
+    const bodyElem = document.getElementById("docViewerBody");
+    const metaElem = document.getElementById("docViewerMeta");
+
+    if (!modal || !bodyElem) return;
+
+    if (titleElem) titleElem.textContent = docName || "Official Certificate Preview";
+    if (metaElem) metaElem.textContent = `Category: ${category || 'Verified Record'} • Issued/Uploaded: ${docDate || 'Current Session'}`;
+
+    bodyElem.innerHTML = `
+      <div style="width:100%; background:#FAFDFB; border:2px solid #0B5CAD; border-radius:10px; padding:28px 20px; box-shadow:0 8px 24px rgba(11,92,173,0.08); position:relative; overflow:hidden;">
+        <!-- Institute Crest Watermark -->
+        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:12px;">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE Crest" style="width:40px; height:40px;">
+          <div>
+            <div style="font-size:14px; font-weight:900; color:#0B1F3A; letter-spacing:0.5px;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</div>
+            <div style="font-size:11px; color:#0B5CAD; font-weight:700;">SHEGAON • AUTONOMOUS INSTITUTE</div>
+          </div>
+        </div>
+        <div style="height:2px; background:linear-gradient(90deg, #0B1F3A, #00A6D6, #0B1F3A); margin-bottom:20px;"></div>
+
+        <div style="font-size:11px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+          OFFICIAL VERIFIED CERTIFICATE & PORTFOLIO RECORD
+        </div>
+        <h2 style="font-size:18px; font-weight:800; color:#0B1F3A; margin:0 0 10px 0;">${docName}</h2>
+        <p style="font-size:12.5px; color:#475569; max-width:540px; margin:0 auto 18px auto; line-height:1.6;">
+          This official institutional record certifies authentic qualification, conference participation, or research contribution logged in the SSGMCE Faculty Information & Appraisal system.
+        </p>
+
+        <div style="display:inline-flex; align-items:center; gap:8px; background:#ECFDF5; border:1px solid #A7F3D0; color:#047857; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700;">
+          <span>✓ Digitally Authenticated Record</span>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = "flex";
+    this.initLucideIcons();
+  },
+
+  closeDocViewerModal() {
+    const modal = document.getElementById("facultyDocViewerModal");
+    if (modal) modal.style.display = "none";
+  },
+
+  downloadCurrentDocument() {
+    if (!this.currentDocPreview) return;
+    this.downloadDirectDocument(this.currentDocPreview.docName, this.currentDocPreview.docUrl);
+  },
+
+  downloadDirectDocument(name, url) {
+    this.showToast(`Downloading: "${name}"...`, "info");
+    const a = document.createElement("a");
+    a.href = url || "#";
+    a.download = `${name.replace(/\s+/g, '_')}.pdf`;
+    a.target = "_blank";
+    a.click();
   }
 };
 

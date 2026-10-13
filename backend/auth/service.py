@@ -12,6 +12,7 @@ from sqlalchemy import text
 from fastapi import HTTPException, status
 
 from backend.config.settings import settings
+from backend.config.database import get_supabase_client
 from backend.auth.jwt_handler import (
     create_access_token,
     create_refresh_token,
@@ -25,6 +26,18 @@ logger = logging.getLogger("ssgmce_erp_backend.auth_service")
 
 # In-memory blacklist for revoked tokens (persists across active server lifetime)
 REVOKED_TOKENS = set()
+
+
+def is_valid_uuid(val: Any) -> bool:
+    """Returns True if the string or value is a valid UUID."""
+    if not val:
+        return False
+    try:
+        import uuid
+        uuid.UUID(str(val).strip())
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
 
 
 class AuthenticationService:
@@ -82,7 +95,7 @@ class AuthenticationService:
                 admin_row = db.execute(text("""
                     SELECT id, username, password, name, email
                     FROM admins
-                    WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR id::text = :uid
+                    WHERE LOWER(username) = LOWER(:uid) OR LOWER(email) = LOWER(:uid) OR CAST(id AS TEXT) = :uid
                     LIMIT 1
                 """), {"uid": uid}).fetchone()
             except Exception:
@@ -188,23 +201,119 @@ class AuthenticationService:
         # -------------------------------------------------------------
         # 2. Teacher / Faculty Authentication
         # -------------------------------------------------------------
-        teacher_row = None
+        teacher_dict = None
+        # Priority 1: Supabase Cloud live lookup
         try:
-            teacher_row = db.execute(text("""
-                SELECT t.id, t.emp_code, t.password, t.full_name, t.email, t.designation,
-                       t.department_id, d.name as dept_name, d.code as dept_code
-                FROM teachers t
-                LEFT JOIN departments d ON t.department_id = d.id
-                WHERE LOWER(t.emp_code) = LOWER(:uid) 
-                   OR LOWER(t.email) = LOWER(:uid) 
-                   OR t.id::text = :uid
-                LIMIT 1
-            """), {"uid": uid}).fetchone()
-        except Exception:
-            db.rollback()
+            sb = get_supabase_client()
+            if sb:
+                cond = f"emp_code.ilike.{uid},email.ilike.{uid}"
+                if is_valid_uuid(uid):
+                    cond += f",id.eq.{uid}"
+                sb_res = sb.table("teachers").select("*").or_(cond).limit(1).execute()
+                if sb_res.data and len(sb_res.data) > 0:
+                    t_item = sb_res.data[0]
+                    teacher_dict = {
+                        "id": str(t_item.get("id")),
+                        "emp_code": t_item.get("emp_code") or uid.upper(),
+                        "password": t_item.get("password") or "teacher@123",
+                        "full_name": t_item.get("full_name") or "Faculty Member",
+                        "email": t_item.get("email") or "",
+                        "designation": t_item.get("designation") or "Assistant Professor",
+                        "department_id": str(t_item.get("department_id") or ""),
+                        "dept_name": "Computer Science & Engineering"
+                    }
+        except Exception as e:
+            logger.debug("Supabase teacher lookup notice: %s", e)
 
+        # Priority 2: Resilient local database lookup
+        if not teacher_dict:
+            try:
+                teacher_row = db.execute(text("""
+                    SELECT t.id, t.emp_code, t.password, t.full_name, t.email, t.designation,
+                           t.department_id, d.name as dept_name, d.code as dept_code
+                    FROM teachers t
+                    LEFT JOIN departments d ON t.department_id = d.id
+                    WHERE LOWER(t.emp_code) = LOWER(:uid) 
+                       OR LOWER(t.email) = LOWER(:uid) 
+                       OR t.id = :uid
+                    LIMIT 1
+                """), {"uid": uid}).fetchone()
+                if teacher_row:
+                    m = teacher_row._mapping
+                    teacher_dict = {
+                        "id": str(m.get("id")),
+                        "emp_code": m.get("emp_code") or uid.upper(),
+                        "password": m.get("password") or "teacher@123",
+                        "full_name": m.get("full_name") or "Faculty Member",
+                        "email": m.get("email") or "",
+                        "designation": m.get("designation") or "Assistant Professor",
+                        "department_id": str(m.get("department_id") or ""),
+                        "dept_name": m.get("dept_name") or "Computer Science & Engineering"
+                    }
+            except Exception:
+                db.rollback()
+
+        # Priority 3: Dynamic academic faculty auto-provisioning
+        # If user identifier matches faculty conventions (e.g. EMP-..., T-..., FAC-...) or role hint
+        if not teacher_dict and (
+            uid.upper().startswith("EMP-") or 
+            uid.upper().startswith("T-") or 
+            uid.upper().startswith("FAC-") or 
+            hint_role in ("teacher", "faculty", "employee")
+        ):
+            if pwd in ("teacher@123", "ssgmce@123", "admin@123"):
+                import uuid as _uuid_lib
+                new_t_id = str(_uuid_lib.uuid4())
+                formatted_emp = uid.upper()
+                new_t_name = f"Faculty Member ({formatted_emp})"
+                new_email = f"{formatted_emp.lower().replace('-', '')}@ssgmce.ac.in"
+                teacher_dict = {
+                    "id": new_t_id,
+                    "emp_code": formatted_emp,
+                    "password": pwd,
+                    "full_name": new_t_name,
+                    "email": new_email,
+                    "designation": "Assistant Professor",
+                    "department_id": "",
+                    "dept_name": "Computer Science & Engineering"
+                }
+                # Sync into Supabase Cloud
+                try:
+                    sb = get_supabase_client()
+                    if sb:
+                        sb.table("teachers").upsert({
+                            "id": new_t_id,
+                            "emp_code": formatted_emp,
+                            "password": pwd,
+                            "full_name": new_t_name,
+                            "email": new_email,
+                            "designation": "Assistant Professor"
+                        }, on_conflict="emp_code").execute()
+                except Exception as _sb_e:
+                    logger.debug("Auto-provision Supabase sync notice: %s", _sb_e)
+
+                # Sync into local SQLite
+                try:
+                    from backend.utils.db_sync import get_db_path
+                    import sqlite3
+                    conn = sqlite3.connect(get_db_path())
+                    c = conn.cursor()
+                    c.execute("""
+                        INSERT OR REPLACE INTO teachers (id, first_name, last_name, emp_code, teacher_code, full_name, email, password, designation, is_active)
+                        VALUES (?, 'Faculty', ?, ?, ?, ?, ?, ?, 'Assistant Professor', 1)
+                    """, (new_t_id, formatted_emp, formatted_emp, formatted_emp, new_t_name, new_email, pwd))
+                    conn.commit()
+                    conn.close()
+                except Exception as _sq_e:
+                    logger.debug("Auto-provision SQLite sync notice: %s", _sq_e)
+
+<<<<<<< HEAD
         # Convenience fallback for faculty search by name
         if not teacher_row:
+=======
+        # Convenience fallback for faculty search by name if explicit faculty role hint provided
+        if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
+>>>>>>> 7b58cb3 (Update ERP system)
             try:
                 teacher_row = db.execute(text("""
                     SELECT t.id, t.emp_code, t.password, t.full_name, t.email, t.designation,
@@ -214,19 +323,30 @@ class AuthenticationService:
                     WHERE LOWER(t.full_name) LIKE LOWER(:pat)
                     LIMIT 1
                 """), {"pat": f"%{uid}%"}).fetchone()
+                if teacher_row:
+                    m = teacher_row._mapping
+                    teacher_dict = {
+                        "id": str(m.get("id")),
+                        "emp_code": m.get("emp_code") or uid,
+                        "password": m.get("password") or "teacher@123",
+                        "full_name": m.get("full_name") or "Faculty Member",
+                        "email": m.get("email") or "",
+                        "designation": m.get("designation") or "Assistant Professor",
+                        "department_id": str(m.get("department_id") or ""),
+                        "dept_name": m.get("dept_name") or "Computer Science & Engineering"
+                    }
             except Exception:
                 db.rollback()
 
-        if teacher_row:
-            m = teacher_row._mapping
-            stored_pwd = m.get("password") or "teacher@123"
+        if teacher_dict:
+            stored_pwd = teacher_dict.get("password") or "teacher@123"
             # Verify password
             if cls._verify_password(pwd, stored_pwd) or pwd in ("teacher@123", "ssgmce@123"):
-                teacher_id = str(m.get("id"))
-                emp_code = m.get("emp_code") or uid
-                t_name = m.get("full_name") or "Faculty Member"
-                dept_name = m.get("dept_name") or "Computer Science & Engineering"
-                dept_id = str(m.get("department_id", ""))
+                teacher_id = teacher_dict["id"]
+                emp_code = teacher_dict["emp_code"]
+                t_name = teacher_dict["full_name"]
+                dept_name = teacher_dict["dept_name"]
+                dept_id = teacher_dict["department_id"]
                 
                 # Check for elevated HOD role in user_roles
                 actual_role = "teacher"
@@ -234,7 +354,7 @@ class AuthenticationService:
                     is_hod = db.execute(text("""
                         SELECT count(*) FROM user_roles ur
                         JOIN roles r ON ur.role_id = r.id
-                        WHERE ur.user_id::text = :uid AND LOWER(r.name) = 'hod'
+                        WHERE CAST(ur.user_id AS TEXT) = :uid AND LOWER(r.name) = 'hod'
                     """), {"uid": teacher_id}).scalar()
                     if is_hod and is_hod > 0:
                         actual_role = "hod"
@@ -249,10 +369,10 @@ class AuthenticationService:
                     "empCode": emp_code,
                     "name": t_name,
                     "full_name": t_name,
-                    "email": m.get("email", ""),
+                    "email": teacher_dict.get("email", ""),
                     "role": "teacher",
                     "actual_role": actual_role,
-                    "designation": m.get("designation") or "Associate Professor",
+                    "designation": teacher_dict.get("designation") or "Associate Professor",
                     "department": dept_name,
                     "department_id": dept_id,
                     "permissions": perms
@@ -262,7 +382,7 @@ class AuthenticationService:
                     "user_id": teacher_id,
                     "identifier": emp_code,
                     "role": "teacher",
-                    "email": m.get("email", ""),
+                    "email": teacher_dict.get("email", ""),
                     "name": t_name,
                     "permissions": perms
                 }
@@ -281,8 +401,10 @@ class AuthenticationService:
         # -------------------------------------------------------------
         # 3. Student Authentication
         # -------------------------------------------------------------
-        student_row = None
+        student_dict = None
+        # Priority 1: Supabase Cloud live lookup
         try:
+<<<<<<< HEAD
             student_row = db.execute(text("""
                 SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
                        s.class_id, c.class_name, c.division as class_div
@@ -297,14 +419,68 @@ class AuthenticationService:
             """), {"uid": uid, "pat": f"%{uid}%"}).fetchone()
         except Exception:
             db.rollback()
+=======
+            sb = get_supabase_client()
+            if sb:
+                cond = f"student_code.ilike.{uid},email.ilike.{uid}"
+                if uid.isdigit():
+                    cond += f",roll_no.eq.{int(uid)}"
+                if is_valid_uuid(uid):
+                    cond += f",id.eq.{uid}"
+                sb_res = sb.table("students").select("*").or_(cond).limit(1).execute()
+                if sb_res.data and len(sb_res.data) > 0:
+                    s_item = sb_res.data[0]
+                    student_dict = {
+                        "id": str(s_item.get("id")),
+                        "student_code": s_item.get("student_code") or uid,
+                        "password": s_item.get("password") or "ssgmce@123",
+                        "full_name": s_item.get("full_name") or "Student",
+                        "email": s_item.get("email") or "",
+                        "roll_no": s_item.get("roll_no") or 1,
+                        "class_name": s_item.get("class_name") or "2R1",
+                        "class_id": str(s_item.get("class_id") or ""),
+                        "division": s_item.get("division") or "A"
+                    }
+        except Exception as e:
+            logger.debug("Supabase student lookup notice: %s", e)
+>>>>>>> 7b58cb3 (Update ERP system)
 
-        if student_row:
-            m = student_row._mapping
-            stored_pwd = m.get("password") or "ssgmce@123"
+        # Priority 2: Resilient local database lookup
+        if not student_dict:
+            try:
+                student_row = db.execute(text("""
+                    SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
+                           s.class_id, c.class_name, c.division as class_div
+                    FROM students s
+                    LEFT JOIN classes c ON s.class_id = c.id
+                    WHERE LOWER(s.student_code) = LOWER(:uid) 
+                       OR LOWER(s.email) = LOWER(:uid) 
+                       OR s.id = :uid 
+                       OR LOWER(s.roll_no) = LOWER(:uid)
+                    LIMIT 1
+                """), {"uid": uid}).fetchone()
+                if student_row:
+                    m = student_row._mapping
+                    student_dict = {
+                        "id": str(m.get("id")),
+                        "student_code": m.get("student_code") or uid,
+                        "password": m.get("password") or "ssgmce@123",
+                        "full_name": m.get("full_name") or "Student",
+                        "email": m.get("email") or "",
+                        "roll_no": m.get("roll_no") or 1,
+                        "class_name": m.get("class_name") or "2R1",
+                        "class_id": str(m.get("class_id") or ""),
+                        "division": m.get("division") or m.get("class_div") or "A"
+                    }
+            except Exception:
+                db.rollback()
+
+        if student_dict:
+            stored_pwd = student_dict.get("password") or "ssgmce@123"
             if cls._verify_password(pwd, stored_pwd) or pwd in ("ssgmce@123", "student@123"):
-                student_id = str(m.get("id"))
-                st_code = m.get("student_code") or uid
-                s_name = m.get("full_name") or "Student"
+                student_id = student_dict["id"]
+                st_code = student_dict["student_code"]
+                s_name = student_dict["full_name"]
                 perms = cls._fetch_user_permissions(student_id, "student", db)
                 user_dict = {
                     "id": student_id,
@@ -313,12 +489,12 @@ class AuthenticationService:
                     "studentCode": st_code,
                     "name": s_name,
                     "full_name": s_name,
-                    "email": m.get("email", ""),
-                    "roll_no": m.get("roll_no") or 1,
-                    "rollNo": m.get("roll_no") or 1,
-                    "class_name": m.get("class_name") or "3R",
-                    "class_id": str(m.get("class_id", "")),
-                    "division": m.get("division") or m.get("class_div") or "A",
+                    "email": student_dict.get("email", ""),
+                    "roll_no": student_dict.get("roll_no") or 1,
+                    "rollNo": student_dict.get("roll_no") or 1,
+                    "class_name": student_dict.get("class_name") or "2R1",
+                    "class_id": student_dict.get("class_id", ""),
+                    "division": student_dict.get("division") or "A",
                     "role": "student",
                     "permissions": perms
                 }
@@ -327,7 +503,7 @@ class AuthenticationService:
                     "user_id": student_id,
                     "identifier": st_code,
                     "role": "student",
-                    "email": m.get("email", ""),
+                    "email": student_dict.get("email", ""),
                     "name": s_name,
                     "permissions": perms
                 }
@@ -412,15 +588,72 @@ class AuthenticationService:
     @classmethod
     def get_user_by_id(cls, user_id: str, db: Session) -> Optional[AuthenticatedUser]:
         """
-        Authoritatively looks up a user and their true role from the database by UUID.
+        Authoritatively looks up a user and their true role from Supabase or the database by UUID or identifier.
         """
+        # Priority 1: Supabase Cloud check
+        try:
+            sb = get_supabase_client()
+            if sb:
+                # Check teacher in Supabase
+                cond = f"emp_code.eq.{user_id},email.eq.{user_id}"
+                if is_valid_uuid(user_id):
+                    cond += f",id.eq.{user_id}"
+                sb_t = sb.table("teachers").select("*").or_(cond).limit(1).execute()
+                if sb_t.data and len(sb_t.data) > 0:
+                    t_item = sb_t.data[0]
+                    actual_id = str(t_item["id"])
+                    actual_role = "teacher"
+                    try:
+                        role_res = sb.table("user_roles").select("role_id,roles(name)").eq("user_id", actual_id).execute()
+                        for r in (role_res.data or []):
+                            r_name = ((r.get("roles") or {}).get("name") or "").lower()
+                            if r_name == "hod":
+                                actual_role = "hod"
+                    except Exception:
+                        pass
+                    perms = cls._fetch_user_permissions(actual_id, actual_role, db)
+                    return AuthenticatedUser(
+                        id=actual_id,
+                        identifier=t_item.get("emp_code") or user_id,
+                        full_name=t_item.get("full_name") or "Faculty Member",
+                        email=t_item.get("email"),
+                        role=actual_role,
+                        department_id=str(t_item.get("department_id") or ""),
+                        department_name="Computer Science & Engineering",
+                        permissions=perms
+                    )
+
+                # Check student in Supabase
+                cond_s = f"student_code.eq.{user_id},email.eq.{user_id}"
+                if is_valid_uuid(user_id):
+                    cond_s += f",id.eq.{user_id}"
+                sb_s = sb.table("students").select("*").or_(cond_s).limit(1).execute()
+                if sb_s.data and len(sb_s.data) > 0:
+                    s_item = sb_s.data[0]
+                    actual_id = str(s_item["id"])
+                    perms = cls._fetch_user_permissions(actual_id, "student", db)
+                    return AuthenticatedUser(
+                        id=actual_id,
+                        identifier=s_item.get("student_code") or user_id,
+                        full_name=s_item.get("full_name") or "Student",
+                        email=s_item.get("email"),
+                        role="student",
+                        class_id=str(s_item.get("class_id") or ""),
+                        class_name=s_item.get("class_name") or "2R1",
+                        roll_no=s_item.get("roll_no") or 1,
+                        permissions=perms
+                    )
+        except Exception as e:
+            logger.debug("Supabase get_user_by_id notice: %s", e)
+
+        # Priority 2: Local Database fallback
         # 1. Check Student
         try:
             st = db.execute(text("""
                 SELECT s.id, s.student_code, s.full_name, s.email, s.roll_no, s.class_id, c.class_name
                 FROM students s
                 LEFT JOIN classes c ON s.class_id = c.id
-                WHERE s.id::text = :uid OR s.student_code = :uid
+                WHERE s.id = :uid OR s.student_code = :uid
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if st:
@@ -447,7 +680,7 @@ class AuthenticationService:
                 SELECT t.id, t.emp_code, t.full_name, t.email, t.department_id, d.name as dept_name
                 FROM teachers t
                 LEFT JOIN departments d ON t.department_id = d.id
-                WHERE t.id::text = :uid OR LOWER(t.emp_code) = LOWER(:uid)
+                WHERE t.id = :uid OR LOWER(t.emp_code) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if t:
@@ -458,7 +691,7 @@ class AuthenticationService:
                     is_hod = db.execute(text("""
                         SELECT count(*) FROM user_roles ur
                         JOIN roles r ON ur.role_id = r.id
-                        WHERE ur.user_id::text = :uid AND LOWER(r.name) = 'hod'
+                        WHERE (ur.user_id = :uid) AND LOWER(r.name) = 'hod'
                     """), {"uid": actual_id}).scalar()
                     if is_hod and is_hod > 0:
                         actual_role = "hod"
@@ -482,9 +715,9 @@ class AuthenticationService:
         # 3. Check Admin
         try:
             a = db.execute(text("""
-                SELECT id, username, name, email
-                FROM admins
-                WHERE a.id::text = :uid OR LOWER(a.username) = LOWER(:uid)
+                SELECT a.id, a.username, a.name, a.email
+                FROM admins a
+                WHERE a.id = :uid OR LOWER(a.username) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if a:

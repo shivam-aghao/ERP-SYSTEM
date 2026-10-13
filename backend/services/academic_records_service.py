@@ -106,7 +106,7 @@ class AcademicRecordsService:
         # Class lookup
         c_row = db.execute(text("""
             SELECT id, class_name FROM classes 
-            WHERE id::text = :cid OR class_name = :cid
+            WHERE CAST(id AS TEXT) = :cid OR class_name = :cid
             LIMIT 1
         """), {"cid": cls_clean}).fetchone()
         if c_row:
@@ -119,7 +119,7 @@ class AcademicRecordsService:
         # Subject lookup
         s_row = db.execute(text("""
             SELECT id, code, name FROM subjects 
-            WHERE id::text = :sid OR code = :sid OR name = :sid
+            WHERE CAST(id AS TEXT) = :sid OR code = :sid OR name = :sid
             LIMIT 1
         """), {"sid": sub_clean}).fetchone()
         if s_row:
@@ -151,15 +151,15 @@ class AcademicRecordsService:
         # Check in faculty_subject_assignments
         chk = db.execute(text("""
             SELECT id FROM faculty_subject_assignments
-            WHERE (faculty_id::text = :uid OR faculty_id IN (SELECT id FROM teachers WHERE emp_code = :ucode))
-              AND (subject_id::text = :sid OR subject_id IN (SELECT id FROM subjects WHERE code = :scode))
-              AND (class_id::text = :cid OR class_id IN (SELECT id FROM classes WHERE class_name = :cname))
+            WHERE (CAST(faculty_id AS TEXT) = :uid OR faculty_id IN (SELECT id FROM teachers WHERE emp_code = :ucode))
+              AND (CAST(subject_id AS TEXT) = :sid OR subject_id IN (SELECT id FROM subjects WHERE code = :scode))
+              AND (CAST(class_id AS TEXT) = :cid OR class_id IN (SELECT id FROM classes WHERE class_name = :cname))
             LIMIT 1
         """), {"uid": str(u_id), "ucode": str(u_code), "sid": actual_sid, "scode": subject_code, "cid": actual_cid, "cname": class_name}).fetchone()
 
         if not chk:
             # Fallback: check if teacher is designated as Professor in the department
-            t_row = db.execute(text("SELECT designation FROM teachers WHERE id::text = :uid OR emp_code = :ucode LIMIT 1"), {"uid": str(u_id), "ucode": str(u_code)}).fetchone()
+            t_row = db.execute(text("SELECT designation FROM teachers WHERE CAST(id AS TEXT) = :uid OR emp_code = :ucode LIMIT 1"), {"uid": str(u_id), "ucode": str(u_code)}).fetchone()
             if t_row and any(title in (t_row[0] or "") for title in ("Professor", "HOD", "Head", "Incharge")):
                 return
             # Allow fallback assignment in development/test environment if assignments table is sparse
@@ -369,7 +369,7 @@ class AcademicRecordsService:
         s_row = db.execute(text("""
             SELECT id, student_code, full_name, class_name, roll_no, department_id 
             FROM students 
-            WHERE student_code = :sc OR id::text = :sc
+            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc
             LIMIT 1
         """), {"sc": str(student_code).strip()}).fetchone()
 
@@ -519,9 +519,9 @@ class AcademicRecordsService:
             FROM students s
             LEFT JOIN student_subject_results ssr 
               ON s.id = ssr.student_id 
-             AND (ssr.subject_id::text = :sid OR ssr.subject_code = :scode)
+             AND (CAST(ssr.subject_id AS TEXT) = :sid OR ssr.subject_code = :scode)
              AND ssr.semester_number = :sem
-            WHERE (s.class_id::text = :cid OR s.class_name = :cname)
+            WHERE (CAST(s.class_id AS TEXT) = :cid OR s.class_name = :cname)
             ORDER BY s.roll_no ASC
         """), {"sid": actual_sid, "scode": subject_code, "sem": int(semester_number), "cid": actual_cid, "cname": class_name}).fetchall()
 
@@ -603,7 +603,7 @@ class AcademicRecordsService:
             stud_ident = item.student_id or item.student_code or item.roll_no
             s_row = db.execute(text("""
                 SELECT id, student_code, roll_no FROM students 
-                WHERE id::text = :s OR student_code = :s OR roll_no = :s
+                WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s
                 LIMIT 1
             """), {"s": str(stud_ident).strip()}).fetchone()
 

@@ -98,7 +98,7 @@ class QuizService:
         class_input = str(cls.get_prop(payload, "class_id", "")).strip()
         actual_class_uuid = cls.resolve_uuid(class_input)
         if not actual_class_uuid:
-            c_row = db.execute(text("SELECT id, class_name FROM classes WHERE class_name = :c OR id::text = :c LIMIT 1"), {"c": class_input}).fetchone()
+            c_row = db.execute(text("SELECT id, class_name FROM classes WHERE class_name = :c OR CAST(id AS TEXT) = :c LIMIT 1"), {"c": class_input}).fetchone()
             if c_row:
                 actual_class_uuid = str(c_row[0])
             else:
@@ -108,7 +108,7 @@ class QuizService:
         # 3. Resolve subject UUID
         actual_subject_uuid = cls.resolve_uuid(cls.get_prop(payload, "subject_id"))
         if not actual_subject_uuid and cls.get_prop(payload, "subject_id"):
-            s_row = db.execute(text("SELECT id FROM subjects WHERE name = :n OR code = :n OR id::text = :n LIMIT 1"), {"n": str(cls.get_prop(payload, "subject_id"))}).fetchone()
+            s_row = db.execute(text("SELECT id FROM subjects WHERE name = :n OR code = :n OR CAST(id AS TEXT) = :n LIMIT 1"), {"n": str(cls.get_prop(payload, "subject_id"))}).fetchone()
             if s_row:
                 actual_subject_uuid = str(s_row[0])
 
@@ -419,7 +419,7 @@ class QuizService:
         # 1. Resolve student record
         st = None
         if student_identifier:
-            st = db.execute(text("SELECT * FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s LIMIT 1"), {"s": str(student_identifier)}).fetchone()
+            st = db.execute(text("SELECT * FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s LIMIT 1"), {"s": str(student_identifier)}).fetchone()
         if not st:
             st = db.execute(text("SELECT * FROM students LIMIT 1")).fetchone()
         if not st:
@@ -1187,7 +1187,7 @@ class QuizService:
                     count(*) as total_answers,
                     sum(CASE WHEN is_correct = TRUE THEN 1 ELSE 0 END) as correct_answers
                 FROM quiz_attempt_answers qaa
-                JOIN quiz_attempts qa ON qaa.attempt_id = qa.id::text
+                JOIN quiz_attempts qa ON qaa.attempt_id = CAST(qa.id AS TEXT)
                 WHERE qaa.question_id = :qid AND qa.status IN ('submitted', 'evaluated', 'auto_submitted', 'SUBMITTED')
             """), {"qid": q_id}).fetchone()
 
@@ -1240,7 +1240,7 @@ class QuizService:
         sec_count = db.execute(text("""
             SELECT count(*)
             FROM quiz_security_events qse
-            JOIN quiz_attempts qa ON qse.attempt_id = qa.id::text
+            JOIN quiz_attempts qa ON qse.attempt_id = CAST(qa.id AS TEXT)
             WHERE qa.quiz_id = :qid
         """), {"qid": quiz_id}).scalar() or 0
 

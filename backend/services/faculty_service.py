@@ -33,7 +33,7 @@ class FacultyService:
             SELECT t.*, d.name as department_name 
             FROM teachers t 
             LEFT JOIN departments d ON t.department_id = d.id 
-            WHERE t.id::text = :uid 
+            WHERE CAST(t.id AS TEXT) = :uid 
                OR LOWER(t.emp_code) = LOWER(:uid) 
                OR LOWER(t.email) = LOWER(:uid) 
                OR LOWER(t.full_name) = LOWER(:uid)
@@ -158,9 +158,10 @@ class FacultyService:
         entries = []
         try:
             rows = db.execute(text("""
-                SELECT id, day, period_num, period_time, course_name, venue, status, att_label
+                SELECT id, day, period_num, COALESCE(slot_index, period_num) as slot_index, 
+                       period_time, course_name, venue, status, att_label, class_code, is_lab, batch
                 FROM timetable_entries
-                WHERE teacher_name LIKE :tname
+                WHERE emp_code = :emp OR teacher_name LIKE :tname
                 ORDER BY
                   CASE LOWER(day)
                     WHEN 'monday' THEN 1
@@ -172,7 +173,7 @@ class FacultyService:
                     ELSE 7
                   END,
                   period_num ASC
-            """), {"tname": f"%{t_name}%"}).fetchall()
+            """), {"emp": emp_code, "tname": f"%{t_name}%"}).fetchall()
             entries = [dict(r._mapping) for r in rows]
         except Exception:
             pass

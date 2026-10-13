@@ -64,7 +64,7 @@ def get_teacher_quizzes(class_id: Optional[str] = None, db: Session = Depends(ge
     clause = "WHERE 1=1"
     params = {}
     if class_id:
-        clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
+        clause += " AND (CAST(q.class_id AS TEXT) = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
@@ -264,7 +264,7 @@ def remove_question_from_quiz(quiz_id: str, question_id: str, db: Session = Depe
 def get_student_available_quizzes(student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
@@ -296,7 +296,7 @@ def get_student_available_quizzes(student_code: Optional[str] = Query(None), db:
 def get_student_quiz_info(quiz_id: str, student_code: Optional[str] = Query(None), db: Session = Depends(get_db)):
     st = None
     if student_code:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": student_code}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"), {"c": student_code}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
 
@@ -322,7 +322,7 @@ def start_quiz_attempt(quiz_id: str, payload: Dict[str, Any] = Body(...), db: Se
     st_id = payload.get("student_id") or payload.get("student_code")
     st = None
     if st_id:
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": st_id}).fetchone()
+        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"), {"c": st_id}).fetchone()
     if not st:
         st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
     if not st:
