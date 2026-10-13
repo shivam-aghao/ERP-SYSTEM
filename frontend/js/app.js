@@ -20,12 +20,9 @@ const TeacherApp = {
     try { this.renderStudentsView(); } catch (e) { console.warn('renderStudentsView:', e); }
     try { this.renderSyllabusView(); } catch (e) { console.warn('renderSyllabusView:', e); }
     try { this.renderResultsView(); } catch (e) { console.warn('renderResultsView:', e); }
-<<<<<<< HEAD
     try { this.renderLeaveView(); } catch (e) { console.warn('renderLeaveView:', e); }
-=======
     try { this.renderBasicProfileView(); } catch (e) { console.warn('renderBasicProfileView:', e); }
     try { this.renderInformationView(); } catch (e) { console.warn('renderInformationView:', e); }
->>>>>>> 7b58cb3 (Update ERP system)
     try { this.renderNotificationsList(); } catch (e) { console.warn('renderNotificationsList:', e); }
     try { this.initLucideIcons(); } catch (e) { console.warn('initLucideIcons:', e); }
     try { this.initHashRouting(); } catch (e) { console.warn('initHashRouting:', e); }
@@ -1356,11 +1353,7 @@ const TeacherApp = {
         const sub = rawHash.includes('roster') ? 'roster' : 'marking';
         this.switchView('attendance', sub);
       } else {
-<<<<<<< HEAD
-        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings', 'notifications', 'information', 'leave'];
-=======
-        const validViews = ['dashboard', 'profile', 'information', 'leave', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
->>>>>>> 7b58cb3 (Update ERP system)
+        const validViews = ['dashboard', 'profile', 'information', 'leave', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings', 'notifications'];
         if (validViews.includes(rawHash)) {
           this.switchView(rawHash);
         }
@@ -1376,71 +1369,6 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-<<<<<<< HEAD
-  // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
-  // ----------------------------------------------------
-  async renderNotificationsList() {
-    const listEl = document.getElementById("notifications-full-list");
-    const container = document.getElementById("notification-items-list");
-    const teacher = this.getLoggedInTeacher() || {};
-    const empCode = teacher.employeeId || 'EMP-CSE-1001';
-
-    let notifs = null;
-    try {
-      const res = await fetch(`http://localhost:8000/api/v1/notifications/list?user_id=${encodeURIComponent(empCode)}&limit=30`).then(r => r.json()).catch(() => null);
-      if (res && res.data && res.data.length > 0) {
-        notifs = res.data;
-      }
-      const countRes = await fetch(`http://localhost:8000/api/v1/notifications/unread-count?user_id=${encodeURIComponent(empCode)}`).then(r => r.json()).catch(() => null);
-      if (countRes && countRes.data && countRes.data.unread_count !== undefined) {
-        const unreadCount = countRes.data.unread_count;
-        document.querySelectorAll('.notif-badge').forEach(b => {
-          b.textContent = unreadCount;
-          b.style.display = unreadCount > 0 ? '' : 'none';
-        });
-      }
-    } catch (e) {
-      console.warn("Error fetching teacher notifications:", e);
-    }
-
-    if (!notifs || notifs.length === 0) {
-      const localNotifs = (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.notifications)) ? TeacherERPData.notifications : [];
-      notifs = localNotifs.map(n => ({
-        id: n.id,
-        title: n.title,
-        message: n.description || n.message || '',
-        priority: 'normal',
-        is_read: !n.unread,
-        received_at: Date.now(),
-        time_str: n.time
-      }));
-    }
-
-    if (listEl) {
-      if (!notifs || notifs.length === 0) {
-        listEl.innerHTML = `<div style="text-align:center; padding:30px; color:#64748B;">No notices or circulars right now. All caught up!</div>`;
-      } else {
-        listEl.innerHTML = notifs.map(n => {
-          const isUnread = !n.is_read;
-          const p = (n.priority || 'normal').toUpperCase();
-          const color = p === 'URGENT' ? '#E11D48' : (p === 'HIGH' ? '#D97706' : '#005A9C');
-          const timeText = n.time_str || new Date(n.received_at || n.sent_at || Date.now()).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-          return `
-            <div class="activity-item" style="padding:14px; border-bottom:1px solid #F1F5F9; background:${isUnread ? 'rgba(0,166,214,0.03)' : '#fff'}; cursor:pointer;" onclick="TeacherApp.handleNotificationClick('${n.id || ''}')">
-              <div class="activity-icon-box" style="background:#EBF3FC; color:${color}; font-weight:800; font-size:12px; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                ${p === 'URGENT' ? '!' : '🔔'}
-              </div>
-              <div class="activity-content" style="flex:1;">
-                <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="activity-title" style="font-weight:700; color:#1E293B;">${n.title}</span>
-                    <span class="badge" style="background:${p === 'URGENT' ? '#FFE4E6' : '#FEF3C7'}; color:${p === 'URGENT' ? '#E11D48' : '#D97706'}; font-size:10px; padding:1px 6px; border-radius:4px;">${p}</span>
-                    ${isUnread ? '<span style="width:6px; height:6px; border-radius:50%; background:#00A6D6;"></span>' : ''}
-                  </div>
-                  <span class="activity-time" style="font-size:12px; color:#94A3B8;">${timeText}</span>
-                </div>
-                <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
-=======
   // NOTIFICATIONS HUB & ANNOUNCEMENT BROADCASTING
   // ----------------------------------------------------
   renderNotificationsList() {
@@ -1520,7 +1448,6 @@ const TeacherApp = {
                     </button>
                   ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
                 </div>
->>>>>>> 7b58cb3 (Update ERP system)
               </div>
             </div>
           `;
@@ -1528,21 +1455,7 @@ const TeacherApp = {
       }
     }
 
-<<<<<<< HEAD
-    if (container && notifs) {
-      container.innerHTML = notifs.slice(0, 5).map(notif => `
-        <div class="notification-item ${!notif.is_read ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id || ''}')">
-          <div class="notif-icon-box" style="background:#EBF3FC; color:var(--primary-blue);">
-            <i data-lucide="bell" style="width:16px;height:16px;"></i>
-          </div>
-          <div class="notif-content">
-            <div class="notif-title" style="font-weight:600;">${notif.title}</div>
-            <div class="notif-desc">${notif.message || ''}</div>
-            <div class="notif-time">${notif.time_str || new Date(notif.received_at || Date.now()).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
-          </div>
-        </div>
-      `).join('');
-    }
+    this.initLucideIcons();
   },
 
   async markAllTeacherNotificationsRead() {
@@ -1566,71 +1479,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-  async dispatchClassAnnouncement() {
-    const classVal = document.getElementById("teacherNotifClass")?.value || '3R';
-    const priorityVal = document.getElementById("teacherNotifPriority")?.value || 'normal';
-    const titleVal = document.getElementById("teacherNotifTitle")?.value?.trim() || '';
-    const msgVal = document.getElementById("teacherNotifMsg")?.value?.trim() || '';
-    const teacher = this.getLoggedInTeacher() || {};
-    const empCode = teacher.employeeId || 'EMP-CSE-1001';
-
-    if (!titleVal || !msgVal) {
-      this.showToast("Please provide both a headline and detailed message.", "error");
-      return;
-    }
-
-    if (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.notifications)) {
-      TeacherERPData.notifications.unshift({
-        id: 'notif-' + Date.now(),
-        title: `[${classVal}] ${titleVal}`,
-        description: msgVal,
-        time: 'Just now',
-        icon: 'bell',
-        unread: true
-      });
-    }
-
-    try {
-      const payload = {
-        notification_type: "announcement",
-        title: titleVal,
-        message: msgVal,
-        priority: priorityVal,
-        target_type: classVal === 'student' ? 'role' : 'class',
-        target_id: classVal,
-        sender_id: empCode,
-        action_url: "/student/announcements"
-      };
-
-      await fetch("http://localhost:8000/api/v1/notifications/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).catch(() => null);
-    } catch (_) {}
-
-    this.showToast(`Notice successfully dispatched to ${classVal}!`, "success");
-    const tEl = document.getElementById("teacherNotifTitle");
-    const mEl = document.getElementById("teacherNotifMsg");
-    const cardEl = document.getElementById("teacherCreateNotifCard");
-    if (tEl) tEl.value = "";
-    if (mEl) mEl.value = "";
-    if (cardEl) cardEl.style.display = "none";
-    this.renderNotificationsList();
-  },
-
-  handleNotificationClick(id) {
-    if (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.notifications)) {
-      const notif = TeacherERPData.notifications.find(n => n.id === id);
-      if (notif) {
-        notif.unread = false;
-        this.renderNotificationsList();
-        this.showToast(`Viewing: ${notif.title}`);
-      }
-=======
-    this.initLucideIcons();
-  },
-
   async handleNotificationClick(id) {
     const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
     if (notif) {
@@ -1642,7 +1490,6 @@ const TeacherApp = {
       } catch (_) {}
       this.renderNotificationsList();
       this.showToast(`Viewing: ${notif.title}`);
->>>>>>> 7b58cb3 (Update ERP system)
     }
   },
 
@@ -3276,7 +3123,6 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-<<<<<<< HEAD
   // ----------------------------------------------------
   // RESULTS VIEW & MARKS EVALUATION CONSOLE
   // ----------------------------------------------------
@@ -3877,7 +3723,9 @@ const TeacherApp = {
     if (modal) modal.style.display = 'none';
     if (this.currentView === 'results') {
       this.loadMarksRoster();
-=======
+    }
+  },
+
   handleMarksInputChange(studentId, rawValue, maxMarks) {
     const val = Math.min(maxMarks, Math.max(0, parseInt(rawValue, 10) || 0));
     const currentClass = this._resultsClass || '2R1';
@@ -3972,10 +3820,8 @@ const TeacherApp = {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     if (typeof this.showToast === 'function') {
       this.showToast(`Marksheet exported: SSGMCE_Marksheet_${currentClass}_${currentExam}.csv`, 'info');
->>>>>>> 7b58cb3 (Update ERP system)
     }
   },
 

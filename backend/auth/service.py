@@ -253,67 +253,8 @@ class AuthenticationService:
             except Exception:
                 db.rollback()
 
-        # Priority 3: Dynamic academic faculty auto-provisioning
-        # If user identifier matches faculty conventions (e.g. EMP-..., T-..., FAC-...) or role hint
-        if not teacher_dict and (
-            uid.upper().startswith("EMP-") or 
-            uid.upper().startswith("T-") or 
-            uid.upper().startswith("FAC-") or 
-            hint_role in ("teacher", "faculty", "employee")
-        ):
-            if pwd in ("teacher@123", "ssgmce@123", "admin@123"):
-                import uuid as _uuid_lib
-                new_t_id = str(_uuid_lib.uuid4())
-                formatted_emp = uid.upper()
-                new_t_name = f"Faculty Member ({formatted_emp})"
-                new_email = f"{formatted_emp.lower().replace('-', '')}@ssgmce.ac.in"
-                teacher_dict = {
-                    "id": new_t_id,
-                    "emp_code": formatted_emp,
-                    "password": pwd,
-                    "full_name": new_t_name,
-                    "email": new_email,
-                    "designation": "Assistant Professor",
-                    "department_id": "",
-                    "dept_name": "Computer Science & Engineering"
-                }
-                # Sync into Supabase Cloud
-                try:
-                    sb = get_supabase_client()
-                    if sb:
-                        sb.table("teachers").upsert({
-                            "id": new_t_id,
-                            "emp_code": formatted_emp,
-                            "password": pwd,
-                            "full_name": new_t_name,
-                            "email": new_email,
-                            "designation": "Assistant Professor"
-                        }, on_conflict="emp_code").execute()
-                except Exception as _sb_e:
-                    logger.debug("Auto-provision Supabase sync notice: %s", _sb_e)
-
-                # Sync into local SQLite
-                try:
-                    from backend.utils.db_sync import get_db_path
-                    import sqlite3
-                    conn = sqlite3.connect(get_db_path())
-                    c = conn.cursor()
-                    c.execute("""
-                        INSERT OR REPLACE INTO teachers (id, first_name, last_name, emp_code, teacher_code, full_name, email, password, designation, is_active)
-                        VALUES (?, 'Faculty', ?, ?, ?, ?, ?, ?, 'Assistant Professor', 1)
-                    """, (new_t_id, formatted_emp, formatted_emp, formatted_emp, new_t_name, new_email, pwd))
-                    conn.commit()
-                    conn.close()
-                except Exception as _sq_e:
-                    logger.debug("Auto-provision SQLite sync notice: %s", _sq_e)
-
-<<<<<<< HEAD
-        # Convenience fallback for faculty search by name
-        if not teacher_row:
-=======
         # Convenience fallback for faculty search by name if explicit faculty role hint provided
-        if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
->>>>>>> 7b58cb3 (Update ERP system)
+        if not teacher_row and hint_role in ("teacher", "faculty", "employee"):
             try:
                 teacher_row = db.execute(text("""
                     SELECT t.id, t.emp_code, t.password, t.full_name, t.email, t.designation,
@@ -402,9 +343,8 @@ class AuthenticationService:
         # 3. Student Authentication
         # -------------------------------------------------------------
         student_dict = None
-        # Priority 1: Supabase Cloud live lookup
+        student_row = None
         try:
-<<<<<<< HEAD
             student_row = db.execute(text("""
                 SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
                        s.class_id, c.class_name, c.division as class_div
@@ -417,63 +357,48 @@ class AuthenticationService:
                    OR LOWER(s.full_name) LIKE LOWER(:pat)
                 LIMIT 1
             """), {"uid": uid, "pat": f"%{uid}%"}).fetchone()
+            if student_row:
+                m = student_row._mapping
+                student_dict = {
+                    "id": str(m.get("id")),
+                    "student_code": m.get("student_code") or uid,
+                    "password": m.get("password") or "ssgmce@123",
+                    "full_name": m.get("full_name") or "Student",
+                    "email": m.get("email") or "",
+                    "roll_no": m.get("roll_no") or 1,
+                    "class_name": m.get("class_name") or "2R1",
+                    "class_id": str(m.get("class_id") or ""),
+                    "division": m.get("division") or m.get("class_div") or "A"
+                }
         except Exception:
             db.rollback()
-=======
-            sb = get_supabase_client()
-            if sb:
-                cond = f"student_code.ilike.{uid},email.ilike.{uid}"
-                if uid.isdigit():
-                    cond += f",roll_no.eq.{int(uid)}"
-                if is_valid_uuid(uid):
-                    cond += f",id.eq.{uid}"
-                sb_res = sb.table("students").select("*").or_(cond).limit(1).execute()
-                if sb_res.data and len(sb_res.data) > 0:
-                    s_item = sb_res.data[0]
-                    student_dict = {
-                        "id": str(s_item.get("id")),
-                        "student_code": s_item.get("student_code") or uid,
-                        "password": s_item.get("password") or "ssgmce@123",
-                        "full_name": s_item.get("full_name") or "Student",
-                        "email": s_item.get("email") or "",
-                        "roll_no": s_item.get("roll_no") or 1,
-                        "class_name": s_item.get("class_name") or "2R1",
-                        "class_id": str(s_item.get("class_id") or ""),
-                        "division": s_item.get("division") or "A"
-                    }
-        except Exception as e:
-            logger.debug("Supabase student lookup notice: %s", e)
->>>>>>> 7b58cb3 (Update ERP system)
 
-        # Priority 2: Resilient local database lookup
+        # Fallback to Supabase REST client if DB query failed or empty
         if not student_dict:
             try:
-                student_row = db.execute(text("""
-                    SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
-                           s.class_id, c.class_name, c.division as class_div
-                    FROM students s
-                    LEFT JOIN classes c ON s.class_id = c.id
-                    WHERE LOWER(s.student_code) = LOWER(:uid) 
-                       OR LOWER(s.email) = LOWER(:uid) 
-                       OR s.id = :uid 
-                       OR LOWER(s.roll_no) = LOWER(:uid)
-                    LIMIT 1
-                """), {"uid": uid}).fetchone()
-                if student_row:
-                    m = student_row._mapping
-                    student_dict = {
-                        "id": str(m.get("id")),
-                        "student_code": m.get("student_code") or uid,
-                        "password": m.get("password") or "ssgmce@123",
-                        "full_name": m.get("full_name") or "Student",
-                        "email": m.get("email") or "",
-                        "roll_no": m.get("roll_no") or 1,
-                        "class_name": m.get("class_name") or "2R1",
-                        "class_id": str(m.get("class_id") or ""),
-                        "division": m.get("division") or m.get("class_div") or "A"
-                    }
-            except Exception:
-                db.rollback()
+                sb = get_supabase_client()
+                if sb:
+                    cond = f"student_code.ilike.{uid},email.ilike.{uid}"
+                    if uid.isdigit():
+                        cond += f",roll_no.eq.{int(uid)}"
+                    if is_valid_uuid(uid):
+                        cond += f",id.eq.{uid}"
+                    sb_res = sb.table("students").select("*").or_(cond).limit(1).execute()
+                    if sb_res.data and len(sb_res.data) > 0:
+                        s_item = sb_res.data[0]
+                        student_dict = {
+                            "id": str(s_item.get("id")),
+                            "student_code": s_item.get("student_code") or uid,
+                            "password": s_item.get("password") or "ssgmce@123",
+                            "full_name": s_item.get("full_name") or "Student",
+                            "email": s_item.get("email") or "",
+                            "roll_no": s_item.get("roll_no") or 1,
+                            "class_name": s_item.get("class_name") or "2R1",
+                            "class_id": str(s_item.get("class_id") or ""),
+                            "division": s_item.get("division") or "A"
+                        }
+            except Exception as e:
+                logger.debug("Supabase student lookup notice: %s", e)
 
         if student_dict:
             stored_pwd = student_dict.get("password") or "ssgmce@123"

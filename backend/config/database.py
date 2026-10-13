@@ -7,7 +7,6 @@ from backend.config.settings import settings
 
 logger = logging.getLogger("ssgmce_erp_backend.database")
 
-<<<<<<< HEAD
 import socket
 import urllib.parse
 from sqlalchemy import text
@@ -114,10 +113,7 @@ def get_db():
     finally:
         db.close()
 
-# Supabase REST Client
-=======
 # Supabase REST Client singleton
->>>>>>> 7b58cb3 (Update ERP system)
 supabase_client = None
 
 def get_supabase_client():

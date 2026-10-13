@@ -5,7 +5,6 @@ from sqlalchemy import text
 class StudentService:
     @staticmethod
     def get_profile(student_code: str, db: Session) -> Optional[Dict[str, Any]]:
-<<<<<<< HEAD
         sc = (student_code or "").strip()
         row = None
         if sc:
@@ -26,12 +25,6 @@ class StudentService:
             row = db.execute(
                 text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = '308637' LIMIT 1")
             ).fetchone()
-=======
-        row = db.execute(
-            text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"),
-            {"c": student_code}
-        ).fetchone()
->>>>>>> 7b58cb3 (Update ERP system)
         if not row:
             row = db.execute(text("SELECT s.*, c.class_name, c.division FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
         if not row:

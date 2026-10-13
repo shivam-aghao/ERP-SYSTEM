@@ -55,7 +55,6 @@ def get_all_quizzes(
     is_teacher = role in ("teacher", "faculty", "hod") and not student_code
     is_student = (role == "student") or bool(student_code) or (not is_teacher and not is_admin and not teacher_id)
 
-<<<<<<< HEAD
     # =========================================================================
     # 1. STUDENT PERSPECTIVE: Strictly Enforce Enrolled Class Membership
     # =========================================================================
@@ -101,15 +100,6 @@ def get_all_quizzes(
                 stud_class_name = str(req_cls[1])
 
         if not stud_class_id and not stud_class_name:
-=======
-    # Student perspective
-    if role == "student" or (not role and student_code):
-        sc = (current_user.identifier if current_user and role == "student" else student_code) or "308637"
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1"), {"c": sc}).fetchone()
-        if not st:
-            st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
-        if not st:
->>>>>>> 7b58cb3 (Update ERP system)
             return success_response([])
 
         # Student CAN ONLY SEE active/published quizzes for their exact class
@@ -131,12 +121,8 @@ def get_all_quizzes(
             FROM quizzes q
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
-<<<<<<< HEAD
             WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
-              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
-=======
-            WHERE (CAST(q.class_id AS TEXT) = :cid OR c.class_name = :cid) AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
->>>>>>> 7b58cb3 (Update ERP system)
+              AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])

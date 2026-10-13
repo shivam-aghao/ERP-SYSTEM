@@ -298,15 +298,6 @@ logger.info(
 )
 
 
-<<<<<<< HEAD
-# ==============================================================================
-# STATIC FILES & WEB APPLICATION SERVING
-# ==============================================================================
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ERP_ROOT = os.path.dirname(BASE_DIR)
-
-=======
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
 
@@ -2833,7 +2824,6 @@ except Exception as e:
 # 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
 # Serves the frontend directory so everything is available on port 8000!
 # ==============================================================================
->>>>>>> 7b58cb3 (Update ERP system)
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
 
