@@ -18,7 +18,7 @@
   const erpCfg = (typeof window !== 'undefined' && window.ERP_CONFIG) || {};
   const DEFAULT_CONFIG = {
     url: (typeof window !== 'undefined' && window.__SUPABASE_URL__) || erpCfg.SUPABASE_URL || 'https://gftqvclenyplnuoocbwe.supabase.co',
-    anonKey: (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || erpCfg.SUPABASE_ANON_KEY || ''
+    anonKey: (typeof window !== 'undefined' && window.__SUPABASE_ANON_KEY__) || erpCfg.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdHF2Y2xlbnlwbG51b29jYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODc3MjYsImV4cCI6MjEwNjA2MzcyNn0.kE1dD3VmL44ekYsqDpuPaMiwr3ljGQ-c4wDuumx9XxY'
   };
 
   const ERPSupabase = {
