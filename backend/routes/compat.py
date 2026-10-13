@@ -142,19 +142,19 @@ def compat_student_quiz_start(quiz_id: str, payload: Dict[str, Any] = Body(...),
     return start_quiz_attempt(quiz_id, payload, current_user, db)
 
 @router.put("/student/attempts/{attempt_id}/answers")
-def compat_student_attempt_answers(attempt_id: str, payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+def compat_student_attempt_answers(attempt_id: str, payload: Dict[str, Any] = Body(...), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
     """Deprecated. Canonical: PUT /api/v1/attempts/{attempt_id}/answers"""
-    return save_attempt_answers(attempt_id, payload, db)
+    return save_attempt_answers(attempt_id=attempt_id, payload=payload, current_user=current_user, db=db)
 
 @router.post("/student/attempts/{attempt_id}/submit")
-def compat_student_attempt_submit(attempt_id: str, payload: QuizSubmitRequest, db: Session = Depends(get_db)):
+def compat_student_attempt_submit(attempt_id: str, payload: QuizSubmitRequest, current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
     """Deprecated. Canonical: POST /api/v1/attempts/{attempt_id}/submit"""
-    return submit_quiz_attempt(attempt_id, payload, db)
+    return submit_quiz_attempt(attempt_id=attempt_id, payload=payload, current_user=current_user, db=db)
 
 @router.get("/student/attempts/{attempt_id}/result")
-def compat_student_attempt_result(attempt_id: str, db: Session = Depends(get_db)):
+def compat_student_attempt_result(attempt_id: str, current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
     """Deprecated. Canonical: GET /api/v1/attempts/{attempt_id}/result"""
-    return get_attempt_result(attempt_id, db)
+    return get_attempt_result(attempt_id=attempt_id, current_user=current_user, db=db)
 
 @router.get("/student/fees")
 def compat_student_fees(student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
@@ -238,9 +238,9 @@ def compat_teacher_profile(request: Request, emp_code: Optional[str] = Query(Non
     return get_teacher_profile(request, emp_code, empCode, teacher_id, current_user, db)
 
 @router.get("/teacher/class-roster")
-def compat_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Optional[str] = Query(None), db: Session = Depends(get_db)):
+def compat_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Optional[str] = Query(None), class_name: Optional[str] = Query(None), db: Session = Depends(get_db)):
     """Deprecated. Canonical: GET /api/v1/attendance/roster"""
-    return get_attendance_class_roster(classId, class_id, db)
+    return get_attendance_class_roster(classId=classId, class_id=class_id, class_name=class_name, db=db)
 
 @router.post("/teacher/attendance/bulk")
 def compat_teacher_attendance_bulk(payload: AttendanceSubmitRequest, current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
