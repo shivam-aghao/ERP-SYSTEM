@@ -62,6 +62,7 @@
         const res = await fetch(endpoint, { headers: this._getHeaders() });
         if (res.ok) {
           const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0) {
             let profile = rows[0];
             return { success: true, data: profile, source: 'supabase' };
           }

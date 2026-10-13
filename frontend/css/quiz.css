@@ -547,3 +547,122 @@ body {
   font-weight: 600;
   text-transform: uppercase;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Scoped Student Quiz Security & Mobile Responsive Rules                     */
+/* -------------------------------------------------------------------------- */
+#view-runner.quiz-secure-active,
+#view-runner.quiz-secure-active .question-card,
+#view-runner.quiz-secure-active .q-text,
+#view-runner.quiz-secure-active .options-grid,
+#view-runner.quiz-secure-active .option-btn {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.quiz-security-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.quiz-sec-fs-btn {
+  background: #EFF6FF;
+  color: var(--primary);
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.quiz-sec-fs-btn:hover {
+  background: var(--primary);
+  color: #FFFFFF;
+}
+
+.quiz-watermark-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none !important;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.25rem 1.5rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  opacity: 0.055;
+  user-select: none !important;
+}
+
+.quiz-watermark-stamp {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0B1F3A;
+  transform: rotate(-16deg);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  pointer-events: none !important;
+}
+
+#view-runner .question-card > div {
+  position: relative;
+  z-index: 3;
+}
+
+.quiz-blur-curtain > div {
+  filter: blur(14px);
+  pointer-events: none;
+  transition: filter 0.15s ease;
+}
+
+@media print {
+  #view-runner.quiz-secure-active {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* Mobile Responsive Quiz Runner (Android Chrome & iOS Safari) */
+@media (max-width: 900px) {
+  #view-runner .runner-body {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  #view-runner .quiz-runner-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+  }
+  #view-runner .question-card {
+    padding: 1.25rem !important;
+    min-height: auto !important;
+  }
+  #view-runner .q-text {
+    font-size: 1.05rem !important;
+  }
+  #view-runner .option-btn {
+    padding: 0.85rem 1rem !important;
+    font-size: 0.92rem !important;
+    touch-action: manipulation;
+  }
+  .quiz-watermark-overlay {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+}
+

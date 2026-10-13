@@ -290,9 +290,14 @@ class QuizService:
             })
             opt_order += 1
 
-        # Update total questions count
+        # Update total questions count and total marks
         tot_q = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
-        db.execute(text("UPDATE quizzes SET total_questions = :tq, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "id": quiz_id})
+        sum_marks = db.execute(text("SELECT COALESCE(SUM(marks), 0) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
+        if sum_marks > 0:
+            pass_m = round(float(sum_marks) * 0.4, 2)
+            db.execute(text("UPDATE quizzes SET total_questions = :tq, total_marks = :tm, passing_marks = :pm, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "tm": float(sum_marks), "pm": pass_m, "id": quiz_id})
+        else:
+            db.execute(text("UPDATE quizzes SET total_questions = :tq, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "id": quiz_id})
         db.commit()
 
         return {
@@ -301,8 +306,78 @@ class QuizService:
             "quiz_id": quiz_id,
             "question_text": q_text,
             "marks": q_marks,
+            "negative_marks": q_neg,
+            "explanation": q_exp,
             "question_order": new_order,
-            "total_questions": tot_q
+            "total_questions": tot_q,
+            "total_marks": float(sum_marks) if sum_marks > 0 else float(quiz._mapping.get("total_marks") or 10)
+        }
+
+    @classmethod
+    def update_question_in_quiz(cls, quiz_id: str, question_id: str, payload: Any, db: Session) -> Dict[str, Any]:
+        """Updates an existing question and its options in a quiz."""
+        existing = db.execute(
+            text("SELECT * FROM quiz_questions WHERE id = :qid AND quiz_id = :quiz_id"),
+            {"qid": question_id, "quiz_id": quiz_id}
+        ).fetchone()
+        if not existing:
+            raise ValueError("Question not found in this quiz")
+
+        em = dict(existing._mapping)
+        q_text = cls.get_prop(payload, "question_text", em.get("question_text") or "Question Text")
+        q_type = cls.normalize_question_type(cls.get_prop(payload, "question_type", em.get("question_type") or "single_choice"))
+        q_marks = float(cls.get_prop(payload, "marks", em.get("marks") or 2.0) or 2.0)
+        q_neg = float(cls.get_prop(payload, "negative_marks", em.get("negative_marks") or 0.0) or 0.0)
+        q_exp = cls.get_prop(payload, "explanation", em.get("explanation") or "") or ""
+        q_hint = cls.get_prop(payload, "hint", em.get("hint") or "") or ""
+
+        db.execute(text("""
+            UPDATE quiz_questions
+            SET question_text = :txt,
+                question_type = :typ,
+                marks = :m,
+                negative_marks = :nm,
+                explanation = :exp,
+                hint = :hint
+            WHERE id = :id AND quiz_id = :qid
+        """), {
+            "id": question_id, "qid": quiz_id,
+            "txt": q_text, "typ": q_type, "m": q_marks, "nm": q_neg, "exp": q_exp, "hint": q_hint
+        })
+
+        opts = cls.get_prop(payload, "options")
+        if opts is not None and isinstance(opts, list) and len(opts) > 0:
+            db.execute(text("DELETE FROM question_options WHERE question_id = :qid"), {"qid": question_id})
+            opt_order = 1
+            for opt in opts:
+                opt_id = str(uuid.uuid4())
+                opt_text = cls.get_prop(opt, "text") or cls.get_prop(opt, "option_text") or cls.get_prop(opt, "key", "")
+                is_corr = bool(cls.get_prop(opt, "is_correct", False))
+                db.execute(text("""
+                    INSERT INTO question_options (id, question_id, option_text, option_order, is_correct, created_at)
+                    VALUES (:id, :qid, :txt, :ord, :corr, CURRENT_TIMESTAMP)
+                """), {
+                    "id": opt_id, "qid": question_id, "txt": opt_text, "ord": opt_order, "corr": is_corr
+                })
+                opt_order += 1
+
+        tot_q = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
+        sum_marks = db.execute(text("SELECT COALESCE(SUM(marks), 0) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
+        if sum_marks > 0:
+            pass_m = round(float(sum_marks) * 0.4, 2)
+            db.execute(text("UPDATE quizzes SET total_questions = :tq, total_marks = :tm, passing_marks = :pm, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "tm": float(sum_marks), "pm": pass_m, "id": quiz_id})
+        db.commit()
+
+        return {
+            "id": question_id,
+            "question_id": question_id,
+            "quiz_id": quiz_id,
+            "question_text": q_text,
+            "marks": q_marks,
+            "negative_marks": q_neg,
+            "explanation": q_exp,
+            "total_questions": tot_q,
+            "total_marks": float(sum_marks)
         }
 
     @classmethod
@@ -311,7 +386,12 @@ class QuizService:
         db.execute(text("DELETE FROM question_options WHERE question_id = :qid"), {"qid": question_id})
         db.execute(text("DELETE FROM quiz_questions WHERE id = :qid AND quiz_id = :quiz_id"), {"qid": question_id, "quiz_id": quiz_id})
         tot_q = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
-        db.execute(text("UPDATE quizzes SET total_questions = :tq, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "id": quiz_id})
+        sum_marks = db.execute(text("SELECT COALESCE(SUM(marks), 0) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
+        if sum_marks > 0:
+            pass_m = round(float(sum_marks) * 0.4, 2)
+            db.execute(text("UPDATE quizzes SET total_questions = :tq, total_marks = :tm, passing_marks = :pm, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "tm": float(sum_marks), "pm": pass_m, "id": quiz_id})
+        else:
+            db.execute(text("UPDATE quizzes SET total_questions = :tq, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"tq": tot_q, "id": quiz_id})
         db.commit()
         return True
 
@@ -622,16 +702,32 @@ class QuizService:
     # ==========================================================================
     @classmethod
     def record_security_event(cls, attempt_id: str, event_type: str, metadata: Optional[Dict[str, Any]], db: Session) -> Dict[str, Any]:
-        """Logs anti-cheating & proctoring anomalies."""
+        """Logs anti-cheating & proctoring anomalies for active attempts while stripping any secret fields."""
+        att = db.execute(text("SELECT status FROM quiz_attempts WHERE id = :id"), {"id": attempt_id}).fetchone()
+        if not att:
+            raise ValueError("Attempt not found")
+        if str(att[0] or "").lower() not in ("in_progress", "active", "started"):
+            return {"event_id": None, "recorded": False, "ignored_reason": "attempt_not_active"}
+
+        safe_meta: Dict[str, Any] = {}
+        if isinstance(metadata, dict):
+            forbidden_substrings = ("token", "password", "secret", "authorization", "cookie", "key")
+            for k, v in metadata.items():
+                k_lower = str(k).lower()
+                if any(f in k_lower for f in forbidden_substrings):
+                    continue
+                safe_meta[str(k)[:64]] = v
+
+        safe_event_type = str(event_type or "security_event").strip()[:64]
         event_id = str(uuid.uuid4())
-        meta_json = json.dumps(metadata or {})
+        meta_json = json.dumps(safe_meta)
         now = datetime.now(timezone.utc)
 
         db.execute(text("""
             INSERT INTO quiz_security_events (id, attempt_id, event_type, metadata, event_time)
             VALUES (:id, :aid, :etype, :meta, :etime)
         """), {
-            "id": event_id, "aid": attempt_id, "etype": event_type, "meta": meta_json, "etime": now
+            "id": event_id, "aid": attempt_id, "etype": safe_event_type, "meta": meta_json, "etime": now
         })
         db.commit()
         return {"event_id": event_id, "recorded": True, "event_time": now.isoformat()}
@@ -646,7 +742,8 @@ class QuizService:
         answers: List[Any],
         is_auto_submit: bool,
         db: Session,
-        student_identifier: Optional[str] = None
+        student_identifier: Optional[str] = None,
+        submission_reason: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Authoritative Server-Side Evaluation:
@@ -807,7 +904,7 @@ class QuizService:
         time_taken_seconds = int((now - started_at).total_seconds()) if started_at else 0
 
         submission_status = "auto_submitted" if is_auto_submit else "submitted"
-        submission_reason = "timer_expired" if is_auto_submit else "student_submitted"
+        final_reason = (str(submission_reason).strip()[:64] if submission_reason else "") or ("timer_expired" if is_auto_submit else "student_submitted")
 
         db.execute(text("""
             UPDATE quiz_attempts
@@ -830,7 +927,7 @@ class QuizService:
         """), {
             "sub_time": now,
             "auto": is_auto_submit,
-            "reason": submission_reason,
+            "reason": final_reason,
             "st": submission_status,
             "tot_q": total_questions,
             "att_q": attempted_count,

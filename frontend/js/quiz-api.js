@@ -187,6 +187,21 @@
       return res.data;
     },
 
+    // 13b. Teacher: Update Existing Question
+    async updateQuestion(quizId, questionId, questionData) {
+      try {
+        var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions/' + encodeURIComponent(questionId), {
+          method: 'PUT',
+          body: JSON.stringify(questionData)
+        });
+        return res.data;
+      } catch (err) {
+        // Fallback: delete and re-add if PUT route is not active
+        await this.deleteQuestion(quizId, questionId);
+        return await this.addQuestion(quizId, questionData);
+      }
+    },
+
     // 14. Teacher: Delete Question
     async deleteQuestion(quizId, questionId) {
       var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions/' + encodeURIComponent(questionId), {

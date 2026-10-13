@@ -107,6 +107,7 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(recordsPayload)
+          });
           return { success: true, sessionId: createdSession.id, source: 'supabase' };
         } else {
           const errBody = await sessionRes.text().catch(() => '');

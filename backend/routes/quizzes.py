@@ -586,6 +586,28 @@ def add_question_to_quiz(
         return error_response(f"Failed to add question: {str(e)}", 400)
 
 
+@router.put("/{quiz_id}/questions/{question_id}")
+def update_question_in_quiz(
+    quiz_id: str,
+    question_id: str,
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """PUT /api/v1/quizzes/{quiz_id}/questions/{question_id} - Updates an existing question in the quiz."""
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
+    try:
+        res = QuizService.update_question_in_quiz(quiz_id, question_id, payload, db)
+        return success_response(res, "Question updated successfully")
+    except ValueError as e:
+        return error_response(str(e), 404)
+    except Exception as e:
+        return error_response(f"Failed to update question: {str(e)}", 400)
+
+
 @router.delete("/{quiz_id}/questions/{question_id}")
 def remove_question_from_quiz(
     quiz_id: str,
