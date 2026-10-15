@@ -56,13 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("renderRecentAttendance notice:", e);
       }
 
-      // Check URL search params for direct class launch (e.g. ?class=2R1&subject=Data%20Structures)
+      // Check URL search params for direct class launch (e.g. ?class=4R&subject=Cloud%20Computing&date=2026-10-08&batch=A)
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const targetClass = urlParams.get('class');
         const targetSubject = urlParams.get('subject');
-        if (targetClass) {
-          await this.handleDirectClassLaunch(targetClass, targetSubject);
+        const targetDate = urlParams.get('date');
+        const targetSlot = urlParams.get('slot');
+        const targetBatch = urlParams.get('batch');
+        if (targetClass || targetSubject) {
+          await this.handleDirectClassLaunch(targetClass, targetSubject, targetDate, targetSlot, targetBatch);
         }
       } catch (e) {
         console.warn("Direct class launch check failed:", e);
@@ -1349,10 +1352,48 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
 
-    async handleDirectClassLaunch(className, subjectName) {
-      if (!className) return;
-      if (!this.state.selectedDate) {
+    async handleDirectClassLaunch(className, subjectName, dateStr, slotStr, batch) {
+      if (dateStr) {
+        try {
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            this.state.selectedDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+          } else {
+            this.state.selectedDate = new Date(dateStr);
+          }
+          this.state.calendarViewingMonth = new Date(this.state.selectedDate.getFullYear(), this.state.selectedDate.getMonth(), 1);
+          this.updateSelectedDateDisplay();
+        } catch (_) {}
+      } else if (!this.state.selectedDate) {
         this.state.selectedDate = new Date();
+      }
+
+      let targetClass = (className || "").trim().toUpperCase();
+      let targetSubject = (subjectName || "").trim();
+
+      // Only if class is not explicitly provided, resolve from subject:
+      // Click CC (the 4R lecture) -> 4R swipe deck
+      // Click DBMS (the 3R lecture) -> 3R swipe deck
+      if (!targetClass && targetSubject) {
+        const subUpper = targetSubject.toUpperCase();
+        if (subUpper.includes('CC') || subUpper.includes('CLOUD') || subUpper.includes('4R')) {
+          targetClass = '4R';
+        } else if (subUpper.includes('DBMS') || subUpper.includes('DATABASE') || subUpper.includes('3R')) {
+          targetClass = '3R';
+        } else if (subUpper.includes('2R2')) {
+          targetClass = '2R2';
+        } else if (subUpper.includes('2R1') || subUpper.includes('OOP') || subUpper.includes('DS') || subUpper.includes('DATA STRUCTURES')) {
+          targetClass = '2R1';
+        }
+      }
+
+      if (!targetClass) targetClass = '3R';
+
+      // Batch resolution
+      let targetBatch = batch || null;
+      if (!targetBatch && targetSubject) {
+        const m = targetSubject.match(/Batch\s*([A-D0-9]+)/i);
+        if (m) targetBatch = m[1].toUpperCase();
       }
 
       let cards = [];
@@ -1364,37 +1405,38 @@ document.addEventListener("DOMContentLoaded", () => {
       if (Array.isArray(cards) && cards.length > 0) {
         matchedCard = cards.find(c => {
           const cName = (c.class || c.class_name || c.className || "").trim().toUpperCase();
-          const target = className.trim().toUpperCase();
-          return cName === target;
+          return cName === targetClass;
         });
       }
 
       if (!matchedCard) {
         matchedCard = {
-          id: `DIRECT-${className}`,
+          id: `DIRECT-${targetClass}`,
           department: "CSE",
           department_name: "Computer Science & Engineering",
-          class: className,
-          class_name: className,
-          subject_name: subjectName || "Core Subject",
-          subject_code: "CS302",
+          class: targetClass,
+          class_name: targetClass,
+          subject_name: targetSubject || (targetClass === '4R' ? 'Cloud Computing' : (targetClass === '3R' ? 'Database Management Systems' : 'Core Subject')),
+          subject_code: targetClass === '4R' ? 'CS401' : (targetClass === '3R' ? 'CS301' : 'CS201'),
           card_type: "scheduled"
         };
-      } else if (subjectName) {
-        matchedCard.subject_name = subjectName;
+      } else if (targetSubject) {
+        matchedCard.subject_name = targetSubject;
       }
+      matchedCard.class = targetClass;
+      matchedCard.class_name = targetClass;
 
-      await this.startAttendanceFromCard(matchedCard);
+      await this.startAttendanceFromCard(matchedCard, targetBatch, slotStr);
     },
 
-    async startAttendanceFromCard(card) {
+    async startAttendanceFromCard(card, batch, slotStr) {
       if (!card) return;
       if (!this.state.selectedDate) {
         this.state.selectedDate = new Date();
       }
 
       const cardDept = card.department || card.department_code || card.departmentCode || "CSE";
-      const cardClass = card.class || card.class_name || card.className || "2R1";
+      const cardClass = card.class || card.class_name || card.className || "3R";
       const cardSubCode = card.subject_code || card.subjectCode || "CS302";
       const cardSubName = card.subject_name || card.subjectName || "Subject";
 
@@ -1410,60 +1452,53 @@ document.addEventListener("DOMContentLoaded", () => {
         id: cardClass,
         name: cardClass,
         year: "",
-        studentCount: 40
+        studentCount: 80
       };
 
       const subjectList = (ERP_DATA.subjects && ERP_DATA.subjects[cardDept]) || [];
       const subjectObj = subjectList.find((s) => s.code === cardSubCode || s.name === cardSubName) || {
         code: cardSubCode,
         name: cardSubName,
-        type: "Theory"
+        type: (cardSubName.toLowerCase().includes("lab") || batch) ? "Practical" : "Theory"
       };
 
       this.state.selectedDept = deptObj;
       this.state.selectedClass = classObj;
       this.state.selectedSubject = subjectObj;
-
-      // Check if attendance already exists for this exact combination
-      try {
-        const dateStr = this.formatDateISO(this.state.selectedDate);
-        const isDuplicate = await AttendanceService.checkDuplicate(
-          deptObj.code,
-          classObj.name,
-          dateStr,
-          subjectObj.code
-        );
-
-        if (isDuplicate) {
-          if (!confirm(`Notice: Attendance for ${classObj.name} - ${subjectObj.name} on ${dateStr} is already submitted.\nDo you want to re-evaluate this session?`)) {
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("Duplicate check bypassed:", e);
-      }
+      this.state.selectedSlot = slotStr || card.time_slot || card.slot || "";
+      this.state.selectedBatch = batch || null;
+      window.currentActiveRosterClass = classObj.name || classObj.id;
+      window.currentActiveRosterBatch = batch || null;
 
       this.showToast(`Loading enrolled students for ${classObj.name}...`, "info");
+      let allStudents = [];
       try {
-        this.state.students = await ERP_DATA.fetchStudentRoster(deptObj.code, classObj.name || classObj.id);
-        if (!this.state.students || this.state.students.length === 0) {
-          this.state.students = await ERP_DATA.fetchStudentRoster(deptObj.code, "SY-CSE-A");
-        }
+        allStudents = await ERP_DATA.fetchStudentRoster(deptObj.code, classObj.name || classObj.id);
       } catch (err) {
         console.warn("Error fetching students:", err);
       }
 
-      // Guaranteed fallback roster so step 4 marking interface never fails or stalls
-      if (!this.state.students || this.state.students.length === 0) {
-        this.state.students = Array.from({ length: 30 }, (_, i) => {
+      if (!allStudents || allStudents.length === 0) {
+        try {
+          allStudents = await window.ErpApi.getStudents(deptObj.code, classObj.name || classObj.id);
+        } catch (_) {}
+      }
+
+      // Fallback roster generator ensuring full sequential count
+      if (!allStudents || allStudents.length === 0) {
+        const count = classObj.name === '3R' ? 80 : (classObj.name === '4R' ? 79 : 77);
+        allStudents = Array.from({ length: count }, (_, i) => {
           const roll = i + 1;
-          const rollStr = roll < 10 ? `0${roll}` : `${roll}`;
+          const rollStr = String(roll).padStart(2, '0');
           return {
-            id: `std-${classObj.name || '2R1'}-${roll}`,
+            id: `std-${classObj.name}-${roll}`,
             roll: roll,
+            rollNo: roll,
             rollFormatted: `ROLL ${rollStr}`,
-            name: `Student ${roll}`,
+            name: `Student ${classObj.name}-${rollStr}`,
             prn: `PRN-2026-${rollStr}`,
+            studentCode: `307${rollStr}`,
+            enrollmentNo: `307${rollStr}`,
             isProvisional: false,
             status: null,
             recentHistory: ["P", "P", "P", "P", "P"]
@@ -1471,7 +1506,45 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      this.showToast(`Loaded ${this.state.students.length} students from database`, "success");
+      // Sort all students numerically by roll number
+      allStudents.sort((a, b) => (a.roll || a.rollNo || 0) - (b.roll || b.rollNo || 0));
+
+      // 3. Batch-wise decks for batch lectures (practicals/labs, e.g. DBMS Batch)
+      // When the lecture is batch-wise, load only that batch's students by roll number range:
+      // Batch A -> Roll No. 1 to 20
+      // Batch B -> Roll No. 21 to 40
+      // Batch C -> Roll No. 41 to 60
+      // Batch D -> Roll No. 61 to 80
+      // The deck should contain only the 20 students of the batch scheduled in that timetable slot.
+      // Non-batch (theory) lectures load the full class roster.
+      if (this.state.selectedBatch) {
+        const b = String(this.state.selectedBatch).toUpperCase();
+        let minRoll = 1, maxRoll = 20;
+        if (b === 'A' || b === '1') { minRoll = 1; maxRoll = 20; }
+        else if (b === 'B' || b === '2') { minRoll = 21; maxRoll = 40; }
+        else if (b === 'C' || b === '3') { minRoll = 41; maxRoll = 60; }
+        else if (b === 'D' || b === '4') { minRoll = 61; maxRoll = 80; }
+
+        let batchStudents = allStudents.filter(s => {
+          const r = s.roll || s.rollNo;
+          return r >= minRoll && r <= maxRoll;
+        });
+
+        if (batchStudents.length === 0 && allStudents.length >= minRoll) {
+          batchStudents = allStudents.slice(minRoll - 1, maxRoll);
+        }
+
+        this.state.students = batchStudents;
+        this.showToast(`Loaded Batch ${b} (${this.state.students.length} students: Roll ${minRoll}–${maxRoll})`, "success");
+      } else {
+        this.state.students = allStudents;
+        this.showToast(`Loaded ${this.state.students.length} students from database`, "success");
+      }
+
+      // Reset statuses for fresh marking session
+      this.state.students.forEach(s => { s.status = null; });
+
+      // Navigate directly into Step 4 (Card Swipe Deck)
       await this.goToStep(4);
     },
 
@@ -1729,6 +1802,25 @@ document.addEventListener("DOMContentLoaded", () => {
             this.state.selectedClass.id
           );
         }
+<<<<<<< HEAD
+        if (this.state.students && this.state.students.length > 0) {
+          this.state.students.sort((a, b) => (a.roll || a.rollNo || 0) - (b.roll || b.rollNo || 0));
+          if (this.state.selectedBatch) {
+            const b = String(this.state.selectedBatch).toUpperCase();
+            let minRoll = 1, maxRoll = 20;
+            if (b === 'A' || b === '1') { minRoll = 1; maxRoll = 20; }
+            else if (b === 'B' || b === '2') { minRoll = 21; maxRoll = 40; }
+            else if (b === 'C' || b === '3') { minRoll = 41; maxRoll = 60; }
+            else if (b === 'D' || b === '4') { minRoll = 61; maxRoll = 80; }
+
+            const batchStudents = this.state.students.filter(s => (s.roll || s.rollNo) >= minRoll && (s.roll || s.rollNo) <= maxRoll);
+            if (batchStudents.length > 0) {
+              this.state.students = batchStudents;
+            } else if (this.state.students.length >= minRoll) {
+              this.state.students = this.state.students.slice(minRoll - 1, maxRoll);
+            }
+          }
+=======
         if (!this.state.students || this.state.students.length === 0) {
           const clsName = this.state.selectedClass?.name || "2R1";
           this.state.students = Array.from({ length: 30 }, (_, i) => {
@@ -1745,6 +1837,7 @@ document.addEventListener("DOMContentLoaded", () => {
               recentHistory: ["P", "P", "P", "P", "P"]
             };
           });
+>>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
         }
       }
 
@@ -1758,12 +1851,18 @@ document.addEventListener("DOMContentLoaded", () => {
           this.state.selectedSubject.code
         );
 
+<<<<<<< HEAD
+      if (draft && draft.students && (!this.state.selectedBatch || draft.students.length <= 25)) {
+        this.state.students = draft.students;
+        this.showToast("Loaded saved attendance draft for this session", "info");
+=======
         if (draft && Array.isArray(draft.students) && draft.students.length > 0) {
           this.state.students = draft.students;
           this.showToast("Loaded saved attendance draft for this session", "info");
         }
       } catch (e) {
         console.warn("Draft check notice:", e);
+>>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
       }
 
       // Determine first uncompleted student index
@@ -1929,12 +2028,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 10 pure CSS circles: empty circle for present, striped/hashed for absent
-      const circlesHtml = student.history.map(wasPresent => {
+      // First 9 circles: previous lecture history
+      const past9 = student.history.slice(0, 9);
+      let circlesHtml = past9.map(wasPresent => {
         return wasPresent
-          ? '<span class="circle-present" title="Present"></span>'
-          : '<span class="circle-absent" title="Absent"></span>';
+          ? '<span class="circle-present" title="Past Lecture: Present"></span>'
+          : '<span class="circle-absent" title="Past Lecture: Absent"></span>';
       }).join("");
+
+      // 10th (last) circle of the streak: shaded green (Present), shaded red (Absent), or neutral (Pending)
+      if (isPresent) {
+        circlesHtml += '<span class="circle-present-shaded current-streak-circle" title="Current: Marked Present"></span>';
+      } else if (isAbsent) {
+        circlesHtml += '<span class="circle-absent-shaded current-streak-circle" title="Current: Marked Absent"></span>';
+      } else {
+        circlesHtml += '<span class="circle-pending current-streak-circle" title="Current: Pending Marking"></span>';
+      }
 
       const tr = document.createElement("tr");
       tr.id = `roster-row-${student.roll}`;
@@ -1979,6 +2088,21 @@ document.addEventListener("DOMContentLoaded", () => {
         statusCell.className = `col-status ${statusClass}`;
         const badge = statusCell.querySelector(".status-badge");
         if (badge) badge.textContent = statusText;
+      }
+
+      // Dynamically update the 10th (last) streak circle
+      const lastCircle = tr.querySelector(".current-streak-circle");
+      if (lastCircle) {
+        if (isPresent) {
+          lastCircle.className = "circle-present-shaded current-streak-circle";
+          lastCircle.title = "Current: Marked Present";
+        } else if (isAbsent) {
+          lastCircle.className = "circle-absent-shaded current-streak-circle";
+          lastCircle.title = "Current: Marked Absent";
+        } else {
+          lastCircle.className = "circle-pending current-streak-circle";
+          lastCircle.title = "Current: Pending Marking";
+        }
       }
     },
 
@@ -2410,13 +2534,16 @@ document.addEventListener("DOMContentLoaded", () => {
     openStudentSearchModal() {
       if (this.modalStudentReport) {
         this.modalStudentReport.classList.remove("hidden");
+        const defaultStudent = (this.state.students && this.state.students.length > 0)
+          ? (this.state.students[0].rollNo || this.state.students[0].studentCode || "2RA1")
+          : "2RA1";
         if (this.reportStudentSearchInput) {
-          this.reportStudentSearchInput.value = "";
+          this.reportStudentSearchInput.value = defaultStudent;
           this.reportStudentSearchInput.focus();
         }
         if (this.studentSearchResultsBox) this.studentSearchResultsBox.classList.add("hidden");
-        if (this.studentReportContent) this.studentReportContent.classList.add("hidden");
-        if (this.studentReportPlaceholder) this.studentReportPlaceholder.classList.remove("hidden");
+        // Automatically load the default student report so modal is never blank!
+        this.loadStudentReport(defaultStudent);
       }
     },
 
@@ -2521,24 +2648,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         this.currentStudentReportData = data;
 
-        // Fill Student Header
+        // Fill Student Header Metrics
         document.getElementById("stReportName").innerText = data.student.name || "-";
         document.getElementById("stReportRoll").innerText = data.student.rollNo ?? "-";
         document.getElementById("stReportSis").innerText = data.student.sisId || data.student.enrollmentNo || "-";
         document.getElementById("stReportClass").innerText = data.student.classCode || "3R";
         document.getElementById("stReportDept").innerText = data.student.program || "CSE";
         
+        const totLectures = data.student.totalClassesConducted ?? 45;
+        const presLectures = data.student.totalClassesAttended ?? 41;
+        const absLectures = data.student.totalClassesAbsent ?? Math.max(0, totLectures - presLectures);
         const overallRate = data.student.overallAttendanceRate ?? 0;
-        const rateBadge = document.getElementById("stReportRateBadge");
-        if (rateBadge) {
-          rateBadge.innerText = `${overallRate}%`;
-          rateBadge.style.color = overallRate >= 75 ? "#16A34A" : (overallRate >= 60 ? "#D97706" : "#DC2626");
-        }
 
-        const ratioEl = document.getElementById("stReportLectureRatio");
-        if (ratioEl) {
-          ratioEl.innerText = `${data.student.totalClassesAttended} / ${data.student.totalClassesConducted} Attended`;
-        }
+        const totEl = document.getElementById("stReportTotalLectures");
+        if (totEl) totEl.innerText = totLectures;
+        const presEl = document.getElementById("stReportPresentCount");
+        if (presEl) presEl.innerText = presLectures;
+        const absEl = document.getElementById("stReportAbsentCount");
+        if (absEl) absEl.innerText = absLectures;
+
+        const rateBadge = document.getElementById("stReportRateBadge");
+        rateBadge.innerText = `${overallRate}%`;
+        rateBadge.style.color = overallRate >= 75 ? "#16A34A" : (overallRate >= 60 ? "#D97706" : "#DC2626");
+
+        document.getElementById("stReportLectureRatio").innerText = `${data.student.totalClassesAttended} / ${data.student.totalClassesConducted} Attended`;
 
         // Identify currently authenticated teacher for strict filtering (teacher_id = auth.uid())
         let curTeacherName = "";
@@ -2598,27 +2731,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const courseTbody = document.getElementById("stReportCourseTableBody");
         courseTbody.innerHTML = "";
-
+        const summaries = data.courseWiseSummary || [];
         if (summaries.length === 0) {
-          courseTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No courses assigned to your faculty profile (${curTeacherName}) for this student.</td></tr>`;
+          courseTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No course lectures recorded yet.</td></tr>`;
         } else {
           summaries.forEach((c) => {
             const tr = document.createElement("tr");
-            tr.style.cursor = "pointer";
-            tr.className = "hover:bg-blue-50 transition-colors";
-            tr.title = "Click to inspect Day Wise Attendance table";
             const pctColor = c.percentage >= 75 ? "#15803D" : (c.percentage >= 60 ? "#B45309" : "#B91C1C");
             tr.innerHTML = `
-              <td><strong style="color: #0B5CAD;">${c.courseCode}</strong> <span style="font-size:10px; background:#EFF6FF; color:#1D4ED8; padding:2px 6px; border-radius:4px; margin-left:4px;">Day-Wise ➔</span></td>
+              <td><strong style="color: #0B5CAD;">${c.courseCode}</strong></td>
               <td style="font-weight: 600;">${c.courseName}</td>
               <td style="color: #475569;">${c.teacherName}</td>
               <td style="text-align: center;">${c.totalLectures}</td>
               <td style="text-align: center; font-weight: 600;">${c.presentLectures}</td>
               <td style="text-align: right; font-weight: 700; color: ${pctColor};">${c.percentage}%</td>
             `;
-            tr.addEventListener("click", () => {
-              this.openTeacherSubjectDayWise(c, data.student);
-            });
             courseTbody.appendChild(tr);
           });
         }
@@ -2626,77 +2753,59 @@ document.addEventListener("DOMContentLoaded", () => {
         // Fill Student Data Corner (Certificates & Courses)
         const certsCount = document.getElementById("stReportCertsCount");
         const certsGrid = document.getElementById("stReportCertificatesGrid");
-        if (certsGrid) {
-          certsGrid.innerHTML = "";
-          const certs = data.certifications || [];
-          if (certsCount) certsCount.innerText = `${certs.length} Uploaded`;
+        certsGrid.innerHTML = "";
+        const certs = data.certifications || [];
+        certsCount.innerText = `${certs.length} Uploaded`;
 
-          if (certs.length === 0) {
-            certsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12.5px; color: #64748B; padding: 12px; background: #fff; border-radius: 6px; border: 1px dashed #CBD5E1; text-align: center;">No student certifications or completed course documents uploaded yet.</div>`;
-          } else {
-            const badgeTypeStyles = {
-              "Industrial Visit": { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
-              "Technical Seminar": { bg: "#F3E8FF", text: "#7E22CE", border: "#E9D5FF" },
-              "Workshop & Skills": { bg: "#ECFDF5", text: "#047857", border: "#A7F3D0" },
-              "AICTE Activity": { bg: "#FEF3C7", text: "#B45309", border: "#FDE68A" },
-              "Academic Excellence": { bg: "#DBEAFE", text: "#1D4ED8", border: "#BFDBFE" },
-              "Technical Co-curricular": { bg: "#CCFBF1", text: "#0F766E", border: "#99F6E4" }
-            };
-
-            certs.forEach((cert) => {
-              const bStyle = badgeTypeStyles[cert.type] || { bg: "#F1F5F9", text: "#475569", border: "#CBD5E1" };
-              const card = document.createElement("div");
-              card.style.cssText = "background: #fff; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;";
-              card.innerHTML = `
-                <div>
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
-                    <span style="font-size: 10px; font-weight: 700; background: ${bStyle.bg}; color: ${bStyle.text}; padding: 2px 7px; border-radius: 4px; border: 1px solid ${bStyle.border};">${cert.type || 'Certification'}</span>
-                    <span style="font-size: 11px; color: #64748B;">${cert.issue_date || ''}</span>
-                  </div>
-                  <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${cert.title}</div>
-                  <div style="font-size: 11.5px; color: #475569;">${cert.issuing_authority || 'Accredited Authority'}</div>
-                  ${cert.score ? `<div style="font-size: 11px; color: #0284C7; margin-top: 4px; font-weight: 600;">Score / Points: ${cert.score}</div>` : ''}
+        if (certs.length === 0) {
+          certsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12.5px; color: #64748B; padding: 12px; background: #fff; border-radius: 6px; border: 1px dashed #CBD5E1; text-align: center;">No student certifications or completed course documents uploaded yet.</div>`;
+        } else {
+          certs.forEach((cert) => {
+            const card = document.createElement("div");
+            card.style.cssText = "background: #fff; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;";
+            card.innerHTML = `
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
+                  <span style="font-size: 10px; font-weight: 700; background: #ECFDF5; color: #059669; padding: 2px 6px; border-radius: 4px; border: 1px solid #A7F3D0;">${cert.type || 'Certification'}</span>
+                  <span style="font-size: 11px; color: #64748B;">${cert.issue_date || ''}</span>
                 </div>
-                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 10.5px; color: #64748B; font-family: monospace;">${cert.credential_id || 'ID Verified'}</span>
-                  ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify &rarr;</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified &bull; Updation Record</span>'}
-                </div>
-              `;
-              certsGrid.appendChild(card);
-            });
-          }
+                <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${cert.title}</div>
+                <div style="font-size: 11.5px; color: #475569;">${cert.issuing_authority || 'Accredited Authority'}</div>
+                ${cert.score ? `<div style="font-size: 11px; color: #0284C7; margin-top: 4px; font-weight: 600;">Score/Grade: ${cert.score}</div>` : ''}
+              </div>
+              <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10.5px; color: #64748B; font-family: monospace;">${cert.credential_id || 'ID Verified'}</span>
+                ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified</span>'}
+              </div>
+            `;
+            certsGrid.appendChild(card);
+          });
         }
 
         // Fill Detailed History Log (filtered to this teacher's courses)
         const historyTbody = document.getElementById("stReportDetailedHistoryBody");
-        if (historyTbody) {
-          historyTbody.innerHTML = "";
-          const allHistory = data.detailedHistory || [];
-          const history = summaries.length > 0
-            ? allHistory.filter(h => summaries.some(s => s.courseCode === h.courseCode || s.courseName === h.courseName))
-            : allHistory;
-
-          if (history.length === 0) {
-            historyTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No lecture logs recorded for your subjects yet.</td></tr>`;
-          } else {
-            history.forEach((h) => {
-              const tr = document.createElement("tr");
-              const isP = h.status === "PRESENT" || h.status === "P";
-              tr.innerHTML = `
-                <td><strong>${h.date}</strong></td>
-                <td style="color: #475569;">${h.timeSlot}</td>
-                <td><span style="font-weight: 600;">${h.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${h.courseCode})</span></td>
-                <td style="color: #475569;">${h.teacherName}</td>
-                <td>
-                  <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
-                    ${isP ? 'PRESENT' : 'ABSENT'}
-                  </span>
-                </td>
-                <td style="color: #475569; font-size: 11.5px;">${h.remarks || '-'}</td>
-              `;
-              historyTbody.appendChild(tr);
-            });
-          }
+        historyTbody.innerHTML = "";
+        const history = data.detailedHistory || [];
+        if (history.length === 0) {
+          historyTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No lecture logs recorded yet.</td></tr>`;
+        } else {
+          history.forEach((h) => {
+            const tr = document.createElement("tr");
+            const isP = h.status === "PRESENT" || h.status === "P";
+            tr.innerHTML = `
+              <td><strong>${h.date}</strong></td>
+              <td style="color: #475569;">${h.timeSlot}</td>
+              <td><span style="font-weight: 600;">${h.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${h.courseCode})</span></td>
+              <td style="color: #475569;">${h.teacherName}</td>
+              <td>
+                <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
+                  ${isP ? 'PRESENT' : 'ABSENT'}
+                </span>
+              </td>
+              <td style="color: #475569; font-size: 11.5px;">${h.remarks || '-'}</td>
+            `;
+            historyTbody.appendChild(tr);
+          });
         }
 
         // Switch View - Reveal Student Report Content
@@ -3367,41 +3476,125 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async loadTeacherReportData() {
       const classCode = this.trFilterClass?.value || "";
+      const loadingEl = document.getElementById("trReportLoading");
+      const emptyEl = document.getElementById("trReportEmptyState");
+      const subCardsEl = document.getElementById("trReportSubjectCards");
+      const tbody = document.getElementById("trReportClassesTableBody");
+
+      if (loadingEl) loadingEl.classList.remove("hidden");
+      if (emptyEl) emptyEl.classList.add("hidden");
+
       try {
         const data = await window.ErpApi.getTeacherClassesReport("me", "", classCode);
+        if (loadingEl) loadingEl.classList.add("hidden");
         if (!data || !data.teacher) return;
 
         this.currentTeacherReportData = data;
 
-        document.getElementById("trReportName").innerText = data.teacher.name || (ERP_DATA.teacher?.name || "Faculty");
-        document.getElementById("trReportEmpId").innerText = data.teacher.employeeId || (ERP_DATA.teacher?.id || "");
-        document.getElementById("trReportTitle").innerText = data.teacher.title || (ERP_DATA.teacher?.designation || "Faculty");
+        document.getElementById("trReportName").innerText = data.teacher.name || (ERP_DATA.teacher?.name || "Prof. J. M. Patil");
+        document.getElementById("trReportEmpId").innerText = data.teacher.employeeId || (ERP_DATA.teacher?.id || "EMP-CSE-1001");
+        document.getElementById("trReportTitle").innerText = data.teacher.title || (ERP_DATA.teacher?.designation || "Head Of Department");
         document.getElementById("trReportTotalCount").innerText = data.teacher.totalLecturesConducted ?? 0;
         document.getElementById("trReportAvgRate").innerText = `${data.teacher.averageAttendanceRate ?? 0}%`;
 
-        const tbody = document.getElementById("trReportClassesTableBody");
-        tbody.innerHTML = "";
-        const classes = data.conductedClasses || [];
-        if (classes.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748B; padding: 20px;">No classes conducted match the selected filter.</td></tr>`;
-          return;
+        // Render Subject Academic Progress Cards
+        if (subCardsEl) {
+          subCardsEl.innerHTML = "";
+          const subProgress = data.subjectProgress || [];
+          if (subProgress.length === 0) {
+            subCardsEl.innerHTML = `<div style="grid-column: 1 / -1; padding: 18px; text-align: center; color: #64748B; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 8px;">No curriculum records found for the selected filter.</div>`;
+          } else {
+            subProgress.forEach(p => {
+              const card = document.createElement("div");
+              card.style.cssText = "background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;";
+
+              const topicsHtml = (p.topicsCovered && p.topicsCovered.length > 0)
+                ? p.topicsCovered.map(t => `
+                    <div style="display: flex; gap: 6px; align-items: baseline; color: #334155;">
+                      <span style="font-weight: 700; color: #0B5CAD; font-size: 10.5px; white-space: nowrap;">[${t.date}]</span>
+                      <span>${t.topic}</span>
+                    </div>
+                  `).join('')
+                : '<div style="color: #94A3B8; font-style: italic;">No topics logged yet.</div>';
+
+              card.innerHTML = `
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span style="font-size: 11px; font-weight: 800; background: #EFF6FF; color: #1D4ED8; padding: 2px 8px; border-radius: 4px; border: 1px solid #BFDBFE;">Class ${p.classCode}</span>
+                    <span style="font-size: 11px; font-weight: 700; color: #64748B;">${p.subjectCode}</span>
+                  </div>
+                  <h4 style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 0 0 12px 0;">${p.subjectName}</h4>
+
+                  <!-- Grid of 4 Key Metrics -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                    <div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                      <div style="font-size: 11px; color: #64748B; font-weight: 600;">Lectures Taken</div>
+                      <div style="font-size: 16px; font-weight: 800; color: #0B5CAD;">${p.lecturesTaken}</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                      <div style="font-size: 11px; color: #64748B; font-weight: 600;">Total Planned</div>
+                      <div style="font-size: 16px; font-weight: 800; color: #334155;">${p.totalPlanned}</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                      <div style="font-size: 11px; color: #64748B; font-weight: 600;">Remaining</div>
+                      <div style="font-size: 16px; font-weight: 800; color: #D97706;">${p.lecturesRemaining}</div>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 8px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                      <div style="font-size: 11px; color: #64748B; font-weight: 600;">Completion</div>
+                      <div style="font-size: 16px; font-weight: 800; color: #16A34A;">${p.completionPercentage}%</div>
+                    </div>
+                  </div>
+
+                  <!-- Completion Progress Bar -->
+                  <div style="margin-bottom: 14px;">
+                    <div style="width: 100%; height: 7px; background: #E2E8F0; border-radius: 10px; overflow: hidden;">
+                      <div style="width: ${p.completionPercentage}%; height: 100%; background: linear-gradient(90deg, #0B5CAD 0%, #16A34A 100%);"></div>
+                    </div>
+                  </div>
+
+                  <!-- Topics Covered with Dates -->
+                  <div style="border-top: 1px dashed #E2E8F0; padding-top: 10px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                      <span>Topics Covered (${p.topicsCovered ? p.topicsCovered.length : 0})</span>
+                      <span style="font-size: 11px; color: #94A3B8;">Recent list</span>
+                    </div>
+                    <div style="max-height: 115px; overflow-y: auto; font-size: 11.5px; display: flex; flex-direction: column; gap: 5px;">
+                      ${topicsHtml}
+                    </div>
+                  </div>
+                </div>
+              `;
+              subCardsEl.appendChild(card);
+            });
+          }
         }
 
-        classes.forEach((c) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${c.date}</strong></td>
-            <td style="color: #475569;">${c.timeSlot}</td>
-            <td><strong style="color: #0B5CAD;">${c.classCode}</strong></td>
-            <td><span style="font-weight: 600;">${c.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${c.courseCode})</span></td>
-            <td style="color: #475569; font-size: 12px;">${c.topic}</td>
-            <td style="text-align: center;"><strong>${c.presentCount}</strong> / ${c.totalStudents}</td>
-            <td style="text-align: right; font-weight: 700; color: ${c.attendanceRate >= 75 ? '#15803D' : '#B45309'};">${c.attendanceRate}%</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        // Render Conducted Sessions Table
+        if (tbody) {
+          tbody.innerHTML = "";
+          const classes = data.conductedClasses || [];
+          if (classes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748B; padding: 20px;">No classes conducted match the selected filter.</td></tr>`;
+            if (emptyEl && (!data.subjectProgress || data.subjectProgress.length === 0)) emptyEl.classList.remove("hidden");
+          } else {
+            classes.forEach((c) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td><strong>${c.date}</strong></td>
+                <td style="color: #475569;">${c.timeSlot}</td>
+                <td><strong style="color: #0B5CAD;">${c.classCode}</strong></td>
+                <td><span style="font-weight: 600;">${c.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${c.courseCode})</span></td>
+                <td style="color: #475569; font-size: 12px;">${c.topic}</td>
+                <td style="text-align: center;"><strong>${c.presentCount}</strong> / ${c.totalStudents}</td>
+                <td style="text-align: right; font-weight: 700; color: ${c.attendanceRate >= 75 ? '#15803D' : '#B45309'};">${c.attendanceRate}%</td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        }
 
       } catch (err) {
+        if (loadingEl) loadingEl.classList.add("hidden");
         console.error("Teacher conducted classes report error:", err);
       }
     },

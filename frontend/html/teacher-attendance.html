@@ -799,14 +799,22 @@
                 </div>
 
                 <!-- Pure CSS Legend -->
-                <div class="attendance-legend">
-                  <span class="legend-item">
+                <div class="attendance-legend" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
                     <span class="circle-present"></span>
-                    <span>Present</span>
+                    <span>Past Present</span>
                   </span>
-                  <span class="legend-item">
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
                     <span class="circle-absent"></span>
-                    <span>(hashed) Absent</span>
+                    <span>Past Absent</span>
+                  </span>
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="circle-present-shaded"></span>
+                    <span>Marked Present</span>
+                  </span>
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="circle-absent-shaded"></span>
+                    <span>Marked Absent</span>
                   </span>
                 </div>
 
@@ -831,12 +839,12 @@
                   <table class="roster-table" id="leftRosterTable">
                     <thead>
                       <tr>
-                        <th style="width: 36px;">Sr No</th>
-                        <th style="width: 86px;">Student Code</th>
+                        <th style="width: 30px;">Sr</th>
+                        <th style="width: 74px;">Student Code</th>
                         <th>Student</th>
-                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
-                        <th style="width: 52px;">Roll No.</th>
-                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                        <th style="width: 155px;">10 Lecture Streak</th>
+                        <th style="width: 44px;">Roll</th>
+                        <th style="width: 62px; text-align: right; padding-right: 6px;">Status</th>
                       </tr>
                     </thead>
                     <tbody id="leftTableBody">
@@ -850,12 +858,12 @@
                   <table class="roster-table" id="rightRosterTable">
                     <thead>
                       <tr>
-                        <th style="width: 36px;">Sr No</th>
-                        <th style="width: 86px;">Student Code</th>
+                        <th style="width: 30px;">Sr</th>
+                        <th style="width: 74px;">Student Code</th>
                         <th>Student</th>
-                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
-                        <th style="width: 52px;">Roll No.</th>
-                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                        <th style="width: 155px;">10 Lecture Streak</th>
+                        <th style="width: 44px;">Roll</th>
+                        <th style="width: 62px; text-align: right; padding-right: 6px;">Status</th>
                       </tr>
                     </thead>
                     <tbody id="rightTableBody">
@@ -1262,10 +1270,45 @@
               <span><strong>Program:</strong> <span id="stReportDept">-</span></span>
             </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Overall Attendance</div>
-            <div id="stReportRateBadge" style="font-size: 24px; font-weight: 800; color: #16A34A; margin-top: 2px;">0%</div>
-            <div style="font-size: 11px; color: #64748B;" id="stReportLectureRatio">0 / 0 Attended</div>
+          <div style="text-align: right; display: flex; gap: 16px; align-items: center;">
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Total</div>
+              <div id="stReportTotalLectures" style="font-size: 16px; font-weight: 800; color: #1E3A8A;">0</div>
+            </div>
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #15803D;">Present</div>
+              <div id="stReportPresentCount" style="font-size: 16px; font-weight: 800; color: #15803D;">0</div>
+            </div>
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #B91C1C;">Absent</div>
+              <div id="stReportAbsentCount" style="font-size: 16px; font-weight: 800; color: #B91C1C;">0</div>
+            </div>
+            <div style="text-align: right; min-width: 90px;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Attendance Rate</div>
+              <div id="stReportRateBadge" style="font-size: 24px; font-weight: 800; color: #16A34A; margin-top: 2px;">0%</div>
+              <div style="font-size: 11px; color: #64748B;" id="stReportLectureRatio">0 / 0 Attended</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Month-wise Attendance Breakdown Table -->
+        <div style="margin-bottom: 22px;">
+          <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span>📅 Month-wise Attendance Record</span>
+          </h4>
+          <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px;">
+            <table class="erp-table" style="margin: 0; font-size: 12.5px;">
+              <thead style="background: #F8FAFC;">
+                <tr>
+                  <th>Academic Month</th>
+                  <th style="text-align: center;">Total Lectures</th>
+                  <th style="text-align: center;">Present</th>
+                  <th style="text-align: center;">Absent</th>
+                  <th style="text-align: right;">Attendance Rate</th>
+                </tr>
+              </thead>
+              <tbody id="stReportMonthTableBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -1291,16 +1334,26 @@
           </div>
         </div>
 
-        <!-- Student Data Corner (Certificates & Completed Courses) -->
+        <!-- Uploaded Documents (Supabase Storage) -->
         <div style="margin-bottom: 22px; background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <span>🎓 Student Data Corner (Certifications & Courses)</span>
+              <span>📁 Uploaded Documents & Credentials (Supabase Storage)</span>
             </h4>
-            <span id="stReportCertsCount" style="font-size: 11px; background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 10px; font-weight: 700;">0 Uploaded</span>
+            <span id="stReportDocsCount" style="font-size: 11px; background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 10px; font-weight: 700;">0 Uploaded</span>
           </div>
-          <div id="stReportCertificatesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px;">
-            <!-- Injected via JS -->
+          <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px; background: #fff;">
+            <table class="erp-table" style="margin: 0; font-size: 12.5px;">
+              <thead style="background: #F8FAFC;">
+                <tr>
+                  <th>File Name</th>
+                  <th>Document Type</th>
+                  <th>Upload Date</th>
+                  <th style="text-align: right;">Supabase Storage Action</th>
+                </tr>
+              </thead>
+              <tbody id="stReportDocsTableBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -1425,23 +1478,23 @@
           </div>
         </div>
 
-        <!-- Filter Controls -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <label style="font-size: 12.5px; font-weight: 600; color: #475569;">Filter Class:</label>
-            <select id="trFilterClass" class="form-select" style="max-width: 160px; font-size: 13px;">
-              <option value="">All Classes</option>
-              <option value="2R1">2R1</option>
-              <option value="2R2">2R2</option>
-              <option value="3R">3R</option>
-              <option value="4R">4R</option>
-            </select>
-            <button class="btn-table-action" id="btnRefreshTeacherReport">↻ Refresh Log</button>
-          </div>
-          <button class="btn-download-teacher-pdf-quick" style="font-size: 12px; font-weight: 700; padding: 7px 14px; background: #0B5CAD; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-            <span>📥</span> Download PDF
-          </button>
+      <!-- Filter Controls -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <label style="font-size: 12.5px; font-weight: 600; color: #475569;">Filter Class:</label>
+          <select id="trFilterClass" class="form-select" style="max-width: 160px; font-size: 13px;">
+            <option value="">All Classes</option>
+            <option value="2R1">2R1</option>
+            <option value="2R2">2R2</option>
+            <option value="3R">3R</option>
+            <option value="4R">4R</option>
+          </select>
+          <button class="btn-table-action" id="btnRefreshTeacherReport">↻ Refresh Log</button>
         </div>
+        <button class="btn-download-teacher-pdf-quick" style="font-size: 12px; font-weight: 700; padding: 7px 14px; background: #0B5CAD; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <span>📥</span> Download PDF
+        </button>
+      </div>
 
         <!-- Conducted Classes Table -->
         <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px; background: #fff;">
@@ -1464,82 +1517,7 @@
         </div>
       </div>
 
-      <!-- PANE 2: VERIFIED CREDENTIALS WALLET -->
-      <div id="paneEmpWallet" class="hidden">
-        <!-- Top Action Bar & Stat Badges -->
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #E2E8F0;">
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="walletCategoryFilterGroup">
-            <button type="button" class="wallet-filter-btn active" data-filter="ALL" style="padding: 6px 14px; font-size: 12.5px; font-weight: 600; border-radius: 20px; border: 1px solid #0284C7; background: #0284C7; color: #fff; cursor: pointer;">All (<span id="walletCountAll">0</span>)</button>
-            <button type="button" class="wallet-filter-btn" data-filter="Degree" style="padding: 6px 14px; font-size: 12.5px; font-weight: 600; border-radius: 20px; border: 1px solid #CBD5E1; background: #fff; color: #475569; cursor: pointer;">Degrees (<span id="walletCountDegree">0</span>)</button>
-            <button type="button" class="wallet-filter-btn" data-filter="Course" style="padding: 6px 14px; font-size: 12.5px; font-weight: 600; border-radius: 20px; border: 1px solid #CBD5E1; background: #fff; color: #475569; cursor: pointer;">Courses (<span id="walletCountCourse">0</span>)</button>
-            <button type="button" class="wallet-filter-btn" data-filter="Research Paper" style="padding: 6px 14px; font-size: 12.5px; font-weight: 600; border-radius: 20px; border: 1px solid #CBD5E1; background: #fff; color: #475569; cursor: pointer;">Research Papers (<span id="walletCountPaper">0</span>)</button>
-            <button type="button" class="wallet-filter-btn" data-filter="Workshop" style="padding: 6px 14px; font-size: 12.5px; font-weight: 600; border-radius: 20px; border: 1px solid #CBD5E1; background: #fff; color: #475569; cursor: pointer;">Workshops (<span id="walletCountWorkshop">0</span>)</button>
-          </div>
-
-          <button type="button" id="btnToggleAddCertForm" onclick="if(window.TeacherApp&&window.TeacherApp.toggleAddCertificationForm){window.TeacherApp.toggleAddCertificationForm();}return false;" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; background: #059669; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(5,150,105,0.25);">
-            <span>➕</span> Add New Certification
-          </button>
-        </div>
-
-        <!-- Add Certification Form Container (Collapsible) -->
-        <div id="walletAddFormContainer" class="hidden" style="background: #fff; border: 1.5px solid #059669; border-radius: 10px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #065F46; display: flex; align-items: center; gap: 6px;">
-              <span>📝</span> Add Credential to Supabase Wallet
-            </h4>
-            <span style="font-size: 11px; color: #047857; background: #ECFDF5; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Direct INSERT (teacher_certifications)</span>
-          </div>
-
-          <form id="formAddCertification" onsubmit="event.preventDefault(); if(window.TeacherApp) window.TeacherApp.handleSaveCertification(event); return false;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-              <div style="grid-column: 1 / -1;">
-                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Credential Title *</label>
-                <input type="text" id="certInputTitle" required placeholder="e.g. Ph.D. in Computer Science & Engineering / Deep Learning Specialization" style="width: 100%; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px;">
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Credential Type *</label>
-                <select id="certInputType" required style="width: 100%; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px; background: #fff;">
-                  <option value="Degree">Degree (Ph.D., M.Tech, B.E.)</option>
-                  <option value="Course">Course (NPTEL, Coursera, edX)</option>
-                  <option value="Research Paper">Research Paper (IEEE, Springer, ACM)</option>
-                  <option value="Workshop">Workshop (AICTE, FDP, STTP)</option>
-                </select>
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Issuing Organization *</label>
-                <input type="text" id="certInputOrg" required placeholder="e.g. IEEE, IIT Bombay, Coursera, SGBAU" style="width: 100%; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px;">
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Year Obtained *</label>
-                <input type="number" id="certInputYear" required min="1990" max="2030" value="2024" style="width: 100%; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px;">
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Verification URL / DOI / Credential Link</label>
-                <input type="url" id="certInputUrl" placeholder="https://doi.org/... or https://coursera.org/verify/..." style="width: 100%; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px;">
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-              <button type="button" id="btnCancelAddCert" onclick="if(window.TeacherApp&&window.TeacherApp.toggleAddCertificationForm){window.TeacherApp.toggleAddCertificationForm(false);}return false;" style="padding: 8px 16px; border: 1px solid #CBD5E1; background: #fff; color: #64748B; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Cancel</button>
-              <button type="submit" id="btnSubmitAddCert" style="padding: 8px 20px; background: #059669; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(5,150,105,0.3);">
-                💾 Save to Wallet
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Credential Cards Container -->
-        <div id="walletCardsBody" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px;">
-          <!-- Injected dynamically via JavaScript -->
-        </div>
-      </div>
-
     </div>
-    
     <div class="modal-footer" style="padding: 14px 20px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
       <div style="font-size: 12px; color: #64748B; display: flex; align-items: center; gap: 6px;">
         <span style="display: inline-block; width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></span>

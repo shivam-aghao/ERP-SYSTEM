@@ -8,43 +8,89 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     const urlParams = new URLSearchParams(window.location.search);
-    const activeClass = urlParams.get("class") || "3R";
-    const activeCourse = urlParams.get("course") || urlParams.get("subject") || "Database Management Systems (5CS220PC)";
+    let activeClass = (urlParams.get("class") || (window.parent && window.parent.currentActiveRosterClass) || "").trim().toUpperCase();
+    let activeCourse = urlParams.get("course") || urlParams.get("subject") || "";
+    let activeBatch = urlParams.get("batch") || (window.parent && window.parent.currentActiveRosterBatch) || null;
     const activeProgram = urlParams.get("program") || urlParams.get("dept") || "CSE";
     const activeDept = activeProgram;
-    const activeSubject = activeCourse;
 
-    // Dynamically display class, course, date, and time in meta header
-    const classMetaEl = document.getElementById("rosterMetaClass");
-    if (classMetaEl) classMetaEl.innerHTML = `<strong>Class:</strong> ${activeClass}`;
-    const subjMetaEl = document.getElementById("rosterMetaSubject");
-    if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Course:</strong> ${activeCourse} (THEORY)`;
-    const timeMetaEl = document.getElementById("rosterMetaTime");
-    if (timeMetaEl) timeMetaEl.innerHTML = `<strong>Time:</strong> 02:15 - 03:15 PM`;
-    const dateMetaEl = document.getElementById("rosterMetaDate");
-    if (dateMetaEl) {
-      const today = new Date();
-      const dStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
-      dateMetaEl.innerHTML = `<strong>Date:</strong> ${dStr}`;
+    if (!activeClass && activeCourse) {
+      const cUpper = activeCourse.toUpperCase();
+      if (cUpper.includes('CC') || cUpper.includes('CLOUD') || cUpper.includes('4R')) activeClass = '4R';
+      else if (cUpper.includes('DBMS') || cUpper.includes('DATABASE') || cUpper.includes('3R')) activeClass = '3R';
+      else if (cUpper.includes('2R2')) activeClass = '2R2';
+      else if (cUpper.includes('2R1') || cUpper.includes('OOP') || cUpper.includes('DS')) activeClass = '2R1';
     }
+    if (!activeClass) activeClass = '3R';
+
+    if (!activeBatch && activeCourse) {
+      const m = activeCourse.match(/Batch\s*([A-D0-9]+)/i);
+      if (m) activeBatch = m[1].toUpperCase();
+    }
+
+    function getCourseForClass(cls) {
+      if (cls === '4R') return "Cloud Computing (7CS201PC)";
+      if (cls === '3R') return "Database Management Systems (5CS220PC)";
+      if (cls === '2R2') return "Data Structures / OOP (3CS201PC)";
+      return "Data Structures (3CS201PC)";
+    }
+
+    function updateMetaHeader() {
+      const classMetaEl = document.getElementById("rosterMetaClass");
+      const classSelector = document.getElementById("rosterClassSelector");
+      if (classSelector) {
+        classSelector.value = activeClass;
+      }
+      const subjMetaEl = document.getElementById("rosterMetaSubject");
+      let courseName = activeCourse || getCourseForClass(activeClass);
+      if (activeBatch && !courseName.includes(`Batch ${activeBatch}`)) {
+        courseName += ` (Batch ${activeBatch})`;
+      }
+      if (subjMetaEl) subjMetaEl.innerHTML = `<strong>Course:</strong> ${courseName} ${activeBatch ? '(PRACTICAL)' : '(THEORY)'}`;
+      const timeMetaEl = document.getElementById("rosterMetaTime");
+      if (timeMetaEl) timeMetaEl.innerHTML = `<strong>Time:</strong> 11:00 AM - 12:00 PM`;
+      const dateMetaEl = document.getElementById("rosterMetaDate");
+      if (dateMetaEl) {
+        const today = new Date();
+        const dStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+        dateMetaEl.innerHTML = `<strong>Date:</strong> ${dStr}`;
+      }
+    }
+
+    const classSelector = document.getElementById("rosterClassSelector");
+    if (classSelector) {
+      classSelector.value = activeClass;
+      classSelector.addEventListener("change", function(e) {
+        activeClass = e.target.value;
+        activeBatch = null;
+        activeCourse = getCourseForClass(activeClass);
+        updateMetaHeader();
+        loadLiveRoster();
+      });
+    }
+
+    updateMetaHeader();
 
     let studentsData = [];
 
-    // Render circles from real attendance records
-    function renderCircles(history) {
-      if (!history || history.length === 0) {
-        let dots = "";
-        for (let i = 0; i < 10; i++) {
-          dots += '<span class="circle-present" title="Lecture Attended"></span>';
-        }
-        return dots;
+    // Render circles: first 9 from history, 10th (last) is green or red shaded depending on current attendance marking
+    function renderCircles(history, currentStatus) {
+      const isPresentCurrent = (currentStatus === "PRESENT");
+      let dots = [];
+      const hist = (history && history.length > 0) ? history : ['P','P','P','P','P','P','P','P','P','P'];
+      // First 9 circles represent previous 9 lecture attendances
+      for (let i = 0; i < 9; i++) {
+        const item = hist[i];
+        const isPresent = (item === "P" || item === true || item === undefined);
+        dots.push(isPresent
+          ? '<span class="circle-present" title="Lecture Attended"></span>'
+          : '<span class="circle-absent" title="Absent"></span>');
       }
-      return history.map(function (item) {
-        const isPresent = item === "P" || item === true;
-        return isPresent
-          ? '<span class="circle-present" title="Present"></span>'
-          : '<span class="circle-absent" title="Absent"></span>';
-      }).join("");
+      // 10th (last) circle of the streak: green or red shaded depending on current attendance marking by teacher
+      const lastClass = isPresentCurrent ? "circle-present shaded" : "circle-absent shaded";
+      const lastTitle = isPresentCurrent ? "Current Lecture: Present (Marked)" : "Current Lecture: Absent (Marked)";
+      dots.push(`<span class="${lastClass} last-current-circle" title="${lastTitle}"></span>`);
+      return dots.join("");
     }
 
     // Build Dynamic Row
@@ -53,7 +99,7 @@
       const statusText = "PRESENT";
       const statusClass = "present";
       const rollNo = student.rollNo || srNo;
-      const rollFormatted = student.rollFormatted || (String(student.roll_no || rollNo).toUpperCase().startsWith(activeClass.toUpperCase()) ? (student.roll_no || rollNo) : `${activeClass}${rollNo}`);
+      const rollFormatted = student.rollFormatted || (String(student.roll_no || rollNo).toUpperCase().startsWith(activeClass.toUpperCase()) ? (student.roll_no || rollNo) : `${activeClass}-${rollNo}`);
       const history = student.recentHistory || student.history || [];
       const sName = student.name || student.full_name || `Student ${rollNo}`;
       const sCode = student.studentCode || student.student_code || student.enrollmentNo || `STU-${rollNo}`;
@@ -75,7 +121,7 @@
         '<td class="col-name ' + (isProv ? 'provisional' : '') + '" title="' + sName + '">' +
           sName + (isProv ? ' *' : '') +
         '</td>',
-        '<td class="col-history"><div class="circle-indicator-wrapper">' + renderCircles(history) + '</div></td>',
+        '<td class="col-history"><div class="circle-indicator-wrapper">' + renderCircles(history, statusText) + '</div></td>',
         '<td class="col-roll ' + statusClass + '">' + rollFormatted + '</td>',
         '<td class="col-status ' + statusClass + '" title="Click to toggle status">' +
           '<span class="status-badge">' + statusText + '</span>' +
@@ -108,6 +154,18 @@
         statusCell.className = "col-status " + (isAbsent ? "absent" : "present");
         const badge = statusCell.querySelector(".status-badge");
         if (badge) badge.textContent = newStatus;
+      }
+
+      // Update the 10th (last) circle of the streak to green or red shaded
+      const lastCircle = row.querySelector(".last-current-circle");
+      if (lastCircle) {
+        if (isAbsent) {
+          lastCircle.className = "circle-absent shaded last-current-circle";
+          lastCircle.title = "Current Lecture: Absent (Marked)";
+        } else {
+          lastCircle.className = "circle-present shaded last-current-circle";
+          lastCircle.title = "Current Lecture: Present (Marked)";
+        }
       }
 
       updateStats();
@@ -175,11 +233,9 @@
     async function loadLiveRoster() {
       try {
         const endpoints = [
-          `/api/teacher/class-roster?classId=${encodeURIComponent(activeClass)}`,
-          `http://localhost:8000/api/teacher/class-roster?classId=${encodeURIComponent(activeClass)}`,
-          `https://gftqvclenyplnuoocbwe.supabase.co/rest/v1/students?class_name=eq.${encodeURIComponent(activeClass)}&select=id,roll_no,full_name,student_code,email,class_name`,
-          `/api/v1/students/class/${encodeURIComponent(activeClass)}`,
-          `http://localhost:8000/api/v1/students/class/${encodeURIComponent(activeClass)}`
+          `/api/v1/teacher/class-roster?classId=${encodeURIComponent(activeClass)}`,
+          `http://localhost:8000/api/v1/teacher/class-roster?classId=${encodeURIComponent(activeClass)}`,
+          `https://gftqvclenyplnuoocbwe.supabase.co/rest/v1/students?class_name=eq.${encodeURIComponent(activeClass)}&select=id,roll_no,full_name,student_code,email,class_name`
         ];
 
         for (const ep of endpoints) {
@@ -209,18 +265,33 @@
               }
 
               if (Array.isArray(list) && list.length > 0) {
-                // Natural sort by numeric roll number (e.g. 3R1, 3R2, ..., 3R80)
+                // Natural sort by numeric roll number
                 list.sort(function (a, b) {
                   function getNum(item) {
                     var raw = String(item.rollNo || item.roll_no || item.rollFormatted || "");
-                    if (raw.toUpperCase().startsWith(activeClass.toUpperCase())) {
-                      raw = raw.substring(activeClass.length);
-                    }
                     var m = raw.match(/\d+/);
                     return m ? parseInt(m[0], 10) : 9999;
                   }
                   return getNum(a) - getNum(b);
                 });
+
+                // Batch lectures roll ranges: A 1-20, B 21-40, C 41-60, D 61-80
+                if (activeBatch) {
+                  const b = String(activeBatch).toUpperCase();
+                  let minRoll = 1, maxRoll = 20;
+                  if (b === 'A' || b === '1') { minRoll = 1; maxRoll = 20; }
+                  else if (b === 'B' || b === '2') { minRoll = 21; maxRoll = 40; }
+                  else if (b === 'C' || b === '3') { minRoll = 41; maxRoll = 60; }
+                  else if (b === 'D' || b === '4') { minRoll = 61; maxRoll = 80; }
+
+                  list = list.filter(function (s) {
+                    var raw = String(s.rollNo || s.roll_no || s.rollFormatted || "");
+                    var m = raw.match(/\d+/);
+                    var r = m ? parseInt(m[0], 10) : 0;
+                    return r >= minRoll && r <= maxRoll;
+                  });
+                }
+
                 renderTable(list);
                 return;
               }
@@ -258,6 +329,17 @@
             statusCell.className = "col-status " + (makeAllAbsent ? "absent" : "present");
             const badge = statusCell.querySelector(".status-badge");
             if (badge) badge.textContent = newStatus;
+          }
+
+          const lastCircle = row.querySelector(".last-current-circle");
+          if (lastCircle) {
+            if (makeAllAbsent) {
+              lastCircle.className = "circle-absent shaded last-current-circle";
+              lastCircle.title = "Current Lecture: Absent (Marked)";
+            } else {
+              lastCircle.className = "circle-present shaded last-current-circle";
+              lastCircle.title = "Current Lecture: Present (Marked)";
+            }
           }
         });
 

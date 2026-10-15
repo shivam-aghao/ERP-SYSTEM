@@ -78,10 +78,10 @@ const ErpApi = {
             id: t.id,
             empCode: t.emp_code,
             fullName: t.full_name,
-            designation: t.designation || "Associate Professor",
+            designation: t.designation || "Head Of Department",
             department: t.department_code || "CSE",
             email: t.email,
-            avatar: t.avatar_initials || "JP",
+            avatar: t.avatar_initials || "JM",
             source: "supabase",
           };
         }
@@ -90,7 +90,16 @@ const ErpApi = {
       }
     }
 
-    return null;
+    return {
+      id: "8f913c70-85ed-4261-bbd0-f2d3b42f4af1",
+      empCode: empCode || "EMP-CSE-1001",
+      fullName: "Prof. J. M. Patil",
+      designation: "Head Of Department",
+      department: "CSE",
+      email: "jmpatil@ssgmce.ac.in",
+      avatar: "JM",
+      source: "default"
+    };
   },
 
   /**
@@ -123,9 +132,6 @@ const ErpApi = {
     return this.getDepartments();
   },
 
-  /**
-   * Master Data: Classes
-   */
   /**
    * Master Data: Classes
    */
@@ -291,7 +297,20 @@ const ErpApi = {
   },
 
   /**
-   * Students Class Roster
+   * Helper to extract sequential number from roll number string (e.g. 2RA1 -> 1, 2RA77 -> 77)
+   */
+  _parseRollNum(val, fallbackIdx = 1) {
+    if (typeof val === 'number') return val;
+    const str = String(val || "").trim();
+    const m = str.match(/(\d+)$/);
+    if (m) return parseInt(m[1], 10);
+    const nums = str.match(/\d+/g);
+    if (nums && nums.length > 0) return parseInt(nums[nums.length - 1], 10);
+    return fallbackIdx;
+  },
+
+  /**
+   * Students Class Roster - Sequentially numbered 1..N
    */
   async getStudents(dept = "CSE", classId = "2R1") {
     // 1. Try FastAPI Backend (/teacher/class-roster or /students)
@@ -303,17 +322,28 @@ const ErpApi = {
         const json = await res.json();
         const list = json.data?.students || (Array.isArray(json.data) ? json.data : []);
         if (list.length > 0) {
-          return list.map(s => ({
-            id: s.id,
-            rollNo: s.rollNo || s.roll_no,
-            studentCode: s.studentCode || s.enrollmentNo || s.student_code,
-            enrollmentNo: s.enrollmentNo || s.student_code,
-            name: s.name || s.full_name,
-            departmentCode: s.departmentCode || "CSE",
-            className: s.classCode || s.class_name || classId,
-            isProvisional: false,
-            recentHistory: []
-          }));
+          // Sort numerically by trailing digits
+          list.sort((a, b) => this._parseRollNum(a.rollNo || a.roll_no, 0) - this._parseRollNum(b.rollNo || b.roll_no, 0));
+          return list.map((s, idx) => {
+            const numRoll = this._parseRollNum(s.rollNo || s.roll_no, idx + 1);
+            const rollStr = String(numRoll).padStart(2, '0');
+            return {
+              id: s.id,
+              roll: numRoll,
+              rollNo: numRoll,
+              rollFormatted: `ROLL ${rollStr}`,
+              rollCode: `${classId}${numRoll}`,
+              cardId: `CARD-${classId}-${numRoll}`,
+              studentCode: s.studentCode || s.enrollmentNo || s.student_code,
+              enrollmentNo: s.enrollmentNo || s.student_code || s.studentCode,
+              name: s.name || s.full_name,
+              departmentCode: s.departmentCode || "CSE",
+              classCode: s.classCode || s.class_name || classId,
+              className: s.classCode || s.class_name || classId,
+              isProvisional: Boolean(s.isProvisional),
+              recentHistory: s.recentHistory || []
+            };
+          });
         }
       }
     } catch (e) {}
@@ -325,18 +355,29 @@ const ErpApi = {
       });
       if (res.ok) {
         const json = await res.json();
-        if (Array.isArray(json.data) && json.data.length > 0) {
-          return json.data.map(s => ({
-            id: s.id,
-            rollNo: s.roll_no,
-            studentCode: s.student_code,
-            enrollmentNo: s.student_code,
-            name: s.full_name,
-            departmentCode: "CSE",
-            className: s.class_name || classId,
-            isProvisional: false,
-            recentHistory: []
-          }));
+        const list = Array.isArray(json.data) ? json.data : [];
+        if (list.length > 0) {
+          list.sort((a, b) => this._parseRollNum(a.roll_no, 0) - this._parseRollNum(b.roll_no, 0));
+          return list.map((s, idx) => {
+            const numRoll = this._parseRollNum(s.roll_no, idx + 1);
+            const rollStr = String(numRoll).padStart(2, '0');
+            return {
+              id: s.id,
+              roll: numRoll,
+              rollNo: numRoll,
+              rollFormatted: `ROLL ${rollStr}`,
+              rollCode: `${classId}${numRoll}`,
+              cardId: `CARD-${classId}-${numRoll}`,
+              studentCode: s.student_code,
+              enrollmentNo: s.student_code,
+              name: s.full_name,
+              departmentCode: "CSE",
+              classCode: s.class_name || classId,
+              className: s.class_name || classId,
+              isProvisional: false,
+              recentHistory: []
+            };
+          });
         }
       }
     } catch (e) {}
@@ -347,20 +388,30 @@ const ErpApi = {
         const { data, error } = await window.supabaseClient
           .from("students")
           .select("id, roll_no, student_code, full_name, class_name")
-          .eq("class_name", classId)
-          .order("roll_no");
+          .eq("class_name", classId);
         if (!error && data && data.length > 0) {
-          return data.map(s => ({
-            id: s.id,
-            rollNo: s.roll_no,
-            studentCode: s.student_code,
-            enrollmentNo: s.student_code,
-            name: s.full_name,
-            departmentCode: "CSE",
-            className: s.class_name,
-            isProvisional: false,
-            recentHistory: [],
-          }));
+          // Sort numerically by trailing digits
+          data.sort((a, b) => this._parseRollNum(a.roll_no, 0) - this._parseRollNum(b.roll_no, 0));
+          return data.map((s, idx) => {
+            const numRoll = this._parseRollNum(s.roll_no, idx + 1);
+            const rollStr = String(numRoll).padStart(2, '0');
+            return {
+              id: s.id,
+              roll: numRoll,
+              rollNo: numRoll,
+              rollFormatted: `ROLL ${rollStr}`,
+              rollCode: `${classId}${numRoll}`,
+              cardId: `CARD-${classId}-${numRoll}`,
+              studentCode: s.student_code,
+              enrollmentNo: s.student_code,
+              name: s.full_name,
+              departmentCode: "CSE",
+              classCode: s.class_name || classId,
+              className: s.class_name || classId,
+              isProvisional: false,
+              recentHistory: [],
+            };
+          });
         }
       } catch (e) {}
     }
@@ -469,85 +520,16 @@ const ErpApi = {
   },
 
   /**
-   * Search student by name, roll no, or ID
-   */
-  async searchStudent(query) {
-    if (!query) return [];
-    const qStr = String(query).trim();
-
-    // 1. Try FastAPI backend search endpoint
-    try {
-      const res = await fetch(`${this.baseUrl}/students/search?q=${encodeURIComponent(qStr)}`, {
-        signal: AbortSignal.timeout(3000)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (Array.isArray(json.data) && json.data.length > 0) {
-          return json.data;
-        }
-      }
-    } catch (e) {
-      console.warn("[ErpApi] Backend students/search failed, trying fallback...", e);
-    }
-
-    // 2. Direct Cloud Supabase fallback
-    if (window.supabaseClient) {
-      try {
-        const { data, error } = await window.supabaseClient
-          .from("users")
-          .select("*")
-          .eq("role", "student")
-          .or(`full_name.ilike.%${qStr}%,roll_no.ilike.%${qStr}%,email.ilike.%${qStr}%`)
-          .limit(20);
-        if (!error && Array.isArray(data) && data.length > 0) {
-          return data.map(s => ({
-            id: s.id,
-            name: s.full_name,
-            fullName: s.full_name,
-            rollNo: s.roll_no,
-            roll_no: s.roll_no,
-            sisId: s.roll_no || s.id,
-            studentCode: s.roll_no || s.id,
-            email: s.email,
-            className: "CSE"
-          }));
-        }
-      } catch (err) {
-        console.warn("[ErpApi] Supabase searchStudent error:", err);
-      }
-    }
-
-    return [];
-  },
-
-  /**
    * Individual Student Report
    */
   async getStudentReport(identifier) {
-    if (!identifier) return null;
-    const idStr = String(identifier).trim();
-
-    // 1. Try /api/v1/attendance/reports/student/{id}
     try {
-      const res = await fetch(`${this.baseUrl}/attendance/reports/student/${encodeURIComponent(idStr)}`, {
+      const res = await fetch(`${this.baseUrl}/reports/student/${encodeURIComponent(identifier)}`, {
         signal: AbortSignal.timeout(3000)
       });
       if (res.ok) {
         const json = await res.json();
         if (json.data) return json.data;
-        if (json.student_name || json.student_code) return json;
-      }
-    } catch (e) {}
-
-    // 2. Try /api/v1/reports/student/{id}
-    try {
-      const res = await fetch(`${this.baseUrl}/reports/student/${encodeURIComponent(idStr)}`, {
-        signal: AbortSignal.timeout(3000)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data) return json.data;
-        if (json.student_name || json.student_code) return json;
       }
     } catch (e) {}
 
@@ -555,30 +537,23 @@ const ErpApi = {
   },
 
   /**
-   * Faculty Conducted Classes Report
+   * Faculty Conducted Classes & Subject Academic Progress Report
    */
-  async getTeacherClassesReport(teacherId = "me", semester = "", classCode = "") {
+  async getTeacherClassesReport(params = {}) {
     try {
-      let queryParams = {};
-      if (typeof teacherId === "object" && teacherId !== null) {
-        queryParams = teacherId;
-      } else {
-        if (teacherId && teacherId !== "me") queryParams.teacher_id = teacherId;
-        if (semester) queryParams.semester = semester;
-        if (classCode) queryParams.class_code = classCode;
-      }
-      const q = new URLSearchParams(queryParams).toString();
-      const url = `${this.baseUrl}/teachers/classes-report${q ? `?${q}` : ""}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      let url = `${this.baseUrl}/reports/teacher-classes`;
+      const q = new URLSearchParams(params).toString();
+      if (q) url += `?${q}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
       if (res.ok) {
         const json = await res.json();
-        return json.data || json;
+        if (Array.isArray(json.data)) return json.data;
       }
     } catch (e) {
       console.warn("Notice on getTeacherClassesReport:", e);
     }
 
-    return null;
+    return [];
   },
 
   async checkDuplicate(dept, classId, date, subjectCode) {
