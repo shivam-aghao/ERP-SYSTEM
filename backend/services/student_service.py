@@ -41,7 +41,7 @@ class StudentService:
     def update_profile(student_code: str, updates: Dict[str, Any], db: Session) -> Optional[Dict[str, Any]]:
         for k, v in updates.items():
             if v is not None:
-                db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR id::text = :sc"), {"val": v, "sc": student_code})
+                db.execute(text(f"UPDATE students SET {k} = :val WHERE student_code = :sc OR CAST(id AS TEXT) = :sc"), {"val": v, "sc": student_code})
         db.commit()
         return StudentService.get_profile(student_code, db)
 

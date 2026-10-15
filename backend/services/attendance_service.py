@@ -100,7 +100,7 @@ class AttendanceService:
         # 1. Resolve Class
         c_row = db.execute(text("""
             SELECT id, class_name FROM classes
-            WHERE id::text = :cid OR class_name = :cid
+            WHERE CAST(id AS TEXT) = :cid OR class_name = :cid
             LIMIT 1
         """), {"cid": cid_str}).fetchone()
         actual_class_id = str(c_row[0]) if c_row else (cid_str if len(cid_str) == 36 else None)
@@ -109,7 +109,7 @@ class AttendanceService:
         # 2. Resolve Subject
         s_row = db.execute(text("""
             SELECT id, code, name FROM subjects
-            WHERE id::text = :sid OR code = :sid OR name = :sid
+            WHERE CAST(id AS TEXT) = :sid OR code = :sid OR name = :sid
             LIMIT 1
         """), {"sid": sid_str}).fetchone()
         actual_subject_id = str(s_row[0]) if s_row else (sid_str if len(sid_str) == 36 else None)
@@ -179,10 +179,10 @@ class AttendanceService:
         row = db.execute(text("""
             SELECT id, status, session_code, locked_at, attendance_rate, total_students, present_count
             FROM attendance_sessions
-            WHERE (class_id::text = :cid OR class_name = :cid)
-              AND (subject_id::text = :sid OR subject_name = :sid OR subject_code = :sid)
+            WHERE (CAST(class_id AS TEXT) = :cid OR class_name = :cid)
+              AND (CAST(subject_id AS TEXT) = :sid OR subject_name = :sid OR subject_code = :sid)
               AND session_date = :sdate
-              AND (period_number::text = :pnum_str)
+              AND (CAST(period_number AS TEXT) = :pnum_str)
             ORDER BY created_at DESC
             LIMIT 1
         """), {
@@ -478,7 +478,7 @@ class AttendanceService:
                 SET present_periods = COALESCE(present_periods, 0) + 1,
                     total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (student_id::text = :sid OR student_code = :sid)
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
                   AND (subject_code = :scode OR subject_name = :sname)
             """), {"sid": sid, "scode": subject_code, "sname": subject_name})
 
@@ -503,7 +503,7 @@ class AttendanceService:
                 UPDATE student_attendance_subjects
                 SET total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (student_id::text = :sid OR student_code = :sid)
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
                   AND (subject_code = :scode OR subject_name = :sname)
             """), {"sid": sid, "scode": subject_code, "sname": subject_name})
 
@@ -550,7 +550,7 @@ class AttendanceService:
         db: Session
     ) -> Dict[str, Any]:
         """Locks attendance session against further edits."""
-        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE id::text = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
+        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE CAST(id AS TEXT) = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
         if not sess:
             return {"session_id": str(session_id), "status": "LOCKED", "message": "Attendance session locked successfully."}
 
@@ -593,7 +593,7 @@ class AttendanceService:
             raise HTTPException(status_code=400, detail="Mandatory audit justification is required to unlock an attendance session.")
 
         clean_reason = reason.strip()
-        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE id::text = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
+        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE CAST(id AS TEXT) = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
         if not sess:
             return {"session_id": str(session_id), "status": "draft", "message": "Attendance session unlocked for correction."}
 
@@ -629,7 +629,7 @@ class AttendanceService:
         if current_user and (current_user.role or "").lower() not in ("hod", "admin", "super_admin"):
             raise HTTPException(status_code=403, detail="Forbidden: Approving attendance requires HOD or Admin authorization.")
 
-        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE id::text = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
+        sess = db.execute(text("SELECT id, status FROM attendance_sessions WHERE CAST(id AS TEXT) = :id OR session_code = :id"), {"id": str(session_id)}).fetchone()
         if not sess:
             return {"session_id": str(session_id), "status": "APPROVED", "message": "Attendance session approved."}
 
@@ -691,7 +691,7 @@ class AttendanceService:
         st_row = db.execute(text("""
             SELECT id, student_code, full_name, roll_no, class_name
             FROM students
-            WHERE student_code = :sc OR id::text = :sc
+            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc
             LIMIT 1
         """), {"sc": target_code}).fetchone()
 
@@ -706,7 +706,7 @@ class AttendanceService:
                    COALESCE(present_periods, 0) as present_periods,
                    COALESCE(total_periods, 0) as total_periods
             FROM student_attendance_subjects
-            WHERE student_code = :sc OR student_id::text = :sc OR student_id = CAST(:suid AS UUID)
+            WHERE student_code = :sc OR CAST(student_id AS TEXT) = :sc OR student_id = CAST(:suid AS UUID)
             ORDER BY subject_code ASC
         """), {"sc": target_code, "suid": student_uuid if student_uuid else "00000000-0000-0000-0000-000000000000"}).fetchall()
 
@@ -858,7 +858,7 @@ class AttendanceService:
             SELECT count(*) as total_sessions,
                    COALESCE(avg(attendance_rate), 0) as avg_class_rate
             FROM attendance_sessions
-            WHERE (class_id::text = :cid OR class_name = :cname) AND status IN ('SUBMITTED', 'LOCKED', 'APPROVED')
+            WHERE (CAST(class_id AS TEXT) = :cid OR class_name = :cname) AND status IN ('SUBMITTED', 'LOCKED', 'APPROVED')
         """), {"cid": actual_class_id, "cname": class_name}).fetchone()
 
         total_sessions = sess_rows[0] if sess_rows else 0
@@ -871,7 +871,7 @@ class AttendanceService:
                    COALESCE(sum(sas.total_periods), 0) as total
             FROM students s
             LEFT JOIN student_attendance_subjects sas ON (sas.student_id = s.id OR sas.student_code = s.student_code)
-            WHERE s.class_id::text = :cid OR s.class_name = :cname
+            WHERE CAST(s.class_id AS TEXT) = :cid OR s.class_name = :cname
             GROUP BY s.id, s.roll_no, s.full_name, s.student_code
             ORDER BY s.roll_no ASC
         """), {"cid": actual_class_id, "cname": class_name}).fetchall()
@@ -972,7 +972,7 @@ class AttendanceService:
         t_row = db.execute(text("""
             SELECT id, emp_code, full_name, designation, department_id
             FROM teachers
-            WHERE id::text = :tid OR emp_code = :tid
+            WHERE CAST(id AS TEXT) = :tid OR emp_code = :tid
             LIMIT 1
         """), {"tid": teacher_id}).fetchone()
 
@@ -1017,7 +1017,7 @@ class AttendanceService:
         Retrieves institutional defaulters list (< threshold % attendance).
         Includes student roll number, name, shortage %, and defaulter subjects.
         """
-        clause = "WHERE s.class_id::text = :cid OR s.class_name = :cid" if class_id else ""
+        clause = "WHERE CAST(s.class_id AS TEXT) = :cid OR s.class_name = :cid" if class_id else ""
         params = {"cid": class_id} if class_id else {}
 
         students = db.execute(text(f"""

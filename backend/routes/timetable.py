@@ -63,7 +63,7 @@ def get_student_timetable(
     from backend.routes.students import resolve_student_code
     sc = resolve_student_code(student_code, current_user)
 
-    s_row = db.execute(text("SELECT class_name FROM students WHERE student_code = :sc OR id::text = :sc LIMIT 1"), {"sc": sc}).fetchone()
+    s_row = db.execute(text("SELECT class_name FROM students WHERE student_code = :sc OR CAST(id AS TEXT) = :sc LIMIT 1"), {"sc": sc}).fetchone()
     class_code = s_row[0] if s_row and s_row[0] else "3R"
 
     clause = "WHERE (class_code = :cc OR class_code = :cname)"

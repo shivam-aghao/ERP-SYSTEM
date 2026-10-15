@@ -2,30 +2,67 @@ import React from 'react';
 
 /**
  * SyllabusAnalysisChart.jsx
- * Displays visual Donut chart, key metric summary cards, pace calculation, and export report option.
+ * Displays top-level syllabus analysis card:
+ * - Total Planned Lectures, Total Engaged Lectures, Remaining Lectures
+ * - Coverage Percentage and Pace Status ("On Track" / "Behind Schedule")
+ * - Donut / Circular Progress indicator
+ * - Unit-wise and Topic-wise progress breakdown bars
  */
 export default function SyllabusAnalysisChart({ subject, onDownloadReport }) {
   if (!subject) return null;
 
-  const totalPlanned = Number(subject.totalLecturesPlanned || 60);
-  const totalTaken = Number(subject.totalLecturesTaken || 0);
-  const remaining = Math.max(0, totalPlanned - totalTaken);
-  const coveragePercent = totalPlanned > 0 ? Math.min(100, Math.round((totalTaken / totalPlanned) * 100)) : 0;
+  let totalPlanned = 0;
+  let totalEngaged = 0;
+  const unitBreakdown = [];
+  const topicBreakdown = [];
 
-  // Pace status calculation (Assuming a standard mid-semester target of 50-60%)
-  const isOnTrack = coveragePercent >= 55;
+  (subject.units || []).forEach(unit => {
+    let uPlanned = 0;
+    let uEngaged = 0;
 
-  // Calculate estimated completion date based on standard 4 lectures/week pace
-  const calculateEstimatedCompletion = () => {
-    if (remaining === 0) return "Syllabus Completed!";
-    const weeksNeeded = Math.ceil(remaining / 4);
-    const date = new Date();
-    date.setDate(date.getDate() + (weeksNeeded * 7));
-    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
+    (unit.topics || []).forEach(t => {
+      const p = Number(t.plannedLectures || t.noOfLectures || t.estimatedLectures || 0);
+      const e = Array.isArray(t.lectures)
+        ? t.lectures.length
+        : Number(t.engagedLectures || t.lecturesTaken || 0);
+      uPlanned += p;
+      uEngaged += e;
 
-  // Donut SVG parameters
-  const radius = 54;
+      const tProgress = p > 0 ? Math.min(100, Math.round((e / p) * 100)) : 0;
+      topicBreakdown.push({
+        topicId: t.topicId,
+        topicName: t.topicName,
+        unitName: unit.unitName ? unit.unitName.split(':')[0] : 'Unit',
+        planned: p,
+        engaged: e,
+        progress: tProgress,
+        status: t.status || (tProgress >= 100 ? 'Completed' : (e > 0 ? 'In Progress' : 'Not Started'))
+      });
+    });
+
+    const uProgress = uPlanned > 0 ? Math.min(100, Math.round((uEngaged / uPlanned) * 100)) : 0;
+    unitBreakdown.push({
+      unitId: unit.unitId,
+      unitName: unit.unitName,
+      planned: uPlanned,
+      engaged: uEngaged,
+      progress: uProgress
+    });
+
+    totalPlanned += uPlanned;
+    totalEngaged += uEngaged;
+  });
+
+  totalPlanned = totalPlanned || Number(subject.totalLecturesPlanned || 60);
+  const remaining = Math.max(0, totalPlanned - totalEngaged);
+  const coveragePercent = totalPlanned > 0 ? Math.min(100, Math.round((totalEngaged / totalPlanned) * 100)) : 0;
+
+  // Status calculation: On Track if >= 45% of planned lectures delivered
+  const isOnTrack = coveragePercent >= 45;
+  const statusLabel = isOnTrack ? 'On Track' : 'Behind Schedule';
+
+  // Circular Donut Progress
+  const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (coveragePercent / 100) * circumference;
 
@@ -33,25 +70,39 @@ export default function SyllabusAnalysisChart({ subject, onDownloadReport }) {
     <div style={{
       background: '#FFFFFF',
       border: '1px solid #E2E8F0',
-      borderRadius: '12px',
-      padding: '20px 24px',
-      marginBottom: '20px',
+      borderRadius: '14px',
+      padding: '22px 26px',
+      marginBottom: '22px',
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)'
     }}>
+      {/* Title & Action Toolbar */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '16px',
+        marginBottom: '18px',
         flexWrap: 'wrap',
         gap: '12px'
       }}>
         <div>
-          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 800, color: '#0B1F3A' }}>
-            Syllabus Coverage Analytics &amp; Delivery Pace
-          </h3>
-          <p style={{ margin: 0, fontSize: '12.5px', color: '#64748B' }}>
-            Subject: <strong>{subject.subjectName}</strong> ({subject.subjectCode || 'CS302'}) • Class {subject.classId}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0B1F3A' }}>
+              Syllabus Coverage &amp; Lecture Delivery Analysis
+            </h3>
+            <span style={{
+              background: isOnTrack ? '#DCFCE7' : '#FEF3C7',
+              color: isOnTrack ? '#15803D' : '#B45309',
+              border: isOnTrack ? '1px solid #86EFAC' : '1px solid #FDE047',
+              padding: '2px 10px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: 800
+            }}>
+              ● {statusLabel}
+            </span>
+          </div>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+            Subject: <strong style={{ color: '#0B1F3A' }}>{subject.subjectName}</strong> ({subject.subjectCode || 'CS302'}) • Class: <strong style={{ color: '#0B1F3A' }}>{subject.classId}</strong>
           </p>
         </div>
 
@@ -70,8 +121,7 @@ export default function SyllabusAnalysisChart({ subject, onDownloadReport }) {
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+              gap: '6px'
             }}
           >
             📥 Download Syllabus Report (CSV)
@@ -79,140 +129,166 @@ export default function SyllabusAnalysisChart({ subject, onDownloadReport }) {
         )}
       </div>
 
+      {/* Main Metric Cards Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '16px',
-        alignItems: 'center'
+        marginBottom: '20px'
       }}>
-        {/* 1. Donut Chart Visual */}
+        {/* Metric 1: Donut Circular Chart */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '16px',
-          padding: '12px',
+          gap: '14px',
+          padding: '14px 16px',
           background: '#F8FAFC',
           borderRadius: '10px',
           border: '1px solid #E2E8F0'
         }}>
-          <div style={{ position: 'relative', width: '120px', height: '120px', flexShrink: 0 }}>
-            <svg width="120" height="120" viewBox="0 0 130 130" style={{ transform: 'rotate(-90deg)' }}>
-              {/* Background Circle */}
+          <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0 }}>
+            <svg width="80" height="80" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
               <circle
-                cx="65"
-                cy="65"
+                cx="60"
+                cy="60"
                 r={radius}
                 stroke="#E2E8F0"
-                strokeWidth="12"
+                strokeWidth="11"
                 fill="transparent"
               />
-              {/* Progress Circle */}
               <circle
-                cx="65"
-                cy="65"
+                cx="60"
+                cy="60"
                 r={radius}
-                stroke={coveragePercent >= 75 ? '#10B981' : (coveragePercent >= 40 ? '#0B5CAD' : '#F59E0B')}
-                strokeWidth="12"
+                stroke={isOnTrack ? '#10B981' : '#F59E0B'}
+                strokeWidth="11"
+                fill="transparent"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                fill="transparent"
                 style={{ transition: 'stroke-dashoffset 0.5s ease' }}
               />
             </svg>
             <div style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center'
-            }}>
-              <span style={{ fontSize: '20px', fontWeight: 800, color: '#0B1F3A', display: 'block', lineHeight: 1 }}>
-                {coveragePercent}%
-              </span>
-              <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>Covered</span>
-            </div>
-          </div>
-
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }}></span>
-              <span style={{ fontSize: '12px', color: '#334155' }}>Covered: <strong>{totalTaken} hrs</strong></span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#CBD5E1', display: 'inline-block' }}></span>
-              <span style={{ fontSize: '12px', color: '#64748B' }}>Remaining: <strong>{remaining} hrs</strong></span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Total & Taken Lectures Card */}
-        <div style={{
-          padding: '14px 18px',
-          background: '#EFF6FF',
-          borderRadius: '10px',
-          border: '1px solid #BFDBFE'
-        }}>
-          <span style={{ fontSize: '12px', color: '#1E40AF', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
-            LECTURES ENGAGED
-          </span>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: '#1E3A8A' }}>
-            {totalTaken} <span style={{ fontSize: '14px', fontWeight: 600, color: '#3B82F6' }}>/ {totalPlanned}</span>
-          </div>
-          <span style={{ fontSize: '11.5px', color: '#2563EB', marginTop: '2px', display: 'block' }}>
-            {totalPlanned - remaining} completed as scheduled
-          </span>
-        </div>
-
-        {/* 3. Pending Lectures Card */}
-        <div style={{
-          padding: '14px 18px',
-          background: '#FEF9C3',
-          borderRadius: '10px',
-          border: '1px solid #FDE047'
-        }}>
-          <span style={{ fontSize: '12px', color: '#854D0E', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
-            PENDING LECTURES
-          </span>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: '#713F12' }}>
-            {remaining} <span style={{ fontSize: '14px', fontWeight: 600, color: '#A16207' }}>Hrs Left</span>
-          </div>
-          <span style={{ fontSize: '11.5px', color: '#A16207', marginTop: '2px', display: 'block' }}>
-            Required to conclude term
-          </span>
-        </div>
-
-        {/* 4. Pace & Completion Date Card */}
-        <div style={{
-          padding: '14px 18px',
-          background: isOnTrack ? '#F0FDF4' : '#FFF7ED',
-          borderRadius: '10px',
-          border: isOnTrack ? '1px solid #BBF7D0' : '1px solid #FED7AA'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '12px', color: isOnTrack ? '#15803D' : '#C2410C', fontWeight: 700 }}>
-              CURRICULUM PACE
-            </span>
-            <span style={{
-              background: isOnTrack ? '#10B981' : '#F97316',
-              color: '#FFFFFF',
-              fontSize: '10px',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '15px',
               fontWeight: 800,
-              padding: '2px 7px',
-              borderRadius: '4px'
+              color: '#0B1F3A'
             }}>
-              {isOnTrack ? '✓ On Track' : '⚠ Behind Schedule'}
+              {coveragePercent}%
+            </div>
+          </div>
+          <div>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+              Coverage
+            </span>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: '#0B1F3A' }}>
+              {coveragePercent}% Completed
+            </div>
+            <span style={{ fontSize: '11px', color: isOnTrack ? '#15803D' : '#B45309', fontWeight: 600 }}>
+              {statusLabel}
             </span>
           </div>
-          <div style={{ fontSize: '15px', fontWeight: 800, color: isOnTrack ? '#14532D' : '#9A3412', marginTop: '4px' }}>
-            Est. End: {calculateEstimatedCompletion()}
-          </div>
-          <span style={{ fontSize: '11.5px', color: isOnTrack ? '#166534' : '#C2410C', marginTop: '2px', display: 'block' }}>
-            Based on ~4 weekly lecture slots
+        </div>
+
+        {/* Metric 2: Planned Lectures */}
+        <div style={{
+          padding: '14px 16px',
+          background: '#F8FAFC',
+          borderRadius: '10px',
+          border: '1px solid #E2E8F0'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+            Total Planned Lectures
           </span>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: '#0B1F3A', marginTop: '2px' }}>
+            {totalPlanned}
+          </div>
+          <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+            Per academic syllabus
+          </span>
+        </div>
+
+        {/* Metric 3: Engaged Lectures */}
+        <div style={{
+          padding: '14px 16px',
+          background: '#F8FAFC',
+          borderRadius: '10px',
+          border: '1px solid #E2E8F0'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+            Lectures Engaged
+          </span>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: '#0B5CAD', marginTop: '2px' }}>
+            {totalEngaged}
+          </div>
+          <span style={{ fontSize: '11.5px', color: '#166534', fontWeight: 600 }}>
+            Delivered &amp; tracked
+          </span>
+        </div>
+
+        {/* Metric 4: Remaining Lectures */}
+        <div style={{
+          padding: '14px 16px',
+          background: '#F8FAFC',
+          borderRadius: '10px',
+          border: '1px solid #E2E8F0'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+            Remaining Lectures
+          </span>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: remaining > 0 ? '#B45309' : '#10B981', marginTop: '2px' }}>
+            {remaining}
+          </div>
+          <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+            {remaining === 0 ? 'Syllabus finished!' : 'To be conducted'}
+          </span>
+        </div>
+      </div>
+
+      {/* Unit-Wise Breakdown */}
+      <div style={{ marginTop: '16px' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
+          Unit-wise Delivery Breakdown
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+          {unitBreakdown.map((u, i) => (
+            <div
+              key={u.unitId || i}
+              style={{
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '10px 14px'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0B1F3A', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {u.unitName.split(':')[0] || `Unit ${i+1}`}
+                </span>
+                <span style={{ fontSize: '11.5px', fontWeight: 800, color: u.progress >= 100 ? '#10B981' : '#0B5CAD' }}>
+                  {u.engaged}/{u.planned} ({u.progress}%)
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${u.progress}%`,
+                  height: '100%',
+                  background: u.progress >= 100 ? '#10B981' : (u.progress > 0 ? '#0B5CAD' : '#94A3B8'),
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

@@ -45,8 +45,9 @@
     }
   </script>
 
-  <!-- Central Quiz API Client -->
+  <!-- Central Quiz API Client & Isolated Student Quiz Security -->
   <script src="../js/quiz-api.js"></script>
+  <script src="../js/student-quiz-security.js"></script>
 
 
 
@@ -2139,9 +2140,18 @@
 
     // 5. Start Quiz Attempt
 
+    let attemptDeadlineMs = 0;
+    let isSubmittingAttempt = false;
+
     async function startQuizAttempt(quizId) {
 
       try {
+        isSubmittingAttempt = false;
+
+        // Request full-screen inside the explicit user click gesture (graceful fallback if declined)
+        if (window.StudentQuizSecurity && typeof window.StudentQuizSecurity.requestFullscreen === 'function') {
+          window.StudentQuizSecurity.requestFullscreen();
+        }
 
         const sid = currentStudent ? currentStudent.id : 'demo-student-id';
 
@@ -2152,7 +2162,7 @@
 
 
         activeAttemptId = startData.attempt_id;
-        activeQuiz = startData.quiz || (quizzes && quizzes.find(x => x.id === quizId)) || startData || {};
+        activeQuiz = startData.quiz || (currentQuizzes && currentQuizzes.find(x => x.id === quizId)) || startData || {};
         activeQuizQuestions = startData.questions || [];
 
         currentQuestionIdx = 0;
@@ -2180,6 +2190,7 @@
         } else {
           remainingSeconds = ((activeQuiz && activeQuiz.duration_minutes) || 20) * 60;
         }
+        attemptDeadlineMs = Date.now() + (remainingSeconds * 1000);
 
         latestReviewData = [];
         const revContainer = document.getElementById('resultReviewContainer');
@@ -2199,6 +2210,24 @@
         document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
         document.getElementById('view-runner').classList.add('active');
 
+        // Activate Student-Side Quiz Security (Scoped strictly to #view-runner)
+        if (window.StudentQuizSecurity) {
+          window.StudentQuizSecurity.start({
+            attemptId: activeAttemptId,
+            quizId: quizId,
+            studentName: currentStudent ? currentStudent.full_name : 'Student',
+            studentCode: currentStudent ? (currentStudent.student_code || '') : '',
+            rollNo: currentStudent ? (currentStudent.roll_no || '') : '',
+            className: currentStudentClass || '',
+            maxViolations: (activeQuiz && activeQuiz.max_violations) ? Number(activeQuiz.max_violations) : 5,
+            autoSubmitOnMaxViolations: Boolean(activeQuiz && activeQuiz.auto_submit_on_violation),
+            requestFullscreen: false, // Already requested synchronously on click
+            onAutoSubmit: function (reason) {
+              performFinalSubmit(true, reason || 'max_security_violations');
+            }
+          });
+        }
+
         // Start Countdown Timer
         startTimer();
         renderCurrentQuestion();
@@ -2206,6 +2235,7 @@
         lucide.createIcons();
 
       } catch (err) {
+        if (window.StudentQuizSecurity) window.StudentQuizSecurity.stop();
         alert('Could not start quiz: ' + err.message);
       }
     }
@@ -2223,6 +2253,9 @@
       const badge = document.getElementById('runnerTimerBadge');
 
       const updateDisplay = () => {
+        if (attemptDeadlineMs > 0) {
+          remainingSeconds = Math.max(0, Math.round((attemptDeadlineMs - Date.now()) / 1000));
+        }
         const mins = Math.max(0, Math.floor(remainingSeconds / 60));
         const secs = Math.max(0, remainingSeconds % 60);
         const timerEl = document.getElementById('quizTimerText');
@@ -2239,13 +2272,12 @@
       updateDisplay();
 
       timerInterval = setInterval(() => {
-        remainingSeconds--;
         updateDisplay();
 
         if (remainingSeconds <= 0) {
           clearInterval(timerInterval);
           alert('Examination time has expired! Your answers are being submitted automatically.');
-          performFinalSubmit();
+          performFinalSubmit(true, 'timer_expired');
         }
       }, 1000);
     }
@@ -2464,10 +2496,15 @@
       if (modal) modal.classList.remove('active');
     }
 
-    function performFinalSubmit() {
+    function performFinalSubmit(isAutoSubmit = false, submissionReason = null) {
+      if (isSubmittingAttempt) return;
       closeSubmitConfirmModal();
       clearInterval(timerInterval);
-      submitQuizEvaluation();
+      attemptDeadlineMs = 0;
+      if (window.StudentQuizSecurity) {
+        window.StudentQuizSecurity.markSubmitting();
+      }
+      submitQuizEvaluation(Boolean(isAutoSubmit), submissionReason);
     }
 
     function confirmSubmitQuiz() {
@@ -2478,7 +2515,11 @@
 
     // 6. Server-Side Evaluation & Real Result Rendering
 
-    async function submitQuizEvaluation() {
+    async function submitQuizEvaluation(isAutoSubmit = false, submissionReason = null) {
+      if (isSubmittingAttempt) return;
+      isSubmittingAttempt = true;
+      const confirmBtn = document.getElementById('btnFinalSubmitConfirm');
+      if (confirmBtn) confirmBtn.disabled = true;
 
       try {
 
@@ -2494,9 +2535,11 @@
 
 
 
-        const result = await QuizAPI.submitQuizAttempt(activeAttemptId, answersPayload);
+        const result = await QuizAPI.submitQuizAttempt(activeAttemptId, answersPayload, isAutoSubmit, submissionReason);
 
-
+        if (window.StudentQuizSecurity) {
+          window.StudentQuizSecurity.stop();
+        }
 
         const isReleased = (result.results_released !== false) && (result.is_released !== false);
 
@@ -2640,9 +2683,11 @@
         await loadStudentPortalData();
 
       } catch (err) {
-
+        isSubmittingAttempt = false;
         showToast('Evaluation failed: ' + err.message, 'error');
 
+      } finally {
+        if (confirmBtn) confirmBtn.disabled = false;
       }
 
     }

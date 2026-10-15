@@ -122,7 +122,7 @@ def get_all_quizzes(
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
-              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
+              AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])
@@ -158,7 +158,7 @@ def get_all_quizzes(
 
     # Optional class filter
     if class_id:
-        clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
+        clause += " AND (CAST(q.class_id AS TEXT) = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
@@ -397,8 +397,8 @@ def delete_quiz(
     # Clean up associated records
     db.execute(text("DELETE FROM question_options WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id = :id)"), {"id": quiz_id})
     db.execute(text("DELETE FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id})
-    db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id IN (SELECT id::text FROM quiz_attempts WHERE quiz_id = :id)"), {"id": quiz_id})
-    db.execute(text("DELETE FROM quiz_security_events WHERE attempt_id IN (SELECT id::text FROM quiz_attempts WHERE quiz_id = :id)"), {"id": quiz_id})
+    db.execute(text("DELETE FROM quiz_attempt_answers WHERE attempt_id IN (SELECT CAST(id AS TEXT) FROM quiz_attempts WHERE quiz_id = :id)"), {"id": quiz_id})
+    db.execute(text("DELETE FROM quiz_security_events WHERE attempt_id IN (SELECT CAST(id AS TEXT) FROM quiz_attempts WHERE quiz_id = :id)"), {"id": quiz_id})
     db.execute(text("DELETE FROM quiz_attempts WHERE quiz_id = :id"), {"id": quiz_id})
     db.execute(text("DELETE FROM quizzes WHERE id = :id"), {"id": quiz_id})
     db.commit()
@@ -586,6 +586,28 @@ def add_question_to_quiz(
         return error_response(f"Failed to add question: {str(e)}", 400)
 
 
+@router.put("/{quiz_id}/questions/{question_id}")
+def update_question_in_quiz(
+    quiz_id: str,
+    question_id: str,
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """PUT /api/v1/quizzes/{quiz_id}/questions/{question_id} - Updates an existing question in the quiz."""
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
+    try:
+        res = QuizService.update_question_in_quiz(quiz_id, question_id, payload, db)
+        return success_response(res, "Question updated successfully")
+    except ValueError as e:
+        return error_response(str(e), 404)
+    except Exception as e:
+        return error_response(f"Failed to update question: {str(e)}", 400)
+
+
 @router.delete("/{quiz_id}/questions/{question_id}")
 def remove_question_from_quiz(
     quiz_id: str,
@@ -754,7 +776,7 @@ def get_quiz_security_events(
         SELECT qse.id, qse.attempt_id, qse.event_type, qse.metadata, qse.event_time,
                s.student_code, s.roll_no, s.full_name
         FROM quiz_security_events qse
-        JOIN quiz_attempts qa ON qse.attempt_id = qa.id::text
+        JOIN quiz_attempts qa ON qse.attempt_id = CAST(qa.id AS TEXT)
         JOIN students s ON qa.student_id = s.id
         WHERE qa.quiz_id = :qid
         ORDER BY qse.event_time DESC

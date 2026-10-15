@@ -100,7 +100,7 @@ class AcademicWalletService:
             with SessionLocal() as db:
                 row = db.execute(text("""
                     SELECT * FROM student_academic_dashboard 
-                    WHERE student_code = :sc OR student_id::text = :sc
+                    WHERE student_code = :sc OR CAST(student_id AS TEXT) = :sc
                     LIMIT 1
                 """), {"sc": str(student_code).strip()}).fetchone()
                 if row:

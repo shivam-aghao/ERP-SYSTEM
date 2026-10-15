@@ -254,11 +254,45 @@
       return res.data;
     },
 
-    // 7. Notifications
+    // 7. Notifications & Announcements
     getNotifications: async function () {
       var res = await this.request('/notifications');
       return res.data;
     },
+
+    createNotification: async function (notifData) {
+      var res = await this.request('/notifications/create', {
+        method: 'POST',
+        body: JSON.stringify(notifData)
+      });
+      return res;
+    },
+
+    markNotificationRead: async function (notificationId) {
+      return await this.request('/notifications/' + encodeURIComponent(notificationId) + '/read', {
+        method: 'POST'
+      });
+    },
+
+    markAllNotificationsRead: async function () {
+      return await this.request('/notifications/mark-all-read', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+    },
+
+    // 8. Teacher Dashboard & Classes
+    getTeacherDashboard: async function (identifier) {
+      var id = identifier || 'EMP-CSE-1001';
+      var res = await this.request('/teachers/dashboard?identifier=' + encodeURIComponent(id));
+      return res.data;
+    },
+
+    getTeacherClasses: async function (identifier) {
+      var id = identifier || 'EMP-CSE-1001';
+      var res = await this.request('/teachers/classes?identifier=' + encodeURIComponent(id));
+      return res.data;
+    }
   };
 
   // Expose safely to window

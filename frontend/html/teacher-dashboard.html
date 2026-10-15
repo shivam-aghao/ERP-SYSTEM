@@ -100,6 +100,190 @@
       border-radius: 50%;
       animation: spinAttendanceLoader 0.75s linear infinite;
     }
+
+    /* ========================================================
+       FACULTY INFORMATION & PORTFOLIO MODULE STYLES
+       ======================================================== */
+    .faculty-portfolio-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .faculty-hero-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-light, #E2E8F0);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(11, 31, 58, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .faculty-hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .faculty-hero-profile {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .faculty-hero-avatar-wrap {
+      position: relative;
+    }
+    .faculty-hero-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0B1F3A, #0B5CAD);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(11, 92, 173, 0.25);
+      border: 3px solid #FFFFFF;
+      overflow: hidden;
+    }
+    .faculty-hero-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .faculty-hero-badge-active {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: #10B981;
+      border: 2.5px solid #FFFFFF;
+      border-radius: 50%;
+    }
+    .faculty-completion-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 290px;
+    }
+    .completion-bar-track {
+      width: 100%;
+      height: 9px;
+      background: #E2E8F0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .completion-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #00A6D6, #10B981);
+      transition: width 0.4s ease;
+    }
+    .portfolio-tabs-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light, #E2E8F0);
+      border-radius: 12px;
+      padding: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .portfolio-tab-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .portfolio-tab-item:hover {
+      background: #F1F5F9;
+      color: #0B5CAD;
+    }
+    .portfolio-tab-item.active {
+      background: #0B1F3A !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 2px 6px rgba(11, 31, 58, 0.25);
+    }
+    .portfolio-tab-content {
+      background: #FFFFFF;
+      border: 1px solid var(--border-light, #E2E8F0);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(11, 31, 58, 0.04);
+    }
+    .portfolio-item-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 18px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .portfolio-item-card:hover {
+      border-color: #CBD5E1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      background: #FFFFFF;
+    }
+    .vault-filter-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: #475569;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .vault-filter-chip:hover {
+      background: #F1F5F9;
+      color: #0B5CAD;
+    }
+    .vault-filter-chip.active {
+      background: #0B5CAD;
+      color: #FFFFFF;
+      border-color: #0B5CAD;
+    }
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #yearlyReportPrintContainer, #yearlyReportPrintContainer * {
+        visibility: visible !important;
+      }
+      #yearlyReportPrintContainer {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        background: #FFFFFF !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
   </style>
   <script src="../js/toast.js"></script>
   <!-- Authentication Guard -->
@@ -206,14 +390,13 @@
             </div>
             <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('information')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>Information</span>
+              <span>My Information (Portfolio)</span>
             </div>
             <div class="profile-dropdown-item p-link-item" onclick="TeacherApp.switchView('settings')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               <span>Settings</span>
             </div>
-            <div class="p-divider"></div>
-            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : TeacherApp.handleLogout()">
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="TeacherApp.openLogoutConfirmModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               <span>Sign Out</span>
             </div>
@@ -1297,24 +1480,17 @@
              ======================================================== -->
         <section id="classes-view" class="view-section-pane app-module-view">
           <div class="card" style="padding:24px;">
-            <h3 style="font-size:16px; margin-bottom:16px; color:var(--dark-navy);">All Assigned Classes & Batches</h3>
-            <div class="class-overview-grid">
-              <!-- Re-use class overview cards -->
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R1', 'Data Structures')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">2R1</div><div class="class-subject-name">Data Structures</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 60 Students</div><span class="badge badge-completed">Completed</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+              <div>
+                <h3 style="font-size:16px; margin:0; color:var(--dark-navy);">All Assigned Classes &amp; Batches</h3>
+                <p style="font-size:12.5px; color:var(--text-muted); margin:4px 0 0 0;">Authorized academic classes and subject allocations from SSGMCE official curriculum.</p>
               </div>
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('2R2', 'Java Programming')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">2R2</div><div class="class-subject-name">Java Programming</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 58 Students</div><span class="badge badge-pending">Pending</span></div>
-              </div>
-              <div class="class-card" onclick="TeacherApp.openAttendanceForClass('3R', 'Database Management')">
-                <div class="class-card-top"><span class="dept-badge">CSE</span><i data-lucide="arrow-right" class="class-arrow-icon" style="width:16px;height:16px;"></i></div>
-                <div class="class-card-middle"><div class="class-name-large">3R</div><div class="class-subject-name">Database Management</div></div>
-                <div class="class-card-bottom"><div class="class-students-count"><i data-lucide="users" style="width:14px;height:14px;"></i> 62 Students</div><span class="badge badge-pending">Pending</span></div>
-              </div>
+              <button class="quick-action-btn primary" onclick="TeacherApp.openAttendanceModule()">
+                <i data-lucide="check-square" style="width:14px;height:14px;"></i> Mark Attendance
+              </button>
+            </div>
+            <div class="class-overview-grid" id="all-classes-grid">
+              <!-- Dynamically populated by TeacherApp.renderClassesView() -->
             </div>
           </div>
         </section>
@@ -1419,47 +1595,316 @@
         </section>
 
         <!-- ========================================================
-             PANE 9: PROFILE / INFORMATION / SETTINGS VIEW
+             PANE 9: BASIC FACULTY PROFILE VIEW (Minimal Glanceable Identity)
              ======================================================== -->
         <section id="profile-view" class="view-section-pane app-module-view">
-          <div class="card" style="padding:28px;">
-            <div style="display:flex; gap:24px; align-items:center; margin-bottom:24px; flex-wrap:wrap;">
-              <div class="profile-avatar" id="teacher-profile-avatar-large" style="width:80px; height:80px; font-size:26px;">--</div>
-              <div>
-                <h2 style="font-size:22px; color:var(--dark-navy);" id="teacher-profile-fullname">Faculty Member</h2>
-                <p style="color:var(--primary-blue); font-weight:600; font-size:14px;" id="teacher-profile-dept-text">Department Faculty</p>
-                <p style="color:var(--text-muted); font-size:12.5px; margin-top:2px;" id="teacher-profile-empid">SSGMCE Faculty Record</p>
-              </div>
-            </div>
+          <div id="faculty-profile-container">
+            <!-- Dynamically populated by TeacherApp.renderBasicProfileView() -->
+          </div>
+        </section>
 
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; border-top:1px solid var(--border-light); padding-top:20px;">
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Official Email</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-email-text">--</div>
+        <!-- ========================================================
+             PANE 9B: COMPREHENSIVE FACULTY INFORMATION & PORTFOLIO VIEW
+             ======================================================== -->
+        <section id="information-view" class="view-section-pane app-module-view">
+          <div id="faculty-info-container">
+            <!-- Dynamic Faculty Information & Portfolio rendered by TeacherApp.renderInformationView() -->
+          </div>
+        </section>
+
+        <!-- ========================================================
+             MODAL: ADD / EDIT FACULTY PORTFOLIO RECORD
+             ======================================================== -->
+        <div id="facultyInfoModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+          <div class="app-modal-dialog" style="max-width: 680px; width: 95%; background:#FFFFFF; border-radius:14px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="edit-3" style="width:17px;height:17px;color:#00A6D6;"></i>
+                </div>
+                <h3 id="facultyInfoModalTitle" style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Add Portfolio Record</h3>
               </div>
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Designation</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-designation-text">Faculty Member</div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeInformationModal()" style="color:#CBD5E1; font-size:20px; background:none; border:none; cursor:pointer;">✕</button>
+            </div>
+            <form id="facultyInfoModalForm" onsubmit="TeacherApp.submitInformationModal(event)" style="margin:0;">
+              <input type="hidden" id="facultyModalSectionKey">
+              <input type="hidden" id="facultyModalItemId">
+              <div class="app-modal-body" id="facultyModalBody" style="padding: 22px; max-height: 70vh; overflow-y: auto;">
+                <!-- Dynamically generated fields depending on sectionKey -->
               </div>
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Phone / Contact</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-phone-text">--</div>
+              <div class="app-modal-footer" style="padding: 14px 22px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeInformationModal()" style="padding: 8px 18px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Cancel</button>
+                <button type="submit" class="quick-action-btn primary" style="padding: 8px 22px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="check" style="width:14px;height:14px;"></i> Save Record
+                </button>
               </div>
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Cabin Location</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-cabin-text">Main Academic Block</div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: DOCUMENT VIEWER
+             ======================================================== -->
+        <div id="facultyDocViewerModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+          <div class="app-modal-dialog" style="max-width: 750px; width: 95%; background:#FFFFFF; border-radius:14px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <i data-lucide="file-check" style="width:20px;height:20px;color:#00A6D6;"></i>
+                <h3 id="docViewerTitle" style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Document Preview</h3>
               </div>
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Office Hours</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="teacher-profile-office-hours-text">Mon - Fri, 10:00 AM - 04:00 PM</div>
-              </div>
-              <div>
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Academic Term</label>
-                <div style="font-weight:600; color:var(--dark-navy); margin-top:3px;" id="profile-academic-term">Active Academic Term</div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeDocViewerModal()" style="color:#CBD5E1; font-size:20px; background:none; border:none; cursor:pointer;">✕</button>
+            </div>
+            <div class="app-modal-body" id="docViewerBody" style="padding: 24px; text-align:center; min-height: 280px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <!-- Document Certificate Preview -->
+            </div>
+            <div class="app-modal-footer" style="padding: 14px 22px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+              <span id="docViewerMeta" style="font-size:12px; color:#64748B;">Category: Verified Academic Record</span>
+              <div style="display:flex; gap:10px;">
+                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeDocViewerModal()" style="padding: 7px 16px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Close</button>
+                <button type="button" class="quick-action-btn primary" onclick="TeacherApp.downloadCurrentDocument()" style="padding: 7px 18px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="download" style="width:14px;height:14px;"></i> Download Certificate
+                </button>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+
+        <!-- ========================================================
+             MODAL: EDIT BASIC FACULTY PROFILE
+             ======================================================== -->
+        <div id="editBasicProfileModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+          <div class="app-modal-dialog" style="max-width: 580px; width: 95%; background:#FFFFFF; border-radius:14px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="user-check" style="width:17px;height:17px;color:#00A6D6;"></i>
+                </div>
+                <h3 style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Edit Basic Profile</h3>
+              </div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeEditBasicProfileModal()" style="color:#CBD5E1; font-size:20px; background:none; border:none; cursor:pointer;">✕</button>
+            </div>
+            <form id="editBasicProfileForm" onsubmit="TeacherApp.submitBasicProfile(event)" style="margin:0;">
+              <div class="app-modal-body" style="padding: 22px; max-height: 72vh; overflow-y: auto; display:flex; flex-direction:column; gap:14px;">
+                
+                <!-- Faculty ID (Read-only) -->
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#64748B; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em;">Faculty ID / Employee ID (Read-Only)</label>
+                  <input type="text" id="editProfileFacultyId" disabled style="width:100%; padding:9px 12px; border:1px solid #E2E8F0; background:#F1F5F9; color:#64748B; border-radius:6px; font-weight:700; font-size:13px; cursor:not-allowed; box-sizing:border-box;">
+                  <span style="font-size:11px; color:#94A3B8; margin-top:2px; display:block;">Assigned by Administration. Cannot be modified by faculty.</span>
+                </div>
+
+                <!-- Full Name -->
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Full Name *</label>
+                  <input type="text" id="editProfileName" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                </div>
+
+                <!-- Designation & Department -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Designation</label>
+                    <input type="text" id="editProfileDesignation" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Department</label>
+                    <input type="text" id="editProfileDepartment" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <!-- Email & Phone -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Email Address *</label>
+                    <input type="email" id="editProfileEmail" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Phone Number</label>
+                    <input type="text" id="editProfilePhone" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <!-- Date of Joining -->
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Date of Joining</label>
+                  <input type="date" id="editProfileDateOfJoining" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                </div>
+
+                <!-- Profile Photo URL / File -->
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Profile Photo</label>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="editProfilePhotoUrl" placeholder="Photo URL or upload image file below" style="flex:1; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                    <label style="background:#F1F5F9; border:1px solid #CBD5E1; padding:9px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
+                      📁 Upload
+                      <input type="file" id="editProfilePhotoFile" accept="image/*" style="display:none;" onchange="TeacherApp.handlePhotoFileSelect(event)">
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Short Bio (1-2 lines) -->
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Short Bio (1-2 Lines)</label>
+                  <textarea id="editProfileBio" rows="2" placeholder="Assistant Professor specializing in..." style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; resize:vertical; box-sizing:border-box;"></textarea>
+                </div>
+
+              </div>
+              <div class="app-modal-footer" style="padding: 14px 22px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeEditBasicProfileModal()" style="padding: 8px 18px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Cancel</button>
+                <button type="submit" class="quick-action-btn primary" style="padding: 8px 22px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="check" style="width:14px;height:14px;"></i> Save Profile
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: CHANGE PASSWORD
+             ======================================================== -->
+        <div id="changePasswordModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+          <div class="app-modal-dialog" style="max-width: 440px; width: 95%; background:#FFFFFF; border-radius:14px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+                  <i data-lucide="key" style="width:17px;height:17px;color:#00A6D6;"></i>
+                </div>
+                <h3 style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Change Password</h3>
+              </div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeChangePasswordModal()" style="color:#CBD5E1; font-size:20px; background:none; border:none; cursor:pointer;">✕</button>
+            </div>
+            <form id="changePasswordForm" onsubmit="TeacherApp.submitChangePassword(event)" style="margin:0;">
+              <div class="app-modal-body" style="padding: 22px; display:flex; flex-direction:column; gap:14px;">
+                <div id="changePasswordAlert" style="display:none; padding:10px 14px; border-radius:6px; font-size:12.5px; font-weight:600;"></div>
+                
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Current Password *</label>
+                  <input type="password" id="currentPasswordInput" required style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">New Password (min 6 characters) *</label>
+                  <input type="password" id="newPasswordInput" required minlength="6" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block; font-size:11px; font-weight:700; color:#334155; margin-bottom:5px; text-transform:uppercase;">Confirm New Password *</label>
+                  <input type="password" id="confirmPasswordInput" required minlength="6" style="width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13.5px; box-sizing:border-box;">
+                </div>
+              </div>
+              <div class="app-modal-footer" style="padding: 14px 22px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeChangePasswordModal()" style="padding: 8px 18px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Cancel</button>
+                <button type="submit" class="quick-action-btn primary" style="padding: 8px 22px; background:#0B5CAD; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px;">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: LOGOUT CONFIRMATION
+             ======================================================== -->
+        <div id="logoutConfirmModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+          <div class="app-modal-dialog" style="max-width: 400px; width: 95%; background:#FFFFFF; border-radius:14px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); overflow:hidden; text-align:center; padding:28px 22px;">
+            <div style="font-size:38px; margin-bottom:12px;">🚪</div>
+            <h3 style="font-size:18px; font-weight:800; color:#0F172A; margin:0 0 8px 0;">Sign Out of Teacher ERP</h3>
+            <p style="font-size:13.5px; color:#64748B; margin:0 0 24px 0; line-height:1.5;">Are you sure you want to end your current faculty session?</p>
+            <div style="display:flex; justify-content:center; gap:12px;">
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeLogoutConfirmModal()" style="padding: 9px 20px; border:1px solid #CBD5E1; background:#FFFFFF; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px;">Cancel</button>
+              <button type="button" onclick="TeacherApp.confirmLogout()" style="padding: 9px 22px; background:#DC2626; color:#FFFFFF; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px;">Yes, Sign Out</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: VIEW PROFILE PHOTO
+             ======================================================== -->
+        <div id="profileImageViewModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(11,31,58,0.72); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+          <div class="app-modal-dialog" style="max-width: 480px; width: 95%; background:#FFFFFF; border-radius:16px; box-shadow:0 25px 50px -12px rgba(11,31,58,0.35); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08);">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">👁️</span>
+                <h3 style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Profile Photo</h3>
+              </div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeViewPhotoModal()" style="color:#94A3B8; font-size:20px; background:none; border:none; cursor:pointer; padding:4px;">✕</button>
+            </div>
+            <div id="profileImageViewModalBody" style="padding: 24px; text-align:center;">
+              <!-- Dynamically populated by TeacherApp.openViewPhotoModal() -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: UPLOAD PROFILE PHOTO PREVIEW (With 2MB Limit Validation)
+             ======================================================== -->
+        <div id="profileImageUploadModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(11,31,58,0.72); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+          <div class="app-modal-dialog" style="max-width: 490px; width: 95%; background:#FFFFFF; border-radius:16px; box-shadow:0 25px 50px -12px rgba(11,31,58,0.35); overflow:hidden;">
+            <div class="app-modal-header" style="background: #0B1F3A; color: #FFFFFF; padding: 16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08);">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px;">📷</span>
+                <h3 style="font-size:16px; font-weight:700; margin:0; color:#FFFFFF;">Preview Profile Photo</h3>
+              </div>
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeUploadPhotoModal()" style="color:#94A3B8; font-size:20px; background:none; border:none; cursor:pointer; padding:4px;">✕</button>
+            </div>
+            <div style="padding: 24px;">
+              <!-- Preview Circle -->
+              <div style="display:flex; justify-content:center; margin-bottom:18px;">
+                <div id="uploadPhotoPreviewBox" style="width:200px; height:200px; border-radius:50%; overflow:hidden; border:4px solid #10B981; box-shadow:0 8px 24px rgba(0,0,0,0.12); background:#F8FAFC;">
+                  <img id="uploadPhotoPreviewImg" src="" alt="Upload Preview" style="width:100%; height:100%; object-fit:cover; display:block;">
+                </div>
+              </div>
+
+              <!-- Metadata Info -->
+              <div id="uploadPhotoMetadata" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#334155;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                  <span style="font-weight:600;">File:</span>
+                  <span id="uploadPhotoFileName" style="color:#64748B; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">--</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="font-weight:600;">Size:</span>
+                  <span id="uploadPhotoFileSize" style="font-weight:700; color:#0B5CAD;">--</span>
+                </div>
+              </div>
+
+              <!-- Size Limit Warning Banner -->
+              <div id="uploadPhotoOversizeAlert" style="display:none; background:#FEE2E2; color:#B91C1C; padding:10px 14px; border-radius:8px; font-size:12.5px; font-weight:600; margin-bottom:16px; align-items:center; gap:8px;">
+                <span>⚠️</span>
+                <span>File size exceeds 2MB limit. Please select an image smaller than 2MB.</span>
+              </div>
+
+              <p style="margin:0 0 20px 0; font-size:13px; color:#64748B; text-align:center;">
+                This image will appear across your Teacher Dashboard, header avatar, and class rosters.
+              </p>
+
+              <!-- Modal Actions -->
+              <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeUploadPhotoModal()" style="padding:10px 18px; border:none; background:#F1F5F9; color:#475569; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">Cancel</button>
+                <button type="button" id="btnSaveUploadedPhoto" onclick="TeacherApp.saveUploadedPhoto()" style="padding:10px 22px; border:none; background:#0B5CAD; color:#FFFFFF; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(11,92,173,0.25);">
+                  ✓ Save Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================
+             MODAL: DELETE PROFILE PHOTO CONFIRMATION
+             ======================================================== -->
+        <div id="profileImageDeleteModal" class="app-modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(11,31,58,0.72); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+          <div class="app-modal-dialog" style="max-width: 420px; width: 95%; background:#FFFFFF; border-radius:16px; box-shadow:0 25px 50px -12px rgba(11,31,58,0.35); overflow:hidden; text-align:center; padding:28px 24px;">
+            <div style="width:60px; height:60px; border-radius:50%; background:#FEE2E2; color:#DC2626; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 16px auto;">
+              🗑️
+            </div>
+            <h4 style="margin:0 0 8px 0; font-size:18px; font-weight:800; color:#0F172A;">Remove Profile Photo?</h4>
+            <p style="margin:0 0 24px 0; font-size:13.5px; color:#64748B; line-height:1.5;">
+              Are you sure you want to remove your profile photo? Your avatar will revert to your default initials avatar across the ERP system.
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <button type="button" class="btn-drawer-cancel" onclick="TeacherApp.closeDeletePhotoModal()" style="padding:10px 20px; border:none; background:#F1F5F9; color:#475569; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">Cancel</button>
+              <button type="button" onclick="TeacherApp.confirmDeletePhoto()" style="padding:10px 22px; border:none; background:#DC2626; color:#FFFFFF; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 2px 6px rgba(220,38,38,0.25);">Remove Photo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden input for file picker -->
+        <input type="file" id="profileImageFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;" onchange="TeacherApp.handlePhotoFileSelected(event)">
+
         <!-- ========================================================
              PANE 10: ACADEMICS HUB VIEW
              ======================================================== -->
