@@ -104,7 +104,7 @@ def download_fee_receipt(
         FROM fee_receipts fr
         JOIN students s ON fr.student_id = s.id
         LEFT JOIN fee_payments fp ON fr.payment_id = fp.id
-        WHERE fr.id::text = :rid OR fr.receipt_number = :rid
+        WHERE CAST(fr.id AS TEXT) = :rid OR fr.receipt_number = :rid
     """), {"rid": receipt_id}).fetchone()
 
     if not row:
@@ -271,7 +271,7 @@ def update_fee_invoice(
             discount_amount = COALESCE(:disc, discount_amount),
             pending_amount = CASE WHEN :pd IS NOT NULL THEN GREATEST(0, total_amount - CAST(:pd AS NUMERIC)) ELSE pending_amount END,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id::text = :iid
+        WHERE CAST(id AS TEXT) = :iid
     """), {
         "st": payload.get("status"),
         "pd": payload.get("paid_amount"),

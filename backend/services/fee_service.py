@@ -75,7 +75,7 @@ class FeeService:
         row = db.execute(text("""
             SELECT id, student_code, full_name, class_name, roll_no, email, phone
             FROM students
-            WHERE student_code = :sc OR id::text = :sc
+            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc
             LIMIT 1
         """), {"sc": sc_clean}).fetchone()
 

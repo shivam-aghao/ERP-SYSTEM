@@ -138,7 +138,7 @@ def get_student_attendance(
     # 2. Fallback to database if Supabase was empty
     if not sub_dicts:
         subjects = db.execute(
-            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR student_id::text = :sc"),
+            text("SELECT * FROM student_attendance_subjects WHERE student_code = :sc OR CAST(student_id AS TEXT) = :sc"),
             {"sc": sc}
         ).fetchall()
         if not subjects:
@@ -151,7 +151,7 @@ def get_student_attendance(
                 SELECT ar.*, s.session_date, s.subject_name, s.period_number, s.session_type
                 FROM attendance_records ar
                 JOIN attendance_sessions s ON ar.session_id = s.id
-                WHERE ar.student_id::text = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
+                WHERE CAST(ar.student_id AS TEXT) = :sc OR ar.student_id = (SELECT id FROM students WHERE student_code = :sc LIMIT 1)
                 ORDER BY s.session_date DESC
                 LIMIT 30
             """), {"sc": sc}

@@ -4,11 +4,9 @@
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>SSGMCE | College ERP</title>
-
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -27,17 +25,11 @@
         :root {
 
             --primary-dark: #0B5CAD;
-
             --primary: #1565C0;
-
             --accent: #00A6D5;
-
             --dark-text: #081c30;
-
             --normal-text: #647F9C;
-
             --border: #D9E6F1;
-
             --white: #FFFFFF;
 
         }
@@ -2362,9 +2354,12 @@
                 return false;
             } catch (error) {
                 console.error("Login error:", error);
-                const errMsg = error.message || "Unable to login. Please check your credentials.";
+                let errMsg = error.message || "Unable to login. Please check your credentials.";
+                if (errMsg.includes("Failed to fetch") || errMsg.includes("NetworkError") || errMsg.includes("Load failed")) {
+                    errMsg = "Connecting to ERP Backend Server (http://127.0.0.1:8000)... If this persists, please ensure the backend is started.";
+                }
                 if (window.ERPToast) {
-                    window.ERPToast.error(errMsg, "Authentication Failed");
+                    window.ERPToast.error(errMsg, "Authentication Notice");
                 } else {
                     alert(errMsg);
                 }

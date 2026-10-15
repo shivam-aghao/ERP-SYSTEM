@@ -102,7 +102,8 @@ def submit_quiz_attempt(
             answers=payload.answers or [],
             is_auto_submit=bool(payload.is_auto_submit),
             db=db,
-            student_identifier=student_id
+            student_identifier=student_id,
+            submission_reason=payload.submission_reason
         )
         return success_response(result, "Quiz submitted and evaluated successfully")
     except ValueError as e:

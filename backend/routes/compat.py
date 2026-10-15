@@ -273,7 +273,6 @@ def compat_teacher_profile(request: Request, emp_code: Optional[str] = Query(Non
 
 @router.get("/teacher/class-roster")
 def compat_teacher_class_roster(classId: Optional[str] = Query(None), class_id: Optional[str] = Query(None), class_name: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    """Deprecated. Canonical: GET /api/v1/attendance/roster"""
     return get_attendance_class_roster(classId=classId, class_id=class_id, class_name=class_name, db=db)
 
 @router.post("/teacher/attendance/bulk")

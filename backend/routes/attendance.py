@@ -80,10 +80,10 @@ def get_attendance_draft(
 
     row = db.execute(text("""
         SELECT * FROM attendance_sessions
-        WHERE (class_id::text = :cid OR class_name = :cid)
-          AND (subject_id::text = :sid OR subject_name = :sid OR subject_code = :sid)
+        WHERE (CAST(class_id AS TEXT) = :cid OR class_name = :cid)
+          AND (CAST(subject_id AS TEXT) = :sid OR subject_name = :sid OR subject_code = :sid)
           AND session_date = :sdate
-          AND (period_number::text = :pnum OR period = :pnum)
+          AND (CAST(period_number AS TEXT) = :pnum OR period = :pnum)
           AND status = 'draft'
         LIMIT 1
     """), {"cid": str(class_id), "sid": str(subject_id), "sdate": clean_date, "pnum": pnum_str}).fetchone()
@@ -380,7 +380,7 @@ def get_attendance_class_roster(
                COALESCE(c.class_name, s.class_name) as class_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
-        WHERE s.class_id::text = :cid OR c.class_name = :cid OR s.class_name = :cid
+        WHERE CAST(s.class_id AS TEXT) = :cid OR c.class_name = :cid OR s.class_name = :cid
         ORDER BY s.roll_no ASC
     """), {"cid": cid}).fetchall()
 
@@ -419,14 +419,26 @@ def get_attendance_sessions(
     db: Session = Depends(get_db)
 ):
     """GET /api/v1/attendance/sessions - List marked sessions with stats."""
-    clause = "WHERE teacher_id::text = :tid" if teacher_id else ""
+    clause = "WHERE CAST(ass.teacher_id AS TEXT) = :tid" if teacher_id else ""
     params = {"tid": teacher_id} if teacher_id else {}
     rows = db.execute(text(f"""
-        SELECT ass.id, ass.session_code, ass.session_date as attendance_date, ass.session_date,
-               ass.total_students, ass.present_count, ass.absent_count,
-               ass.status, ass.class_name, ass.subject_name, ass.subject_code, ass.attendance_rate
+        SELECT ass.id,
+               COALESCE(c.class_name, ass.class_id) AS class_name,
+               COALESCE(sub.name, ass.subject_id) AS subject_name,
+               COALESCE(sub.code, ass.subject_id) AS subject_code,
+               ass.session_date,
+               ass.period_number,
+               ass.status,
+               ass.session_type,
+               COUNT(ar.id) AS total_students,
+               SUM(CASE WHEN ar.is_present = 1 THEN 1 ELSE 0 END) AS present_count,
+               SUM(CASE WHEN ar.is_present = 0 THEN 1 ELSE 0 END) AS absent_count
         FROM attendance_sessions ass
+        LEFT JOIN classes c ON ass.class_id = c.id
+        LEFT JOIN subjects sub ON ass.subject_id = sub.id
+        LEFT JOIN attendance_records ar ON ar.session_id = ass.id
         {clause}
+        GROUP BY ass.id
         ORDER BY ass.session_date DESC, ass.created_at DESC
         LIMIT 100
     """), params).fetchall()
@@ -434,20 +446,24 @@ def get_attendance_sessions(
     sessions = []
     for r in rows:
         m = dict(r._mapping)
+        tot = int(m.get("total_students") or 0)
+        pres = int(m.get("present_count") or 0)
+        absnt = int(m.get("absent_count") or 0)
+        rate = round((pres / tot) * 100, 1) if tot > 0 else 0.0
         sessions.append({
             "sessionId": str(m["id"]),
             "id": str(m["id"]),
-            "sessionCode": m.get("session_code"),
-            "date": str(m.get("attendance_date")),
-            "lectureDate": str(m.get("attendance_date")),
+            "sessionCode": f"ATT-{str(m['id'])[:8]}",
+            "date": str(m.get("session_date")),
+            "lectureDate": str(m.get("session_date")),
             "classCode": m.get("class_name") or "3R",
             "subject": m.get("subject_name") or m.get("subject_code") or "Lecture",
             "subjectCode": m.get("subject_code") or m.get("subject_name"),
-            "presentCount": m.get("present_count"),
-            "absentCount": m.get("absent_count"),
-            "totalStudents": m.get("total_students"),
-            "attendanceRate": float(m.get("attendance_rate") or 0.0),
-            "status": m.get("status")
+            "presentCount": pres,
+            "absentCount": absnt,
+            "totalStudents": tot,
+            "attendanceRate": rate,
+            "status": m.get("status") or "Completed"
         })
     return success_response({"sessions": sessions})
 
@@ -466,10 +482,10 @@ def get_attendance_records(
     clauses = []
     params = {"lim": limit}
     if target_class:
-        clauses.append("(ass.class_id::text = :cid OR ass.class_name = :cid)")
+        clauses.append("(CAST(ass.class_id AS TEXT) = :cid OR ass.class_name = :cid)")
         params["cid"] = target_class
     if teacher_id:
-        clauses.append("ass.teacher_id::text = :tid")
+        clauses.append("CAST(ass.teacher_id AS TEXT) = :tid")
         params["tid"] = teacher_id
     if subject_code:
         clauses.append("ass.subject_code = :scode")

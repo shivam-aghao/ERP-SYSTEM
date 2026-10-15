@@ -779,9 +779,121 @@
       text-transform: uppercase;
 
       letter-spacing: 0.05em;
-
     }
 
+    /* Interactive Question Builder Studio */
+    .qb-studio-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .qb-studio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .qb-option-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.65rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      background: #FFFFFF;
+      margin-bottom: 0.65rem;
+      transition: all 0.18s ease;
+    }
+    .qb-option-row.is-correct {
+      border-color: #16A34A;
+      background: #F0FDF4;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
+    .qb-letter-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #EFF6FF;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      border: 1px solid #BFDBFE;
+      transition: all 0.15s ease;
+    }
+    .qb-option-row.is-correct .qb-letter-badge {
+      background: #16A34A;
+      color: #FFFFFF;
+      border-color: #15803D;
+    }
+    .qb-correct-btn {
+      padding: 0.38rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.15s ease;
+    }
+    .qb-correct-btn:hover {
+      border-color: #16A34A;
+      color: #15803D;
+      background: #F0FDF4;
+    }
+    .qb-option-row.is-correct .qb-correct-btn {
+      background: #16A34A;
+      color: #FFFFFF;
+      border-color: #15803D;
+    }
+    .qb-mode-switcher {
+      display: inline-flex;
+      background: #F1F5F9;
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      gap: 0.25rem;
+    }
+    .qb-mode-btn {
+      border: none;
+      background: transparent;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+    .qb-mode-btn.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .question-item {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      margin-bottom: 0.85rem;
+      background: #FFFFFF;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .question-item:hover {
+      border-color: #BFDBFE;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
   </style>
 
 </head>
@@ -1134,9 +1246,7 @@
       </div>
 
       <div class="nav-tab" onclick="switchTab('question-bank')">
-
-        <i data-lucide="database"></i> Question Bank & Import
-
+        <i data-lucide="plus-square"></i> Add Questions &amp; Question Bank
       </div>
 
     </div>
@@ -1356,76 +1466,208 @@
 
 
 
-    <!-- SECTION 3: QUESTION BANK & JSON IMPORT -->
-
+    <!-- SECTION 3: ADD QUESTIONS & QUESTION BANK STUDIO -->
     <section id="sec-question-bank" class="view-section">
-
-      <div class="action-bar">
-
+      <div class="action-bar" style="flex-wrap: wrap; gap: 1rem;">
         <div>
-
-          <h2 class="page-title">Question Bank & MHT-CET JSON Importer</h2>
-
-          <p class="page-desc">Import batches of questions directly from JSON format (Study Guide Section 2 & 18)</p>
-
+          <h2 class="page-title">Add &amp; Manage Questions Studio</h2>
+          <p class="page-desc">Build questions visually one-by-one, edit existing questions, or bulk import via JSON for any class quiz</p>
         </div>
-
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <div class="qb-mode-switcher">
+            <button type="button" id="qbModeVisualBtn" class="qb-mode-btn active" onclick="setStudioMode('visual')">
+              <i data-lucide="edit-3" style="width:14px;height:14px;"></i> Visual Question Builder
+            </button>
+            <button type="button" id="qbModeJsonBtn" class="qb-mode-btn" onclick="setStudioMode('json')">
+              <i data-lucide="file-code" style="width:14px;height:14px;"></i> Bulk JSON Importer
+            </button>
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="openCreateQuizModal()">
+            <i data-lucide="folder-plus" style="width:15px;height:15px;"></i> + New Quiz
+          </button>
+        </div>
       </div>
 
+      <!-- Target Quiz Selection & Live Summary Banner -->
+      <div class="card" style="padding: 1rem 1.35rem; margin-bottom: 1.35rem; background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%); border: 1px solid #BFDBFE;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; flex: 1;">
+            <label for="importTargetQuiz" style="font-weight: 700; font-size: 0.88rem; color: var(--navy); white-space: nowrap;">
+              <i data-lucide="book-open" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;color:var(--primary);"></i>
+              Target Quiz:
+            </label>
+            <select id="importTargetQuiz" class="form-control" style="max-width: 380px; font-weight: 600; background: #FFFFFF;" onchange="onStudioQuizChange()">
+              <option value="">Select Quiz to Add / Edit Questions...</option>
+            </select>
+            <div id="studioQuizMetaPills" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <!-- Dynamic Class, Subject, Question Count & Marks Badges -->
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <button type="button" id="studioQuickSampleBtn" class="btn btn-secondary" onclick="addSampleQuestionsToCurrentQuiz()" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;" title="Add 3 ready-made CSE MCQ questions to this quiz">
+              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample Qs
+            </button>
+            <button type="button" id="studioPublishQuizBtn" class="btn btn-success" onclick="handleStudioPublishToggle()" style="padding: 0.45rem 0.95rem; font-size: 0.8rem; display: none;">
+              <i data-lucide="send" style="width:14px;height:14px;"></i> Publish Quiz
+            </button>
+          </div>
+        </div>
+      </div>
 
+      <!-- Studio 2-Column Workspace -->
+      <div class="qb-studio-grid">
+        <!-- LEFT COLUMN: Question Builder Form / JSON Importer -->
+        <div>
+          <!-- MODE 1: VISUAL QUESTION BUILDER -->
+          <div id="studioVisualPanel" class="card" style="border-top: 4px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <h3 id="studioFormHeading" style="margin: 0; font-size: 1.05rem; color: var(--navy); display: flex; align-items: center; gap: 0.45rem;">
+                  <i data-lucide="plus-circle" style="width:18px;height:18px;color:var(--primary);"></i>
+                  <span>Add New Question</span>
+                </h3>
+                <span id="studioFormSubheading" style="font-size: 0.78rem; color: var(--text-muted);">Enter question text, 4 options, and click the correct option badge</span>
+              </div>
+              <div style="display: flex; gap: 0.45rem;">
+                <button type="button" class="btn btn-secondary" onclick="fillSampleStudioQuestion()" style="padding: 0.32rem 0.65rem; font-size: 0.76rem;" title="Auto-fill form with a sample CSE question">
+                  <i data-lucide="wand-2" style="width:13px;height:13px;"></i> Auto-Fill Sample
+                </button>
+                <button type="button" id="studioCancelEditBtn" class="btn btn-secondary" onclick="resetStudioQuestionForm()" style="padding: 0.32rem 0.65rem; font-size: 0.76rem; display: none; color: var(--danger);">
+                  Cancel Edit
+                </button>
+              </div>
+            </div>
 
-      <div class="card">
+            <input type="hidden" id="studioEditingQuestionId" value="">
 
-        <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Import questions.json</h3>
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label for="studioQText">Question Statement <span style="color: var(--danger);">*</span></label>
+              <textarea id="studioQText" class="form-control" rows="3" placeholder="e.g. Which scheduling algorithm assigns the CPU to the process with the smallest next CPU burst?"></textarea>
+            </div>
 
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                <label style="margin-bottom: 0;">Answer Options (Click ✓ to mark the Correct Option) <span style="color: var(--danger);">*</span></label>
+                <span style="font-size: 0.75rem; font-weight: 700; color: #15803D;" id="studioCorrectIndicator">Correct Answer: Option A</span>
+              </div>
+              <input type="hidden" id="studioQCorrect" value="A">
 
-          Paste a JSON array containing questions, choices A/B/C/D, and correct answers.
+              <!-- Option A -->
+              <div class="qb-option-row is-correct" id="studioOptRowA">
+                <span class="qb-letter-badge" onclick="selectStudioCorrectOption('A')" title="Click to mark Option A as correct">A</span>
+                <input type="text" id="studioOptA" class="form-control" style="border: none; background: transparent; padding: 0.35rem 0.5rem; box-shadow: none;" placeholder="Enter Option A text...">
+                <button type="button" class="qb-correct-btn" onclick="selectStudioCorrectOption('A')">
+                  <span id="studioOptCheckA">✓ Correct</span>
+                </button>
+              </div>
 
-        </p>
+              <!-- Option B -->
+              <div class="qb-option-row" id="studioOptRowB">
+                <span class="qb-letter-badge" onclick="selectStudioCorrectOption('B')" title="Click to mark Option B as correct">B</span>
+                <input type="text" id="studioOptB" class="form-control" style="border: none; background: transparent; padding: 0.35rem 0.5rem; box-shadow: none;" placeholder="Enter Option B text...">
+                <button type="button" class="qb-correct-btn" onclick="selectStudioCorrectOption('B')">
+                  <span id="studioOptCheckB">Mark Correct</span>
+                </button>
+              </div>
 
+              <!-- Option C -->
+              <div class="qb-option-row" id="studioOptRowC">
+                <span class="qb-letter-badge" onclick="selectStudioCorrectOption('C')" title="Click to mark Option C as correct">C</span>
+                <input type="text" id="studioOptC" class="form-control" style="border: none; background: transparent; padding: 0.35rem 0.5rem; box-shadow: none;" placeholder="Enter Option C text...">
+                <button type="button" class="qb-correct-btn" onclick="selectStudioCorrectOption('C')">
+                  <span id="studioOptCheckC">Mark Correct</span>
+                </button>
+              </div>
 
+              <!-- Option D -->
+              <div class="qb-option-row" id="studioOptRowD">
+                <span class="qb-letter-badge" onclick="selectStudioCorrectOption('D')" title="Click to mark Option D as correct">D</span>
+                <input type="text" id="studioOptD" class="form-control" style="border: none; background: transparent; padding: 0.35rem 0.5rem; box-shadow: none;" placeholder="Enter Option D text...">
+                <button type="button" class="qb-correct-btn" onclick="selectStudioCorrectOption('D')">
+                  <span id="studioOptCheckD">Mark Correct</span>
+                </button>
+              </div>
+            </div>
 
-        <textarea id="jsonImportArea" class="form-control" rows="8" placeholder='[
+            <!-- Marks, Negative Marks & Explanation -->
+            <div class="form-row" style="margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="studioQMarks">Positive Marks (+)</label>
+                <input type="number" step="0.5" min="0.5" max="20" id="studioQMarks" class="form-control" value="2.0">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="studioQNegMarks">Negative Marks (-)</label>
+                <input type="number" step="0.25" min="0" max="10" id="studioQNegMarks" class="form-control" value="0.5">
+              </div>
+            </div>
 
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label for="studioQExplanation">Solution Explanation / Answer Note (Optional — shown when results are released)</label>
+              <input type="text" id="studioQExplanation" class="form-control" placeholder="e.g. SJF (Shortest Job First) selects the waiting process with the smallest execution time.">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
+              <button type="button" class="btn btn-secondary" onclick="resetStudioQuestionForm()">
+                <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i> Clear Form
+              </button>
+              <button type="button" id="studioSubmitBtn" class="btn btn-primary" onclick="handleStudioSaveQuestion()" style="flex: 1; justify-content: center;">
+                <i data-lucide="plus" style="width:16px;height:16px;"></i> <span id="studioSubmitBtnText">Add Question to Quiz</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE 2: BULK JSON IMPORTER -->
+          <div id="studioJsonPanel" class="card" style="display: none; border-top: 4px solid #2563EB;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div>
+                <h3 style="margin: 0; font-size: 1.05rem; color: var(--navy);">Bulk Import Questions (JSON Format)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+                  Paste an array of question objects with A/B/C/D options and correct answer key.
+                </p>
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="loadSampleJsonPack()" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;">
+                <i data-lucide="file-plus" style="width:14px;height:14px;"></i> Load Sample JSON
+              </button>
+            </div>
+
+            <textarea id="jsonImportArea" class="form-control" rows="11" style="font-family: monospace; font-size: 0.82rem;" placeholder='[
   {
-
-    "question": "What is the capital of Maharashtra?",
-
-    "A": "Nagpur",
-
-    "B": "Mumbai",
-
-    "C": "Pune",
-
-    "D": "Nashik",
-
+    "question": "Which data structure uses LIFO (Last In First Out) order?",
+    "A": "Queue",
+    "B": "Stack",
+    "C": "Binary Tree",
+    "D": "Graph",
     "correct": "B",
-
     "marks": 2,
-
-    "negative_marks": 0.5
-
+    "negative_marks": 0.5,
+    "explanation": "Stack follows Last-In-First-Out (LIFO) ordering."
   }
-
 ]'></textarea>
 
-        
+            <div style="margin-top: 1rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('jsonImportArea').value = ''">
+                Clear JSON
+              </button>
+              <button type="button" class="btn btn-primary" onclick="importQuestionsJson()">
+                <i data-lucide="upload-cloud"></i> Validate &amp; Import All to Quiz
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+        <!-- RIGHT COLUMN: Live Questions List in Selected Quiz -->
+        <div class="card" style="padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <div>
+              <h3 style="margin: 0; font-size: 1.05rem; color: var(--navy);" id="studioRightListTitle">Questions in Selected Quiz (0)</h3>
+              <span style="font-size: 0.78rem; color: var(--text-muted);" id="studioRightListSub">Click Edit on any question card to modify its text, options, or marks</span>
+            </div>
+            <span class="badge" id="studioTotalMarksBadge" style="background: #EFF6FF; color: var(--primary); font-size: 0.8rem; font-weight: 700;">Total: 0 Marks</span>
+          </div>
 
-          <select id="importTargetQuiz" class="form-control" style="width: 300px;">
-
-            <option value="">Select Quiz to Add Questions</option>
-
-          </select>
-
-          <button class="btn btn-primary" onclick="importQuestionsJson()">
-
-            <i data-lucide="upload-cloud"></i> Validate & Import Questions
-
-          </button>
-
+          <div id="studioQuestionsList" style="max-height: 560px; overflow-y: auto; padding-right: 0.25rem;">
+            <!-- Populated dynamically -->
+          </div>
         </div>
       </div>
     </section>
@@ -1540,225 +1782,163 @@
 
 
   <!-- CREATE QUIZ MODAL -->
-
   <div class="modal-backdrop" id="createQuizModal">
-
     <div class="modal-box">
-
       <div class="modal-header">
-
         <h3 style="margin: 0; color: var(--navy);">Create New Quiz</h3>
-
-        <button class="btn btn-secondary" onclick="closeCreateQuizModal()" style="padding: 0.2rem 0.5rem;">âœ•</button>
-
+        <button class="btn btn-secondary" onclick="closeCreateQuizModal()" style="padding: 0.25rem 0.65rem; font-size: 1.1rem; line-height: 1;">&times;</button>
       </div>
-
-
 
       <form id="createQuizForm" onsubmit="handleCreateQuiz(event)">
-
         <div class="form-group">
-
           <label>Quiz Title *</label>
-
           <input type="text" id="newQuizTitle" class="form-control" placeholder="e.g. Unit Test 2 - Operating Systems" required>
-
         </div>
 
-
-
         <div class="form-row">
-
           <div class="form-group">
-
             <label>Subject / Chapter *</label>
-
             <input type="text" id="newQuizSubject" class="form-control" placeholder="e.g. Operating Systems" required>
-
           </div>
 
           <div class="form-group">
-
             <label>Target Class (Restriction) *</label>
-
             <select id="newQuizClass" class="form-control" required>
-
               <option value="">Select target class...</option>
-
             </select>
-
           </div>
-
-
-
         </div>
 
-
-
         <div class="form-row">
-
           <div class="form-group">
-
             <label>Duration (Minutes) *</label>
-
             <input type="number" id="newQuizDuration" class="form-control" value="20" min="5" max="180" required>
-
           </div>
 
           <div class="form-group">
-
             <label>Max Attempts</label>
-
             <input type="number" id="newQuizMaxAttempts" class="form-control" value="1" min="1" max="5">
-
           </div>
-
         </div>
-
-
 
         <div class="form-row">
-
           <div class="form-group">
-
-            <label>Marks Per Question *</label>
-
+            <label>Default Marks Per Question *</label>
             <input type="number" step="0.5" id="newQuizMarks" class="form-control" value="2.0" required>
-
           </div>
 
           <div class="form-group">
-
             <label>Negative Marks (per wrong answer)</label>
-
             <input type="number" step="0.25" id="newQuizNegMarks" class="form-control" value="0.5" min="0">
-
           </div>
-
         </div>
-
-
 
         <div class="form-group">
-
-          <label>Description & Instructions</label>
-
+          <label>Description &amp; Instructions</label>
           <textarea id="newQuizDesc" class="form-control" rows="3" placeholder="Enter instructions for students..."></textarea>
-
         </div>
-
-
 
         <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-
           <button type="button" class="btn btn-secondary" onclick="closeCreateQuizModal()">Cancel</button>
-
-          <button type="submit" class="btn btn-primary">Create Quiz & Add Questions</button>
-
+          <button type="submit" class="btn btn-primary">Create Quiz &amp; Add Questions</button>
         </div>
-
       </form>
-
     </div>
-
   </div>
 
-
-
   <!-- MANAGE QUESTIONS MODAL -->
-
   <div class="modal-backdrop" id="manageQuestionsModal">
-
-    <div class="modal-box" style="max-width: 800px;">
-
+    <div class="modal-box" style="max-width: 860px;">
       <div class="modal-header">
-
         <div>
-
           <h3 style="margin: 0; color: var(--navy);" id="manageQuizTitle">Manage Questions</h3>
-
-          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);" id="manageQuizSubtitle"></p>
-
+          <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);" id="manageQuizSubtitle"></p>
         </div>
-
-        <button class="btn btn-secondary" onclick="closeManageQuestionsModal()" style="padding: 0.2rem 0.5rem;">âœ•</button>
-
-      </div>
-
-
-
-      <!-- Add New Question Box -->
-
-      <div class="card" style="background: #F8FAFC; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
-
-        <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; color: var(--primary);">+ Add Question</h4>
-
-        <div class="form-group">
-
-          <textarea id="addQText" class="form-control" rows="2" placeholder="Enter question statement..."></textarea>
-
-        </div>
-
-        <div class="form-row" style="margin-bottom: 0.75rem;">
-
-          <input type="text" id="addQOptA" class="form-control" placeholder="Option A">
-
-          <input type="text" id="addQOptB" class="form-control" placeholder="Option B">
-
-        </div>
-
-        <div class="form-row" style="margin-bottom: 0.75rem;">
-
-          <input type="text" id="addQOptC" class="form-control" placeholder="Option C">
-
-          <input type="text" id="addQOptD" class="form-control" placeholder="Option D">
-
-        </div>
-
-        <div class="form-row" style="align-items: center;">
-
-          <div class="form-group" style="margin-bottom: 0;">
-
-            <label style="margin-bottom: 0.2rem;">Correct Answer Option</label>
-
-            <select id="addQCorrect" class="form-control">
-
-              <option value="A">Option A</option>
-
-              <option value="B">Option B</option>
-
-              <option value="C">Option C</option>
-
-              <option value="D">Option D</option>
-
-            </select>
-
-          </div>
-
-          <button class="btn btn-primary" onclick="handleAddSingleQuestion()" style="align-self: flex-end;">
-
-            <i data-lucide="plus"></i> Add to Quiz
-
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="openCurrentModalQuizInStudio()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+            <i data-lucide="maximize-2" style="width:13px;height:13px;"></i> Open in Full Studio
           </button>
-
+          <button class="btn btn-secondary" onclick="closeManageQuestionsModal()" style="padding: 0.25rem 0.65rem; font-size: 1.1rem; line-height: 1;">&times;</button>
         </div>
-
       </div>
 
+      <!-- Add / Edit Question Box inside Modal -->
+      <div class="card" style="background: #F8FAFC; border: 1.5px dashed var(--primary); margin-bottom: 1.25rem; padding: 1.15rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+          <h4 id="modalQuestionFormTitle" style="margin: 0; font-size: 0.96rem; color: var(--primary);">+ Add Question to Quiz</h4>
+          <div style="display: flex; gap: 0.45rem;">
+            <button type="button" class="btn btn-secondary" onclick="fillSampleModalQuestion()" style="padding: 0.28rem 0.6rem; font-size: 0.75rem;">
+              <i data-lucide="wand-2" style="width:12px;height:12px;"></i> Auto-Fill Sample Q
+            </button>
+            <button type="button" id="modalCancelEditBtn" class="btn btn-secondary" onclick="resetModalQuestionForm()" style="padding: 0.28rem 0.6rem; font-size: 0.75rem; display: none; color: var(--danger);">
+              Cancel Edit
+            </button>
+          </div>
+        </div>
 
+        <input type="hidden" id="modalEditingQuestionId" value="">
+
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <textarea id="addQText" class="form-control" rows="2" placeholder="Enter question statement..."></textarea>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 0.65rem;">
+          <input type="text" id="addQOptA" class="form-control" placeholder="Option A text *">
+          <input type="text" id="addQOptB" class="form-control" placeholder="Option B text *">
+        </div>
+
+        <div class="form-row" style="margin-bottom: 0.75rem;">
+          <input type="text" id="addQOptC" class="form-control" placeholder="Option C text *">
+          <input type="text" id="addQOptD" class="form-control" placeholder="Option D text *">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr 1.2fr; gap: 0.75rem; align-items: end; margin-bottom: 0.75rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.78rem;">Correct Option *</label>
+            <select id="addQCorrect" class="form-control" style="font-weight: 700; color: #15803D;">
+              <option value="A">✓ Option A</option>
+              <option value="B">✓ Option B</option>
+              <option value="C">✓ Option C</option>
+              <option value="D">✓ Option D</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.78rem;">Marks (+)</label>
+            <input type="number" step="0.5" min="0.5" id="addQMarks" class="form-control" value="2.0">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.78rem;">Neg Marks (-)</label>
+            <input type="number" step="0.25" min="0" id="addQNegMarks" class="form-control" value="0.5">
+          </div>
+          <button type="button" id="modalSaveQuestionBtn" class="btn btn-primary" onclick="handleAddSingleQuestion()" style="justify-content: center; height: 40px;">
+            <i data-lucide="plus"></i> <span id="modalSaveQuestionBtnText">Add to Quiz</span>
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <input type="text" id="addQExplanation" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem;" placeholder="Optional explanation / solution note for students...">
+        </div>
+      </div>
 
       <!-- Existing Questions List -->
-
-      <h4 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--navy);">Questions in this Quiz (<span id="manageQuestionCount">0</span>)</h4>
-
-      <div id="questionsContainer" style="max-height: 350px; overflow-y: auto;">
-
-        <!-- Rendered dynamically -->
-
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h4 style="margin: 0; font-size: 0.95rem; color: var(--navy);">
+          Questions in this Quiz (<span id="manageQuestionCount">0</span>)
+        </h4>
+        <span class="badge" id="manageTotalMarksBadge" style="background: #EFF6FF; color: var(--primary); font-weight: 700;">Total: 0 Marks</span>
       </div>
 
-    </div>
+      <div id="questionsContainer" style="max-height: 310px; overflow-y: auto; margin-bottom: 1rem;">
+        <!-- Rendered dynamically -->
+      </div>
 
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.85rem; border-top: 1px solid var(--border-color);">
+        <button type="button" class="btn btn-secondary" onclick="closeManageQuestionsModal()">Done / Close</button>
+        <button type="button" id="modalPublishQuizBtn" class="btn btn-success" onclick="publishQuizFromModal()">
+          <i data-lucide="check-circle" style="width:15px;height:15px;"></i> Save &amp; Publish Quiz for Students
+        </button>
+      </div>
+    </div>
   </div>
 
 
@@ -2065,7 +2245,7 @@
         const q = quizzes.find(x => x.id === quizId);
         const qCount = q ? (q.question_count || q.total_questions || 0) : 0;
         if (!isCurrentlyPublished && qCount === 0) {
-          alert('Cannot publish a quiz with 0 questions! Please add questions first.');
+          showToast('Cannot publish a quiz with 0 questions! Add questions first.', 'warning');
           openManageQuestions(quizId);
           return;
         }
@@ -2073,30 +2253,21 @@
         const res = await QuizAPI.togglePublish(quizId);
         await refreshQuizzes();
         const actionLabel = (res && res.is_published) ? 'published and active for students' : 'set to draft';
-        alert(`Quiz is now ${actionLabel}!`);
+        showToast(`Quiz is now ${actionLabel}!`, (res && res.is_published) ? 'success' : 'info');
       } catch (err) {
-        alert('Failed to update status: ' + err.message);
+        showToast('Failed to update status: ' + err.message, 'error');
       }
     }
 
-
-
     async function handleDeleteQuiz(quizId) {
-
       if (!confirm('Are you sure you want to permanently delete this quiz, all its questions, and recorded student attempts?')) return;
-
       try {
-
         await QuizAPI.deleteQuiz(quizId);
-
         await refreshQuizzes();
-
+        showToast('Quiz deleted successfully.', 'info');
       } catch (err) {
-
-        alert('Failed to delete quiz: ' + err.message);
-
+        showToast('Failed to delete quiz: ' + err.message, 'error');
       }
-
     }
 
 
@@ -2167,472 +2338,836 @@
         const created = await QuizAPI.createQuiz(payload);
         closeCreateQuizModal();
         await refreshQuizzes();
-        alert(`Quiz '${title}' created as Draft! Now add questions to it before publishing.`);
+        showToast(`Quiz '${title}' created as Draft! Add questions below before publishing.`, 'success');
         openManageQuestions(created.id);
       } catch (err) {
-        alert('Failed to create quiz: ' + err.message);
+        showToast('Failed to create quiz: ' + err.message, 'error');
       }
-
     }
 
+    // Sample CSE Question Pool for 1-Click Teacher Assistance
+    const SAMPLE_CSE_QUESTIONS = [
+      {
+        question: "Which CPU scheduling algorithm assigns the processor to the process with the smallest next CPU burst?",
+        A: "First-Come, First-Served (FCFS)",
+        B: "Shortest Job First (SJF)",
+        C: "Round Robin (RR)",
+        D: "Multilevel Queue Scheduling",
+        correct: "B",
+        marks: 2,
+        negative_marks: 0.5,
+        explanation: "Shortest Job First (SJF) selects the waiting process with the smallest execution burst time."
+      },
+      {
+        question: "In a relational database (RDBMS), which normal form eliminates transitive functional dependencies?",
+        A: "First Normal Form (1NF)",
+        B: "Second Normal Form (2NF)",
+        C: "Third Normal Form (3NF)",
+        D: "Boyce-Codd Normal Form (BCNF)",
+        correct: "C",
+        marks: 2,
+        negative_marks: 0.5,
+        explanation: "3NF requires the relation to be in 2NF and have no transitive dependencies of non-prime attributes on the primary key."
+      },
+      {
+        question: "What is the worst-case time complexity of searching for an element in a balanced Binary Search Tree (AVL Tree) with n nodes?",
+        A: "O(1)",
+        B: "O(log n)",
+        C: "O(n)",
+        D: "O(n log n)",
+        correct: "B",
+        marks: 2,
+        negative_marks: 0.5,
+        explanation: "An AVL tree remains height-balanced with height O(log n), guaranteeing O(log n) search time."
+      },
+      {
+        question: "Which layer of the OSI reference model is responsible for end-to-end process-to-process delivery and flow control?",
+        A: "Network Layer",
+        B: "Data Link Layer",
+        C: "Transport Layer",
+        D: "Session Layer",
+        correct: "C",
+        marks: "2",
+        negative_marks: 0.5,
+        explanation: "The Transport Layer (Layer 4, e.g., TCP/UDP) handles end-to-end communication, segmentation, and flow/error control."
+      },
+      {
+        question: "Which condition is NOT one of Coffman's four necessary conditions for a deadlock to occur in an Operating System?",
+        A: "Mutual Exclusion",
+        B: "Hold and Wait",
+        C: "Preemption",
+        D: "Circular Wait",
+        correct: "C",
+        marks: 2,
+        negative_marks: 0.5,
+        explanation: "The four conditions are Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait."
+      }
+    ];
+    let sampleQuestionCursor = 0;
 
+    function escapeHtmlSafe(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-    // Manage questions
-
+    // ==========================================
+    // Manage Questions Modal Logic
+    // ==========================================
     async function openManageQuestions(quizId) {
-
       currentEditingQuizId = quizId;
-
       const q = quizzes.find(x => x.id === quizId);
-
       if (!q) return;
 
-
-
       document.getElementById('manageQuizTitle').textContent = `Manage Questions: ${q.title}`;
-
-      document.getElementById('manageQuizSubtitle').textContent = `Class: ${q.class_name} • ${q.subject || q.subject_name || 'General'} • ${q.marks_per_question || 2} Marks / Q`;
-
+      document.getElementById('manageQuizSubtitle').textContent = `Target Class: ${q.class_name} • Subject: ${q.subject || q.subject_name || 'General'} • Default: ${q.marks_per_question || 2} Marks / Q`;
+      resetModalQuestionForm();
       document.getElementById('manageQuestionsModal').classList.add('active');
 
-
-
       try {
-
         currentEditingQuestions = await QuizAPI.getQuizQuestions(quizId);
-
       } catch (err) {
-
         currentEditingQuestions = [];
-
       }
 
       renderQuestionsList();
-
       lucide.createIcons();
-
     }
-
-
 
     function closeManageQuestionsModal() {
-
       document.getElementById('manageQuestionsModal').classList.remove('active');
-
+      resetModalQuestionForm();
       refreshQuizzes();
-
     }
 
+    function openCurrentModalQuizInStudio() {
+      const qid = currentEditingQuizId;
+      document.getElementById('manageQuestionsModal').classList.remove('active');
+      switchTab('question-bank');
+      const sel = document.getElementById('importTargetQuiz');
+      if (sel && qid) {
+        sel.value = qid;
+        onStudioQuizChange();
+      }
+    }
 
+    function resetModalQuestionForm() {
+      const q = quizzes.find(x => x.id === currentEditingQuizId);
+      const editIdEl = document.getElementById('modalEditingQuestionId');
+      if (editIdEl) editIdEl.value = '';
+      const titleEl = document.getElementById('modalQuestionFormTitle');
+      if (titleEl) titleEl.textContent = '+ Add Question to Quiz';
+      const btnTextEl = document.getElementById('modalSaveQuestionBtnText');
+      if (btnTextEl) btnTextEl.textContent = 'Add to Quiz';
+      const cancelBtn = document.getElementById('modalCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+
+      if (document.getElementById('addQText')) document.getElementById('addQText').value = '';
+      if (document.getElementById('addQOptA')) document.getElementById('addQOptA').value = '';
+      if (document.getElementById('addQOptB')) document.getElementById('addQOptB').value = '';
+      if (document.getElementById('addQOptC')) document.getElementById('addQOptC').value = '';
+      if (document.getElementById('addQOptD')) document.getElementById('addQOptD').value = '';
+      if (document.getElementById('addQCorrect')) document.getElementById('addQCorrect').value = 'A';
+      if (document.getElementById('addQMarks')) document.getElementById('addQMarks').value = q ? (q.marks_per_question || 2.0) : 2.0;
+      if (document.getElementById('addQNegMarks')) document.getElementById('addQNegMarks').value = q ? (q.negative_marks_per_question || q.negative_marks || 0.5) : 0.5;
+      if (document.getElementById('addQExplanation')) document.getElementById('addQExplanation').value = '';
+    }
+
+    function fillSampleModalQuestion() {
+      const sample = SAMPLE_CSE_QUESTIONS[sampleQuestionCursor % SAMPLE_CSE_QUESTIONS.length];
+      sampleQuestionCursor++;
+      document.getElementById('addQText').value = sample.question;
+      document.getElementById('addQOptA').value = sample.A;
+      document.getElementById('addQOptB').value = sample.B;
+      document.getElementById('addQOptC').value = sample.C;
+      document.getElementById('addQOptD').value = sample.D;
+      document.getElementById('addQCorrect').value = sample.correct;
+      document.getElementById('addQMarks').value = sample.marks;
+      document.getElementById('addQNegMarks').value = sample.negative_marks;
+      document.getElementById('addQExplanation').value = sample.explanation || '';
+      showToast('Sample question loaded into form! Click "Add to Quiz" to save.', 'info');
+    }
+
+    function editModalQuestion(questionId) {
+      const qu = currentEditingQuestions.find(item => String(item.id) === String(questionId));
+      if (!qu) return;
+      document.getElementById('modalEditingQuestionId').value = qu.id;
+      document.getElementById('modalQuestionFormTitle').textContent = '✎ Edit Question';
+      document.getElementById('modalSaveQuestionBtnText').textContent = 'Update Question';
+      document.getElementById('modalCancelEditBtn').style.display = 'inline-flex';
+
+      document.getElementById('addQText').value = qu.question_text || qu.text || '';
+      const opts = qu.options || [];
+      document.getElementById('addQOptA').value = (opts[0] && (opts[0].text || opts[0].option_text)) || '';
+      document.getElementById('addQOptB').value = (opts[1] && (opts[1].text || opts[1].option_text)) || '';
+      document.getElementById('addQOptC').value = (opts[2] && (opts[2].text || opts[2].option_text)) || '';
+      document.getElementById('addQOptD').value = (opts[3] && (opts[3].text || opts[3].option_text)) || '';
+
+      const corrOpt = opts.find(o => o.is_correct);
+      const corrIdx = opts.findIndex(o => o.is_correct);
+      const corrLetter = (corrOpt && corrOpt.key) ? corrOpt.key : (corrIdx >= 0 ? String.fromCharCode(65 + corrIdx) : 'A');
+      document.getElementById('addQCorrect').value = corrLetter;
+      document.getElementById('addQMarks').value = qu.marks !== undefined ? qu.marks : 2.0;
+      document.getElementById('addQNegMarks').value = qu.negative_marks !== undefined ? qu.negative_marks : 0.5;
+      document.getElementById('addQExplanation').value = qu.explanation || '';
+      document.getElementById('addQText').focus();
+    }
 
     function renderQuestionsList() {
-
       const container = document.getElementById('questionsContainer');
-
       document.getElementById('manageQuestionCount').textContent = currentEditingQuestions.length;
+      const totalMarks = currentEditingQuestions.reduce((acc, item) => acc + (parseFloat(item.marks) || 0), 0);
+      const marksBadge = document.getElementById('manageTotalMarksBadge');
+      if (marksBadge) marksBadge.textContent = `Total: ${totalMarks} Marks`;
+
+      const q = quizzes.find(x => x.id === currentEditingQuizId);
+      const pubBtn = document.getElementById('modalPublishQuizBtn');
+      if (pubBtn && q) {
+        const isPub = (q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published';
+        pubBtn.innerHTML = isPub
+          ? `<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Quiz is Active (${currentEditingQuestions.length} Qs)`
+          : `<i data-lucide="send" style="width:15px;height:15px;"></i> Save &amp; Publish Quiz (${currentEditingQuestions.length} Qs)`;
+      }
 
       container.innerHTML = '';
 
-
-
       if (currentEditingQuestions.length === 0) {
-
-        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No questions in this quiz yet. Add a question using the form above.</p>`;
-
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 1.75rem; background: #F8FAFC; border-radius: 10px; border: 1px dashed var(--border-color);">
+            <div style="font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">No questions in this quiz yet</div>
+            <div style="font-size: 0.82rem; margin-bottom: 0.85rem;">Use the form above to add a question, or click below to populate 3 sample CSE questions immediately.</div>
+            <button type="button" class="btn btn-secondary" onclick="addSampleQuestionsToQuizById('${currentEditingQuizId}')">
+              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample CSE Questions
+            </button>
+          </div>`;
+        lucide.createIcons();
         return;
-
       }
-
-
 
       currentEditingQuestions.forEach((qu, idx) => {
-
         const div = document.createElement('div');
-
         div.className = 'question-item';
-
+        const negText = parseFloat(qu.negative_marks) > 0 ? ` • -${qu.negative_marks} Neg` : '';
         div.innerHTML = `
-
           <div class="question-header">
-
-            <span><strong>Q${idx + 1}:</strong> ${qu.question_text || qu.text}</span>
-
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-
-              <span style="color: var(--primary); font-size: 0.8rem; font-weight: 600;">${qu.marks} Marks</span>
-
-              <button onclick="handleDeleteQuestion('${qu.id}')" style="background: none; border: none; color: #EF4444; cursor: pointer;" title="Delete Question">
-
-                <i data-lucide="trash"></i>
-
+            <span style="line-height: 1.4;"><strong>Q${idx + 1}:</strong> ${escapeHtmlSafe(qu.question_text || qu.text)}</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-left: 0.75rem;">
+              <span class="badge" style="background: #EFF6FF; color: var(--primary); font-size: 0.75rem; font-weight: 700;">+${qu.marks} Marks${negText}</span>
+              <button type="button" onclick="editModalQuestion('${qu.id}')" class="btn btn-secondary" style="padding: 0.22rem 0.55rem; font-size: 0.74rem;" title="Edit Question">
+                <i data-lucide="edit-2" style="width:12px;height:12px;"></i> Edit
               </button>
-
+              <button type="button" onclick="handleDeleteQuestion('${qu.id}')" class="btn btn-secondary" style="padding: 0.22rem 0.5rem; font-size: 0.74rem; color: #EF4444;" title="Delete Question">
+                <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+              </button>
             </div>
-
           </div>
-
           <div class="option-list">
-
-            ${(qu.options || []).map(o => `
-
-              <div class="option-pill ${o.is_correct ? 'correct' : ''}">
-
-                <strong>${o.key}.</strong> ${o.text} ${o.is_correct ? '✓ Correct' : ''}
-
-              </div>
-
-            `).join('')}
-
+            ${(qu.options || []).map((o, oIdx) => {
+              const letter = o.key || String.fromCharCode(65 + oIdx);
+              return `
+                <div class="option-pill ${o.is_correct ? 'correct' : ''}">
+                  <strong>${letter}.</strong> <span>${escapeHtmlSafe(o.text || o.option_text)}</span> ${o.is_correct ? '<span style="margin-left:auto;font-weight:800;">✓ Correct</span>' : ''}
+                </div>
+              `;
+            }).join('')}
           </div>
-
+          ${qu.explanation ? `<div style="margin-top: 0.55rem; font-size: 0.76rem; color: #475569; background: #F8FAFC; padding: 0.4rem 0.65rem; border-radius: 6px; border-left: 3px solid var(--primary);"><strong>Explanation:</strong> ${escapeHtmlSafe(qu.explanation)}</div>` : ''}
         `;
-
         container.appendChild(div);
-
       });
-
       lucide.createIcons();
-
     }
-
-
 
     async function handleAddSingleQuestion() {
-
       if (!currentEditingQuizId) return;
-
       const q = quizzes.find(x => x.id === currentEditingQuizId);
 
-
-
+      const editingQId = (document.getElementById('modalEditingQuestionId') && document.getElementById('modalEditingQuestionId').value) || '';
       const text = document.getElementById('addQText').value.trim();
-
       const a = document.getElementById('addQOptA').value.trim();
-
       const b = document.getElementById('addQOptB').value.trim();
-
       const c = document.getElementById('addQOptC').value.trim();
-
       const d = document.getElementById('addQOptD').value.trim();
-
       const corr = document.getElementById('addQCorrect').value;
-
-
+      const marksVal = parseFloat(document.getElementById('addQMarks').value) || (q ? q.marks_per_question : 2.0);
+      const negVal = parseFloat(document.getElementById('addQNegMarks').value);
+      const expVal = (document.getElementById('addQExplanation') && document.getElementById('addQExplanation').value.trim()) || '';
 
       if (!text || !a || !b || !c || !d) {
-
-        alert('Please fill the question text and all 4 options!');
-
+        showToast('Please fill the question statement and all 4 options (A, B, C, D)!', 'warning');
         return;
-
       }
-
-
 
       const payload = {
-
         question_text: text,
-
-        marks: q ? q.marks_per_question : 2.0,
-
-        negative_marks: q ? q.negative_marks : 0.5,
-
+        marks: marksVal,
+        negative_marks: isNaN(negVal) ? (q ? q.negative_marks : 0.5) : negVal,
+        explanation: expVal,
         options: [
-
           { key: 'A', text: a, is_correct: corr === 'A' },
-
           { key: 'B', text: b, is_correct: corr === 'B' },
-
           { key: 'C', text: c, is_correct: corr === 'C' },
-
           { key: 'D', text: d, is_correct: corr === 'D' }
-
         ]
-
       };
 
-
-
       try {
-
-        await QuizAPI.addQuestion(currentEditingQuizId, payload);
-
+        if (editingQId) {
+          await QuizAPI.updateQuestion(currentEditingQuizId, editingQId, payload);
+          showToast('Question updated successfully!', 'success');
+        } else {
+          await QuizAPI.addQuestion(currentEditingQuizId, payload);
+          showToast('Question added to quiz!', 'success');
+        }
         currentEditingQuestions = await QuizAPI.getQuizQuestions(currentEditingQuizId);
-
-        
-
-        // Clear inputs
-
-        document.getElementById('addQText').value = '';
-
-        document.getElementById('addQOptA').value = '';
-
-        document.getElementById('addQOptB').value = '';
-
-        document.getElementById('addQOptC').value = '';
-
-        document.getElementById('addQOptD').value = '';
-
-
-
+        resetModalQuestionForm();
         renderQuestionsList();
-
+        await refreshQuizzes();
       } catch (err) {
-
-        alert('Failed to add question: ' + err.message);
-
+        showToast('Failed to save question: ' + err.message, 'error');
       }
-
     }
-
-
 
     async function handleDeleteQuestion(questionId) {
-
-      if (!confirm('Remove this question?')) return;
-
+      if (!confirm('Remove this question from the quiz?')) return;
       try {
-
         await QuizAPI.deleteQuestion(currentEditingQuizId, questionId);
-
         currentEditingQuestions = await QuizAPI.getQuizQuestions(currentEditingQuizId);
-
         renderQuestionsList();
-
+        await refreshQuizzes();
+        showToast('Question removed from quiz.', 'info');
       } catch (err) {
-
-        alert('Failed to delete question: ' + err.message);
-
+        showToast('Failed to delete question: ' + err.message, 'error');
       }
-
     }
 
+    async function publishQuizFromModal() {
+      if (!currentEditingQuizId) return;
+      if (currentEditingQuestions.length === 0) {
+        showToast('Please add at least 1 question before publishing this quiz!', 'warning');
+        return;
+      }
+      const q = quizzes.find(x => x.id === currentEditingQuizId);
+      const isPub = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
+      try {
+        if (!isPub) {
+          await QuizAPI.togglePublish(currentEditingQuizId, 'publish');
+        }
+        await refreshQuizzes();
+        closeManageQuestionsModal();
+        showToast(`Quiz is now Published and Active for class ${q ? q.class_name : ''}!`, 'success');
+      } catch (err) {
+        showToast('Failed to publish quiz: ' + err.message, 'error');
+      }
+    }
 
-
-    // Analytics
-
+    // ==========================================
+    // Analytics Section
+    // ==========================================
     function populateAnalyticsDropdown() {
-
       const sel = document.getElementById('analyticsQuizSelect');
-
       if (!sel) return;
-
+      const prev = sel.value;
       sel.innerHTML = quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
-
+      if (prev && quizzes.some(q => q.id === prev)) sel.value = prev;
     }
-
-
 
     async function loadQuizAnalytics() {
-
       const sel = document.getElementById('analyticsQuizSelect');
-
       const qid = (sel && sel.value) || (quizzes[0] && quizzes[0].id);
-
       if (!qid) {
-
         document.getElementById('statAttempts').textContent = '0';
-
         document.getElementById('statAvgScore').textContent = '0%';
-
         document.getElementById('statAvgAccuracy').textContent = '0%';
-
         document.getElementById('statAvgTime').textContent = '0s';
-
         document.getElementById('statHighScore').textContent = '0%';
-
         document.getElementById('analyticsTopPerformers').innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No quizzes created yet.</div>`;
-
         return;
-
       }
-
-
 
       const data = await QuizAPI.getQuizAnalytics(qid);
-
       if (!data) return;
 
-
-
       document.getElementById('statAttempts').textContent = data.total_attempts || 0;
-
       document.getElementById('statAvgScore').textContent = `${data.average_score || 0}%`;
-
       document.getElementById('statAvgAccuracy').textContent = `${data.average_accuracy || 0}%`;
-
       const avgMins = Math.floor((data.average_time_seconds || 0) / 60);
-
       const avgSecs = (data.average_time_seconds || 0) % 60;
-
       document.getElementById('statAvgTime').textContent = `${avgMins}m ${avgSecs}s`;
-
       document.getElementById('statHighScore').textContent = `${data.highest_score || 0}%`;
 
-
-
       // Top Performers Leaderboard
-
       const topContainer = document.getElementById('analyticsTopPerformers');
-
       if (data.top_performers && data.top_performers.length > 0) {
-
         topContainer.innerHTML = data.top_performers.map(tp => `
-
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: #F8FAFC; border-radius: 8px;">
-
             <div><strong>${tp.rank}. ${tp.name}</strong><div style="font-size: 0.75rem; color: var(--text-muted);">Roll ${tp.roll_no} • Time: ${Math.floor(tp.time_taken_seconds / 60)}m ${tp.time_taken_seconds % 60}s</div></div>
-
             <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 700;">${tp.score} Marks (${tp.accuracy}%)</span>
-
           </div>
-
         `).join('');
-
       } else {
-
         topContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No student attempts recorded yet for this quiz.</div>`;
-
       }
-
-
 
       // Chart
-
       const labels = (data.questions_analysis || []).map((_, i) => `Q${i + 1}`);
-
       const accuracyData = (data.questions_analysis || []).map(qa => qa.accuracy || 0);
 
-
-
       if (analyticsChart) {
-
         analyticsChart.destroy();
-
       }
-
-
 
       const ctx = document.getElementById('questionAccuracyChart').getContext('2d');
-
       analyticsChart = new Chart(ctx, {
-
         type: 'bar',
-
         data: {
-
           labels: labels.length ? labels : ['No Questions'],
-
           datasets: [{
-
             label: 'Accuracy %',
-
             data: accuracyData.length ? accuracyData : [0],
-
             backgroundColor: (accuracyData.length ? accuracyData : [0]).map(val => val < 50 ? '#EF4444' : '#0B5CAD'),
-
             borderRadius: 6
-
           }]
-
         },
-
         options: {
-
           responsive: true,
-
           maintainAspectRatio: false,
-
           scales: {
-
             y: { beginAtZero: true, max: 100 }
-
           }
-
         }
-
       });
-
     }
 
+    // ==========================================
+    // Add & Manage Questions Studio (#sec-question-bank)
+    // ==========================================
+    let studioQuestions = [];
 
+    function setStudioMode(mode) {
+      const visualBtn = document.getElementById('qbModeVisualBtn');
+      const jsonBtn = document.getElementById('qbModeJsonBtn');
+      const visualPanel = document.getElementById('studioVisualPanel');
+      const jsonPanel = document.getElementById('studioJsonPanel');
 
-    // JSON Import
+      if (mode === 'json') {
+        if (visualBtn) visualBtn.classList.remove('active');
+        if (jsonBtn) jsonBtn.classList.add('active');
+        if (visualPanel) visualPanel.style.display = 'none';
+        if (jsonPanel) jsonPanel.style.display = 'block';
+      } else {
+        if (jsonBtn) jsonBtn.classList.remove('active');
+        if (visualBtn) visualBtn.classList.add('active');
+        if (jsonPanel) jsonPanel.style.display = 'none';
+        if (visualPanel) visualPanel.style.display = 'block';
+      }
+      lucide.createIcons();
+    }
+
+    function selectStudioCorrectOption(letter) {
+      const clean = ['A', 'B', 'C', 'D'].includes(letter) ? letter : 'A';
+      const hiddenInput = document.getElementById('studioQCorrect');
+      if (hiddenInput) hiddenInput.value = clean;
+      const indicator = document.getElementById('studioCorrectIndicator');
+      if (indicator) indicator.textContent = `Correct Answer: Option ${clean}`;
+
+      ['A', 'B', 'C', 'D'].forEach(opt => {
+        const row = document.getElementById('studioOptRow' + opt);
+        const chk = document.getElementById('studioOptCheck' + opt);
+        if (row) {
+          if (opt === clean) row.classList.add('is-correct');
+          else row.classList.remove('is-correct');
+        }
+        if (chk) {
+          chk.textContent = (opt === clean) ? '✓ Correct' : 'Mark Correct';
+        }
+      });
+    }
 
     function populateImportDropdown() {
-
       const sel = document.getElementById('importTargetQuiz');
-
       if (!sel) return;
+      const prevVal = sel.value;
+      if (quizzes.length === 0) {
+        sel.innerHTML = `<option value="">No Quizzes Created Yet — Click '+ New Quiz'</option>`;
+        onStudioQuizChange();
+        return;
+      }
+      sel.innerHTML = quizzes.map(q => {
+        const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
+        return `<option value="${q.id}">${q.title} — Class ${q.class_name} (${qCount} Qs)</option>`;
+      }).join('');
 
-      sel.innerHTML = `<option value="">Select Quiz to Add Questions</option>` + quizzes.map(q => `<option value="${q.id}">${q.title} (${q.class_name})</option>`).join('');
-
+      if (prevVal && quizzes.some(q => q.id === prevVal)) {
+        sel.value = prevVal;
+      } else if (currentEditingQuizId && quizzes.some(q => q.id === currentEditingQuizId)) {
+        sel.value = currentEditingQuizId;
+      } else {
+        sel.value = quizzes[0].id;
+      }
+      onStudioQuizChange();
     }
 
-
-
-    async function importQuestionsJson() {
-
-      const qid = document.getElementById('importTargetQuiz').value;
+    async function onStudioQuizChange() {
+      const sel = document.getElementById('importTargetQuiz');
+      const qid = sel ? sel.value : '';
+      const metaContainer = document.getElementById('studioQuizMetaPills');
+      const pubBtn = document.getElementById('studioPublishQuizBtn');
+      const listContainer = document.getElementById('studioQuestionsList');
 
       if (!qid) {
-
-        alert('Please select a target quiz!');
-
+        if (metaContainer) metaContainer.innerHTML = '';
+        if (pubBtn) pubBtn.style.display = 'none';
+        if (listContainer) {
+          listContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2.5rem;">Select or create a quiz above to begin adding questions.</div>`;
+        }
         return;
-
       }
 
-      const raw = document.getElementById('jsonImportArea').value.trim();
+      const q = quizzes.find(x => x.id === qid);
+      try {
+        studioQuestions = await QuizAPI.getQuizQuestions(qid);
+      } catch (err) {
+        studioQuestions = [];
+      }
+
+      const totalMarks = studioQuestions.reduce((acc, item) => acc + (parseFloat(item.marks) || 0), 0);
+      const isPublished = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
+
+      if (metaContainer && q) {
+        metaContainer.innerHTML = `
+          <span class="badge" style="background: #DBEAFE; color: #1E40AF; font-weight: 800;">Class ${q.class_name}</span>
+          <span class="badge" style="background: #F1F5F9; color: #334155; font-weight: 600;">${escapeHtmlSafe(q.subject || q.subject_name || 'General')}</span>
+          <span class="badge" style="background: #EDE9FE; color: #5B21B6; font-weight: 700;">${studioQuestions.length} Questions • ${totalMarks} Marks</span>
+          <span class="badge ${isPublished ? 'badge-published' : 'badge-draft'}">${isPublished ? 'Active (Published)' : 'Draft'}</span>
+        `;
+      }
+
+      if (pubBtn && q) {
+        pubBtn.style.display = 'inline-flex';
+        pubBtn.className = isPublished ? 'btn btn-secondary' : 'btn btn-success';
+        pubBtn.innerHTML = isPublished
+          ? `<i data-lucide="eye-off" style="width:14px;height:14px;"></i> Unpublish to Draft`
+          : `<i data-lucide="send" style="width:14px;height:14px;"></i> Publish Quiz Now`;
+      }
+
+      resetStudioQuestionForm();
+      renderStudioQuestionsList();
+      lucide.createIcons();
+    }
+
+    function resetStudioQuestionForm() {
+      const sel = document.getElementById('importTargetQuiz');
+      const qid = sel ? sel.value : '';
+      const q = quizzes.find(x => x.id === qid);
+
+      const editIdEl = document.getElementById('studioEditingQuestionId');
+      if (editIdEl) editIdEl.value = '';
+      const heading = document.getElementById('studioFormHeading');
+      if (heading) heading.innerHTML = `<i data-lucide="plus-circle" style="width:18px;height:18px;color:var(--primary);"></i><span>Add New Question</span>`;
+      const btnText = document.getElementById('studioSubmitBtnText');
+      if (btnText) btnText.textContent = 'Add Question to Quiz';
+      const cancelBtn = document.getElementById('studioCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+
+      if (document.getElementById('studioQText')) document.getElementById('studioQText').value = '';
+      if (document.getElementById('studioOptA')) document.getElementById('studioOptA').value = '';
+      if (document.getElementById('studioOptB')) document.getElementById('studioOptB').value = '';
+      if (document.getElementById('studioOptC')) document.getElementById('studioOptC').value = '';
+      if (document.getElementById('studioOptD')) document.getElementById('studioOptD').value = '';
+      if (document.getElementById('studioQMarks')) document.getElementById('studioQMarks').value = q ? (q.marks_per_question || 2.0) : 2.0;
+      if (document.getElementById('studioQNegMarks')) document.getElementById('studioQNegMarks').value = q ? (q.negative_marks_per_question || q.negative_marks || 0.5) : 0.5;
+      if (document.getElementById('studioQExplanation')) document.getElementById('studioQExplanation').value = '';
+      selectStudioCorrectOption('A');
+      lucide.createIcons();
+    }
+
+    function fillSampleStudioQuestion() {
+      const sample = SAMPLE_CSE_QUESTIONS[sampleQuestionCursor % SAMPLE_CSE_QUESTIONS.length];
+      sampleQuestionCursor++;
+      document.getElementById('studioQText').value = sample.question;
+      document.getElementById('studioOptA').value = sample.A;
+      document.getElementById('studioOptB').value = sample.B;
+      document.getElementById('studioOptC').value = sample.C;
+      document.getElementById('studioOptD').value = sample.D;
+      document.getElementById('studioQMarks').value = sample.marks;
+      document.getElementById('studioQNegMarks').value = sample.negative_marks;
+      document.getElementById('studioQExplanation').value = sample.explanation || '';
+      selectStudioCorrectOption(sample.correct);
+      showToast('Sample CSE question filled! Click "Add Question to Quiz" to save.', 'info');
+    }
+
+    function renderStudioQuestionsList() {
+      const container = document.getElementById('studioQuestionsList');
+      const titleEl = document.getElementById('studioRightListTitle');
+      const totalBadge = document.getElementById('studioTotalMarksBadge');
+      if (!container) return;
+
+      const totalMarks = studioQuestions.reduce((acc, item) => acc + (parseFloat(item.marks) || 0), 0);
+      if (titleEl) titleEl.textContent = `Questions in Selected Quiz (${studioQuestions.length})`;
+      if (totalBadge) totalBadge.textContent = `Total: ${totalMarks} Marks`;
+
+      if (studioQuestions.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 2.5rem 1.25rem; background: #F8FAFC; border-radius: 10px; border: 1px dashed var(--border-color);">
+            <i data-lucide="help-circle" style="width: 36px; height: 36px; color: #94A3B8; margin-bottom: 0.5rem;"></i>
+            <div style="font-weight: 700; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.3rem;">This quiz has 0 questions</div>
+            <div style="font-size: 0.82rem; margin-bottom: 1rem;">Add questions using the visual builder on the left, or click below to insert 3 ready-made CSE questions.</div>
+            <button type="button" class="btn btn-primary" onclick="addSampleQuestionsToCurrentQuiz()">
+              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample CSE Questions
+            </button>
+          </div>`;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = '';
+      studioQuestions.forEach((qu, idx) => {
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        const negText = parseFloat(qu.negative_marks) > 0 ? ` • -${qu.negative_marks} Neg` : '';
+        div.innerHTML = `
+          <div class="question-header">
+            <span style="line-height: 1.4;">
+              <span class="badge" style="background: var(--navy); color: #fff; margin-right: 0.4rem;">Q${idx + 1}</span>
+              ${escapeHtmlSafe(qu.question_text || qu.text)}
+            </span>
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; margin-left: 0.65rem;">
+              <span class="badge" style="background: #EFF6FF; color: var(--primary); font-size: 0.74rem; font-weight: 700;">+${qu.marks}M${negText}</span>
+              <button type="button" class="btn btn-secondary" style="padding: 0.22rem 0.55rem; font-size: 0.74rem;" onclick="editStudioQuestion('${qu.id}')" title="Edit this question">
+                <i data-lucide="edit-2" style="width:12px;height:12px;"></i> Edit
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding: 0.22rem 0.45rem; font-size: 0.74rem; color: var(--danger);" onclick="deleteStudioQuestion('${qu.id}')" title="Delete this question">
+                <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+              </button>
+            </div>
+          </div>
+          <div class="option-list">
+            ${(qu.options || []).map((o, oIdx) => {
+              const letter = o.key || String.fromCharCode(65 + oIdx);
+              return `
+                <div class="option-pill ${o.is_correct ? 'correct' : ''}">
+                  <strong>${letter}.</strong> <span>${escapeHtmlSafe(o.text || o.option_text)}</span>
+                  ${o.is_correct ? '<span style="margin-left:auto;font-weight:800;">✓ Correct</span>' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          ${qu.explanation ? `<div style="margin-top: 0.55rem; font-size: 0.76rem; color: #475569; background: #F8FAFC; padding: 0.4rem 0.65rem; border-radius: 6px; border-left: 3px solid var(--primary);"><strong>Explanation:</strong> ${escapeHtmlSafe(qu.explanation)}</div>` : ''}
+        `;
+        container.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    function editStudioQuestion(questionId) {
+      const qu = studioQuestions.find(item => String(item.id) === String(questionId));
+      if (!qu) return;
+      setStudioMode('visual');
+      document.getElementById('studioEditingQuestionId').value = qu.id;
+      document.getElementById('studioFormHeading').innerHTML = `<i data-lucide="edit-3" style="width:18px;height:18px;color:#D97706;"></i><span style="color:#B45309;">Edit Question</span>`;
+      document.getElementById('studioSubmitBtnText').textContent = 'Update Question';
+      document.getElementById('studioCancelEditBtn').style.display = 'inline-flex';
+
+      document.getElementById('studioQText').value = qu.question_text || qu.text || '';
+      const opts = qu.options || [];
+      document.getElementById('studioOptA').value = (opts[0] && (opts[0].text || opts[0].option_text)) || '';
+      document.getElementById('studioOptB').value = (opts[1] && (opts[1].text || opts[1].option_text)) || '';
+      document.getElementById('studioOptC').value = (opts[2] && (opts[2].text || opts[2].option_text)) || '';
+      document.getElementById('studioOptD').value = (opts[3] && (opts[3].text || opts[3].option_text)) || '';
+
+      const corrOpt = opts.find(o => o.is_correct);
+      const corrIdx = opts.findIndex(o => o.is_correct);
+      const corrLetter = (corrOpt && corrOpt.key) ? corrOpt.key : (corrIdx >= 0 ? String.fromCharCode(65 + corrIdx) : 'A');
+      selectStudioCorrectOption(corrLetter);
+
+      document.getElementById('studioQMarks').value = qu.marks !== undefined ? qu.marks : 2.0;
+      document.getElementById('studioQNegMarks').value = qu.negative_marks !== undefined ? qu.negative_marks : 0.5;
+      document.getElementById('studioQExplanation').value = qu.explanation || '';
+      document.getElementById('studioQText').focus();
+      lucide.createIcons();
+    }
+
+    async function handleStudioSaveQuestion() {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid) {
+        showToast('Please select a Target Quiz at the top first (or click "+ New Quiz")!', 'warning');
+        return;
+      }
+      const q = quizzes.find(x => x.id === qid);
+      const editingQId = document.getElementById('studioEditingQuestionId').value;
+
+      const text = document.getElementById('studioQText').value.trim();
+      const a = document.getElementById('studioOptA').value.trim();
+      const b = document.getElementById('studioOptB').value.trim();
+      const c = document.getElementById('studioOptC').value.trim();
+      const d = document.getElementById('studioOptD').value.trim();
+      const corr = document.getElementById('studioQCorrect').value || 'A';
+      const marksVal = parseFloat(document.getElementById('studioQMarks').value) || (q ? q.marks_per_question : 2.0);
+      const negVal = parseFloat(document.getElementById('studioQNegMarks').value);
+      const expVal = document.getElementById('studioQExplanation').value.trim();
+
+      if (!text || !a || !b || !c || !d) {
+        showToast('Please enter the question statement and all 4 options (A, B, C, D)!', 'warning');
+        return;
+      }
+
+      const payload = {
+        question_text: text,
+        marks: marksVal,
+        negative_marks: isNaN(negVal) ? 0.5 : negVal,
+        explanation: expVal,
+        options: [
+          { key: 'A', text: a, is_correct: corr === 'A' },
+          { key: 'B', text: b, is_correct: corr === 'B' },
+          { key: 'C', text: c, is_correct: corr === 'C' },
+          { key: 'D', text: d, is_correct: corr === 'D' }
+        ]
+      };
 
       try {
+        if (editingQId) {
+          await QuizAPI.updateQuestion(qid, editingQId, payload);
+          showToast('Question updated successfully!', 'success');
+        } else {
+          await QuizAPI.addQuestion(qid, payload);
+          showToast('Question added to quiz!', 'success');
+        }
+        await refreshQuizzes();
+        document.getElementById('importTargetQuiz').value = qid;
+        await onStudioQuizChange();
+      } catch (err) {
+        showToast('Failed to save question: ' + err.message, 'error');
+      }
+    }
 
-        const parsed = JSON.parse(raw);
+    async function deleteStudioQuestion(questionId) {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid || !confirm('Remove this question from the quiz?')) return;
+      try {
+        await QuizAPI.deleteQuestion(qid, questionId);
+        showToast('Question deleted.', 'info');
+        await refreshQuizzes();
+        document.getElementById('importTargetQuiz').value = qid;
+        await onStudioQuizChange();
+      } catch (err) {
+        showToast('Failed to delete question: ' + err.message, 'error');
+      }
+    }
 
-        if (!Array.isArray(parsed)) throw new Error('JSON root must be an array of questions');
-
-        
-
-        const q = quizzes.find(x => x.id === qid);
-
-        for (const item of parsed) {
-
+    async function addSampleQuestionsToQuizById(qid) {
+      if (!qid) return;
+      try {
+        for (let i = 0; i < 3; i++) {
+          const item = SAMPLE_CSE_QUESTIONS[(sampleQuestionCursor + i) % SAMPLE_CSE_QUESTIONS.length];
           await QuizAPI.addQuestion(qid, {
-
-            question_text: item.question || item.text,
-
-            marks: item.marks || (q ? q.marks_per_question : 2.0),
-
-            negative_marks: item.negative_marks || (q ? q.negative_marks : 0.5),
-
+            question_text: item.question,
+            marks: Number(item.marks) || 2.0,
+            negative_marks: Number(item.negative_marks) || 0.5,
+            explanation: item.explanation || '',
             options: [
-
               { key: 'A', text: item.A, is_correct: item.correct === 'A' },
-
               { key: 'B', text: item.B, is_correct: item.correct === 'B' },
-
               { key: 'C', text: item.C, is_correct: item.correct === 'C' },
-
               { key: 'D', text: item.D, is_correct: item.correct === 'D' }
-
             ]
-
           });
+        }
+        sampleQuestionCursor += 3;
+        showToast('Added 3 sample CSE questions to the quiz!', 'success');
+        if (currentEditingQuizId === qid) {
+          currentEditingQuestions = await QuizAPI.getQuizQuestions(qid);
+          renderQuestionsList();
+        }
+        await refreshQuizzes();
+      } catch (err) {
+        showToast('Failed to add sample questions: ' + err.message, 'error');
+      }
+    }
 
+    async function addSampleQuestionsToCurrentQuiz() {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid) {
+        showToast('Please select a Target Quiz first!', 'warning');
+        return;
+      }
+      await addSampleQuestionsToQuizById(qid);
+      document.getElementById('importTargetQuiz').value = qid;
+      await onStudioQuizChange();
+    }
+
+    async function handleStudioPublishToggle() {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid) return;
+      const q = quizzes.find(x => x.id === qid);
+      const isPub = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
+      if (!isPub && studioQuestions.length === 0) {
+        showToast('Cannot publish a quiz with 0 questions! Add at least 1 question first.', 'warning');
+        return;
+      }
+      try {
+        const res = await QuizAPI.togglePublish(qid);
+        await refreshQuizzes();
+        document.getElementById('importTargetQuiz').value = qid;
+        await onStudioQuizChange();
+        showToast(res && res.is_published ? 'Quiz is now Published and Active for students!' : 'Quiz moved back to Draft.', 'success');
+      } catch (err) {
+        showToast('Failed to toggle publish status: ' + err.message, 'error');
+      }
+    }
+
+    function loadSampleJsonPack() {
+      setStudioMode('json');
+      document.getElementById('jsonImportArea').value = JSON.stringify(SAMPLE_CSE_QUESTIONS.slice(0, 3), null, 2);
+      showToast('Loaded 3 sample questions into the JSON editor!', 'info');
+    }
+
+    async function importQuestionsJson() {
+      const qid = document.getElementById('importTargetQuiz').value;
+      if (!qid) {
+        showToast('Please select a Target Quiz at the top first!', 'warning');
+        return;
+      }
+      const raw = document.getElementById('jsonImportArea').value.trim();
+      if (!raw) {
+        showToast('Please paste a JSON array of questions or click "Load Sample JSON"!', 'warning');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          throw new Error('JSON root must be a non-empty array of question objects');
         }
 
-        alert(`Successfully imported and saved ${parsed.length} questions to database!`);
-
+        const q = quizzes.find(x => x.id === qid);
+        for (const item of parsed) {
+          const opts = Array.isArray(item.options) && item.options.length >= 2
+            ? item.options
+            : [
+                { key: 'A', text: item.A || item.optionA || 'Option A', is_correct: (item.correct || 'A').toUpperCase() === 'A' },
+                { key: 'B', text: item.B || item.optionB || 'Option B', is_correct: (item.correct || 'A').toUpperCase() === 'B' },
+                { key: 'C', text: item.C || item.optionC || 'Option C', is_correct: (item.correct || 'A').toUpperCase() === 'C' },
+                { key: 'D', text: item.D || item.optionD || 'Option D', is_correct: (item.correct || 'A').toUpperCase() === 'D' }
+              ];
+          await QuizAPI.addQuestion(qid, {
+            question_text: item.question || item.question_text || item.text,
+            marks: parseFloat(item.marks) || (q ? q.marks_per_question : 2.0),
+            negative_marks: item.negative_marks !== undefined ? parseFloat(item.negative_marks) : (q ? q.negative_marks : 0.5),
+            explanation: item.explanation || '',
+            options: opts
+          });
+        }
+        showToast(`Successfully imported ${parsed.length} questions into the quiz!`, 'success');
+        document.getElementById('jsonImportArea').value = '';
         await refreshQuizzes();
-
-        switchTab('quizzes');
-
-      } catch(e) {
-
-        alert('Invalid JSON or import error: ' + e.message);
-
+        document.getElementById('importTargetQuiz').value = qid;
+        setStudioMode('visual');
+        await onStudioQuizChange();
+      } catch (e) {
+        showToast('Invalid JSON or import error: ' + e.message, 'error');
       }
-
     }
 
 

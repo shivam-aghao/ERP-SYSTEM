@@ -45,17 +45,23 @@ def main():
     port = int(os.environ.get("PORT", "8000"))
     reload_flag = os.environ.get("RELOAD", "false").lower() in ("true", "1")
 
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     print("\n" + "=" * 80)
     print("  SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING, SHEGAON")
-    print("  SSGMCE AUTONOMOUS COLLEGE ERP — UNIFIED FULL-STACK BACKEND")
+    print("  SSGMCE AUTONOMOUS COLLEGE ERP - UNIFIED FULL-STACK BACKEND")
     print("=" * 80)
-    print(f"  [✓] Server URL:       http://localhost:{port}")
-    print(f"  [✓] Swagger Docs:     http://localhost:{port}/docs")
-    print(f"  [✓] System Health:    http://localhost:{port}/health")
-    print(f"  [✓] Login Portal:     http://localhost:{port}/login.html")
-    print(f"  [✓] Student Portal:   http://localhost:{port}/student-dashboard.html")
-    print(f"  [✓] Teacher Portal:   http://localhost:{port}/teacher-dashboard.html")
-    print(f"  [✓] Admin Portal:     http://localhost:{port}/admin-dashboard.html")
+    print(f"  [+] Server URL:       http://localhost:{port}")
+    print(f"  [+] Swagger Docs:     http://localhost:{port}/docs")
+    print(f"  [+] System Health:    http://localhost:{port}/health")
+    print(f"  [+] Login Portal:     http://localhost:{port}/login.html")
+    print(f"  [+] Student Portal:   http://localhost:{port}/student-dashboard.html")
+    print(f"  [+] Teacher Portal:   http://localhost:{port}/teacher-dashboard.html")
+    print(f"  [+] Admin Portal:     http://localhost:{port}/admin-dashboard.html")
     print("=" * 80)
     print(f"  Booting unified Uvicorn server on {host}:{port} ...")
     print("  Press Ctrl+C to stop the server.")
