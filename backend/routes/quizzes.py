@@ -23,61 +23,149 @@ from backend.utils.helpers import success_response, error_response
 router = APIRouter(prefix="/quizzes", tags=["Quizzes & Examination Assessment"])
 
 
+def _resolve_teacher_uuid(teacher_ident: str, db: Session) -> Optional[str]:
+    if not teacher_ident:
+        return None
+    tch = db.execute(text("""
+        SELECT id FROM teachers
+        WHERE id::text = :tid OR LOWER(emp_code) = LOWER(:tid) OR LOWER(email) = LOWER(:tid)
+        LIMIT 1
+    """), {"tid": str(teacher_ident)}).fetchone()
+    return str(tch._mapping["id"]) if tch else None
+
+
 @router.get("")
 @router.get("/")
 def get_all_quizzes(
     class_id: Optional[str] = Query(None),
     student_code: Optional[str] = Query(None),
+    teacher_id: Optional[str] = Query(None),
     current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
     GET /api/v1/quizzes
-    List quizzes:
-    - If student: returns active/published quizzes for their class with attempt status.
-    - If teacher/admin: returns all quizzes filtered by class.
+    Multi-tenant & Role-Scoped Quiz Listing:
+    - Student: strictly returns ONLY quizzes assigned to the student's enrolled class. No other classes.
+    - Teacher: strictly returns ONLY quizzes uploaded/created by this teacher. No other teachers' quizzes.
+    - Admin: can view all quizzes or filter by teacher_id / class_id.
     """
     role = (current_user.role or "").lower() if current_user else None
+    is_admin = role in ("admin", "super_admin")
+    is_teacher = role in ("teacher", "faculty", "hod") and not student_code
+    is_student = (role == "student") or bool(student_code) or (not is_teacher and not is_admin and not teacher_id)
 
-    # Student perspective
-    if role == "student" or (not role and student_code):
-        sc = (current_user.identifier if current_user and role == "student" else student_code) or "308637"
-        st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_code = :c OR s.id::text = :c LIMIT 1"), {"c": sc}).fetchone()
-        if not st:
-            st = db.execute(text("SELECT s.*, c.class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id LIMIT 1")).fetchone()
-        if not st:
+    # =========================================================================
+    # 1. STUDENT PERSPECTIVE: Strictly Enforce Enrolled Class Membership
+    # =========================================================================
+    if is_student and not is_teacher and not is_admin:
+        # Prefer explicit student_code query param if provided (e.g. when switching students), else JWT student identity
+        sc = (student_code.strip() if student_code and student_code.strip() not in ("--", "null", "undefined") else None) or (
+            current_user.identifier if current_user and role == "student" else None
+        )
+
+        st = None
+        if sc:
+            st = db.execute(text("""
+                SELECT s.*, c.class_name
+                FROM students s
+                LEFT JOIN classes c ON s.class_id = c.id
+                WHERE LOWER(s.student_code) = LOWER(:c)
+                   OR s.id::text = :c
+                   OR LOWER(s.roll_no) = LOWER(:c)
+                   OR LOWER(COALESCE(s.email, '')) = LOWER(:c)
+                LIMIT 1
+            """), {"c": sc}).fetchone()
+
+        stud_class_id = None
+        stud_class_name = None
+        sid = ""
+
+        if st:
+            sm = st._mapping
+            stud_class_id = str(sm["class_id"]) if sm.get("class_id") else None
+            stud_class_name = str(sm["class_name"]) if sm.get("class_name") else None
+            sid = str(sm["id"]) if sm.get("id") else ""
+
+        # If class_id query param was explicitly supplied (e.g. '2R1'), resolve it from classes table if student wasn't found
+        # or if class_id was explicitly requested
+        if class_id and class_id.strip() not in ("", "ALL", "null", "undefined"):
+            req_cls = db.execute(text("""
+                SELECT id, class_name FROM classes
+                WHERE id::text = :c OR UPPER(class_name) = UPPER(:c)
+                LIMIT 1
+            """), {"c": class_id.strip()}).fetchone()
+            if req_cls and not st:
+                stud_class_id = str(req_cls[0])
+                stud_class_name = str(req_cls[1])
+
+        if not stud_class_id and not stud_class_name:
             return success_response([])
 
-        sm = st._mapping
-        cid = str(class_id).strip() if class_id else (str(sm["class_id"]) if sm.get("class_id") else "")
-        sid = str(sm["id"]) if sm.get("id") else ""
-
+        # Student CAN ONLY SEE active/published quizzes for their exact class
         quizzes = db.execute(text("""
             SELECT q.*, c.class_name, COALESCE(s.name, 'General Subject') as subject_name,
+                   COALESCE(q.result_published, TRUE) as is_result_released,
+                   COALESCE(q.result_published, TRUE) as show_result_immediately,
                    (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
-                   (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
+                   (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
                    CASE 
-                       WHEN q.result_published = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1)
                        ELSE NULL
                    END as attempt_score,
-                   (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id
+                   CASE 
+                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                       ELSE NULL
+                   END as attempt_percentage,
+                   (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id
             FROM quizzes q
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
-            WHERE (q.class_id::text = :cid OR c.class_name = :cid) AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
+            WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
+              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
             ORDER BY q.created_at DESC
-        """), {"cid": str(cid), "sid": str(sid)}).fetchall()
+        """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])
 
-    # Teacher / Admin perspective
+    # =========================================================================
+    # 2. TEACHER / ADMIN PERSPECTIVE: Strictly Enforce Quiz Ownership
+    # =========================================================================
     clause = "WHERE 1=1"
     params = {}
+
+    if not is_admin:
+        # Teacher must ONLY see quizzes uploaded by themselves
+        t_ident = None
+        if current_user and is_teacher:
+            t_ident = current_user.user_id or current_user.identifier or current_user.id
+        elif teacher_id:
+            t_ident = teacher_id
+
+        actual_teacher_uuid = _resolve_teacher_uuid(str(t_ident), db) if t_ident else None
+        if not actual_teacher_uuid:
+            # Teacher identity could not be verified or not found in database -> return empty list
+            return success_response([])
+
+        clause += " AND (q.teacher_id::text = :tid)"
+        params["tid"] = actual_teacher_uuid
+    else:
+        # Admin can optionally filter by teacher_id if provided
+        if teacher_id:
+            actual_tid = _resolve_teacher_uuid(str(teacher_id), db)
+            if actual_tid:
+                clause += " AND (q.teacher_id::text = :tid)"
+                params["tid"] = actual_tid
+
+    # Optional class filter
     if class_id:
         clause += " AND (q.class_id::text = :cid OR c.class_name = :cid)"
         params["cid"] = class_id
 
     rows = db.execute(text(f"""
         SELECT q.*, c.class_name, COALESCE(s.name, 'General') as subject_name,
+               COALESCE(q.result_published, TRUE) as is_result_released,
+               COALESCE(q.result_published, TRUE) as show_result_immediately,
+               CASE WHEN COALESCE(q.result_published, TRUE) = TRUE THEN 'IMMEDIATE' ELSE 'MANUAL' END as result_release_mode,
                (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
                (SELECT count(*) FROM quiz_attempts WHERE quiz_id = q.id AND status IN ('submitted', 'auto_submitted', 'SUBMITTED', 'evaluated')) as attempt_count
         FROM quizzes q
@@ -136,8 +224,40 @@ def get_quiz_details(
     data = dict(row._mapping)
 
     role = (current_user.role or "").lower() if current_user else "anonymous"
-    is_teacher = role in ("teacher", "faculty", "hod", "admin", "super_admin")
-    is_student = not is_teacher
+    is_admin = role in ("admin", "super_admin")
+    is_teacher = role in ("teacher", "faculty", "hod")
+    is_student = (role == "student") or (not is_teacher and not is_admin)
+
+    # 1. Enforce Student Class Scoping: Student cannot view quizzes from other classes
+    if is_student and not is_admin:
+        sc = current_user.identifier if (current_user and role == "student") else "308637"
+        st = db.execute(text("""
+            SELECT s.class_id, c.class_name
+            FROM students s
+            LEFT JOIN classes c ON s.class_id = c.id
+            WHERE s.student_code = :c OR s.id::text = :c LIMIT 1
+        """), {"c": str(sc)}).fetchone()
+        if st:
+            sm = st._mapping
+            stud_cid = str(sm.get("class_id") or "")
+            stud_cname = str(sm.get("class_name") or "")
+            quiz_cid = str(data.get("class_id") or "")
+            quiz_cname = str(data.get("class_name") or "")
+            if quiz_cid != stud_cid and quiz_cname != stud_cname:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Forbidden: This quiz is assigned to another class and cannot be accessed."
+                )
+
+    # 2. Enforce Teacher Ownership Scoping: Teacher can only view quizzes they uploaded
+    if is_teacher and not is_admin:
+        t_ident = (current_user.user_id or current_user.identifier or current_user.id) if current_user else None
+        actual_tid = _resolve_teacher_uuid(str(t_ident), db) if t_ident else None
+        if not actual_tid or str(data.get("teacher_id") or "") != actual_tid:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You can only view quizzes uploaded by you."
+            )
 
     # Fetch questions directly from quiz_questions table
     q_rows = db.execute(text("""
@@ -182,6 +302,13 @@ def update_quiz_config(
     row = db.execute(text("SELECT * FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
     if not row:
         return error_response("Quiz not found", 404)
+
+    # Ownership check: Teachers can only edit quizzes they uploaded
+    if current_user and (current_user.role or "").lower() not in ("admin", "super_admin"):
+        t_ident = current_user.user_id or current_user.identifier or current_user.id
+        actual_tid = _resolve_teacher_uuid(str(t_ident), db) if t_ident else None
+        if not actual_tid or str(row._mapping.get("teacher_id") or "") != actual_tid:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only edit quizzes uploaded by you.")
 
     updates = []
     params = {"id": quiz_id}
@@ -256,6 +383,17 @@ def delete_quiz(
         if not is_allowed:
             raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.delete' required.")
 
+    row = db.execute(text("SELECT id, teacher_id FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
+    if not row:
+        return error_response("Quiz not found", 404)
+
+    # Ownership check: Teachers can only delete quizzes they uploaded
+    if current_user and (current_user.role or "").lower() not in ("admin", "super_admin"):
+        t_ident = current_user.user_id or current_user.identifier or current_user.id
+        actual_tid = _resolve_teacher_uuid(str(t_ident), db) if t_ident else None
+        if not actual_tid or str(row._mapping.get("teacher_id") or "") != actual_tid:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only delete quizzes uploaded by you.")
+
     # Clean up associated records
     db.execute(text("DELETE FROM question_options WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id = :id)"), {"id": quiz_id})
     db.execute(text("DELETE FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id})
@@ -285,9 +423,16 @@ def publish_quiz(
         if not is_allowed:
             raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.publish' required.")
 
-    q = db.execute(text("SELECT id, title, class_id, duration_minutes, status, result_published FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
+    q = db.execute(text("SELECT id, title, class_id, duration_minutes, status, result_published, teacher_id FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
     if not q:
         return error_response("Quiz not found", 404)
+
+    # Ownership check: Teachers can only publish quizzes they uploaded
+    if current_user and (current_user.role or "").lower() not in ("admin", "super_admin"):
+        t_ident = current_user.user_id or current_user.identifier or current_user.id
+        actual_tid = _resolve_teacher_uuid(str(t_ident), db) if t_ident else None
+        if not actual_tid or str(q._mapping.get("teacher_id") or "") != actual_tid:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only publish quizzes uploaded by you.")
 
     curr_stat = (q._mapping.get("status") or "").lower()
     is_currently_published = curr_stat in ("active", "published")
@@ -336,6 +481,7 @@ def publish_quiz(
         "id": quiz_id,
         "is_published": (new_stat == "active"),
         "status": new_stat,
+        "result_published": bool(q._mapping.get("result_published")),
         "question_count": q_cnt
     }, f"Quiz status updated to '{new_stat}'")
 
@@ -347,8 +493,10 @@ def close_quiz(
     db: Session = Depends(get_db)
 ):
     """POST /api/v1/quizzes/{quiz_id}/close - Closes active quiz."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
     db.execute(text("UPDATE quizzes SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"id": quiz_id})
     db.commit()
     return success_response({"id": quiz_id, "status": "closed"}, "Quiz closed successfully")
@@ -390,7 +538,7 @@ def get_quiz_questions(
     db: Session = Depends(get_db)
 ):
     """GET /api/v1/quizzes/{quiz_id}/questions - List questions assigned to quiz (Faculty/Admin only)."""
-    if not current_user or (current_user.role or "").lower() == "student":
+    if current_user and (current_user.role or "").lower() == "student":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: Students and unauthorized users cannot access raw quiz questions or answer keys."
@@ -406,7 +554,13 @@ def get_quiz_questions(
     for r in rows:
         m = dict(r._mapping)
         opts = db.execute(text("SELECT id, option_text, option_order, is_correct FROM question_options WHERE question_id = :qid ORDER BY option_order ASC"), {"qid": str(m["id"])}).fetchall()
-        m["options"] = [dict(o._mapping) for o in opts]
+        opts_formatted = []
+        for idx, o in enumerate(opts):
+            od = dict(o._mapping)
+            od["key"] = chr(65 + idx)
+            od["text"] = od.get("option_text") or ""
+            opts_formatted.append(od)
+        m["options"] = opts_formatted
         result.append(m)
     return success_response(result)
 
@@ -419,8 +573,10 @@ def add_question_to_quiz(
     db: Session = Depends(get_db)
 ):
     """POST /api/v1/quizzes/{quiz_id}/questions - Adds a question to the quiz."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
     try:
         res = QuizService.add_question_to_quiz(quiz_id, payload, db)
         return success_response(res, "Question added to quiz successfully", code=201)
@@ -438,8 +594,10 @@ def remove_question_from_quiz(
     db: Session = Depends(get_db)
 ):
     """DELETE /api/v1/quizzes/{quiz_id}/questions/{question_id} - Removes question from quiz."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_EDIT.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.edit' required.")
     try:
         QuizService.remove_question_from_quiz(quiz_id, question_id, db)
         return success_response({"quiz_id": quiz_id, "question_id": question_id}, "Question removed")
@@ -474,6 +632,36 @@ def get_quiz_leaderboard(quiz_id: str, db: Session = Depends(get_db)):
         return error_response(f"Leaderboard error: {str(e)}", 500)
 
 
+@router.get("/{quiz_id}/results")
+def get_quiz_results_summary(
+    quiz_id: str,
+    filter: str = Query("all"),
+    db: Session = Depends(get_db)
+):
+    """GET /api/v1/quizzes/{quiz_id}/results - Summary metrics & roster for teacher results tab."""
+    try:
+        roster = QuizService.export_quiz_results(quiz_id, filter, "json", db)
+        all_roster = QuizService.export_quiz_results(quiz_id, "all", "json", db)
+        total_students = len(all_roster)
+        attempted_rows = [r for r in all_roster if r.get("Attempt Status") == "Attempted"]
+        attempted_count = len(attempted_rows)
+        not_attempted_count = max(0, total_students - attempted_count)
+        avg_score = round(sum(float(r.get("Score") or 0) for r in attempted_rows) / attempted_count, 1) if attempted_count > 0 else 0.0
+        passed_count = sum(1 for r in attempted_rows if r.get("Result") == "Passed")
+        pass_pct = round((passed_count / attempted_count) * 100, 1) if attempted_count > 0 else 0.0
+        return success_response({
+            "quiz_id": quiz_id,
+            "total_students": total_students,
+            "attempted_count": attempted_count,
+            "not_attempted_count": not_attempted_count,
+            "average_score": avg_score,
+            "pass_percentage": pass_pct,
+            "roster": roster
+        })
+    except Exception as e:
+        return error_response(f"Failed to load quiz results: {str(e)}", 500)
+
+
 @router.get("/{quiz_id}/export")
 def export_quiz_results(
     quiz_id: str,
@@ -501,14 +689,17 @@ def toggle_release_results(
     db: Session = Depends(get_db)
 ):
     """POST /api/v1/quizzes/{quiz_id}/toggle-release-results - Toggle release of results to students."""
-    if current_user and not RBACService.has_permission(current_user, Permission.QUIZ_PUBLISH.value):
-        raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.publish' required.")
+    if current_user:
+        user_role = (current_user.role or "").lower()
+        if user_role not in ("teacher", "faculty", "hod", "admin", "super_admin") and not RBACService.has_permission(current_user, Permission.QUIZ_PUBLISH.value):
+            raise HTTPException(status_code=403, detail="Forbidden: Permission 'quiz.publish' required.")
 
     q = db.execute(text("SELECT result_published FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
     if not q:
         return error_response("Quiz not found", 404)
 
-    target_state = payload.get("release") if (payload and "release" in payload) else (not bool(q[0]))
+    curr_val = True if q[0] is None else bool(q[0])
+    target_state = bool(payload.get("release")) if (payload and "release" in payload and payload.get("release") is not None) else (not curr_val)
     teacher_id = QuizService.resolve_uuid(current_user.user_id if current_user else None)
 
     db.execute(text("""
@@ -521,7 +712,32 @@ def toggle_release_results(
     """), {"rel": target_state, "tid": teacher_id, "id": quiz_id})
     db.commit()
 
-    return success_response({"quiz_id": quiz_id, "result_published": target_state}, f"Results {'released to students' if target_state else 'hidden from students'}")
+    msg = "Results are now SHOWN to students!" if target_state else "Results are now HIDDEN from students."
+    return success_response({
+        "quiz_id": quiz_id,
+        "result_published": target_state,
+        "is_result_released": target_state,
+        "show_result_immediately": target_state,
+        "message": msg
+    }, msg)
+
+
+@router.get("/{quiz_id}/export")
+def export_quiz_results(
+    quiz_id: str,
+    filter: str = Query("all"),
+    format: str = Query("csv"),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """GET /api/v1/quizzes/{quiz_id}/export - Export quiz results as CSV, Excel, or JSON."""
+    try:
+        res = QuizService.export_quiz_results(quiz_id, filter, format, db)
+        if isinstance(res, list):
+            return success_response(res)
+        return res
+    except ValueError as e:
+        return error_response("NOT_FOUND", str(e), code=404)
 
 
 @router.get("/{quiz_id}/security-events")

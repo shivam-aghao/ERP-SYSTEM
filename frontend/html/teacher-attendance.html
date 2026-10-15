@@ -4,15 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SSGMCE, Shegaon - Teacher Attendance ERP Portal</title>
+  <!-- Academic Fonts: Inter & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Module-Specific & Shared ERP Stylesheets (Unified SSGMCE Top Navbar & Sidebar Design) -->
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/teacher-attendance-styles.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/toast.css">
+
   <style>
-    .app-top-header,
-    .sidebar {
-      background-color: #0B1F3A !important;
+    /* Reset main-wrapper margin and legacy sidebar-nav padding when inside canonical app-wrapper */
+    .app-wrapper .main-wrapper {
+      margin-left: 0 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 !important;
+      min-height: calc(100vh - var(--header-height));
     }
-    .notification-badge {
-      border-color: #0B1F3A !important;
+    .app-sidebar .sidebar-nav {
+      padding: 0 !important;
+      overflow: visible !important;
     }
-    /* Reports Button */
+    .app-sidebar.open,
+    .app-sidebar.mobile-open,
+    .dashboard-sidebar.open,
+    .dashboard-sidebar.mobile-open {
+      transform: translateX(0) !important;
+    }
+    .home-hero-card h2,
+    .hero-left h2 {
+      color: #FFFFFF !important;
+    }
+
+    /* Embedded mode styling when rendered inside Teacher Dashboard */
+    body.is-embedded .app-header,
+    body.is-embedded .app-sidebar,
+    .is-embedded .app-header,
+    .is-embedded .app-sidebar {
+      display: none !important;
+    }
+    body.is-embedded .app-wrapper,
+    .is-embedded .app-wrapper {
+      margin-top: 0 !important;
+      padding: 0 !important;
+      min-height: 100vh !important;
+      background: transparent !important;
+    }
+    body.is-embedded .main-wrapper,
+    .is-embedded .main-wrapper {
+      margin-left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 16px 20px !important;
+      box-sizing: border-box !important;
+    }
+    body.is-embedded .content-viewport,
+    .is-embedded .content-viewport {
+      padding: 12px 0 24px 0 !important;
+    }
+
+    /* Reports Button in Header */
     .header-reports-btn {
       display: inline-flex !important;
       align-items: center !important;
@@ -52,43 +109,8 @@
       font-weight: 600 !important;
     }
 
-    /* Embedded mode styling when rendered inside Teacher Dashboard */
-    body.is-embedded .app-top-header,
-    body.is-embedded aside.sidebar,
-    .is-embedded .app-top-header,
-    .is-embedded aside.sidebar {
-      display: none !important;
-    }
-    body.is-embedded .app-root,
-    body.is-embedded .app-body-layout,
-    .is-embedded .app-root,
-    .is-embedded .app-body-layout {
-      margin: 0 !important;
-      padding: 0 !important;
-      min-height: 100vh !important;
-      height: auto !important;
-      display: block !important;
-      background: transparent !important;
-    }
-    body.is-embedded .main-wrapper,
-    .is-embedded .main-wrapper {
-      margin-left: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      padding: 16px 20px !important;
-      box-sizing: border-box !important;
-    }
-    body.is-embedded .content-viewport,
-    .is-embedded .content-viewport {
-      padding: 12px 0 24px 0 !important;
-    }
-
-    /* By default hide topbar reports button in standalone window since top header already has Reports */
+    /* Show Reports button in content topbar and keep top header identical to teacher-dashboard.html */
     .btn-topbar-reports {
-      display: none !important;
-    }
-    body.is-embedded .btn-topbar-reports,
-    .is-embedded .btn-topbar-reports {
       display: inline-flex !important;
     }
   </style>
@@ -107,11 +129,6 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="../css/teacher-attendance-styles.css">
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Unified ERP Authentication Guard -->
   <script src="../js/config.js"></script>
@@ -127,306 +144,371 @@
 
 <body>
 
-<div class="app-root">
-  <!-- ====================================================================
-       TWO-PART TOP HEADER
-       ==================================================================== -->
-  <header class="app-top-header">
-    <div class="header-left-part">
-      <button class="menu-toggle-btn" id="mobileMenuToggle" aria-label="Toggle Sidebar Menu">
-        ☰
+  <!-- ========================================================
+       TOP MASTER STICKY HEADER (SSGMCE Dark Navy #0B1F3A)
+       ======================================================== -->
+  <header class="app-header ssgmce-top-header" id="app-header" role="banner">
+    <!-- Left: College Logo & Full College Name + ERP Brand -->
+    <div class="header-left header-left-brand">
+      <!-- Mobile Hamburger Toggle Button -->
+      <button type="button" class="mobile-menu-toggle hamburger-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
-      <img src="../images/ssgmce_logo.jpg" alt="SSGMCE College Logo" class="header-college-logo">
-      <div class="header-college-info">
-        <h1 class="header-college-title">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</h1>
-        <span class="header-college-tagline">(An Autonomous Institute)</span>
-      </div>
-      <div class="header-erp-divider"></div>
-      <div class="header-erp-tag-box">
-        <span class="header-erp-tag">ERP</span>
-        <span class="header-erp-motto">Learn | Grow | Excel</span>
+
+      <!-- Official SSGMCE Logo & College Title -->
+      <a href="teacher-dashboard.html" class="header-brand header-college-brand" aria-label="SSGMCE Dashboard">
+        <div class="brand-crest college-logo-crest">
+          <img src="https://www.ssgmce.ac.in/favicon.svg" alt="SSGMCE College Logo" class="brand-logo-img official-college-logo">
+        </div>
+        <div class="brand-text-block college-brand-info">
+          <div class="college-full-name">Shri Sant Gajanan Maharaj College of Engineering, Shegaon</div>
+          <div class="college-sub-tag">(An Autonomous Institute)</div>
+        </div>
+      </a>
+
+      <!-- Divider & ERP Motto -->
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="erp-tag-wrap">
+        <span class="erp-badge-text">ERP</span>
+        <span class="erp-slogan">Learn | Grow | Excel</span>
       </div>
     </div>
 
-    <div class="header-right-part">
-      <!-- Live Visual Indicator Badge (🟢 Live Connected / 🟠 Offline Cache) -->
-      <div class="erp-live-badge" id="erpLiveConnBadge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; transition: all 0.3s ease;" title="Connected to Faculty API (Port 8000) & Cloud Supabase Database">
-        <span class="live-dot" id="liveDot" style="width: 8px; height: 8px; background: #22C55E; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #22C55E;"></span>
-        <span id="liveBadgeText">Live Connected (Supabase)</span>
+    <!-- Right Controls: Status Pill, Notifications & Teacher Profile -->
+    <div class="header-right header-right-controls">
+      <!-- Live Backend & Database Connection Indicator Pill -->
+      <div id="erpLiveConnBadge" style="display:inline-flex; align-items:center; gap:7px; background:#ECFDF5; border:1px solid #10B981; color:#047857; padding:5px 12px; border-radius:18px; font-size:12px; font-weight:600; cursor:pointer; margin-right:8px;" title="Connected to Faculty API & Cloud Database">
+        <span id="liveDot" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block; box-shadow:0 0 6px #10B981;"></span>
+        <span id="liveBadgeText">🟢 Backend: Connected</span>
       </div>
 
-      <!-- Prominent Header Action: Reports -->
-      <button class="header-reports-btn" id="btnHeaderPdfReports" title="View &amp; Download Attendance Reports" onclick="var m=document.getElementById('modalPdfCenter'); if(m) m.classList.remove('hidden');">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
-          <path d="M3 3v18h18"/>
-          <path d="M18 17V9"/>
-          <path d="M13 17V5"/>
-          <path d="M8 17v-3"/>
-        </svg>
-        <span>Reports</span>
-      </button>
+      <button id="btnHeaderPdfReports" style="display:none;" aria-hidden="true"></button>
 
-      <button class="header-action-btn" id="notificationsBtn" title="Notifications">
-        <span class="notif-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Notification Bell -->
+      <div class="notif-wrapper" id="notifWrapper">
+        <a href="teacher-dashboard.html#notifications" class="header-icon-btn" id="notificationsBtn" aria-label="Notifications, 4 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-        </span>
-        <span class="notification-badge" id="notifBadge">3</span>
-      </button>
-
-      <div class="header-vertical-divider"></div>
-
-      <div class="teacher-profile-widget" id="profileWidget" title="Teacher Account">
-        <div class="teacher-avatar" id="teacherAvatar">--</div>
-        <div class="teacher-profile-details">
-          <div class="teacher-name-row">
-            <span class="teacher-name" id="teacherName">Faculty</span>
-            <span class="dropdown-caret">▼</span>
-          </div>
-          <span class="teacher-portal-label" id="teacherDesignation">Employee Portal</span>
-        </div>
+          <span class="notif-badge" id="notifBadge">4</span>
+        </a>
       </div>
 
-      <button class="btn-header-logout" id="headerLogoutBtn" title="Logout Session">
-        <span>Logout</span>
-      </button>
+      <!-- Teacher Profile Pill Trigger & Menu -->
+      <div class="profile-wrapper header-profile-container">
+        <button type="button" class="profile-pill-btn header-profile-trigger" id="profile-dropdown-trigger" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Teacher Account">
+          <div class="avatar-circle profile-avatar" id="teacherAvatar">
+            <span>--</span>
+          </div>
+          <div class="profile-details profile-info">
+            <span class="student-name profile-name" id="teacherName">Faculty</span>
+            <span class="student-meta profile-dept" id="teacherDesignation">Department Faculty</span>
+          </div>
+          <svg class="chevron-down-icon profile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Profile Dropdown Menu -->
+        <div class="header-dropdown-panel dropdown-menu-popover profile-dropdown-menu" id="profile-dropdown-menu">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); background:#F8FAFC;">
+            <div style="font-weight:700; font-size:14px; color:var(--navy);" id="profile-menu-name">Faculty Member</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;" id="profile-menu-title">Faculty Attendance Portal</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;" id="profile-menu-empid">SSGMCE Faculty Record</div>
+          </div>
+          <div class="p-links">
+            <a href="teacher-dashboard.html#profile" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>View Profile</span>
+            </a>
+            <a href="teacher-dashboard.html#leave" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+              <span>Apply Leave</span>
+            </a>
+            <a href="teacher-timetable.html" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Timetable</span>
+            </a>
+            <a href="teacher-dashboard.html#settings" class="profile-dropdown-item p-link-item" style="text-decoration:none; color:inherit;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Settings</span>
+            </a>
+            <div class="p-divider"></div>
+            <div class="profile-dropdown-item p-link-item text-danger danger" id="headerLogoutBtn" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Sign Out</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
   <!-- ====================================================================
        APPLICATION BODY LAYOUT (SIDEBAR + MAIN CONTENT)
        ==================================================================== -->
-  <div class="app-body-layout">
-    <!-- FIXED SIDEBAR (#061325) -->
-    <aside class="sidebar" id="appSidebar">
-      <div class="sidebar-nav">
-        <div class="nav-category">Main Navigation</div>
-        <ul class="nav-list">
-          <li class="nav-item">
-            <a href="#dashboard" class="nav-link" data-nav="dashboard">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                </svg>
-              </span>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#profile" class="nav-link" data-nav="profile">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="7" r="4"/>
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                </svg>
-              </span>
-              <span>Profile</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#information" class="nav-link" data-nav="information">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 16v-4"/>
-                  <path d="M12 8h.01"/>
-                </svg>
-              </span>
-              <span>Information</span>
-            </a>
-          </li>
-          <!-- Highlighted in #0B5CAD with subtle right active indicator in #00A6D6 -->
-          <!-- Attendance Expandable Group -->
-          <li class="nav-item nav-item-group expanded active" id="navGroupAttendance">
-            <a href="#attendance" class="nav-link group-toggle" id="navToggleAttendance" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-              <span style="display: flex; align-items: center; gap: 12px;">
-                <span class="nav-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                    <path d="m9 14 2 2 4-4"/>
-                  </svg>
-                </span>
-                <span>Attendance</span>
-              </span>
-              <span class="group-chevron" id="chevronAttendance" style="font-size: 10px; color: #94A3B8; transition: transform 0.2s;">▼</span>
-            </a>
-            <ul class="nav-sub-list" id="navSubListAttendance" style="list-style: none; padding: 4px 0 4px 34px; margin: 4px 0 6px 0; display: flex; flex-direction: column; gap: 4px;">
-              <li class="nav-sub-item">
-                <a href="#attendance-cards" class="nav-sub-link active" id="navSubCards" data-nav="cards" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 6px; font-size: 13px; color: #FFFFFF; font-weight: 600; text-decoration: none; background: rgba(56, 189, 248, 0.15);">
-                  <span style="font-size: 9px; color: #38BDF8;">●</span>
-                  <span>Attendance Cards</span>
-                </a>
-              </li>
-              <li class="nav-sub-item">
-                <a href="#student-records" class="nav-sub-link" id="navSubStudentRecords" data-nav="student-records" onclick="event.preventDefault(); document.getElementById('modalStudentReport').classList.remove('hidden');" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 6px; font-size: 13px; color: #94A3B8; font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;">
-                  <span style="font-size: 9px; color: #64748B;">●</span>
-                  <span>Student Records</span>
-                </a>
-              </li>
-              <li class="nav-sub-item">
-                <a href="#lecture-report" class="nav-sub-link" id="navSubLectureReport" data-nav="lecture-report" onclick="event.preventDefault(); document.getElementById('modalTeacherReport').classList.remove('hidden');" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 6px; font-size: 13px; color: #94A3B8; font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s;">
-                  <span style="font-size: 9px; color: #64748B;">●</span>
-                  <span>Lecture Report</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a href="teacher_timetable.html" class="nav-link" data-nav="timetable">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="18" height="18" x="3" y="4" rx="2"/>
-                  <line x1="16" x2="16" y1="2" y2="6"/>
-                  <line x1="8" x2="8" y1="2" y2="6"/>
-                  <line x1="3" x2="21" y1="10" y2="10"/>
-                  <path d="M8 14h.01"/>
-                  <path d="M12 14h.01"/>
-                  <path d="M16 14h.01"/>
-                  <path d="M8 18h.01"/>
-                  <path d="M12 18h.01"/>
-                  <path d="M16 18h.01"/>
-                </svg>
-              </span>
-              <span>Timetable</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#classes" class="nav-link" data-nav="classes">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                </svg>
-              </span>
-              <span>Classes</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#students" class="nav-link" data-nav="students">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </span>
-              <span>Students</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#syllabus" class="nav-link" data-nav="syllabus">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-              </span>
-              <span>Syllabus</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#results" class="nav-link" data-nav="results">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" x2="18" y1="20" y2="10"/>
-                  <line x1="12" x2="12" y1="20" y2="4"/>
-                  <line x1="6" x2="6" y1="20" y2="14"/>
-                </svg>
-              </span>
-              <span>Results</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher_test_schedule.html" class="nav-link" data-nav="test-schedule">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10 9 9 9 8 9"/>
-                </svg>
-              </span>
-              <span>Test Scheduler</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-quiz.html" class="nav-link" data-nav="quiz" style="color: #38BDF8;">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-              </span>
-              <span>Quiz Management</span>
-              <span style="margin-left:auto; background:#2563EB; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:10px;">Live</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#notifications" class="nav-link" data-nav="notifications">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                </svg>
-              </span>
-              <span>Notifications</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="teacher-dashboard.html#settings" class="nav-link" data-nav="settings">
-              <span class="nav-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-              </span>
-              <span>Settings</span>
-            </a>
-          </li>
-          
-        </ul>
-      </div>
+  <div class="app-wrapper">
+    <!-- Off-canvas Mobile Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-      <div class="sidebar-footer">
-        <div class="sidebar-motto-block">
-          <div class="motto-dome-icon">
-            <svg width="46" height="34" viewBox="0 0 46 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M23 3 C16 3 13 10 13 15 L33 15 C33 10 30 3 23 3 Z" stroke="#38BDF8" stroke-width="1.3" fill="none"/>
-              <line x1="23" y1="0.5" x2="23" y2="3" stroke="#38BDF8" stroke-width="1.3"/>
-              <circle cx="23" cy="0.8" r="0.7" fill="#38BDF8"/>
-              <rect x="11" y="15" width="24" height="2.5" rx="0.5" stroke="#38BDF8" stroke-width="1" fill="none"/>
-              <line x1="14" y1="17.5" x2="14" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
-              <line x1="19.5" y1="17.5" x2="19.5" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
-              <line x1="26.5" y1="17.5" x2="26.5" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
-              <line x1="32" y1="17.5" x2="32" y2="27.5" stroke="#38BDF8" stroke-width="1"/>
-              <rect x="9" y="27.5" width="28" height="2.5" rx="0.5" stroke="#38BDF8" stroke-width="1" fill="none"/>
+    <!-- ========================================================
+         2. LEFT SIDEBAR (Dark Navy #0B1F3A)
+         ======================================================== -->
+    <aside class="app-sidebar dashboard-sidebar" id="appSidebar" aria-label="Faculty Main Navigation">
+      <div class="sidebar-inner">
+        <!-- Close button for mobile drawer -->
+        <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <nav class="sidebar-nav sidebar-nav-container" id="sidebar-nav" aria-label="Sidebar Menu">
+          <ul class="sidebar-menu-list">
+            <!-- 1. Dashboard -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html" class="nav-item sidebar-link" data-view="dashboard">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+              </a>
+            </li>
+
+            <!-- TEACHER MODULE Header Banner -->
+            <li class="sidebar-item">
+              <div class="sidebar-module-banner">
+                <span class="sidebar-module-title">TEACHER MODULE</span>
+              </div>
+            </li>
+
+            <!-- 2. Attendance (Active) -->
+            <li class="sidebar-item" id="navGroupAttendance">
+              <a href="teacher-attendance.html" class="nav-item sidebar-link active" data-view="attendance" id="navToggleAttendance">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <polyline points="9 16 11 18 15 14"></polyline>
+                </svg>
+                <span class="nav-label">Attendance</span>
+              </a>
+            </li>
+            <!-- 3. Timetable -->
+            <li class="sidebar-item">
+              <a href="teacher-timetable.html" class="nav-item sidebar-link" data-view="timetable">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span class="nav-label">Timetable</span>
+              </a>
+            </li>
+
+            <!-- 4. Test Scheduler -->
+            <li class="sidebar-item">
+              <a href="teacher_test_schedule.html" class="nav-item sidebar-link" data-view="test-schedule">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label">Test Scheduler</span>
+              </a>
+            </li>
+
+            <!-- 5. Classes (with chevron) -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#classes" class="nav-item sidebar-link" data-view="classes">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h20"></path>
+                  <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+                  <path d="m7 21 5-5 5 5"></path>
+                </svg>
+                <span class="nav-label">Classes</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 6. Students (with chevron) -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#students" class="nav-item sidebar-link" data-view="students">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="nav-label">Students</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 7. Syllabus (with chevron) -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#syllabus" class="nav-item sidebar-link" data-view="syllabus">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span class="nav-label">Syllabus</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 8. Results (with chevron) -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#results" class="nav-item sidebar-link" data-view="results">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="nav-label">Results</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 9. Quiz Management -->
+            <li class="sidebar-item">
+              <a class="nav-item sidebar-link" href="teacher-quiz.html" style="color: var(--primary);">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="nav-label" style="font-weight: 700;">Quiz Management</span>
+                <span class="nav-badge" style="background:#2563EB; color:white;">Live</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- 9b. Apply Leave -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#leave" class="nav-item sidebar-link" data-view="leave">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <line x1="12" y1="14" x2="12" y2="18"></line>
+                  <line x1="10" y1="16" x2="14" y2="16"></line>
+                </svg>
+                <span class="nav-label">Apply Leave</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            </li>
+
+            <!-- Preferences & Info Divider -->
+            <li class="sidebar-item">
+              <div class="sidebar-section-divider"></div>
+              <span class="sidebar-section-caption">Preferences &amp; Info</span>
+            </li>
+
+            <!-- 10. Profile -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#profile" class="nav-item sidebar-link" data-view="profile">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="nav-label">Profile</span>
+              </a>
+            </li>
+
+            <!-- 11. Information -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#information" class="nav-item sidebar-link" data-view="information">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="nav-label">Information</span>
+              </a>
+            </li>
+
+            <!-- 12. Notifications -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#notifications" class="nav-item sidebar-link" data-view="notifications">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="nav-label">Notifications</span>
+                <span class="nav-badge" style="background:#00A6D6;color:#fff;">4</span>
+              </a>
+            </li>
+
+            <!-- 13. Settings -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#settings" class="nav-item sidebar-link" data-view="settings">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="nav-label">Settings</span>
+              </a>
+            </li>
+
+            <!-- 14. Sign Out -->
+            <li class="sidebar-item">
+              <a href="javascript:void(0)" class="nav-item sidebar-link" onclick="window.handleLogout ? window.handleLogout() : (window.location.href='login.html?logout=true')" style="color:#FCA5A5;">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="nav-label" style="color:#FCA5A5; font-weight:700;">Sign Out</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Sidebar Bottom: Architectural Dome Illustration & College Motto -->
+        <div class="sidebar-footer-artwork">
+          <div class="ssgmce-dome-illustration" aria-hidden="true">
+            <svg viewBox="0 0 220 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="dome-svg">
+              <path d="M110 8 C92 8 82 24 80 40 L140 40 C138 24 128 8 110 8Z" stroke="#00A6D6" stroke-width="1.6" fill="rgba(0, 166, 214, 0.08)"/>
+              <line x1="110" y1="2" x2="110" y2="8" stroke="#F59E0B" stroke-width="2"/>
+              <circle cx="110" cy="2" r="2.5" fill="#F59E0B"/>
+              <polygon points="110,34 65,48 155,48" stroke="#00A6D6" stroke-width="1.5" fill="rgba(11, 92, 173, 0.25)"/>
+              <line x1="72" y1="48" x2="72" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="88" y1="48" x2="88" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="104" y1="48" x2="104" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="116" y1="48" x2="116" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="132" y1="48" x2="132" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="148" y1="48" x2="148" y2="76" stroke="#00A6D6" stroke-width="1.8"/>
+              <line x1="15" y1="76" x2="205" y2="76" stroke="#00A6D6" stroke-width="2"/>
+              <line x1="10" y1="80" x2="210" y2="80" stroke="#0B5CAD" stroke-width="2.5"/>
+              <line x1="5" y1="84" x2="215" y2="84" stroke="#0B1F3A" stroke-width="3"/>
             </svg>
           </div>
-          <div class="sidebar-motto-text">DISCIPLINE • DEVELOPMENT • DEDICATION</div>
+          <div class="sidebar-motto-text">
+            <span>Discipline</span>
+            <span class="dot">•</span>
+            <span>Development</span>
+            <span class="dot">•</span>
+            <span>Dedication</span>
+          </div>
+          <button id="sidebarLogoutBtn" style="display: none;" aria-hidden="true"></button>
         </div>
-        <button class="sidebar-logout" id="sidebarLogoutBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" x2="9" y1="12" y2="12"/>
-          </svg>
-          <span>Logout Session</span>
-        </button>
       </div>
     </aside>
 
     <!-- MAIN APPLICATION WRAPPER -->
-    <div class="main-wrapper">
+    <div class="main-wrapper app-main">
       <!-- CONTENT TOP BAR: BREADCRUMBS, REPORTS & BACK BUTTON -->
       <div class="content-topbar">
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -496,7 +578,7 @@
             </p>
             
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <button class="btn-start-attendance" id="btnStartFlow">
+              <button type="button" class="btn-start-attendance" id="btnStartFlow" onclick="if(window.TeacherAttendanceApp && typeof window.TeacherAttendanceApp.startFlow==='function'){ window.TeacherAttendanceApp.startFlow(); }">
                 <span>Mark Today's Attendance</span>
                 <span>→</span>
               </button>
@@ -511,6 +593,42 @@
               <div class="metric-num" id="statAvgAttendance">0%</div>
               <div class="metric-lbl">Avg. Attendance</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Recent Attendance Sessions Table -->
+        <div style="margin-top: 24px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0B1F3A;">Recent Attendance Sessions</h3>
+              <p style="margin: 2px 0 0 0; font-size: 12.5px; color: #64748B;">Submitted and draft classroom attendance logs</p>
+            </div>
+            <button type="button" class="btn-table-action" id="btnRefreshRecent" style="padding: 6px 12px; border: 1px solid #CBD5E1; background: #F8FAFC; border-radius: 6px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer;">
+              ↻ Refresh Records
+            </button>
+          </div>
+          <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px; overflow-x: auto;">
+            <table class="erp-table" style="width: 100%; margin: 0; font-size: 13px;">
+              <thead style="background: #F8FAFC;">
+                <tr>
+                  <th>Session ID</th>
+                  <th>Date</th>
+                  <th>Class</th>
+                  <th>Subject</th>
+                  <th>Attendance</th>
+                  <th>Status</th>
+                  <th>Saved At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recentAttendanceTbody">
+                <tr>
+                  <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                    No attendance records found yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -921,7 +1039,6 @@
 
     </main>
   </div>
-</div>
 </div>
 
 <!-- ====================================================================
@@ -1515,10 +1632,111 @@
 <script src="../js/teacher-attendance-api.js"></script>
 
 <!-- Scripts -->
-<script charset="utf-8" src="../js/teacher-attendance-data.js?v=clean_v3"></script>
-<script charset="utf-8" src="../js/teacher-attendance-service.js?v=clean_v3"></script>
-<script charset="utf-8" src="../js/teacher-swipe-engine.js?v=clean_v3"></script>
-<script charset="utf-8" src="../js/teacher-attendance-app.js?v=clean_v3"></script>
+<script charset="utf-8" src="../js/teacher-attendance-data.js?v=clean_v4"></script>
+<script charset="utf-8" src="../js/teacher-attendance-service.js?v=clean_v4"></script>
+<script charset="utf-8" src="../js/teacher-swipe-engine.js?v=clean_v4"></script>
+<script charset="utf-8" src="../js/teacher-attendance-app.js?v=clean_v4"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize Lucide Icons if loaded
+    if (window.lucide) {
+      try { lucide.createIcons(); } catch (e) {}
+    }
+
+    // Populate Header Profile Pill & Dropdown from Active Teacher Session
+    try {
+      var u = (window.ERP_AUTH && window.ERP_AUTH.getCurrentUser) ? window.ERP_AUTH.getCurrentUser() : null;
+      if (!u) {
+        var raw = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session");
+        if (raw) u = JSON.parse(raw);
+      }
+      if (u) {
+        var fullName = u.fullName || u.name || "Faculty Member";
+        var dept = u.department || u.departmentName || u.designation || "Department Faculty";
+        var empId = u.empCode || u.emp_code || u.id || "SSGMCE Faculty";
+        var initials = u.initials || fullName.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s*/i, "").split(" ").map(function(w){return w[0];}).join("").substring(0,2).toUpperCase() || "FA";
+
+        var elName = document.getElementById("teacherName");
+        var elDept = document.getElementById("teacherDesignation");
+        var elAvatar = document.getElementById("teacherAvatar");
+        var elMenuName = document.getElementById("profile-menu-name");
+        var elMenuTitle = document.getElementById("profile-menu-title");
+        var elMenuEmp = document.getElementById("profile-menu-empid");
+
+        if (elName) elName.textContent = fullName;
+        if (elDept) elDept.textContent = dept;
+        if (elAvatar) elAvatar.innerHTML = "<span>" + initials + "</span>";
+        if (elMenuName) elMenuName.textContent = fullName;
+        if (elMenuTitle) elMenuTitle.textContent = u.designation || "Faculty Member";
+        if (elMenuEmp) elMenuEmp.textContent = empId + (u.department ? " • " + u.department : "");
+      }
+    } catch (err) {
+      console.warn("Header profile init warning:", err);
+    }
+
+    // Profile Dropdown Menu Toggle
+    var profileTrigger = document.getElementById("profile-dropdown-trigger");
+    var profileMenu = document.getElementById("profile-dropdown-menu");
+    if (profileTrigger && profileMenu) {
+      profileTrigger.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var isOpen = profileMenu.classList.contains("show");
+        if (isOpen) {
+          profileMenu.classList.remove("show");
+          profileTrigger.classList.remove("active");
+        } else {
+          profileMenu.classList.add("show");
+          profileTrigger.classList.add("active");
+        }
+      });
+
+      document.addEventListener("click", function(e) {
+        if (!profileMenu.contains(e.target) && !profileTrigger.contains(e.target)) {
+          profileMenu.classList.remove("show");
+          profileTrigger.classList.remove("active");
+        }
+      });
+    }
+
+    // Mobile Menu Drawer Toggle & Overlay
+    var hamburgerBtn = document.getElementById("mobileMenuToggle");
+    var closeBtn = document.getElementById("sidebar-close-btn");
+    var sidebar = document.getElementById("appSidebar");
+    var overlay = document.getElementById("sidebar-overlay");
+
+    function openSidebar() {
+      if (sidebar) {
+        sidebar.classList.add("open");
+        sidebar.classList.add("mobile-open");
+      }
+      if (overlay) overlay.classList.add("active");
+    }
+
+    function closeSidebar() {
+      if (sidebar) {
+        sidebar.classList.remove("open");
+        sidebar.classList.remove("mobile-open");
+      }
+      if (overlay) overlay.classList.remove("active");
+    }
+
+    if (hamburgerBtn && !hamburgerBtn.dataset.bound) {
+      hamburgerBtn.dataset.bound = "true";
+      hamburgerBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (sidebar && (sidebar.classList.contains("open") || sidebar.classList.contains("mobile-open"))) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      });
+    }
+
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (overlay) overlay.addEventListener("click", closeSidebar);
+  });
+</script>
 
 </body>
 </html>

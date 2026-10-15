@@ -396,42 +396,37 @@ const TeacherTimetableApp = {
     const overlay = document.getElementById("sidebar-overlay");
     const closeBtn = document.getElementById("sidebar-close-btn");
 
-    if (hamburgerBtn && sidebar) {
-      hamburgerBtn.addEventListener("click", () => {
+    if (hamburgerBtn && sidebar && !hamburgerBtn.dataset.bound) {
+      hamburgerBtn.dataset.bound = "true";
+      hamburgerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         sidebar.classList.toggle("open");
         if (overlay) overlay.classList.toggle("active");
       });
     }
 
-    if (closeBtn && sidebar) {
+    if (closeBtn && sidebar && !closeBtn.dataset.bound) {
+      closeBtn.dataset.bound = "true";
       closeBtn.addEventListener("click", () => {
         sidebar.classList.remove("open");
         if (overlay) overlay.classList.remove("active");
       });
     }
 
-    if (overlay && sidebar) {
+    if (overlay && sidebar && !overlay.dataset.bound) {
+      overlay.dataset.bound = "true";
       overlay.addEventListener("click", () => {
         sidebar.classList.remove("open");
         overlay.classList.remove("active");
       });
     }
 
-    // Profile Dropdown Trigger & Direct Profile Click
+    // Profile Dropdown Trigger
     const profileTrigger = document.getElementById("profile-dropdown-trigger");
     const profileMenu = document.getElementById("profile-dropdown-menu");
-    const headerProfName = document.getElementById("header-profile-name");
 
-    if (headerProfName) {
-      headerProfName.style.cursor = "pointer";
-      headerProfName.title = "View Faculty Profile";
-      headerProfName.addEventListener("click", (e) => {
-        e.stopPropagation();
-        window.location.href = "teacher-dashboard.html#profile";
-      });
-    }
-
-    if (profileTrigger && profileMenu) {
+    if (profileTrigger && profileMenu && !profileTrigger.dataset.dropdownBound) {
+      profileTrigger.dataset.dropdownBound = "true";
       profileTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
         const isOpen = profileMenu.classList.contains("show");
@@ -441,12 +436,14 @@ const TeacherTimetableApp = {
           profileTrigger.classList.add("active");
         }
       });
-    }
 
-    // Close dropdowns on outside click
-    document.addEventListener("click", (e) => {
-      this.closeAllDropdowns();
-    });
+      // Close dropdowns on outside click
+      document.addEventListener("click", (e) => {
+        if (!profileMenu.contains(e.target) && !profileTrigger.contains(e.target)) {
+          this.closeAllDropdowns();
+        }
+      });
+    }
 
     // Close modals on Escape key
     document.addEventListener("keydown", (e) => {
@@ -504,19 +501,20 @@ const TeacherTimetableApp = {
     };
 
     try {
-      const selected = localStorage.getItem("ssgmce_selected_faculty");
-      const stored = localStorage.getItem("ssgmce_active_teacher") || 
-                     localStorage.getItem("ssgmce_user") || 
+      const selected = sessionStorage.getItem("ssgmce_selected_faculty") || localStorage.getItem("ssgmce_selected_faculty");
+      const stored = sessionStorage.getItem("ssgmce_user") ||
+                     localStorage.getItem("ssgmce_user") ||
                      sessionStorage.getItem("ssgmce_active_teacher") ||
-                     sessionStorage.getItem("ssgmce_user");
+                     localStorage.getItem("ssgmce_active_teacher");
       
       let u = null;
       if (stored) {
         u = typeof stored === 'string' ? JSON.parse(stored) : stored;
       }
 
-      const code = (selected || (u && (u.emp_code || u.empCode || u.id)) || "EMP-CSE-1001").toUpperCase();
-      const nameStr = (u && (u.full_name || u.name) || "").toLowerCase();
+      const userCode = u && (u.emp_code || u.empCode || u.employeeId || u.user_id || u.username || u.id);
+      const code = String(selected || userCode || "EMP-CSE-1001").toUpperCase();
+      const nameStr = (selected ? "" : (u && (u.full_name || u.fullName || u.name) || "")).toLowerCase();
 
       if (code === "EMP-CSE-1015" || nameStr.includes("kulthe") || nameStr.includes("krushan")) {
         return {
@@ -732,12 +730,15 @@ const TeacherTimetableApp = {
 
   switchFaculty(empCode) {
     if (!empCode) return;
+    try {
+      sessionStorage.setItem('ssgmce_selected_faculty', empCode);
+      localStorage.setItem('ssgmce_selected_faculty', empCode);
+    } catch (_) {}
     if (typeof TeacherERPData !== 'undefined' && typeof TeacherERPData.setActiveTeacherEmpCode === 'function') {
       TeacherERPData.setActiveTeacherEmpCode(empCode);
-    } else if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('ssgmce_selected_faculty', empCode);
     }
     this.renderHeaderProfile();
+    this.loadTeacherSubjects();
     this.renderTimetableView();
   },
 
@@ -1050,13 +1051,22 @@ const TeacherTimetableApp = {
         end: payload.end_time
       };
 
-      const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
-      if (existingIdx >= 0) {
-        this.tests[existingIdx] = testObj;
+      if (res.ok) {
+        const resJson = await res.json().catch(() => ({}));
+        if (resJson && resJson.data && resJson.data.id) {
+          testObj.id = resJson.data.id;
+        }
+        const existingIdx = this.tests.findIndex(t => t.id === testObj.id);
+        if (existingIdx >= 0) {
+          this.tests[existingIdx] = testObj;
+        } else {
+          this.tests.push(testObj);
+        }
       } else {
         const errJson = await res.json().catch(() => ({}));
         const errMsg = errJson.detail || errJson.message || `Failed to save assessment (HTTP ${res.status})`;
         this.showToast(errMsg, "error");
+        return;
       }
       if (typeof TeacherTestScheduler !== 'undefined' && TeacherTestScheduler.tests) {
         const scIdx = TeacherTestScheduler.tests.findIndex(t => t.id === testObj.id);
@@ -3032,10 +3042,26 @@ const TeacherTimetableApp = {
       }
 
       const isHighlightRow = (dayName.toLowerCase() === currentDayName.toLowerCase());
+      const safeSub = (block.subject || '').replace(/'/g, "\\'");
+      const safeLoc = (block.room || 'Room 201').replace(/'/g, "\\'");
+      const slotIdx0 = (block.slotIndices && block.slotIndices[0]) || 0;
+      const slotTimes = [
+        "11:00 AM - 12:00 PM",
+        "12:00 PM - 01:00 PM",
+        "01:15 PM - 02:15 PM",
+        "02:15 PM - 03:15 PM",
+        "03:45 PM - 04:45 PM",
+        "04:45 PM - 05:45 PM"
+      ];
+      const timeStr = slotTimes[slotIdx0] || "11:00 AM - 12:00 PM";
+      const cleanClassCode = (block.class_code || '2R1').split(' ')[0].trim();
 
       return `
         <td class="schedule-cell" colspan="${block.colspan || 1}">
-          <div class="class-card ${block.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}">
+          <div class="class-card ${block.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}"
+               onclick="TeacherTimetableApp.handleSlotClick('${safeSub}', '${safeLoc}', '${timeStr}', '${cleanClassCode}', '${selectedDate}')"
+               style="cursor: pointer;"
+               title="Click to mark attendance for ${block.fullTitle || block.subject}">
             <div class="class-card-top">
               <span class="class-type ${block.isLab ? 'type-lab' : 'type-lecture'}">
                 <i data-lucide="${block.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
@@ -3051,6 +3077,9 @@ const TeacherTimetableApp = {
               ${block.room ? `<span class="class-faculty-pill"><i data-lucide="map-pin" style="width:10px;height:10px;display:inline;vertical-align:-1px;"></i> ${block.room}</span>` : ''}
               ${block.class_code ? `<span class="class-batch-pill">${block.class_code}</span>` : ''}
               ${block.batch ? `<span class="class-batch-pill">${block.batch}</span>` : ''}
+            </div>
+            <div style="margin-top: 6px; font-size: 10px; font-weight: 700; color: #0B5CAD; display: flex; align-items: center; justify-content: flex-end; gap: 3px;">
+              <span>Mark Attendance &rarr;</span>
             </div>
           </div>
         </td>
@@ -3113,6 +3142,24 @@ const TeacherTimetableApp = {
       sundayRowHTML = renderRowHTML(sundayRow);
     }
 
+    const facultyOptionsList = [
+      { empCode: "EMP-CSE-1001", name: "Dr. J. M. Patil (HOD, CSE)" },
+      { empCode: "EMP-CSE-1002", name: "Dr. N. M. Kandoi" },
+      { empCode: "EMP-CSE-1003", name: "Prof. C. M. Mankar" },
+      { empCode: "EMP-CSE-1004", name: "Dr. V. S. Mahalle" },
+      { empCode: "EMP-CSE-1005", name: "Dr. P. K. Bharne" },
+      { empCode: "EMP-CSE-1006", name: "Prof. K. P. Sable" },
+      { empCode: "EMP-CSE-1007", name: "Prof. S. B. Pagrut" },
+      { empCode: "EMP-CSE-1008", name: "Dr. R. A. Zamare" },
+      { empCode: "EMP-CSE-1009", name: "Prof. R. V. Deshmukh" },
+      { empCode: "EMP-CSE-1010", name: "Prof. S. M. Jawake" },
+      { empCode: "EMP-CSE-1011", name: "Prof. T. A. Puranik" },
+      { empCode: "EMP-CSE-1012", name: "Prof. V. S. Kanherkar" },
+      { empCode: "EMP-CSE-1013", name: "Prof. N. N. Fatkar" },
+      { empCode: "EMP-CSE-1014", name: "Prof. M. D. Rakhonde" },
+      { empCode: "EMP-CSE-1015", name: "Mr. Krushan. V. Kulthe" }
+    ];
+
     container.innerHTML = `
       <div class="timetable-card">
 
@@ -3131,12 +3178,17 @@ const TeacherTimetableApp = {
                 <h2 class="official-main-heading">PERSONAL TIME-TABLE</h2>
               </div>
             </div>
-            <div class="official-tt-submeta">
-              <div class="submeta-left">
-                <span>Name of Faculty: <span class="faculty-tag">${teacher.name}</span> (${teacher.title})</span>
+            <div class="official-tt-submeta" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div class="submeta-left" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span>Name of Faculty: <span class="faculty-tag">${teacher.name}</span> (${teacher.title} • ${teacher.empCode})</span>
+                <select aria-label="Switch Faculty Timetable"
+                        onchange="TeacherTimetableApp.switchFaculty(this.value)"
+                        style="padding:4px 10px; border-radius:6px; border:1px solid #CBD5E1; background:#F8FAFC; color:#0B1F3A; font-size:12px; font-weight:600; cursor:pointer;">
+                  ${facultyOptionsList.map(f => `<option value="${f.empCode}" ${f.empCode === teacher.empCode ? 'selected' : ''}>${f.name} (${f.empCode})</option>`).join('')}
+                </select>
               </div>
               <div class="submeta-right">
-                <span>w.e.f.: <span class="wef-tag">13/08/2026</span></span>
+                <span>w.e.f.: <span class="wef-tag">${teacher.wef || '13/08/2026'}</span></span>
               </div>
             </div>
           </div>
@@ -3272,143 +3324,8 @@ const TeacherTimetableApp = {
               </tr>
             </thead>
             <tbody>
-              ${timetableData.map(row => {
-                const isHighlightRow = (row.day.toLowerCase() === currentDayName.toLowerCase());
-                return `
-                <tr class="schedule-row ${isHighlightRow ? 'active-day-row' : ''}" role="row">
-                  
-                  <!-- Day Cell -->
-                  <td class="day-cell ${isHighlightRow ? 'active-day-cell' : ''}" scope="row">
-                    <div class="day-cell-inner">
-                      <span class="day-label">${row.day.toUpperCase()}</span>
-                      ${isHighlightRow ? `
-                        <span class="today-badge ${isToday ? 'today-badge-current' : 'today-badge-active'}">
-                          ${isToday ? 'TODAY' : 'ACTIVE'}
-                        </span>
-                      ` : ''}
-                    </div>
-                  </td>
-
-                  <!-- Subject Slots -->
-                  ${row.slots.map((slotText, slotIdx) => {
-                    const parsed = parseSlotInfo(slotText);
-
-                    // Find tests scheduled for this day & slot
-                    const slotTests = this.tests.filter(t => {
-                      if (!t.date || !t.start) return false;
-                      const [y, m, d] = t.date.split("-").map(Number);
-                      const testDayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
-                      if (testDayName.toLowerCase() !== row.day.toLowerCase()) return false;
-                      return this.getSlotIndexForTime(t.start) === slotIdx;
-                    });
-
-                    // Build regular class card HTML if not free
-                    let regularClassHTML = "";
-                    if (!parsed.isFree) {
-                      const safeSub = parsed.subject.replace(/'/g, "\\'");
-                      const safeLoc = (parsed.location || 'Room 201').replace(/'/g, "\\'");
-                      const timeStr = timeSlots[slotIdx] ? `${timeSlots[slotIdx].range} ${timeSlots[slotIdx].period}` : "09:00 - 10:30 AM";
-                      regularClassHTML = `
-                        <div class="class-card ${parsed.isLab ? 'class-lab' : 'class-lecture'} ${isHighlightRow ? 'class-card-highlighted' : ''}"
-                             onclick="TeacherTimetableApp.handleSlotClick('${safeSub}', '${safeLoc}', '${timeStr}', '2R1', '${selectedDate}')"
-                             style="cursor: pointer;"
-                             title="Click to mark attendance for ${parsed.subject}">
-                          <div class="class-card-top">
-                            <span class="class-type ${parsed.isLab ? 'type-lab' : 'type-lecture'}">
-                              <i data-lucide="${parsed.isLab ? 'flask-conical' : 'book-open'}" style="width:11px;height:11px;"></i>
-                              ${parsed.typeLabel}
-                            </span>
-                          </div>
-                          
-                          <div class="class-title" title="${parsed.subject}">
-                            ${parsed.subject}
-                          </div>
-
-                          ${parsed.location ? `
-                            <div class="class-location">
-                              <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
-                              <span>${parsed.location}</span>
-                            </div>
-                          ` : ''}
-                          <div style="margin-top: 4px; font-size: 10px; font-weight: 700; color: #0B5CAD;">
-                            Mark Attendance &rarr;
-                          </div>
-                        </div>
-                      `;
-                    }
-
-                    // Build test cards HTML
-                    const testsHTML = slotTests.map(t => {
-                      const st = this.getTestStatus(t);
-                      const start12 = this.formatTime12Hour(t.start);
-                      const end12 = this.formatTime12Hour(t.end);
-
-                      return `
-                        <div class="test-card ${t.type.toLowerCase()}-card"
-                             onclick="TeacherTimetableApp.openTestDetails('${t.id}')"
-                             role="button"
-                             tabindex="0"
-                             aria-label="Assessment: ${t.title}"
-                             onkeydown="if(event.key==='Enter') TeacherTimetableApp.openTestDetails('${t.id}')">
-                          <div class="test-card-top">
-                            <span class="test-type-badge ${t.type.toLowerCase()}-type">
-                              <i data-lucide="file-text" style="width:11px;height:11px;"></i>
-                              ${t.type.toUpperCase()}
-                            </span>
-                            <span class="test-status-pill ${st.badgeClass}">
-                              ${st.label}
-                            </span>
-                          </div>
-                          <div class="test-subject">${t.subject}</div>
-                          <div class="test-title" title="${t.title}">${t.title}</div>
-                          <div class="test-time">
-                            <i data-lucide="calendar" style="width:11px;height:11px;"></i>
-                            <span>${t.date}</span>
-                            <span style="margin: 0 4px; opacity:0.5;">•</span>
-                            <i data-lucide="clock" style="width:11px;height:11px;"></i>
-                            <span>${start12} – ${end12}</span>
-                          </div>
-                        </div>
-                      `;
-                    }).join('');
-
-                    // If test(s) are scheduled for this slot, show test card (replaces regular lecture)
-                    if (slotTests.length > 0) {
-                      return `
-                        <td class="schedule-cell">
-                          <div class="cell-stack-container">
-                            ${testsHTML}
-                          </div>
-                        </td>
-                      `;
-                    }
-
-                    // If regular class is free and no test exists, render Off/Prep
-                    if (parsed.isFree) {
-                      return `
-                        <td class="schedule-cell off-prep-cell">
-                          <div class="off-prep">
-                            <span class="off-prep-pill">
-                              <i data-lucide="coffee" style="width:12px;height:12px;"></i>
-                              OFF / PREP
-                            </span>
-                            <span class="off-prep-caption">No Class Scheduled</span>
-                          </div>
-                        </td>
-                      `;
-                    }
-
-                    return `
-                      <td class="schedule-cell">
-                        <div class="cell-stack-container">
-                          ${regularClassHTML}
-                        </div>
-                      </td>
-                    `;
-                  }).join('')}
-                </tr>
-              `;
-              }).join('')}
+              ${scheduleRows.map(row => renderRowHTML(row)).join('')}
+              ${sundayRowHTML}
             </tbody>
           </table>
         </div>
@@ -3434,16 +3351,20 @@ const TeacherTimetableApp = {
               </tr>
             </thead>
             <tbody>
-              ${teachingLoadRows.map(row => `
+              ${teachingLoadRows.map(row => {
+                const thVal = row.th !== undefined ? row.th : (row.theory || 0);
+                const prVal = row.pr !== undefined ? row.pr : (row.practical || 0);
+                return `
                 <tr>
                   <td><strong>${row.sem}</strong></td>
                   <td><code>${row.code}</code></td>
-                  <td style="text-align:left;">${row.detail || `<strong>${row.name}</strong>`}</td>
-                  <td>${row.th > 0 ? `<strong>${String(row.th).padStart(2, '0')}</strong>` : '--'}</td>
-                  <td>${row.pr > 0 ? `<strong>${String(row.pr).padStart(2, '0')}</strong>` : '--'}</td>
+                  <td style="text-align:left;">${row.detail || `<strong>${row.name}</strong>${row.class_code ? ` — Class ${row.class_code}` : ''}`}</td>
+                  <td>${thVal > 0 ? `<strong>${String(thVal).padStart(2, '0')}</strong>` : '--'}</td>
+                  <td>${prVal > 0 ? `<strong>${String(prVal).padStart(2, '0')}</strong>` : '--'}</td>
                   <td><strong>${String(row.total).padStart(2, '0')} Hrs</strong></td>
                 </tr>
-              `).join('')}
+                `;
+              }).join('')}
               <tr style="background:#F8FAFD; font-weight:700;">
                 <td colspan="3" style="text-align:right;">Total Faculty Teaching Load:</td>
                 <td>${String(totalTheoryLoad).padStart(2, '0')}</td>

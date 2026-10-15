@@ -127,19 +127,22 @@ def get_teacher_timetable_by_id(
 
 @router.get("/tests")
 def get_scheduled_tests(
-    class_code: Optional[str] = Query("2R1"),
+    class_code: Optional[str] = Query(None),
     teacher_id: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
     GET /api/v1/timetable/tests
-    List scheduled upcoming assessments and unit tests.
+    List scheduled upcoming assessments and unit tests, filtered by class_code when provided.
     """
+    clean_cls = (class_code or "").strip()
     try:
         from backend.config.settings import settings
         if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
-            import urllib.request, json
+            import urllib.request, urllib.parse, json
             url = f"{settings.SUPABASE_URL}/rest/v1/timetable_assessments?select=*&order=date.asc,start_time.asc"
+            if clean_cls and clean_cls.upper() != "ALL":
+                url += f"&class_code=eq.{urllib.parse.quote(clean_cls)}"
             req = urllib.request.Request(
                 url,
                 headers={"apikey": settings.SUPABASE_ANON_KEY, "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}"}
@@ -151,7 +154,13 @@ def get_scheduled_tests(
     except Exception:
         pass
 
-    rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
+    if clean_cls and clean_cls.upper() != "ALL":
+        rows = db.execute(
+            text("SELECT * FROM timetable_assessments WHERE UPPER(class_code) = UPPER(:cc) ORDER BY date ASC, start_time ASC"),
+            {"cc": clean_cls}
+        ).fetchall()
+    else:
+        rows = db.execute(text("SELECT * FROM timetable_assessments ORDER BY date ASC, start_time ASC")).fetchall()
     return success_response([dict(r._mapping) for r in rows])
 
 

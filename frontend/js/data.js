@@ -2567,24 +2567,28 @@ const TeacherERPData = {
   // Get active teacher employee code from storage or default (Strict personal timetable)
   getActiveTeacherEmpCode() {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        // Priority 1: Check authenticated teacher user session so each teacher sees strictly their own timetable
-        const userStr = window.localStorage.getItem('ssgmce_user') || window.localStorage.getItem('ssgmce_active_teacher') || window.localStorage.getItem('ssgmce_logged_in_teacher');
+      if (typeof window !== 'undefined') {
+        // Priority 1: Manual selected faculty switcher in current session
+        const selected = (window.sessionStorage && window.sessionStorage.getItem('ssgmce_selected_faculty')) ||
+                         (window.localStorage && window.localStorage.getItem('ssgmce_selected_faculty'));
+        if (selected && SSGMCE_FACULTY_TIMETABLES[selected]) return selected;
+
+        // Priority 2: Check authenticated teacher user session so each teacher sees strictly their own timetable
+        const userStr = (window.sessionStorage && (window.sessionStorage.getItem('ssgmce_user') || window.sessionStorage.getItem('ssgmce_active_teacher'))) ||
+                        (window.localStorage && (window.localStorage.getItem('ssgmce_user') || window.localStorage.getItem('ssgmce_active_teacher') || window.localStorage.getItem('ssgmce_logged_in_teacher')));
         if (userStr) {
           const u = typeof userStr === 'string' ? JSON.parse(userStr) : userStr;
-          if (u.emp_code && SSGMCE_FACULTY_TIMETABLES[u.emp_code]) return u.emp_code;
-          if (u.employeeId && SSGMCE_FACULTY_TIMETABLES[u.employeeId]) return u.employeeId;
-          if (u.name) {
+          const cand = String(u.emp_code || u.empCode || u.employeeId || u.user_id || u.username || u.id || '').toUpperCase();
+          if (cand && SSGMCE_FACULTY_TIMETABLES[cand]) return cand;
+          const uName = u.full_name || u.fullName || u.name;
+          if (uName) {
             for (const [code, fac] of Object.entries(SSGMCE_FACULTY_TIMETABLES)) {
-              if (fac.name && (fac.name.toLowerCase().includes(u.name.toLowerCase()) || u.name.toLowerCase().includes(fac.name.split('. ').pop().toLowerCase()))) {
+              if (fac.name && (fac.name.toLowerCase().includes(uName.toLowerCase()) || uName.toLowerCase().includes(fac.name.split('. ').pop().toLowerCase()))) {
                 return code;
               }
             }
           }
         }
-        // Priority 2: Check manual selected faculty switcher
-        const selected = window.localStorage.getItem('ssgmce_selected_faculty');
-        if (selected && SSGMCE_FACULTY_TIMETABLES[selected]) return selected;
       }
     } catch (e) {}
     return "EMP-CSE-1001"; // Default to Dr. J. M. Patil (HOD / First Faculty)
@@ -2592,8 +2596,11 @@ const TeacherERPData = {
 
   // Switch active teacher view
   setActiveTeacherEmpCode(empCode) {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('ssgmce_selected_faculty', empCode);
+    if (typeof window !== 'undefined') {
+      try {
+        if (window.sessionStorage) window.sessionStorage.setItem('ssgmce_selected_faculty', empCode);
+        if (window.localStorage) window.localStorage.setItem('ssgmce_selected_faculty', empCode);
+      } catch (_) {}
     }
     const fac = SSGMCE_FACULTY_TIMETABLES[empCode];
     if (fac) {

@@ -122,9 +122,14 @@ def compat_student_timetable_tests(class_code: Optional[str] = Query("2R1"), db:
     return get_scheduled_tests(class_code, None, db)
 
 @router.get("/student/quizzes")
-def compat_student_quizzes(student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+def compat_student_quizzes(
+    class_id: Optional[str] = Query(None),
+    student_code: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
     """Deprecated. Canonical: GET /api/v1/quizzes"""
-    return get_all_quizzes(None, student_code, current_user, db)
+    return get_all_quizzes(class_id=class_id, student_code=student_code, teacher_id=None, current_user=current_user, db=db)
 
 @router.get("/student/quizzes/{quiz_id}")
 def compat_student_quiz_detail(quiz_id: str, current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
