@@ -48,13 +48,21 @@ const ErpApi = {
   async getProfile(empCode = null) {
     // 1. Try FastAPI Backend
     try {
-      const url = empCode ? `${this.baseUrl}/profile?empCode=${encodeURIComponent(empCode)}` : `${this.baseUrl}/profile`;
+      const url = empCode ? `${this.baseUrl}/teachers/profile?empCode=${encodeURIComponent(empCode)}` : `${this.baseUrl}/teachers/profile`;
       const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
       if (res.ok) {
         const json = await res.json();
         if (json.data) return json.data;
       }
     } catch (e) {
+      try {
+        const url2 = empCode ? `${this.baseUrl}/profile?empCode=${encodeURIComponent(empCode)}` : `${this.baseUrl}/profile`;
+        const res2 = await fetch(url2, { signal: AbortSignal.timeout(2000) });
+        if (res2.ok) {
+          const json2 = await res2.json();
+          if (json2.data) return json2.data;
+        }
+      } catch (_) {}
       console.info("[ErpApi] Backend profile unavailable, falling back to Supabase Cloud...");
     }
 
@@ -461,16 +469,85 @@ const ErpApi = {
   },
 
   /**
+   * Search student by name, roll no, or ID
+   */
+  async searchStudent(query) {
+    if (!query) return [];
+    const qStr = String(query).trim();
+
+    // 1. Try FastAPI backend search endpoint
+    try {
+      const res = await fetch(`${this.baseUrl}/students/search?q=${encodeURIComponent(qStr)}`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          return json.data;
+        }
+      }
+    } catch (e) {
+      console.warn("[ErpApi] Backend students/search failed, trying fallback...", e);
+    }
+
+    // 2. Direct Cloud Supabase fallback
+    if (window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient
+          .from("users")
+          .select("*")
+          .eq("role", "student")
+          .or(`full_name.ilike.%${qStr}%,roll_no.ilike.%${qStr}%,email.ilike.%${qStr}%`)
+          .limit(20);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          return data.map(s => ({
+            id: s.id,
+            name: s.full_name,
+            fullName: s.full_name,
+            rollNo: s.roll_no,
+            roll_no: s.roll_no,
+            sisId: s.roll_no || s.id,
+            studentCode: s.roll_no || s.id,
+            email: s.email,
+            className: "CSE"
+          }));
+        }
+      } catch (err) {
+        console.warn("[ErpApi] Supabase searchStudent error:", err);
+      }
+    }
+
+    return [];
+  },
+
+  /**
    * Individual Student Report
    */
   async getStudentReport(identifier) {
+    if (!identifier) return null;
+    const idStr = String(identifier).trim();
+
+    // 1. Try /api/v1/attendance/reports/student/{id}
     try {
-      const res = await fetch(`${this.baseUrl}/reports/student/${encodeURIComponent(identifier)}`, {
+      const res = await fetch(`${this.baseUrl}/attendance/reports/student/${encodeURIComponent(idStr)}`, {
         signal: AbortSignal.timeout(3000)
       });
       if (res.ok) {
         const json = await res.json();
         if (json.data) return json.data;
+        if (json.student_name || json.student_code) return json;
+      }
+    } catch (e) {}
+
+    // 2. Try /api/v1/reports/student/{id}
+    try {
+      const res = await fetch(`${this.baseUrl}/reports/student/${encodeURIComponent(idStr)}`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) return json.data;
+        if (json.student_name || json.student_code) return json;
       }
     } catch (e) {}
 
@@ -480,19 +557,28 @@ const ErpApi = {
   /**
    * Faculty Conducted Classes Report
    */
-  async getTeacherClassesReport(params = {}) {
+  async getTeacherClassesReport(teacherId = "me", semester = "", classCode = "") {
     try {
-      let url = `${this.baseUrl}/reports/teacher-classes`;
-      const q = new URLSearchParams(params).toString();
-      if (q) url += `?${q}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      let queryParams = {};
+      if (typeof teacherId === "object" && teacherId !== null) {
+        queryParams = teacherId;
+      } else {
+        if (teacherId && teacherId !== "me") queryParams.teacher_id = teacherId;
+        if (semester) queryParams.semester = semester;
+        if (classCode) queryParams.class_code = classCode;
+      }
+      const q = new URLSearchParams(queryParams).toString();
+      const url = `${this.baseUrl}/teachers/classes-report${q ? `?${q}` : ""}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
       if (res.ok) {
         const json = await res.json();
-        if (Array.isArray(json.data)) return json.data;
+        return json.data || json;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Notice on getTeacherClassesReport:", e);
+    }
 
-    return [];
+    return null;
   },
 
   async checkDuplicate(dept, classId, date, subjectCode) {
@@ -504,6 +590,48 @@ const ErpApi = {
         return json.data?.isDuplicate || false;
       }
     } catch (err) {}
+    return false;
+  },
+
+  /**
+   * Faculty Certification Wallet CRUD (Supabase / Backend)
+   */
+  async getTeacherCertifications(teacherId = "") {
+    try {
+      const url = teacherId 
+        ? `${this.baseUrl}/teachers/certifications?teacher_id=${encodeURIComponent(teacherId)}`
+        : `${this.baseUrl}/teachers/certifications`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.data)) return json.data;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  async addTeacherCertification(certData) {
+    try {
+      const res = await fetch(`${this.baseUrl}/teachers/certifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(certData)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || json;
+      }
+    } catch (e) {}
+    return null;
+  },
+
+  async deleteTeacherCertification(certId) {
+    try {
+      const res = await fetch(`${this.baseUrl}/teachers/certifications/${encodeURIComponent(certId)}`, {
+        method: "DELETE"
+      });
+      return res.ok;
+    } catch (e) {}
     return false;
   }
 };

@@ -549,20 +549,43 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
       if (this.btnPdfCenterDownloadTeacher) {
-        this.btnPdfCenterDownloadTeacher.addEventListener("click", () => {
-          this.downloadTeacherReportPdf();
+        this.btnPdfCenterDownloadTeacher.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (this.modalPdfCenter) this.modalPdfCenter.classList.add("hidden");
+          this.openEmployeeRecordCorner("classes");
         });
       }
       const tileTeacher = document.getElementById("tileTeacherReport");
       if (tileTeacher) {
         tileTeacher.addEventListener("click", () => {
-          this.downloadTeacherReportPdf();
+          if (this.modalPdfCenter) this.modalPdfCenter.classList.add("hidden");
+          this.openEmployeeRecordCorner("classes");
         });
       }
       if (this.btnDownloadSessionSummaryPdf) {
         this.btnDownloadSessionSummaryPdf.addEventListener("click", () => {
           this.downloadSessionSummaryPdf();
         });
+      }
+
+      // Employee Record Corner (Verified Wallet & Classes) Event Listeners
+      const btnHeaderCertWallet = document.getElementById("btnHeaderCertWallet");
+      if (btnHeaderCertWallet && !btnHeaderCertWallet.dataset.bound) {
+        btnHeaderCertWallet.dataset.bound = "true";
+        btnHeaderCertWallet.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.openEmployeeRecordCorner("wallet");
+        });
+      }
+      const btnToggleAdd = document.getElementById("btnToggleAddCertForm");
+      if (btnToggleAdd && !btnToggleAdd.dataset.bound) {
+        btnToggleAdd.dataset.bound = "true";
+        btnToggleAdd.addEventListener("click", () => this.toggleAddCertificationForm());
+      }
+      const btnCancelAdd = document.getElementById("btnCancelAddCert");
+      if (btnCancelAdd && !btnCancelAdd.dataset.bound) {
+        btnCancelAdd.dataset.bound = "true";
+        btnCancelAdd.addEventListener("click", () => this.toggleAddCertificationForm(false));
       }
 
       // Quick PDF Download buttons from header cards
@@ -2448,9 +2471,52 @@ document.addEventListener("DOMContentLoaded", () => {
       this.showToast(`Loading report for student: ${identifier}...`, "info");
       try {
         const data = await window.ErpApi.getStudentReport(identifier);
-        if (!data || !data.student) {
+        if (!data) {
           this.showToast(`No report records found for '${identifier}'`, "warning");
           return;
+        }
+
+        // 1. Normalize Student Profile Object
+        const st = data.student || {
+          id: data.student_id || data.id || data.student_code || identifier,
+          name: data.student_name || data.name || data.fullName || "Student",
+          rollNo: data.roll_no || data.rollNo || "-",
+          sisId: data.student_code || data.sisId || data.enrollmentNo || identifier,
+          classCode: data.class_name || data.className || data.class || "3R",
+          program: data.department || data.program || "CSE",
+          overallAttendanceRate: Math.round(data.overall_percentage ?? data.overall_rate ?? data.attendance_percentage ?? 0),
+          totalClassesAttended: data.total_attended ?? data.present_count ?? 0,
+          totalClassesConducted: data.total_conducted ?? data.total_count ?? 0
+        };
+        data.student = st;
+
+        // 2. Normalize Course-wise Summaries
+        if (!data.courseWiseSummary) {
+          const rawSubs = data.subjects || data.subject_wise || data.subjectWise || [];
+          data.courseWiseSummary = rawSubs.map(s => ({
+            id: s.id,
+            courseCode: s.subject_code || s.code || "",
+            courseName: s.subject_name || s.name || "",
+            teacherName: s.faculty_name || s.faculty || s.teacher_name || s.teacherName || "Faculty",
+            teacherId: s.teacher_id || s.faculty_id || "",
+            totalLectures: s.total_periods ?? s.total ?? s.conducted ?? 0,
+            presentLectures: s.present_periods ?? s.present ?? s.attended ?? 0,
+            percentage: Math.round(s.attendance_percentage ?? s.percentage ?? 0)
+          }));
+        }
+
+        // 3. Normalize Detailed Lecture History
+        if (!data.detailedHistory) {
+          const rawHist = data.lecture_history || data.history || [];
+          data.detailedHistory = rawHist.map(h => ({
+            date: h.session_date || h.date || "-",
+            timeSlot: h.period_number ? `Period ${h.period_number}` : (h.timeSlot || "-"),
+            courseCode: h.subject_code || h.code || "",
+            courseName: h.subject_name || h.name || "",
+            teacherName: h.faculty_name || h.faculty || h.teacher || "-",
+            status: (h.status || (h.is_present ? "PRESENT" : "ABSENT")).toUpperCase(),
+            remarks: h.session_type || h.remarks || (h.is_present ? "Regular" : "Absent")
+          }));
         }
 
         this.currentStudentReportData = data;
@@ -2459,34 +2525,100 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("stReportName").innerText = data.student.name || "-";
         document.getElementById("stReportRoll").innerText = data.student.rollNo ?? "-";
         document.getElementById("stReportSis").innerText = data.student.sisId || data.student.enrollmentNo || "-";
-        document.getElementById("stReportClass").innerText = data.student.classCode || "2R1";
+        document.getElementById("stReportClass").innerText = data.student.classCode || "3R";
         document.getElementById("stReportDept").innerText = data.student.program || "CSE";
         
         const overallRate = data.student.overallAttendanceRate ?? 0;
         const rateBadge = document.getElementById("stReportRateBadge");
-        rateBadge.innerText = `${overallRate}%`;
-        rateBadge.style.color = overallRate >= 75 ? "#16A34A" : (overallRate >= 60 ? "#D97706" : "#DC2626");
+        if (rateBadge) {
+          rateBadge.innerText = `${overallRate}%`;
+          rateBadge.style.color = overallRate >= 75 ? "#16A34A" : (overallRate >= 60 ? "#D97706" : "#DC2626");
+        }
 
-        document.getElementById("stReportLectureRatio").innerText = `${data.student.totalClassesAttended} / ${data.student.totalClassesConducted} Attended`;
+        const ratioEl = document.getElementById("stReportLectureRatio");
+        if (ratioEl) {
+          ratioEl.innerText = `${data.student.totalClassesAttended} / ${data.student.totalClassesConducted} Attended`;
+        }
 
-        // Fill Course Breakdown
+        // Identify currently authenticated teacher for strict filtering (teacher_id = auth.uid())
+        let curTeacherName = "";
+        let curTeacherId = "";
+
+        if (window.ERP_AUTH && typeof window.ERP_AUTH.getCurrentUser === "function") {
+          const u = window.ERP_AUTH.getCurrentUser();
+          if (u) {
+            curTeacherName = u.fullName || u.name || "";
+            curTeacherId = u.empCode || u.emp_code || u.id || "";
+          }
+        }
+        if (!curTeacherName) {
+          try {
+            const raw = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session") || localStorage.getItem("erp_user") || localStorage.getItem("currentUser");
+            if (raw) {
+              const u = JSON.parse(raw);
+              curTeacherName = u.fullName || u.name || "";
+              curTeacherId = u.empCode || u.emp_code || u.id || "";
+            }
+          } catch (_) {}
+        }
+        if (!curTeacherName) {
+          const nameEl = document.getElementById("teacherName");
+          if (nameEl && nameEl.textContent && nameEl.textContent.trim() !== "Faculty") {
+            curTeacherName = nameEl.textContent.trim();
+          }
+        }
+        if (!curTeacherName && typeof ERP_DATA !== "undefined" && ERP_DATA.teacher) {
+          curTeacherName = ERP_DATA.teacher.name || "";
+          curTeacherId = ERP_DATA.teacher.id || "";
+        }
+        if (!curTeacherName) {
+          curTeacherName = "Dr. N. M. Kandoi";
+          curTeacherId = "EMP-CSE-1002";
+        }
+
+        // Extract key identifier token for teacher matching
+        const lastNameToken = curTeacherName.split(/\s+/).filter(w => !/^(DR|PROF|MR|MRS|MS)\.?$/i.test(w)).pop()?.toLowerCase() || "";
+
+        // Strict Filter: Teacher should ONLY see subjects they teach (teacher_id = auth.uid())
+        const allSummaries = data.courseWiseSummary || [];
+        const summaries = allSummaries.filter(c => {
+          const cTeacher = (c.teacherName || "").toLowerCase();
+          const cTeacherId = (c.teacherId || "").toLowerCase();
+          if (curTeacherId && (cTeacherId.includes(curTeacherId.toLowerCase()) || curTeacherId.toLowerCase().includes(cTeacherId))) {
+            return true;
+          }
+          if (lastNameToken && cTeacher.includes(lastNameToken)) {
+            return true;
+          }
+          if (curTeacherName && cTeacher.includes(curTeacherName.toLowerCase())) {
+            return true;
+          }
+          return false;
+        });
+
         const courseTbody = document.getElementById("stReportCourseTableBody");
         courseTbody.innerHTML = "";
-        const summaries = data.courseWiseSummary || [];
+
         if (summaries.length === 0) {
-          courseTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No course lectures recorded yet.</td></tr>`;
+          courseTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No courses assigned to your faculty profile (${curTeacherName}) for this student.</td></tr>`;
         } else {
           summaries.forEach((c) => {
             const tr = document.createElement("tr");
+            tr.style.cursor = "pointer";
+            tr.className = "hover:bg-blue-50 transition-colors";
+            tr.title = "Click to inspect Day Wise Attendance table";
             const pctColor = c.percentage >= 75 ? "#15803D" : (c.percentage >= 60 ? "#B45309" : "#B91C1C");
             tr.innerHTML = `
-              <td><strong style="color: #0B5CAD;">${c.courseCode}</strong></td>
+              <td><strong style="color: #0B5CAD;">${c.courseCode}</strong> <span style="font-size:10px; background:#EFF6FF; color:#1D4ED8; padding:2px 6px; border-radius:4px; margin-left:4px;">Day-Wise ➔</span></td>
               <td style="font-weight: 600;">${c.courseName}</td>
               <td style="color: #475569;">${c.teacherName}</td>
               <td style="text-align: center;">${c.totalLectures}</td>
               <td style="text-align: center; font-weight: 600;">${c.presentLectures}</td>
               <td style="text-align: right; font-weight: 700; color: ${pctColor};">${c.percentage}%</td>
             `;
+            tr.addEventListener("click", () => {
+              this.openTeacherSubjectDayWise(c, data.student);
+            });
             courseTbody.appendChild(tr);
           });
         }
@@ -2494,68 +2626,286 @@ document.addEventListener("DOMContentLoaded", () => {
         // Fill Student Data Corner (Certificates & Courses)
         const certsCount = document.getElementById("stReportCertsCount");
         const certsGrid = document.getElementById("stReportCertificatesGrid");
-        certsGrid.innerHTML = "";
-        const certs = data.certifications || [];
-        certsCount.innerText = `${certs.length} Uploaded`;
+        if (certsGrid) {
+          certsGrid.innerHTML = "";
+          const certs = data.certifications || [];
+          if (certsCount) certsCount.innerText = `${certs.length} Uploaded`;
 
-        if (certs.length === 0) {
-          certsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12.5px; color: #64748B; padding: 12px; background: #fff; border-radius: 6px; border: 1px dashed #CBD5E1; text-align: center;">No student certifications or completed course documents uploaded yet.</div>`;
-        } else {
-          certs.forEach((cert) => {
-            const card = document.createElement("div");
-            card.style.cssText = "background: #fff; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;";
-            card.innerHTML = `
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
-                  <span style="font-size: 10px; font-weight: 700; background: #ECFDF5; color: #059669; padding: 2px 6px; border-radius: 4px; border: 1px solid #A7F3D0;">${cert.type || 'Certification'}</span>
-                  <span style="font-size: 11px; color: #64748B;">${cert.issue_date || ''}</span>
+          if (certs.length === 0) {
+            certsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 12.5px; color: #64748B; padding: 12px; background: #fff; border-radius: 6px; border: 1px dashed #CBD5E1; text-align: center;">No student certifications or completed course documents uploaded yet.</div>`;
+          } else {
+            const badgeTypeStyles = {
+              "Industrial Visit": { bg: "#E0F2FE", text: "#0369A1", border: "#BAE6FD" },
+              "Technical Seminar": { bg: "#F3E8FF", text: "#7E22CE", border: "#E9D5FF" },
+              "Workshop & Skills": { bg: "#ECFDF5", text: "#047857", border: "#A7F3D0" },
+              "AICTE Activity": { bg: "#FEF3C7", text: "#B45309", border: "#FDE68A" },
+              "Academic Excellence": { bg: "#DBEAFE", text: "#1D4ED8", border: "#BFDBFE" },
+              "Technical Co-curricular": { bg: "#CCFBF1", text: "#0F766E", border: "#99F6E4" }
+            };
+
+            certs.forEach((cert) => {
+              const bStyle = badgeTypeStyles[cert.type] || { bg: "#F1F5F9", text: "#475569", border: "#CBD5E1" };
+              const card = document.createElement("div");
+              card.style.cssText = "background: #fff; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;";
+              card.innerHTML = `
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; font-weight: 700; background: ${bStyle.bg}; color: ${bStyle.text}; padding: 2px 7px; border-radius: 4px; border: 1px solid ${bStyle.border};">${cert.type || 'Certification'}</span>
+                    <span style="font-size: 11px; color: #64748B;">${cert.issue_date || ''}</span>
+                  </div>
+                  <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${cert.title}</div>
+                  <div style="font-size: 11.5px; color: #475569;">${cert.issuing_authority || 'Accredited Authority'}</div>
+                  ${cert.score ? `<div style="font-size: 11px; color: #0284C7; margin-top: 4px; font-weight: 600;">Score / Points: ${cert.score}</div>` : ''}
                 </div>
-                <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${cert.title}</div>
-                <div style="font-size: 11.5px; color: #475569;">${cert.issuing_authority || 'Accredited Authority'}</div>
-                ${cert.score ? `<div style="font-size: 11px; color: #0284C7; margin-top: 4px; font-weight: 600;">Score/Grade: ${cert.score}</div>` : ''}
-              </div>
-              <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 10.5px; color: #64748B; font-family: monospace;">${cert.credential_id || 'ID Verified'}</span>
-                ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified</span>'}
-              </div>
-            `;
-            certsGrid.appendChild(card);
-          });
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 10.5px; color: #64748B; font-family: monospace;">${cert.credential_id || 'ID Verified'}</span>
+                  ${cert.url && cert.url !== '#' ? `<a href="${cert.url}" target="_blank" style="font-size: 11px; font-weight: 600; color: #0B5CAD; text-decoration: none;">Verify &rarr;</a>` : '<span style="font-size: 10px; color: #10B981; font-weight: 600;">Verified &bull; Updation Record</span>'}
+                </div>
+              `;
+              certsGrid.appendChild(card);
+            });
+          }
         }
 
-        // Fill Detailed History Log
+        // Fill Detailed History Log (filtered to this teacher's courses)
         const historyTbody = document.getElementById("stReportDetailedHistoryBody");
-        historyTbody.innerHTML = "";
-        const history = data.detailedHistory || [];
-        if (history.length === 0) {
-          historyTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No lecture logs recorded yet.</td></tr>`;
-        } else {
-          history.forEach((h) => {
-            const tr = document.createElement("tr");
-            const isP = h.status === "PRESENT" || h.status === "P";
-            tr.innerHTML = `
-              <td><strong>${h.date}</strong></td>
-              <td style="color: #475569;">${h.timeSlot}</td>
-              <td><span style="font-weight: 600;">${h.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${h.courseCode})</span></td>
-              <td style="color: #475569;">${h.teacherName}</td>
-              <td>
-                <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
-                  ${isP ? 'PRESENT' : 'ABSENT'}
-                </span>
-              </td>
-              <td style="color: #475569; font-size: 11.5px;">${h.remarks || '-'}</td>
-            `;
-            historyTbody.appendChild(tr);
-          });
+        if (historyTbody) {
+          historyTbody.innerHTML = "";
+          const allHistory = data.detailedHistory || [];
+          const history = summaries.length > 0
+            ? allHistory.filter(h => summaries.some(s => s.courseCode === h.courseCode || s.courseName === h.courseName))
+            : allHistory;
+
+          if (history.length === 0) {
+            historyTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No lecture logs recorded for your subjects yet.</td></tr>`;
+          } else {
+            history.forEach((h) => {
+              const tr = document.createElement("tr");
+              const isP = h.status === "PRESENT" || h.status === "P";
+              tr.innerHTML = `
+                <td><strong>${h.date}</strong></td>
+                <td style="color: #475569;">${h.timeSlot}</td>
+                <td><span style="font-weight: 600;">${h.courseName}</span> <span style="font-size: 11px; color: #64748B;">(${h.courseCode})</span></td>
+                <td style="color: #475569;">${h.teacherName}</td>
+                <td>
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; ${isP ? 'background: #DCFCE7; color: #15803D;' : 'background: #FEE2E2; color: #B91C1C;'}">
+                    ${isP ? 'PRESENT' : 'ABSENT'}
+                  </span>
+                </td>
+                <td style="color: #475569; font-size: 11.5px;">${h.remarks || '-'}</td>
+              `;
+              historyTbody.appendChild(tr);
+            });
+          }
         }
 
-        // Switch View
-        this.studentReportPlaceholder.classList.add("hidden");
-        this.studentReportContent.classList.remove("hidden");
+        // Switch View - Reveal Student Report Content
+        if (this.studentReportPlaceholder) this.studentReportPlaceholder.classList.add("hidden");
+        if (this.studentReportContent) this.studentReportContent.classList.remove("hidden");
 
       } catch (err) {
         console.error("Load student report error:", err);
         this.showToast("Failed to load student report.", "danger");
+      }
+    },
+
+    // =========================================================================
+    // DAY-WISE ATTENDANCE MODAL (TEACHER SUBJECT-RESTRICTED VIEW)
+    // =========================================================================
+
+    async openTeacherSubjectDayWise(course, student) {
+      const modal = document.getElementById("modalTeacherDayWise");
+      const titleEl = document.getElementById("teacherDayWiseTitle");
+      const subtitleEl = document.getElementById("teacherDayWiseSubtitle");
+      const bodyEl = document.getElementById("teacherDayWiseContent");
+      const btnPdf = document.getElementById("btnDownloadDayWisePdf");
+
+      if (!modal || !bodyEl) return;
+
+      const subName = course.courseName || course.name || course.subject || "Subject";
+      const subCode = course.courseCode || course.code || "";
+      if (titleEl) titleEl.textContent = `Day Wise Attendance of ${subName}`;
+      if (subtitleEl) subtitleEl.textContent = `Student: ${student.name || student.fullName || "Student"} • Roll No: ${student.rollNo || student.roll_no || "-"} • Subject Code: ${subCode}`;
+
+      bodyEl.innerHTML = `
+        <div style="padding: 40px 20px; text-align: center; color: #64748B;">
+          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #CBD5E1; border-top-color: #1565C0; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div style="margin-top: 12px; font-weight: 500; font-size: 0.9rem;">Fetching day-wise records from database...</div>
+        </div>
+      `;
+
+      modal.classList.remove("hidden");
+
+      let dayRecords = [];
+      try {
+        const studentId = student.sisId || student.rollNo || student.id || student.studentCode;
+        const res = await fetch(`http://localhost:8000/api/v1/attendance/student/${encodeURIComponent(studentId)}/day-wise`);
+        if (res.ok) {
+          const json = await res.json();
+          const allRecords = json.data || [];
+          dayRecords = allRecords.filter(r => {
+            if (!r) return false;
+            if (course.id && r.subject_id === course.id) return true;
+            if (subCode && (r.subject_code === subCode || r.subject_code?.toLowerCase() === subCode.toLowerCase())) return true;
+            if (subName && r.subject_name && r.subject_name.toLowerCase().includes(subName.toLowerCase())) return true;
+            return false;
+          });
+          if (dayRecords.length === 0 && allRecords.length > 0 && !course.id) {
+            const firstWord = subName.split(' ')[0].toLowerCase();
+            dayRecords = allRecords.filter(r => r.subject_name?.toLowerCase().includes(firstWord));
+          }
+        }
+      } catch (err) {
+        console.warn("Day-wise attendance fetch error:", err);
+      }
+
+      this.currentDayWiseModalData = {
+        student: student,
+        course: course,
+        records: dayRecords
+      };
+
+      if (!dayRecords || dayRecords.length === 0) {
+        bodyEl.innerHTML = `
+          <div style="padding: 36px 16px; text-align: center; color: #64748B;">
+            <p style="font-weight: 600; font-size: 1rem; color: #475569; margin-bottom: 4px;">No records found</p>
+            <p style="font-size: 0.85rem; color: #94A3B8;">No attendance sessions found for this student in this subject.</p>
+          </div>
+        `;
+        if (btnPdf) btnPdf.disabled = true;
+        return;
+      }
+
+      if (btnPdf) {
+        btnPdf.disabled = false;
+        btnPdf.onclick = () => this.downloadDayWiseAttendancePdf();
+      }
+
+      let rowsHtml = dayRecords.map((r, idx) => {
+        const isAbsent = String(r.status || '').toUpperCase() === 'ABSENT';
+        const isEven = idx % 2 === 0;
+        const bg = isEven ? '#FFFFFF' : '#F8FAFC';
+        const statusColor = isAbsent ? '#DC2626' : '#0F172A';
+        const periodColor = isAbsent ? '#DC2626' : '#334155';
+        const dateFormatted = r.date ? new Date(r.date).toLocaleDateString('en-GB') : '-';
+        const periodType = r.period_type || 'REGULAR';
+
+        return `
+          <tr style="background-color: ${bg}; border-bottom: 1px solid #E2E8F0;">
+            <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 500; color: #334155;">${idx + 1}</td>
+            <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 500; color: #334155;">${dateFormatted}</td>
+            <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${r.status || 'PRESENT'}</td>
+            <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 600; color: ${periodColor};">${periodType}</td>
+          </tr>
+        `;
+      }).join('');
+
+      bodyEl.innerHTML = `
+        <div style="border: 1px solid #CBD5E1; border-radius: 8px; overflow: hidden; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background-color: #1565C0; color: #FFFFFF; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Sl. No</th>
+                <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Date</th>
+                <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Attendance Status</th>
+                <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Period Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    },
+
+    async downloadDayWiseAttendancePdf() {
+      const data = this.currentDayWiseModalData;
+      if (!data || !data.records || data.records.length === 0) {
+        this.showToast("No attendance records to download.", "warning");
+        return;
+      }
+
+      const student = data.student;
+      const course = data.course;
+      const records = data.records;
+
+      let jsPDFClass = window.jspdf ? window.jspdf.jsPDF : null;
+      if (!jsPDFClass && typeof jspdf !== 'undefined') {
+        jsPDFClass = jspdf.jsPDF;
+      }
+
+      if (!jsPDFClass) {
+        this.showToast("PDF engine initializing...", "info");
+        try {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+          const s2 = document.createElement('script');
+          s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+          await new Promise((resolve) => { s2.onload = resolve; document.head.appendChild(s2); });
+          jsPDFClass = window.jspdf.jsPDF;
+        } catch (e) {
+          console.error("jsPDF load error:", e);
+        }
+      }
+
+      if (jsPDFClass) {
+        try {
+          const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          doc.setFillColor(21, 101, 192);
+          doc.rect(0, 0, 210, 26, 'F');
+          doc.setFontSize(14);
+          doc.setTextColor(255, 255, 255);
+          doc.text("SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING", 105, 11, { align: "center" });
+          doc.setFontSize(9.5);
+          doc.text("DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING — STUDENT ATTENDANCE RECORD", 105, 19, { align: "center" });
+
+          doc.setFontSize(11);
+          doc.setTextColor(15, 23, 42);
+          doc.text(`Subject: ${course.courseName || course.name} (${course.courseCode || course.code})`, 14, 35);
+          doc.setFontSize(9.5);
+          doc.setTextColor(71, 85, 105);
+          doc.text(`Student: ${student.name || student.fullName}   |   Roll No: ${student.rollNo || student.roll_no}   |   Total Classes: ${records.length}`, 14, 42);
+
+          const tableRows = records.map((r, i) => [
+            String(i + 1),
+            r.date ? new Date(r.date).toLocaleDateString('en-GB') : '-',
+            r.status || 'PRESENT',
+            r.period_type || 'REGULAR'
+          ]);
+
+          if (doc.autoTable) {
+            doc.autoTable({
+              startY: 47,
+              head: [['Sl. No', 'Date', 'Attendance Status', 'Period Type']],
+              body: tableRows,
+              theme: 'striped',
+              headStyles: { fillColor: [21, 101, 192], textColor: 255, fontStyle: 'bold' },
+              didParseCell: function(d) {
+                if (d.section === 'body') {
+                  const statusVal = d.row.raw[2];
+                  if (String(statusVal).toUpperCase() === 'ABSENT') {
+                    if (d.column.index === 2 || d.column.index === 3) {
+                      d.cell.styles.textColor = [220, 38, 38];
+                      d.cell.styles.fontStyle = 'bold';
+                    }
+                  }
+                }
+              }
+            });
+          }
+
+          doc.save(`${student.rollNo || 'Student'}_${course.courseCode || 'Subject'}_Attendance.pdf`);
+          this.showToast("Student Attendance Record PDF generated successfully!", "success");
+        } catch (pdfErr) {
+          console.error("PDF generation error:", pdfErr);
+          this.showToast("Failed to generate PDF.", "danger");
+        }
       }
     },
 
@@ -2600,14 +2950,419 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     // =========================================================================
+    // EMPLOYEE RECORD CORNER (UNIFIED CONDUCTED CLASSES & VERIFIED WALLET)
+    // =========================================================================
+
+    openEmployeeRecordCorner(tab = "classes") {
+      const modal = document.getElementById("modalTeacherReport");
+      if (modal) {
+        modal.classList.remove("hidden");
+        this.switchEmployeeCornerTab(tab);
+      }
+    },
+
+    switchEmployeeCornerTab(tab = "classes") {
+      const btnClasses = document.getElementById("tabBtnEmpClasses");
+      const btnWallet = document.getElementById("tabBtnEmpWallet");
+      const paneClasses = document.getElementById("paneEmpClasses");
+      const paneWallet = document.getElementById("paneEmpWallet");
+      const btnDownloadPdf = document.getElementById("btnDownloadTeacherPdf");
+
+      if (tab === "wallet") {
+        if (btnWallet) {
+          btnWallet.style.background = "#0B5CAD";
+          btnWallet.style.color = "#fff";
+          btnWallet.style.borderColor = "#0B5CAD";
+        }
+        if (btnClasses) {
+          btnClasses.style.background = "#fff";
+          btnClasses.style.color = "#475569";
+          btnClasses.style.borderColor = "#CBD5E1";
+        }
+        if (paneClasses) paneClasses.classList.add("hidden");
+        if (paneWallet) paneWallet.classList.remove("hidden");
+        if (btnDownloadPdf) btnDownloadPdf.style.display = "none";
+        this.loadCertificationWallet();
+      } else {
+        if (btnClasses) {
+          btnClasses.style.background = "#0B5CAD";
+          btnClasses.style.color = "#fff";
+          btnClasses.style.borderColor = "#0B5CAD";
+        }
+        if (btnWallet) {
+          btnWallet.style.background = "#fff";
+          btnWallet.style.color = "#475569";
+          btnWallet.style.borderColor = "#CBD5E1";
+        }
+        if (paneWallet) paneWallet.classList.add("hidden");
+        if (paneClasses) paneClasses.classList.remove("hidden");
+        if (btnDownloadPdf) btnDownloadPdf.style.display = "inline-flex";
+        this.loadTeacherReportData();
+      }
+    },
+
+    openCertificationWalletModal() {
+      this.openEmployeeRecordCorner("wallet");
+    },
+
+    toggleAddCertificationForm(forceState) {
+      const container = document.getElementById("walletAddFormContainer");
+      const btnToggle = document.getElementById("btnToggleAddCertForm");
+      if (!container) return;
+
+      const isHidden = container.classList.contains("hidden");
+      const shouldShow = forceState !== undefined ? forceState : isHidden;
+
+      if (shouldShow) {
+        container.classList.remove("hidden");
+        if (btnToggle) btnToggle.innerHTML = "<span>✕</span> Close Form";
+        const titleInput = document.getElementById("certInputTitle");
+        if (titleInput) titleInput.focus();
+      } else {
+        container.classList.add("hidden");
+        if (btnToggle) btnToggle.innerHTML = "<span>➕</span> Add New Certification";
+        const form = document.getElementById("formAddCertification");
+        if (form) form.reset();
+      }
+    },
+
+    async loadCertificationWallet() {
+      const cardsBody = document.getElementById("walletCardsBody");
+      if (!cardsBody) return;
+
+      cardsBody.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: #64748B;">
+          <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #CBD5E1; border-top-color: #0284C7; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div style="margin-top: 12px; font-weight: 600; font-size: 13.5px;">Loading verified certifications from Supabase...</div>
+        </div>
+      `;
+
+      // 1. Resolve current teacher identifier
+      let teacherId = "";
+      let teacherName = "";
+      if (window.ERP_AUTH && typeof window.ERP_AUTH.getCurrentUser === "function") {
+        const u = window.ERP_AUTH.getCurrentUser();
+        if (u) {
+          teacherId = u.empCode || u.emp_code || u.id || "";
+          teacherName = u.fullName || u.name || "";
+        }
+      }
+      if (!teacherId) {
+        try {
+          const raw = localStorage.getItem("ssgmce_user") || localStorage.getItem("ssgmce_erp_session") || localStorage.getItem("erp_user") || localStorage.getItem("currentUser");
+          if (raw) {
+            const u = JSON.parse(raw);
+            teacherId = u.empCode || u.emp_code || u.id || "";
+            teacherName = u.fullName || u.name || "";
+          }
+        } catch (_) {}
+      }
+      if (!teacherId && typeof ERP_DATA !== "undefined" && ERP_DATA.teacher) {
+        teacherId = ERP_DATA.teacher.id || "";
+        teacherName = ERP_DATA.teacher.name || "";
+      }
+      if (!teacherId) {
+        const nameEl = document.getElementById("teacherName");
+        if (nameEl && nameEl.textContent && nameEl.textContent.trim() !== "Faculty") {
+          teacherName = nameEl.textContent.trim();
+        }
+        teacherId = teacherName.toLowerCase().includes("patil") ? "EMP-CSE-1001" : "EMP-CSE-1002";
+      }
+
+      let certs = [];
+
+      // 2. Query Direct Supabase Client if available
+      let supaLoaded = false;
+      if (window.supabaseClient) {
+        try {
+          let query = window.supabaseClient.from("teacher_certifications").select("*");
+          const { data, error } = await query.order("year", { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            certs = data;
+            supaLoaded = true;
+          }
+        } catch (e) {
+          console.warn("[Wallet] Supabase direct query notice:", e);
+        }
+      }
+
+      // 3. Fallback to API endpoint
+      if (!supaLoaded || certs.length === 0) {
+        try {
+          const res = await fetch(`http://localhost:8000/api/v1/teachers/certifications?teacher_id=${encodeURIComponent(teacherId)}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.data)) {
+              certs = json.data;
+            }
+          }
+        } catch (err) {
+          console.error("[Wallet] Fetch error:", err);
+        }
+      }
+
+      this.currentCertifications = certs;
+      this.selectedWalletCategory = "ALL";
+
+      // Update counters
+      const countAll = certs.length;
+      const countDegree = certs.filter(c => (c.type || "").toLowerCase() === "degree").length;
+      const countCourse = certs.filter(c => (c.type || "").toLowerCase() === "course").length;
+      const countPaper = certs.filter(c => (c.type || "").toLowerCase().includes("paper") || (c.type || "").toLowerCase().includes("research")).length;
+      const countWorkshop = certs.filter(c => (c.type || "").toLowerCase() === "workshop").length;
+
+      const elAll = document.getElementById("walletCountAll");
+      const elDegree = document.getElementById("walletCountDegree");
+      const elCourse = document.getElementById("walletCountCourse");
+      const elPaper = document.getElementById("walletCountPaper");
+      const elWorkshop = document.getElementById("walletCountWorkshop");
+
+      if (elAll) elAll.textContent = countAll;
+      if (elDegree) elDegree.textContent = countDegree;
+      if (elCourse) elCourse.textContent = countCourse;
+      if (elPaper) elPaper.textContent = countPaper;
+      if (elWorkshop) elWorkshop.textContent = countWorkshop;
+
+      // Bind Category Filter Buttons
+      const filterGroup = document.getElementById("walletCategoryFilterGroup");
+      if (filterGroup && !filterGroup.dataset.bound) {
+        filterGroup.dataset.bound = "true";
+        filterGroup.querySelectorAll(".wallet-filter-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            filterGroup.querySelectorAll(".wallet-filter-btn").forEach(b => {
+              b.classList.remove("active");
+              b.style.background = "#fff";
+              b.style.color = "#475569";
+              b.style.borderColor = "#CBD5E1";
+            });
+            btn.classList.add("active");
+            btn.style.background = "#0284C7";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "#0284C7";
+            this.selectedWalletCategory = btn.dataset.filter || "ALL";
+            this.renderCertificationCards();
+          });
+        });
+      }
+
+      this.renderCertificationCards();
+    },
+
+    renderCertificationCards() {
+      const cardsBody = document.getElementById("walletCardsBody");
+      if (!cardsBody) return;
+
+      const certs = this.currentCertifications || [];
+      const filter = this.selectedWalletCategory || "ALL";
+
+      const filtered = filter === "ALL" 
+        ? certs 
+        : certs.filter(c => (c.type || "").toLowerCase().includes(filter.toLowerCase()));
+
+      if (filtered.length === 0) {
+        cardsBody.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; background: #fff; border: 1.5px dashed #CBD5E1; border-radius: 10px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">📂</div>
+            <h4 style="font-size: 15px; font-weight: 700; color: #334155; margin-bottom: 4px;">No records found</h4>
+            <p style="font-size: 12.5px; color: #64748B; margin-bottom: 12px;">No certifications matching '${filter}' in your wallet.</p>
+            <button type="button" onclick="if(window.TeacherApp&&window.TeacherApp.toggleAddCertificationForm){window.TeacherApp.toggleAddCertificationForm(true);}" style="padding: 6px 14px; background: #059669; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              ➕ Add First Certification
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      cardsBody.innerHTML = filtered.map(c => {
+        const typeLower = (c.type || "").toLowerCase();
+        let badgeBg = "#EEF2FF";
+        let badgeColor = "#4F46E5";
+        let badgeIcon = "🎓";
+
+        if (typeLower.includes("course")) {
+          badgeBg = "#ECFDF5";
+          badgeColor = "#059669";
+          badgeIcon = "💻";
+        } else if (typeLower.includes("paper") || typeLower.includes("research")) {
+          badgeBg = "#F0F9FF";
+          badgeColor = "#0284C7";
+          badgeIcon = "📄";
+        } else if (typeLower.includes("workshop")) {
+          badgeBg = "#FFFBEB";
+          badgeColor = "#D97706";
+          badgeIcon = "🛠️";
+        }
+
+        const org = c.issuing_organization || c.org || "Accredited Body";
+        const year = c.year || "2024";
+        const url = c.credential_url || c.url || "";
+
+        return `
+          <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: transform 0.15s ease, box-shadow 0.15s ease;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; background: ${badgeBg}; color: ${badgeColor}; padding: 3px 8px; border-radius: 6px;">
+                  <span>${badgeIcon}</span> ${c.type || 'Certification'}
+                </span>
+                <span style="font-size: 12px; font-weight: 700; color: #64748B;">Year: ${year}</span>
+              </div>
+              
+              <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin: 0 0 6px 0; line-height: 1.35;">${c.title}</h4>
+              <p style="font-size: 12.5px; color: #475569; margin: 0 0 10px 0; font-weight: 500;">🏛️ ${org}</p>
+            </div>
+
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; font-weight: 600; color: #0284C7; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">Verify Credential ↗</a>` : `<span style="font-size: 11px; color: #10B981; font-weight: 600;">✓ Verified</span>`}
+              </div>
+              <button type="button" onclick="if(window.TeacherApp&&window.TeacherApp.deleteCertification){window.TeacherApp.deleteCertification('${c.id}');}" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;">
+                <span>🗑️</span> Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    },
+
+    async handleSaveCertification(event) {
+      if (event) event.preventDefault();
+
+      const title = document.getElementById("certInputTitle")?.value.trim();
+      const ctype = document.getElementById("certInputType")?.value;
+      const org = document.getElementById("certInputOrg")?.value.trim();
+      const year = parseInt(document.getElementById("certInputYear")?.value || "2024", 10);
+      const url = document.getElementById("certInputUrl")?.value.trim();
+
+      if (!title || !ctype || !org) {
+        this.showToast("Please fill in Title, Type, and Issuing Organization.", "warning");
+        return;
+      }
+
+      const btnSubmit = document.getElementById("btnSubmitAddCert");
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Saving to Supabase...";
+      }
+
+      let teacherId = "";
+      if (window.ERP_AUTH && typeof window.ERP_AUTH.getCurrentUser === "function") {
+        const u = window.ERP_AUTH.getCurrentUser();
+        if (u) teacherId = u.empCode || u.emp_code || u.id || "";
+      }
+      if (!teacherId && typeof ERP_DATA !== "undefined" && ERP_DATA.teacher) {
+        teacherId = ERP_DATA.teacher.id || "";
+      }
+      if (!teacherId) {
+        teacherId = "EMP-CSE-1002";
+      }
+
+      try {
+        let inserted = false;
+
+        // 1. Direct Supabase INSERT
+        if (window.supabaseClient) {
+          try {
+            const { data, error } = await window.supabaseClient.from("teacher_certifications").insert([{
+              teacher_id: teacherId,
+              title: title,
+              type: ctype,
+              issuing_organization: org,
+              year: year,
+              credential_url: url
+            }]).select();
+
+            if (!error) {
+              inserted = true;
+            }
+          } catch (e) {
+            console.warn("[Wallet] Direct Supabase insert notice:", e);
+          }
+        }
+
+        // 2. Fallback to backend API
+        if (!inserted) {
+          const res = await fetch("http://localhost:8000/api/v1/teachers/certifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              teacher_id: teacherId,
+              title: title,
+              type: ctype,
+              issuing_organization: org,
+              year: year,
+              credential_url: url
+            })
+          });
+          if (res.ok) {
+            inserted = true;
+          }
+        }
+
+        if (inserted) {
+          this.showToast("Certification added to wallet successfully!", "success");
+          this.toggleAddCertificationForm(false);
+          await this.loadCertificationWallet();
+        } else {
+          this.showToast("Failed to save certification.", "danger");
+        }
+      } catch (err) {
+        console.error("Save certification error:", err);
+        this.showToast("Error saving certification to wallet.", "danger");
+      } finally {
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.innerText = "💾 Save to Wallet";
+        }
+      }
+    },
+
+    async deleteCertification(id) {
+      if (!id) return;
+      if (!confirm("Are you sure you want to remove this certification from your wallet?")) {
+        return;
+      }
+
+      this.showToast("Removing certification...", "info");
+
+      try {
+        let deleted = false;
+
+        // 1. Direct Supabase DELETE
+        if (window.supabaseClient) {
+          try {
+            const { error } = await window.supabaseClient.from("teacher_certifications").delete().eq("id", id);
+            if (!error) deleted = true;
+          } catch (e) {
+            console.warn("[Wallet] Supabase delete notice:", e);
+          }
+        }
+
+        // 2. Fallback to API
+        if (!deleted) {
+          const res = await fetch(`http://localhost:8000/api/v1/teachers/certifications/${encodeURIComponent(id)}`, {
+            method: "DELETE"
+          });
+          if (res.ok) deleted = true;
+        }
+
+        if (deleted) {
+          this.showToast("Certification removed from wallet.", "success");
+          await this.loadCertificationWallet();
+        } else {
+          this.showToast("Failed to remove certification.", "danger");
+        }
+      } catch (err) {
+        console.error("Delete certification error:", err);
+        this.showToast("Error removing certification.", "danger");
+      }
+    },
+
+    // =========================================================================
     // TEACHER CONDUCTED CLASSES REPORT
     // =========================================================================
 
     openTeacherReportModal() {
-      if (this.modalTeacherReport) {
-        this.modalTeacherReport.classList.remove("hidden");
-        this.loadTeacherReportData();
-      }
+      this.openEmployeeRecordCorner("classes");
     },
 
     async loadTeacherReportData() {
@@ -2696,16 +3451,26 @@ document.addEventListener("DOMContentLoaded", () => {
         certsHtml = `<div style="padding: 10px; font-size: 11.5px; color: #64748B; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 6px; text-align: center;">No student certifications or completed course documents uploaded.</div>`;
       } else {
         certsHtml = `<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">`;
+        const pdfBadgeTypeStyles = {
+          "Industrial Visit": { bg: "#E0F2FE", text: "#0369A1" },
+          "Technical Seminar": { bg: "#F3E8FF", text: "#7E22CE" },
+          "Workshop & Skills": { bg: "#ECFDF5", text: "#047857" },
+          "AICTE Activity": { bg: "#FEF3C7", text: "#B45309" },
+          "Academic Excellence": { bg: "#DBEAFE", text: "#1D4ED8" },
+          "Technical Co-curricular": { bg: "#CCFBF1", text: "#0F766E" }
+        };
+
         certs.forEach((crt) => {
+          const pbStyle = pdfBadgeTypeStyles[crt.type] || { bg: "#DCFCE7", text: "#15803D" };
           certsHtml += `
             <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-size: 10px; font-weight: 700; background: #DCFCE7; color: #15803D; padding: 2px 6px; border-radius: 4px;">${crt.type || 'Verified'}</span>
+                <span style="font-size: 10px; font-weight: 700; background: ${pbStyle.bg}; color: ${pbStyle.text}; padding: 2px 6px; border-radius: 4px;">${crt.type || 'Verified'}</span>
                 <span style="font-size: 10.5px; color: #64748B;">${crt.issue_date || ''}</span>
               </div>
               <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-bottom: 2px;">${crt.title}</div>
               <div style="font-size: 11px; color: #475569;">${crt.issuing_authority || 'Accredited Authority'}</div>
-              ${crt.score ? `<div style="font-size: 10.5px; color: #0284C7; font-weight: 600; margin-top: 2px;">Grade/Score: ${crt.score}</div>` : ''}
+              ${crt.score ? `<div style="font-size: 10.5px; color: #0284C7; font-weight: 600; margin-top: 2px;">Grade / Points: ${crt.score}</div>` : ''}
               <div style="font-size: 10px; color: #64748B; font-family: monospace; margin-top: 4px;">ID: ${crt.credential_id || 'VERIFIED'}</div>
             </div>
           `;
@@ -3251,6 +4016,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.CollegeERPApp = App;
   window.TeacherAttendanceApp = App;
+  window.TeacherApp = App;
   App.init();
 });
 

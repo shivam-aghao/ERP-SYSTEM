@@ -165,9 +165,10 @@
       });
     },
 
-    // 9. Updation Info
-    async getUpdationRecords() {
-      return await this.request('/update-info');
+    // 9. Updation Info & Unified Student Records Data Module
+    async getUpdationRecords(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/update-info?student_code=${encodeURIComponent(code)}`);
     },
 
     async submitUpdationRecord(payload) {
@@ -175,6 +176,17 @@
         method: 'POST',
         body: payload
       });
+    },
+
+    async deleteUpdationRecord(recordId) {
+      return await this.request(`/update-info/${encodeURIComponent(recordId)}`, {
+        method: 'DELETE'
+      });
+    },
+
+    async getUnifiedRecordsData(studentCode = null) {
+      const code = studentCode || getActiveStudentCode();
+      return await this.request(`/records-data?student_code=${encodeURIComponent(code)}`);
     },
 
     // 10. D-Wallet & Documents

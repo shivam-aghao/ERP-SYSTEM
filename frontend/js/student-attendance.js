@@ -721,9 +721,9 @@
   }
 
   /* ==========================================================================
-     8. SUBJECT DETAILS MODAL
+     8. SUBJECT DETAILS MODAL - DAY WISE ATTENDANCE TABLE
      ========================================================================== */
-  function openSubjectModal(subject) {
+  async function openSubjectModal(subject) {
     const backdrop = document.getElementById('subjectModalBackdrop');
     const titleEl = document.getElementById('modalSubjectName');
     const codeEl = document.getElementById('modalSubjectCode');
@@ -733,76 +733,101 @@
 
     state.selectedSubjectForModal = subject;
 
-    const typeFull = subject.type === 'TH' ? 'Theory' : (subject.type === 'PR' ? 'Practical / Laboratory' : 'Tutorial');
-    if (codeEl) codeEl.textContent = `${subject.code || ''} • ${typeFull}`;
-    if (titleEl) titleEl.textContent = subject.subject || subject.name || subject.code || 'Subject';
+    const subName = subject.subject || subject.name || subject.subject_name || subject.code || 'Subject';
+    const subCode = subject.code || subject.subject_code || '';
+    if (codeEl) codeEl.textContent = `${subCode} • ${subject.type === 'PR' ? 'Practical' : 'Theory'}`;
+    if (titleEl) titleEl.textContent = `Day Wise Attendance of ${subName}`;
 
-    const absent = subject.total - subject.present;
-    const calc75 = window.AttendanceCalculations.calculateConsecutiveNeeded(subject.present, subject.total, 75);
-
-    let adviceHtml = '';
-    if (calc75.isMet) {
-      adviceHtml = `
-        <div class="modal-prediction-card" style="border-left-color:#10B981; background:#ECFDF5;">
-          <h4 style="color:#065F46;">Target Met (Above 75%)</h4>
-          <p style="color:#047857;">Your attendance for this subject is safe. You can miss up to <strong>${calc75.canMiss} lecture${calc75.canMiss > 1 ? 's' : ''}</strong> without falling below 75%.</p>
-        </div>
-      `;
-    } else {
-      adviceHtml = `
-        <div class="modal-prediction-card" style="border-left-color:#EF4444; background:#FEF2F2;">
-          <h4 style="color:#991B1B;">Classes Needed for 75% Minimum: ${calc75.needed}</h4>
-          <p style="color:#B91C1C;">You must attend the next <strong>${calc75.needed} consecutive ${subject.type} sessions</strong> without missing to reach the minimum 75% requirement (${subject.present + calc75.needed} / ${subject.total + calc75.needed} periods).</p>
-        </div>
-      `;
-    }
-
+    // Loading skeleton / spinner
     bodyEl.innerHTML = `
-      <div class="modal-stat-grid">
-        <div class="modal-stat-card">
-          <div class="label">Present Classes</div>
-          <div class="val" style="color:#10B981;">${subject.present}</div>
-        </div>
-        <div class="modal-stat-card">
-          <div class="label">Absent Classes</div>
-          <div class="val" style="color:#EF4444;">${absent}</div>
-        </div>
-        <div class="modal-stat-card">
-          <div class="label">Total Conducted</div>
-          <div class="val">${subject.total}</div>
-        </div>
-        <div class="modal-stat-card">
-          <div class="label">Attendance %</div>
-          <div class="val" style="color:${subject.percentage >= 75 ? '#10B981' : '#EF4444'};">${subject.percentage}%</div>
-        </div>
-        <div class="modal-stat-card">
-          <div class="label">Course Credits</div>
-          <div class="val">${subject.credits || '3.0'}</div>
-        </div>
-        <div class="modal-stat-card">
-          <div class="label">Classroom / Venue</div>
-          <div class="val" style="font-size:0.95rem; line-height:1.8;">${subject.room || 'LH-204'}</div>
-        </div>
+      <div style="padding: 40px 20px; text-align: center; color: #64748B;">
+        <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #CBD5E1; border-top-color: #1565C0; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="margin-top: 12px; font-weight: 500; font-size: 0.9rem;">Fetching day-wise records from database...</div>
       </div>
-
-      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:12px 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.8rem; font-weight:600;">
-          <span style="color:var(--text-secondary);">Course Instructor:</span>
-          <strong style="color:var(--navy);">${escapeHTML(subject.faculty || 'SSGMCE Faculty')}</strong>
-        </div>
-        <div class="attendance-progress-bar" style="height:8px;">
-          <div class="attendance-progress-fill ${subject.percentage >= 75 ? 'fill-safe' : 'fill-critical'}" style="width:${subject.percentage}%;"></div>
-        </div>
-      </div>
-
-      ${adviceHtml}
-
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:4px;">
-        <button type="button" class="btn btn-outline" onclick="closeSubjectModal()" style="font-size:0.8rem; padding:6px 14px;">Close</button>
-        <button type="button" class="btn btn-primary" onclick="showToast('Syllabus sheet requested for ${escapeHTML(subject.code)}', 'info')" style="font-size:0.8rem; padding:6px 14px;">View Subject Syllabus</button>
-      </div>
+      <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+      </style>
     `;
 
+    backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    let dayRecords = [];
+    try {
+      const studentId = state.profile?.student_code || state.profile?.roll_no || state.profile?.id || '308637';
+      const res = await fetch(`http://localhost:8000/api/v1/attendance/student/${encodeURIComponent(studentId)}/day-wise`);
+      if (res.ok) {
+        const json = await res.json();
+        const allRecords = json.data || [];
+        dayRecords = allRecords.filter(r => {
+          if (!r) return false;
+          if (subject.id && r.subject_id === subject.id) return true;
+          if (subCode && (r.subject_code === subCode || r.subject_code?.toLowerCase() === subCode.toLowerCase())) return true;
+          if (subName && r.subject_name && r.subject_name.toLowerCase().includes(subName.toLowerCase())) return true;
+          return false;
+        });
+        if (dayRecords.length === 0 && allRecords.length > 0 && !subject.id) {
+          const firstWord = subName.split(' ')[0].toLowerCase();
+          dayRecords = allRecords.filter(r => r.subject_name?.toLowerCase().includes(firstWord));
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching day-wise records from API:', err);
+    }
+
+    if (!dayRecords || dayRecords.length === 0) {
+      bodyEl.innerHTML = `
+        <div style="padding: 32px 16px; text-align: center; color: #64748B;">
+          <p style="font-weight: 600; font-size: 1rem; color: #475569; margin-bottom: 4px;">No records found</p>
+          <p style="font-size: 0.85rem; color: #94A3B8;">No attendance sessions found for this subject.</p>
+        </div>
+        <div style="display:flex; justify-content:flex-end; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+          <button type="button" class="btn btn-outline" onclick="closeSubjectModal()" style="font-size: 0.85rem; padding: 7px 18px; border-radius: 6px;">Close</button>
+        </div>
+      `;
+      return;
+    }
+
+    // Render table exactly matching the screenshot
+    let rowsHtml = dayRecords.map((r, idx) => {
+      const isAbsent = String(r.status || '').toUpperCase() === 'ABSENT';
+      const isEven = idx % 2 === 0;
+      const bg = isEven ? '#FFFFFF' : '#F8FAFC';
+      const statusColor = isAbsent ? '#DC2626' : '#0F172A';
+      const periodColor = isAbsent ? '#DC2626' : '#334155';
+      const dateFormatted = r.date ? new Date(r.date).toLocaleDateString('en-GB') : '-';
+      const periodType = r.period_type || 'REGULAR';
+
+      return `
+        <tr style="background-color: ${bg}; border-bottom: 1px solid #E2E8F0;">
+          <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 500; color: #334155;">${idx + 1}</td>
+          <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 500; color: #334155;">${dateFormatted}</td>
+          <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 700; color: ${statusColor};">${r.status || 'PRESENT'}</td>
+          <td style="padding: 10px 14px; font-size: 0.85rem; font-weight: 600; color: ${periodColor};">${periodType}</td>
+        </tr>
+      `;
+    }).join('');
+
+    bodyEl.innerHTML = `
+      <div style="border: 1px solid #CBD5E1; border-radius: 8px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background-color: #1565C0; color: #FFFFFF; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Sl. No</th>
+              <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Date</th>
+              <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Attendance Status</th>
+              <th style="padding: 12px 14px; font-weight: 700; border-bottom: 2px solid #0D47A1;">Period Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: flex-end; padding-top: 8px;">
+        <button type="button" class="btn btn-primary" onclick="closeSubjectModal()" style="background: #334155; border: none; padding: 8px 24px; font-weight: 600; border-radius: 6px; color: #FFFFFF; cursor: pointer; font-size: 0.875rem;">Close</button>
+      </div>
+    `;
     backdrop.classList.add('active');
     document.body.style.overflow = 'hidden';
   }

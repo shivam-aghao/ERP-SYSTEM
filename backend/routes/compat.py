@@ -76,6 +76,12 @@ router = APIRouter(tags=["Documented Compatibility Layer"])
 # -----------------------------------------------------------------------------
 # 1. DEPRECATED /student/... -> CANONICAL /students/...
 # -----------------------------------------------------------------------------
+@router.get("/student/search")
+def compat_student_search(q: str = Query(...), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: GET /api/v1/students/search"""
+    from backend.routes.students import search_students
+    return search_students(q, db)
+
 @router.get("/student/profile")
 def compat_student_profile(student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
     """Deprecated. Canonical: GET /api/v1/students/profile"""
@@ -207,6 +213,34 @@ def compat_student_certificates(student_code: Optional[str] = Query(None), curre
 def compat_verify_certificate(verification_code: str):
     """Deprecated. Canonical: GET /api/v1/documents/certificates/verify/{verification_code}"""
     return verify_certificate(verification_code)
+
+@router.get("/update-info")
+@router.get("/student/update-info")
+def compat_get_update_info(student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: GET /api/v1/students/update-info"""
+    from backend.routes.students import get_student_update_info
+    return get_student_update_info(student_code, current_user, db)
+
+@router.post("/update-info")
+@router.post("/student/update-info")
+def compat_post_update_info(payload: Dict[str, Any] = Body(...), student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: POST /api/v1/students/update-info"""
+    from backend.routes.students import submit_student_update_info
+    return submit_student_update_info(payload, student_code, current_user, db)
+
+@router.delete("/update-info/{record_id}")
+@router.delete("/student/update-info/{record_id}")
+def compat_delete_update_info(record_id: str, db: Session = Depends(get_db)):
+    """Deprecated. Canonical: DELETE /api/v1/students/update-info/{record_id}"""
+    from backend.routes.students import delete_student_update_info
+    return delete_student_update_info(record_id, db)
+
+@router.get("/records-data")
+@router.get("/student/records-data")
+def compat_get_student_records_data(student_code: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: GET /api/v1/students/records-data"""
+    from backend.routes.students import get_unified_student_records_data
+    return get_unified_student_records_data(student_code, current_user, db)
 
 @router.get("/student/semester-results")
 def compat_student_semester_results(student_code: Optional[str] = Query(None), semester: Optional[int] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
