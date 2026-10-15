@@ -894,6 +894,76 @@
       border-color: #BFDBFE;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
     }
+
+    /* AI Question Generator & Preview Card Styles */
+    .ai-gen-modal-box {
+      max-width: 980px;
+      width: 95%;
+      height: min(90vh, 880px);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    @media (max-width: 768px) {
+      .ai-gen-modal-box {
+        width: 98%;
+        height: 94vh;
+        max-height: 94vh;
+        border-radius: 10px;
+      }
+    }
+    .ai-preview-card {
+      border: 1.5px solid #E2E8F0;
+      background: #F8FAFC;
+      border-radius: 10px;
+      padding: 1.15rem 1.25rem;
+      margin-bottom: 0.85rem;
+      flex-shrink: 0;
+      min-height: fit-content;
+      height: auto;
+      max-height: none;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: visible;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ai-preview-card.selected {
+      border-color: #2563EB;
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+    .ai-preview-card:hover {
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    }
+    .btn-count-pill {
+      padding: 0.3rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.2;
+    }
+    .btn-count-pill:hover {
+      background: #EFF6FF;
+      border-color: #93C5FD;
+      color: #1D4ED8;
+    }
+    .btn-count-pill.active {
+      background: #2563EB !important;
+      border-color: #1D4ED8 !important;
+      color: #FFFFFF !important;
+      font-weight: 700;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+    }
   </style>
 
 </head>
@@ -1415,53 +1485,76 @@
         </div>
 
         <div class="stat-card">
-
           <div class="stat-num" id="statHighScore">0%</div>
-
           <div class="stat-label">Highest Score</div>
+        </div>
 
+        <div class="stat-card" style="border-top: 3px solid #2563EB;">
+          <div class="stat-num" id="statUniquePapers" style="color: #2563EB;">0</div>
+          <div class="stat-label">Unique Question Papers</div>
+        </div>
+
+        <div class="stat-card" style="border-top: 3px solid #7C3AED;">
+          <div class="stat-num" id="statTotalPapers" style="color: #7C3AED;">0</div>
+          <div class="stat-label">Total Attempt Papers</div>
         </div>
 
       </div>
-
-
-
-
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-
         <div class="card">
-
           <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Question-Level Performance Breakdown</h3>
-
           <p style="font-size: 0.85rem; color: var(--text-muted);">Identify difficult or slow questions to revise in lectures.</p>
-
           <div style="height: 300px;">
-
             <canvas id="questionAccuracyChart"></canvas>
-
           </div>
-
         </div>
-
-
 
         <div class="card">
-
           <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--navy);">Speed & Leaderboard</h3>
-
           <p style="font-size: 0.85rem; color: var(--text-muted);">Top 5 Student Performers</p>
-
           <div id="analyticsTopPerformers" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
-
             <!-- Rendered dynamically -->
-
           </div>
-
         </div>
-
       </div>
 
+      <!-- Question Exposure Heat & Exam Proctoring Security Logs -->
+      <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+        <!-- Question Exposure Heat -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h3 style="margin: 0; font-size: 1.05rem; color: var(--navy); display: flex; align-items: center; gap: 0.45rem;">
+              <i data-lucide="layers" style="width:16px;height:16px;color:#2563EB;"></i>
+              <span>Question Exposure &amp; Distribution Heat</span>
+            </h3>
+            <span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-size: 0.72rem;">Frequency Tracking</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Monitors how many times each question from the pool has been served across student attempt papers.
+          </p>
+          <div id="analyticsQuestionExposure" style="max-height: 280px; overflow-y: auto;">
+            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">Select a quiz with student attempts to view question exposure.</div>
+          </div>
+        </div>
+
+        <!-- Exam Proctoring & Integrity Events -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h3 style="margin: 0; font-size: 1.05rem; color: var(--navy); display: flex; align-items: center; gap: 0.45rem;">
+              <i data-lucide="shield-alert" style="width:16px;height:16px;color:#DC2626;"></i>
+              <span>Exam Proctoring &amp; Integrity Logs</span>
+            </h3>
+            <span class="badge" style="background: #FEF2F2; color: #DC2626; font-size: 0.72rem;">Proctoring</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Recorded suspicious events (tab switching, blur, window exit) during online attempts.
+          </p>
+          <div id="analyticsSuspiciousAttempts" style="max-height: 280px; overflow-y: auto;">
+            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No security violations detected.</div>
+          </div>
+        </div>
+      </div>
     </section>
 
 
@@ -1503,9 +1596,12 @@
               <!-- Dynamic Class, Subject, Question Count & Marks Badges -->
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <button type="button" id="studioQuickSampleBtn" class="btn btn-secondary" onclick="addSampleQuestionsToCurrentQuiz()" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;" title="Add 3 ready-made CSE MCQ questions to this quiz">
-              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample Qs
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <button type="button" id="studioAiGenBtn" class="btn btn-primary" onclick="openAiQuestionGeneratorModal('studio')" style="padding: 0.45rem 0.85rem; font-size: 0.8rem; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);" title="Generate syllabus-relevant CSE questions using AI or Curriculum Engine">
+              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add Sample CSE Questions
+            </button>
+            <button type="button" id="studioCsvUploadBtn" class="btn btn-secondary" onclick="openCsvQuestionModal('studio')" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;" title="Import validated questions from CSV file">
+              <i data-lucide="upload" style="width:14px;height:14px;"></i> Upload Questions from CSV
             </button>
             <button type="button" id="studioPublishQuizBtn" class="btn btn-success" onclick="handleStudioPublishToggle()" style="padding: 0.45rem 0.95rem; font-size: 0.8rem; display: none;">
               <i data-lucide="send" style="width:14px;height:14px;"></i> Publish Quiz
@@ -1835,7 +1931,119 @@
 
         <div class="form-group">
           <label>Description &amp; Instructions</label>
-          <textarea id="newQuizDesc" class="form-control" rows="3" placeholder="Enter instructions for students..."></textarea>
+          <textarea id="newQuizDesc" class="form-control" rows="2" placeholder="Enter instructions for students..."></textarea>
+        </div>
+
+        <!-- QUESTION RANDOMIZATION & EXAM SECURITY -->
+        <div style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 1.1rem; margin: 1.25rem 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: #2563EB; color: #fff;">
+                <i data-lucide="shuffle" style="width:16px;height:16px;"></i>
+              </span>
+              <div>
+                <h4 style="margin: 0; font-size: 0.95rem; color: #0F172A;">Question Randomization &amp; Exam Security</h4>
+                <p style="margin: 0.15rem 0 0 0; font-size: 0.76rem; color: #64748B;">Generate individual, fair question papers for every student</p>
+              </div>
+            </div>
+            <span class="badge" style="background: #DBEAFE; color: #1D4ED8; font-size: 0.72rem; font-weight: 600;">Anti-Cheating Enabled</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 0.85rem;">
+            <!-- Randomize Questions -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizRandomizeQuestions" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Randomize Questions</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Shuffle question order for each student</div>
+              </div>
+            </label>
+
+            <!-- Randomize Answer Options -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizRandomizeOptions" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Randomize Answer Options</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Shuffle MCQ options (A/B/C/D) independently</div>
+              </div>
+            </label>
+
+            <!-- Unique Question Paper -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizUniquePaper" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Unique Question Paper</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Maximize variation across students' papers</div>
+              </div>
+            </label>
+
+            <!-- Prevent Duplicate Questions -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizPreventDuplicates" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Prevent Duplicate Questions</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Guarantee zero duplicates per attempt</div>
+              </div>
+            </label>
+
+            <!-- Randomize Question Types -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizRandomizeTypes" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Randomize Question Types</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Mix MCQs, True/False, and short-answers</div>
+              </div>
+            </label>
+
+            <!-- Proctoring Security -->
+            <label style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.75rem; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
+              <input type="checkbox" id="newQuizTrackTabSwitches" checked style="margin-top: 0.2rem; cursor: pointer;">
+              <div>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1E293B;">Track Tab Switches &amp; Blur</div>
+                <div style="font-size: 0.72rem; color: #64748B;">Log suspicious background switching events</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Pool Subset: Questions Per Student -->
+          <div class="form-row" style="margin-bottom: 0.75rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #1E293B;">
+                Questions Per Student
+                <span style="font-weight: 400; color: #64748B;">(Optional: leave empty to serve all pool questions)</span>
+              </label>
+              <input type="number" id="newQuizQuestionsPerStudent" class="form-control" placeholder="e.g. 20 (from a 50 question pool)" min="1" max="500">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #1E293B;">Difficulty Distribution Mode</label>
+              <select id="newQuizDiffMode" class="form-control" onchange="toggleCreateQuizDiffDistPanel(this.value)">
+                <option value="none">Uniform / Any Available Difficulty</option>
+                <option value="custom">Enforce Easy / Medium / Hard Ratio (%)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Custom Difficulty Sliders (Hidden by default) -->
+          <div id="newQuizDiffDistPanel" style="display: none; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.75rem; margin-top: 0.6rem;">
+            <div style="font-size: 0.78rem; font-weight: 600; color: #1E293B; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+              <span>Target Question Difficulty Split</span>
+              <span id="newQuizDiffTotalBadge" class="badge" style="background: #DCFCE7; color: #15803D;">Total: 100%</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+              <div>
+                <label style="font-size: 0.72rem; color: #15803D; font-weight: 600;">Easy (%)</label>
+                <input type="number" id="newQuizDiffEasy" class="form-control" value="40" min="0" max="100" onchange="updateCreateQuizDiffDist()">
+              </div>
+              <div>
+                <label style="font-size: 0.72rem; color: #D97706; font-weight: 600;">Medium (%)</label>
+                <input type="number" id="newQuizDiffMed" class="form-control" value="40" min="0" max="100" onchange="updateCreateQuizDiffDist()">
+              </div>
+              <div>
+                <label style="font-size: 0.72rem; color: #DC2626; font-weight: 600;">Hard (%)</label>
+                <input type="number" id="newQuizDiffHard" class="form-control" value="20" min="0" max="100" onchange="updateCreateQuizDiffDist()">
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
@@ -1864,9 +2072,15 @@
 
       <!-- Add / Edit Question Box inside Modal -->
       <div class="card" style="background: #F8FAFC; border: 1.5px dashed var(--primary); margin-bottom: 1.25rem; padding: 1.15rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
           <h4 id="modalQuestionFormTitle" style="margin: 0; font-size: 0.96rem; color: var(--primary);">+ Add Question to Quiz</h4>
-          <div style="display: flex; gap: 0.45rem;">
+          <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onclick="openAiQuestionGeneratorModal('modal')" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+              <i data-lucide="sparkles" style="width:12px;height:12px;"></i> AI Generator
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="openCsvQuestionModal('modal')" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;">
+              <i data-lucide="upload" style="width:12px;height:12px;"></i> Upload CSV
+            </button>
             <button type="button" class="btn btn-secondary" onclick="fillSampleModalQuestion()" style="padding: 0.28rem 0.6rem; font-size: 0.75rem;">
               <i data-lucide="wand-2" style="width:12px;height:12px;"></i> Auto-Fill Sample Q
             </button>
@@ -1941,7 +2155,396 @@
     </div>
   </div>
 
+  <!-- ======================================================================= -->
+  <!-- AI-POWERED QUESTION GENERATOR & CSV QUESTION BANK MODAL (TEACHER MODULE) -->
+  <!-- ======================================================================= -->
+  <div class="modal-backdrop" id="aiQuestionGenModal" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="modal-box ai-gen-modal-box">
+      
+      <!-- Modal Header -->
+      <div style="padding: 1.15rem 1.5rem; background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 50%, #2563EB 100%); color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="sparkles" style="width: 22px; height: 22px; color: #FDE047;"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
+              AI-Powered Question Generator &amp; Question Bank
+            </h3>
+            <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: #BFDBFE;">
+              Syllabus-Aligned CSE Questions • Google Gemini &amp; Academic Engine • CSV Ingestion
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="closeAiGenModal()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.35rem 0.75rem; font-size: 1.1rem; line-height: 1;" title="Close Modal">
+          &times;
+        </button>
+      </div>
 
+      <!-- Mode & Source Switcher Tabs + Back Button -->
+      <div style="background: #F8FAFC; border-bottom: 1px solid var(--border-color); padding: 0.65rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; flex-shrink: 0;">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <!-- Dedicated Visible Back Button -->
+          <button type="button" id="aiModalBackBtn" class="btn btn-secondary" onclick="handleAiModalBackClick()" style="padding: 0.35rem 0.85rem; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #CBD5E1; background: #FFFFFF; color: var(--navy); border-radius: 8px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.15s ease;" title="Return to previous screen or step">
+            <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back
+          </button>
+
+          <div style="height: 20px; width: 1px; background: #CBD5E1; margin: 0 0.15rem;"></div>
+
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--navy); margin-right: 0.25rem;">Question Source:</span>
+          <div class="qb-mode-switcher" style="background: #E2E8F0; padding: 3px; border-radius: 8px;">
+            <button type="button" id="sourceTabAi" class="qb-mode-btn active" onclick="setAiGenSource('ai')" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 600;">
+              <i data-lucide="sparkles" style="width:13px;height:13px;"></i> AI Generated Questions
+            </button>
+            <button type="button" id="sourceTabCsv" class="qb-mode-btn" onclick="setAiGenSource('csv')" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 600;">
+              <i data-lucide="file-spreadsheet" style="width:13px;height:13px;"></i> Upload CSV
+            </button>
+            <button type="button" id="sourceTabBoth" class="qb-mode-btn" onclick="setAiGenSource('both')" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 600;">
+              <i data-lucide="layers" style="width:13px;height:13px;"></i> Both (CSV + AI Pool)
+            </button>
+          </div>
+        </div>
+
+        <div id="aiTargetQuizBadge" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem;">
+          <!-- Shows selected target quiz -->
+        </div>
+      </div>
+
+      <!-- Modal Body (Flex container) -->
+      <div id="aiGenModalBody" style="padding: 1.25rem 1.5rem; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+        
+        <!-- STEP 1: CONFIGURATION & CRITERIA FORM -->
+        <div id="aiGenConfigStep" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
+          <!-- Resume Banner if Questions already exist in pool -->
+          <div id="aiPoolResumeBanner" style="display: none; margin-bottom: 1rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 0.65rem 1rem; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: #1E40AF; font-weight: 600;">
+              <i data-lucide="layers" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+              You have <strong id="aiPoolResumeCount">0</strong> questions in the preview pool.
+            </span>
+            <button type="button" class="btn btn-secondary" onclick="backToAiPreviewStep()" style="padding: 0.25rem 0.65rem; font-size: 0.76rem; font-weight: 700; color: #2563EB;">
+              View Preview Pool &rarr;
+            </button>
+          </div>
+          <!-- AI Generation Parameters (Visible when Source is AI or Both) -->
+          <div id="aiGenSourceSection" style="margin-bottom: 1.25rem; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.15rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: var(--navy); display: flex; align-items: center; gap: 0.45rem;">
+                <i data-lucide="cpu" style="width: 16px; height: 16px; color: var(--primary);"></i>
+                Syllabus-Aligned Question Criteria &amp; Topic Definition
+              </h4>
+              <span class="badge" style="background: #EFF6FF; color: var(--primary); font-size: 0.75rem; font-weight: 600;">Course / Branch: Computer Science &amp; Engineering (CSE)</span>
+            </div>
+
+            <!-- Row 1: Target Class, Subject Name (Free Text), Unit Number (Optional) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenClass" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Target Class <span style="color: var(--danger);">*</span></label>
+                <select id="aiGenClass" class="form-control" style="font-size: 0.85rem;">
+                  <option value="3R" selected>3R (CSE 3rd Year)</option>
+                  <option value="2R1">2R1 (CSE 2nd Year Div 1)</option>
+                  <option value="2R2">2R2 (CSE 2nd Year Div 2)</option>
+                  <option value="4R">4R (CSE 4th Year)</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenSubject" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Subject Name <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="aiGenSubject" list="subjectDatalist" class="form-control" placeholder="e.g. Data Structures, Operating Systems, DBMS" style="font-size: 0.85rem;" autocomplete="off" oninput="onSubjectInput(this.value)">
+                <datalist id="subjectDatalist"></datalist>
+                <small style="font-size: 0.72rem; color: var(--text-muted);">Type any custom subject or choose from catalog suggestions</small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenUnit" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Unit Number / Name <span style="font-size: 0.74rem; font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+                <input type="text" id="aiGenUnit" class="form-control" placeholder="e.g. 2, or Unit II" style="font-size: 0.85rem;">
+                <small style="font-size: 0.72rem; color: var(--text-muted);">Optional unit context (e.g. 2, or Unit II)</small>
+              </div>
+            </div>
+
+            <!-- Row 2: Main Topic (Free Text) & Subtopic(s) (Multi-line Textarea) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenTopic" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Main Topic <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="aiGenTopic" list="topicDatalist" class="form-control" placeholder="e.g. Trees, CPU Scheduling, Normalization" style="font-size: 0.85rem;" autocomplete="off">
+                <datalist id="topicDatalist"></datalist>
+                <small style="font-size: 0.72rem; color: var(--text-muted);">Main concept or academic topic to cover</small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenSubtopics" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Subtopic(s) <span style="font-size: 0.74rem; font-weight: normal; color: var(--text-muted);">(Comma or line separated)</span></label>
+                <textarea id="aiGenSubtopics" class="form-control" rows="2" placeholder="e.g. Binary Trees, Binary Search Trees, Tree Traversals, AVL Trees" style="font-size: 0.85rem; resize: vertical;"></textarea>
+                <small style="font-size: 0.72rem; color: var(--text-muted);">Type individual subtopics to test in the quiz</small>
+              </div>
+            </div>
+
+            <!-- Row 3: Question Count, Difficulty Level, Question Type -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end; margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenCount" style="font-weight: 600; font-size: 0.82rem; color: var(--navy); display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <span>Number of Questions <span style="color: var(--danger);">*</span></span>
+                  <span id="aiCountDisplayBadge" class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700; border: 1px solid #BFDBFE;">10 Questions</span>
+                </label>
+                <!-- Quick Preset Count Buttons -->
+                <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.45rem;" id="aiCountPresetBtns">
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(5)" data-count="5">5</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill active" onclick="setAiQuestionCount(10)" data-count="10">10</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(15)" data-count="15">15</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(20)" data-count="20">20</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(50)" data-count="50">50</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(100)" data-count="100">100</button>
+                  <button type="button" class="btn btn-secondary btn-count-pill" onclick="setAiQuestionCount(250)" data-count="250">250</button>
+                </div>
+                <!-- Number Input with Steppers -->
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary" onclick="adjustAiQuestionCount(-5)" style="padding: 0.35rem 0.65rem; font-weight: 700; font-size: 0.88rem;" title="Decrease count by 5">−</button>
+                  <input type="number" id="aiGenCount" class="form-control" min="1" max="300" value="10" placeholder="Count (1-300)" style="font-size: 0.88rem; font-weight: 700; text-align: center; max-width: 120px;" oninput="onAiCountInput(this.value)">
+                  <button type="button" class="btn btn-secondary" onclick="adjustAiQuestionCount(5)" style="padding: 0.35rem 0.65rem; font-weight: 700; font-size: 0.88rem;" title="Increase count by 5">+</button>
+                  <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 3px;">Qs (up to 300)</span>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenDifficulty" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Difficulty Level</label>
+                <select id="aiGenDifficulty" class="form-control" onchange="onAiGenDifficultyChange()" style="font-size: 0.85rem;">
+                  <option value="Mixed" selected>Mixed (30% Easy, 50% Med, 20% Hard)</option>
+                  <option value="Easy">Predominantly Easy</option>
+                  <option value="Medium">Predominantly Medium</option>
+                  <option value="Hard">Predominantly Hard</option>
+                  <option value="custom_dist">Custom Percentage Distribution</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="aiGenType" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Question Type</label>
+                <select id="aiGenType" class="form-control" style="font-size: 0.85rem;">
+                  <option value="single_choice" selected>Multiple Choice (Single Answer MCQ)</option>
+                  <option value="true_false">True / False Questions</option>
+                  <option value="short_answer">Short Answer / Conceptual</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Difficulty Distribution Sliders -->
+            <div id="aiGenDistPanel" style="display: none; margin-bottom: 1rem; padding: 0.85rem 1rem; background: #F8FAFC; border-radius: 8px; border: 1px dashed #CBD5E1;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.82rem; font-weight: 700; color: var(--navy);">Difficulty Distribution (% must sum to 100%)</span>
+                <span id="aiDistSumBadge" class="badge" style="background: #10B981; color: #fff;">Sum: 100%</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div>
+                  <label style="font-size: 0.78rem;">Easy: <strong id="valEasyDist">30%</strong></label>
+                  <input type="range" id="sliderEasyDist" min="0" max="100" value="30" step="5" style="width: 100%;" oninput="updateDifficultyDistribution()">
+                </div>
+                <div>
+                  <label style="font-size: 0.78rem;">Medium: <strong id="valMedDist">50%</strong></label>
+                  <input type="range" id="sliderMedDist" min="0" max="100" value="50" step="5" style="width: 100%;" oninput="updateDifficultyDistribution()">
+                </div>
+                <div>
+                  <label style="font-size: 0.78rem;">Hard: <strong id="valHardDist">20%</strong></label>
+                  <input type="range" id="sliderHardDist" min="0" max="100" value="20" step="5" style="width: 100%;" oninput="updateDifficultyDistribution()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 4: Additional Instructions (Optional) -->
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+              <label for="aiGenInstructions" style="font-weight: 600; font-size: 0.82rem; color: var(--navy);">Additional Instructions <span style="font-size: 0.74rem; font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+              <textarea id="aiGenInstructions" class="form-control" rows="2" placeholder="e.g. Focus on university exam questions, practical applications, time complexity analysis, or specific algorithms" style="font-size: 0.85rem; resize: vertical;"></textarea>
+            </div>
+
+            <!-- Row 5: Grounding Reference Document / Syllabus Content (Optional Collapsible) -->
+            <div style="border-top: 1px dashed #E2E8F0; padding-top: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="toggleReferenceDocPanel()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                  <i data-lucide="book-open" style="width:13px;height:13px;"></i> <span id="toggleRefDocBtnText">+ Add Reference Syllabus / Document Excerpt (Optional)</span>
+                </button>
+                <span id="referenceAttachedBadge" class="badge" style="display: none; background: #DCFCE7; color: #15803D; font-size: 0.74rem;">Reference Attached</span>
+              </div>
+              <div id="aiReferenceDocPanel" style="display: none; margin-top: 0.65rem; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.85rem;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--navy); display: block; margin-bottom: 0.25rem;">
+                  Paste Reference Syllabus Text or Notes:
+                </label>
+                <textarea id="aiGenReferenceContent" class="form-control" rows="3" placeholder="Paste relevant syllabus sections, textbook excerpts, or lecture notes to ground the questions..." style="font-size: 0.82rem; resize: vertical;"></textarea>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                  <span style="font-size: 0.76rem; color: var(--text-muted);">Or upload text/markdown file:</span>
+                  <input type="file" id="aiReferenceFileInput" accept=".txt,.md" onchange="handleReferenceFileUpload(event)" style="font-size: 0.78rem;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CSV Upload Section (Visible when Source is CSV or Both) -->
+          <div id="aiCsvSourceSection" style="display: none; margin-bottom: 1.25rem; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.15rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.6rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: var(--navy); display: flex; align-items: center; gap: 0.45rem;">
+                <i data-lucide="file-spreadsheet" style="width: 16px; height: 16px; color: #16A34A;"></i>
+                Upload Questions from CSV
+              </h4>
+              <button type="button" class="btn btn-secondary" onclick="downloadCsvTemplate()" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;">
+                <i data-lucide="download" style="width: 12px; height: 12px;"></i> Download CSV Template
+              </button>
+            </div>
+
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 0.85rem 0;">
+              Upload a standard CSV file with headers: <code>question,type,option_a,option_b,option_c,option_d,correct_answer,explanation,difficulty,unit,topic</code>
+            </p>
+
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <input type="file" id="aiCsvFileInput" accept=".csv" class="form-control" style="max-width: 420px; font-size: 0.85rem;" onchange="handleCsvFileSelected(event)">
+              <button type="button" id="aiValidateCsvBtn" class="btn btn-secondary" onclick="validateSelectedCsvFile()" style="font-size: 0.82rem;" disabled>
+                <i data-lucide="check" style="width:14px;height:14px;"></i> Validate CSV File
+              </button>
+            </div>
+
+            <!-- Validation Results Box -->
+            <div id="csvValidationBox" style="display: none; margin-top: 1rem; padding: 0.85rem 1rem; border-radius: 8px;"></div>
+          </div>
+
+          <!-- Bottom Action Row for Step 1 -->
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+            <button type="button" class="btn btn-secondary" onclick="closeAiGenModal()">Cancel</button>
+            <button type="button" id="aiStartGenBtn" class="btn btn-primary" onclick="executeQuestionGenerationOrCsv()" style="padding: 0.55rem 1.35rem; font-weight: 600; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+              <i data-lucide="sparkles" style="width:16px;height:16px;"></i> <span id="aiStartGenBtnText">Generate Questions &amp; Preview</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: PREVIEW & SELECTION INTERFACE (Hidden initially) -->
+        <div id="aiGenPreviewStep" style="display: none; flex: 1; min-height: 0; flex-direction: column; overflow: hidden;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 0.75rem 1.15rem; flex-shrink: 0;">
+            <div>
+              <div style="font-weight: 700; color: var(--navy); font-size: 0.96rem;" id="previewPoolHeading">
+                Generated Question Pool (<span id="previewTotalCount">0</span> Available)
+              </div>
+              <div style="font-size: 0.78rem; color: #1E40AF;" id="previewPoolSubheading">
+                Select questions to include, edit text/options, or regenerate questions before adding to quiz.
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary" onclick="selectAllPreviewQuestions(true)" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;">
+                Select All
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="selectAllPreviewQuestions(false)" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;">
+                Deselect All
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="regenerateAllAiQuestions()" style="padding: 0.35rem 0.7rem; font-size: 0.78rem; color: #2563EB;" id="btnRegenAll">
+                <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Regenerate All
+              </button>
+            </div>
+          </div>
+
+          <!-- Pool vs Quiz Count Selection Bar -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.85rem; margin-bottom: 0.75rem; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.75rem 1rem; flex-shrink: 0;">
+            <div>
+              <label style="font-weight: 700; font-size: 0.82rem; color: var(--navy); margin-bottom: 0.25rem; display: block;">
+                Number of Questions in Quiz:
+              </label>
+              <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                <input type="number" id="previewQuizQuestionCount" class="form-control" min="1" max="500" style="max-width: 110px; font-weight: 700;" onchange="onQuizQuestionCountChange()">
+                <span style="font-size: 0.78rem; color: var(--text-muted);">questions will be imported to the quiz</span>
+              </div>
+              <div style="display: flex; gap: 0.3rem; margin-top: 0.45rem; flex-wrap: wrap;" id="previewQuizCountPresets">
+                <button type="button" class="btn-count-pill active" onclick="setPreviewQuizQuestionCount('all')">Use All in Pool</button>
+                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(250)">250</button>
+                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(100)">100</button>
+                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(50)">50</button>
+                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(20)">20</button>
+                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(10)">10</button>
+              </div>
+            </div>
+
+            <div>
+              <label style="font-weight: 700; font-size: 0.82rem; color: var(--navy); margin-bottom: 0.25rem; display: block;">
+                Question Selection Method:
+              </label>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" id="selModeManual" class="btn btn-secondary active" onclick="setSelectionMode('manual')" style="flex: 1; padding: 0.38rem; font-size: 0.8rem;">
+                  <i data-lucide="check-square" style="width:13px;height:13px;"></i> Manually Select (<span id="previewManualCount">0</span>)
+                </button>
+                <button type="button" id="selModeRandom" class="btn btn-secondary" onclick="setSelectionMode('random')" style="flex: 1; padding: 0.38rem; font-size: 0.8rem;">
+                  <i data-lucide="shuffle" style="width:13px;height:13px;"></i> Random Selection
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Questions Preview Cards (Independently Scrollable List) -->
+          <div id="aiPreviewListContainer" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 6px; display: flex; flex-direction: column; gap: 0.85rem;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Bottom Action Row for Step 2 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.75rem; flex-shrink: 0; background: #FFFFFF;">
+            <button type="button" class="btn btn-secondary" onclick="backToAiConfigStep()">
+              <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Criteria
+            </button>
+            <div style="display: flex; gap: 0.6rem; align-items: center;">
+              <button type="button" class="btn btn-secondary" onclick="openFinalReviewSummaryModal()">
+                <i data-lucide="file-check" style="width:14px;height:14px;"></i> Review Summary Card
+              </button>
+              <button type="button" id="aiAddSelectedBtn" class="btn btn-success" onclick="confirmAddSelectedQuestionsToQuiz()" style="padding: 0.55rem 1.4rem; font-weight: 700;">
+                <i data-lucide="plus-circle" style="width:16px;height:16px;"></i> Add Selected Questions to Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: FINAL QUIZ REVIEW SUMMARY CARD (Modal overlay / view) -->
+        <div id="aiGenReviewStep" style="display: none; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
+          <div class="card" style="border: 2px solid #2563EB; background: #FFFFFF; padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; border-bottom: 1px solid #E2E8F0; padding-bottom: 0.75rem;">
+              <i data-lucide="clipboard-check" style="width: 24px; height: 24px; color: #2563EB;"></i>
+              <div>
+                <h3 style="margin: 0; color: var(--navy); font-size: 1.1rem;">Final Quiz Question Pool Summary</h3>
+                <p style="margin: 0.15rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Please review the configuration and distribution before committing to the database.</p>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+              <div style="background: #F8FAFC; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Subject</div>
+                <div style="font-size: 0.92rem; font-weight: 700; color: var(--navy); margin-top: 0.2rem;" id="reviewCardSubject">-</div>
+              </div>
+              <div style="background: #F8FAFC; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Unit &amp; Topic</div>
+                <div style="font-size: 0.92rem; font-weight: 700; color: var(--navy); margin-top: 0.2rem;" id="reviewCardUnitTopic">-</div>
+              </div>
+              <div style="background: #F8FAFC; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Question Pool vs Added</div>
+                <div style="font-size: 0.92rem; font-weight: 700; color: #1E40AF; margin-top: 0.2rem;" id="reviewCardCounts">0 in Pool • 0 to Add</div>
+              </div>
+              <div style="background: #F8FAFC; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total Added Marks</div>
+                <div style="font-size: 0.92rem; font-weight: 700; color: #16A34A; margin-top: 0.2rem;" id="reviewCardMarks">0.0 Marks</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--navy); margin-bottom: 0.6rem;">Difficulty Breakdown:</div>
+                <div id="reviewCardDifficulty" style="display: flex; gap: 0.6rem; flex-wrap: wrap;"></div>
+              </div>
+              <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--navy); margin-bottom: 0.6rem;">Question Source Breakdown:</div>
+                <div id="reviewCardSources" style="display: flex; gap: 0.6rem; flex-wrap: wrap;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.85rem; border-top: 1px solid var(--border-color);">
+            <button type="button" class="btn btn-secondary" onclick="backToAiPreviewStep()">
+              <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Questions Preview
+            </button>
+            <button type="button" class="btn btn-success" onclick="confirmAddSelectedQuestionsToQuiz()" style="padding: 0.55rem 1.5rem; font-weight: 700;">
+              <i data-lucide="check" style="width:16px;height:16px;"></i> Confirm &amp; Save Questions to Quiz
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <script>
 
@@ -2250,6 +2853,18 @@
           return;
         }
 
+        if (!isCurrentlyPublished) {
+          const valRes = await QuizAPI.validatePublish(quizId);
+          if (valRes && !valRes.valid) {
+            const errList = (valRes.errors || []).join('; ');
+            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
+            return;
+          }
+          if (valRes && valRes.warnings && valRes.warnings.length > 0) {
+            console.warn('Publish validation warnings:', valRes.warnings);
+          }
+        }
+
         const res = await QuizAPI.togglePublish(quizId);
         await refreshQuizzes();
         const actionLabel = (res && res.is_published) ? 'published and active for students' : 'set to draft';
@@ -2288,33 +2903,71 @@
 
 
 
+    function toggleCreateQuizDiffDistPanel(mode) {
+      const p = document.getElementById('newQuizDiffDistPanel');
+      if (p) {
+        p.style.display = (mode === 'custom') ? 'block' : 'none';
+      }
+      updateCreateQuizDiffDist();
+    }
+
+    function updateCreateQuizDiffDist() {
+      const easy = parseInt(document.getElementById('newQuizDiffEasy')?.value || '0', 10);
+      const med = parseInt(document.getElementById('newQuizDiffMed')?.value || '0', 10);
+      const hard = parseInt(document.getElementById('newQuizDiffHard')?.value || '0', 10);
+      const total = easy + med + hard;
+      const badge = document.getElementById('newQuizDiffTotalBadge');
+      if (badge) {
+        badge.textContent = `Total: ${total}%`;
+        if (total === 100) {
+          badge.style.background = '#DCFCE7';
+          badge.style.color = '#15803D';
+        } else {
+          badge.style.background = '#FEE2E2';
+          badge.style.color = '#DC2626';
+        }
+      }
+    }
+
     async function handleCreateQuiz(e) {
-
       e.preventDefault();
-
       const title = document.getElementById('newQuizTitle').value.trim();
-
       const subject = document.getElementById('newQuizSubject').value.trim();
-
       const classId = document.getElementById('newQuizClass').value;
-
       const duration = parseInt(document.getElementById('newQuizDuration').value);
-
       const marks = parseFloat(document.getElementById('newQuizMarks').value);
-
       const negMarks = parseFloat(document.getElementById('newQuizNegMarks').value);
-
       const desc = document.getElementById('newQuizDesc').value.trim();
 
+      const randomizeQuestions = document.getElementById('newQuizRandomizeQuestions') ? document.getElementById('newQuizRandomizeQuestions').checked : true;
+      const randomizeOptions = document.getElementById('newQuizRandomizeOptions') ? document.getElementById('newQuizRandomizeOptions').checked : true;
+      const uniquePaper = document.getElementById('newQuizUniquePaper') ? document.getElementById('newQuizUniquePaper').checked : true;
+      const preventDuplicates = document.getElementById('newQuizPreventDuplicates') ? document.getElementById('newQuizPreventDuplicates').checked : true;
+      const randomizeTypes = document.getElementById('newQuizRandomizeTypes') ? document.getElementById('newQuizRandomizeTypes').checked : true;
+      const trackTabSwitches = document.getElementById('newQuizTrackTabSwitches') ? document.getElementById('newQuizTrackTabSwitches').checked : true;
 
+      const qPerStudentRaw = document.getElementById('newQuizQuestionsPerStudent') ? parseInt(document.getElementById('newQuizQuestionsPerStudent').value, 10) : null;
+      const questionsPerStudent = (qPerStudentRaw && qPerStudentRaw > 0) ? qPerStudentRaw : null;
+
+      const diffMode = document.getElementById('newQuizDiffMode') ? document.getElementById('newQuizDiffMode').value : 'none';
+      let difficultyDistribution = null;
+      if (diffMode === 'custom') {
+        const easyVal = parseInt(document.getElementById('newQuizDiffEasy').value, 10) || 0;
+        const medVal = parseInt(document.getElementById('newQuizDiffMed').value, 10) || 0;
+        const hardVal = parseInt(document.getElementById('newQuizDiffHard').value, 10) || 0;
+        difficultyDistribution = { easy: easyVal, medium: medVal, hard: hardVal };
+      }
+
+      const securitySettings = {
+        track_tab_switches: trackTabSwitches,
+        enable_fullscreen_lock: false,
+        block_clipboard: true
+      };
 
       const selectedClassObj = availableClasses.find(c => c.id === classId);
-
       const className = selectedClassObj ? selectedClassObj.class_name : '1R1';
 
-
-
-      const totalMarksVal = Math.max(1, marks * 5);
+      const totalMarksVal = Math.max(1, marks * (questionsPerStudent || 5));
       const passingMarksVal = Math.round(totalMarksVal * 0.4);
 
       const payload = {
@@ -2329,6 +2982,14 @@
         negative_marks: negMarks,
         negative_marks_per_question: negMarks,
         negative_marking: negMarks > 0,
+        randomize_questions: randomizeQuestions,
+        randomize_options: randomizeOptions,
+        questions_per_student: questionsPerStudent,
+        unique_question_paper: uniquePaper,
+        prevent_duplicate_questions: preventDuplicates,
+        randomize_question_types: randomizeTypes,
+        difficulty_distribution: difficultyDistribution,
+        security_settings: securitySettings,
         description: desc,
         status: 'draft',
         questions: []
@@ -2338,7 +2999,7 @@
         const created = await QuizAPI.createQuiz(payload);
         closeCreateQuizModal();
         await refreshQuizzes();
-        showToast(`Quiz '${title}' created as Draft! Add questions below before publishing.`, 'success');
+        showToast(`Quiz '${title}' created with Randomization enabled! Add questions below before publishing.`, 'success');
         openManageQuestions(created.id);
       } catch (err) {
         showToast('Failed to create quiz: ' + err.message, 'error');
@@ -2537,10 +3198,15 @@
         container.innerHTML = `
           <div style="text-align: center; color: var(--text-muted); padding: 1.75rem; background: #F8FAFC; border-radius: 10px; border: 1px dashed var(--border-color);">
             <div style="font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">No questions in this quiz yet</div>
-            <div style="font-size: 0.82rem; margin-bottom: 0.85rem;">Use the form above to add a question, or click below to populate 3 sample CSE questions immediately.</div>
-            <button type="button" class="btn btn-secondary" onclick="addSampleQuestionsToQuizById('${currentEditingQuizId}')">
-              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample CSE Questions
-            </button>
+            <div style="font-size: 0.82rem; margin-bottom: 0.85rem;">Use the form above to add a question, or generate syllabus-relevant questions using AI or CSV import.</div>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" onclick="openAiQuestionGeneratorModal('modal')" style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+                <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add Sample CSE Questions
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="openCsvQuestionModal('modal')">
+                <i data-lucide="upload" style="width:14px;height:14px;"></i> Upload Questions from CSV
+              </button>
+            </div>
           </div>`;
         lucide.createIcons();
         return;
@@ -2653,6 +3319,12 @@
       const isPub = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
       try {
         if (!isPub) {
+          const valRes = await QuizAPI.validatePublish(currentEditingQuizId);
+          if (valRes && !valRes.valid) {
+            const errList = (valRes.errors || []).join('; ');
+            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
+            return;
+          }
           await QuizAPI.togglePublish(currentEditingQuizId, 'publish');
         }
         await refreshQuizzes();
@@ -2683,7 +3355,15 @@
         document.getElementById('statAvgAccuracy').textContent = '0%';
         document.getElementById('statAvgTime').textContent = '0s';
         document.getElementById('statHighScore').textContent = '0%';
+        if (document.getElementById('statUniquePapers')) document.getElementById('statUniquePapers').textContent = '0';
+        if (document.getElementById('statTotalPapers')) document.getElementById('statTotalPapers').textContent = '0';
         document.getElementById('analyticsTopPerformers').innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No quizzes created yet.</div>`;
+        if (document.getElementById('analyticsQuestionExposure')) {
+          document.getElementById('analyticsQuestionExposure').innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No quizzes created yet.</div>`;
+        }
+        if (document.getElementById('analyticsSuspiciousAttempts')) {
+          document.getElementById('analyticsSuspiciousAttempts').innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No violations detected.</div>`;
+        }
         return;
       }
 
@@ -2698,6 +3378,13 @@
       document.getElementById('statAvgTime').textContent = `${avgMins}m ${avgSecs}s`;
       document.getElementById('statHighScore').textContent = `${data.highest_score || 0}%`;
 
+      if (document.getElementById('statUniquePapers')) {
+        document.getElementById('statUniquePapers').textContent = data.unique_papers_count ?? (data.total_papers_generated || 0);
+      }
+      if (document.getElementById('statTotalPapers')) {
+        document.getElementById('statTotalPapers').textContent = data.total_papers_generated ?? 0;
+      }
+
       // Top Performers Leaderboard
       const topContainer = document.getElementById('analyticsTopPerformers');
       if (data.top_performers && data.top_performers.length > 0) {
@@ -2710,6 +3397,56 @@
       } else {
         topContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No student attempts recorded yet for this quiz.</div>`;
       }
+
+      // Question Exposure Heat
+      const exposureContainer = document.getElementById('analyticsQuestionExposure');
+      if (exposureContainer) {
+        if (data.question_exposure && data.question_exposure.length > 0) {
+          exposureContainer.innerHTML = data.question_exposure.map((qe, idx) => {
+            const pct = Math.round(qe.exposure_percentage || 0);
+            const diff = (qe.difficulty || 'medium').toLowerCase();
+            const diffColor = diff === 'hard' ? '#DC2626' : (diff === 'easy' ? '#15803D' : '#D97706');
+            const diffBg = diff === 'hard' ? '#FEE2E2' : (diff === 'easy' ? '#DCFCE7' : '#FEF3C7');
+            return `
+              <div style="padding: 0.55rem 0.75rem; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; margin-bottom: 0.45rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <span style="font-weight: 600; font-size: 0.78rem; color: #1E293B; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtmlSafe(qe.question_text || '')}">
+                    #${idx + 1}. ${escapeHtmlSafe(qe.question_text || 'Question ' + (idx + 1))}
+                  </span>
+                  <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <span class="badge" style="background: ${diffBg}; color: ${diffColor}; font-size: 0.68rem; text-transform: capitalize;">${diff}</span>
+                    <span class="badge" style="background: #E0E7FF; color: #3730A3; font-size: 0.68rem; font-weight: 700;">${qe.exposure_count} Papers (${pct}%)</span>
+                  </div>
+                </div>
+                <div style="background: #E2E8F0; border-radius: 4px; height: 5px; width: 100%; overflow: hidden;">
+                  <div style="background: ${pct > 75 ? '#2563EB' : (pct > 35 ? '#3B82F6' : '#93C5FD')}; height: 100%; width: ${Math.min(100, pct)}%;"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          exposureContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;">No student attempt papers generated yet.</div>`;
+        }
+      }
+
+      // Suspicious Exam Proctoring Events
+      const suspContainer = document.getElementById('analyticsSuspiciousAttempts');
+      if (suspContainer) {
+        if (data.suspicious_attempts && data.suspicious_attempts.length > 0) {
+          suspContainer.innerHTML = data.suspicious_attempts.map(ev => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0.75rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; margin-bottom: 0.45rem;">
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #991B1B;">${escapeHtmlSafe(ev.student_name || 'Student')} (${escapeHtmlSafe(ev.roll_no || 'N/A')})</div>
+                <div style="font-size: 0.72rem; color: #B91C1C;">Violation: ${escapeHtmlSafe(ev.event_type || 'tab_switch')} • Count: ${ev.event_count || 1}</div>
+              </div>
+              <span class="badge" style="background: #DC2626; color: #fff; font-size: 0.7rem;">Flagged</span>
+            </div>
+          `).join('');
+        } else {
+          suspContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem;"><i data-lucide="shield-check" style="width:16px;height:16px;color:#16A34A;vertical-align:middle;"></i> All student attempts clean. Zero integrity violations detected.</div>`;
+        }
+      }
+      lucide.createIcons();
 
       // Chart
       const labels = (data.questions_analysis || []).map((_, i) => `Q${i + 1}`);
@@ -2914,10 +3651,15 @@
           <div style="text-align: center; color: var(--text-muted); padding: 2.5rem 1.25rem; background: #F8FAFC; border-radius: 10px; border: 1px dashed var(--border-color);">
             <i data-lucide="help-circle" style="width: 36px; height: 36px; color: #94A3B8; margin-bottom: 0.5rem;"></i>
             <div style="font-weight: 700; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.3rem;">This quiz has 0 questions</div>
-            <div style="font-size: 0.82rem; margin-bottom: 1rem;">Add questions using the visual builder on the left, or click below to insert 3 ready-made CSE questions.</div>
-            <button type="button" class="btn btn-primary" onclick="addSampleQuestionsToCurrentQuiz()">
-              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add 3 Sample CSE Questions
-            </button>
+            <div style="font-size: 0.82rem; margin-bottom: 1rem;">Add questions using the visual builder on the left, or generate syllabus-relevant questions using AI or CSV import.</div>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" onclick="openAiQuestionGeneratorModal('studio')" style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+                <i data-lucide="sparkles" style="width:14px;height:14px;"></i> + Add Sample CSE Questions
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="openCsvQuestionModal('studio')">
+                <i data-lucide="upload" style="width:14px;height:14px;"></i> Upload Questions from CSV
+              </button>
+            </div>
           </div>`;
         lucide.createIcons();
         return;
@@ -3108,6 +3850,14 @@
         return;
       }
       try {
+        if (!isPub) {
+          const valRes = await QuizAPI.validatePublish(qid);
+          if (valRes && !valRes.valid) {
+            const errList = (valRes.errors || []).join('; ');
+            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
+            return;
+          }
+        }
         const res = await QuizAPI.togglePublish(qid);
         await refreshQuizzes();
         document.getElementById('importTargetQuiz').value = qid;
@@ -3431,6 +4181,1060 @@
       const filter = filterSel ? filterSel.value : 'all';
       if (!qid) return showToast('Please select a quiz first', 'warning');
       await triggerQuizDownload(qid, filter, 'json');
+    }
+
+    // =========================================================================
+    // AI QUESTION GENERATOR & CSV QUESTION BANK CONTROLLER (TEACHER MODULE)
+    // =========================================================================
+
+    let aiGenContextCaller = 'studio'; // 'studio' or 'modal'
+    let aiGenCurrentSource = 'ai'; // 'ai', 'csv', 'both'
+    let syllabusCatalog = [];
+    let currentAiQuestionPool = [];
+    let currentUploadedCsvQuestions = [];
+    let currentCombinedPool = [];
+    let selectedQuestionIds = new Set();
+    let currentSelectionMode = 'manual'; // 'manual' or 'random'
+    let lastUploadedCsvContent = '';
+
+    // Open Modal
+    async function openAiQuestionGeneratorModal(caller = 'studio') {
+      aiGenContextCaller = caller;
+      const modal = document.getElementById('aiQuestionGenModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+
+      // Determine target quiz
+      let targetQuizId = null;
+      let targetQuiz = null;
+      if (caller === 'studio') {
+        targetQuizId = document.getElementById('importTargetQuiz') ? document.getElementById('importTargetQuiz').value : null;
+      } else {
+        targetQuizId = currentEditingQuizId;
+      }
+
+      if (targetQuizId) {
+        targetQuiz = quizzes.find(q => q.id === targetQuizId);
+      }
+
+      const badge = document.getElementById('aiTargetQuizBadge');
+      if (badge) {
+        if (targetQuiz) {
+          badge.innerHTML = `<span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700; border: 1px solid #BFDBFE;">Target: ${escapeHtmlSafe(targetQuiz.title)} (${escapeHtmlSafe(targetQuiz.class_name || '')})</span>`;
+        } else {
+          badge.innerHTML = `<span class="badge" style="background: #FEF3C7; color: #92400E;">No Quiz Selected — will save to selected quiz</span>`;
+        }
+      }
+
+      // Initialize syllabus catalog suggestions & class options
+      await initSyllabusCatalog();
+
+      // Pre-fill target class and subject from target quiz if available
+      if (targetQuiz) {
+        const classSel = document.getElementById('aiGenClass');
+        if (classSel && targetQuiz.class_name) {
+          for (let i = 0; i < classSel.options.length; i++) {
+            if (classSel.options[i].value === targetQuiz.class_name) {
+              classSel.selectedIndex = i;
+              break;
+            }
+          }
+        }
+        const subjInput = document.getElementById('aiGenSubject');
+        if (subjInput && targetQuiz.subject && targetQuiz.subject !== 'General') {
+          subjInput.value = targetQuiz.subject;
+          onSubjectInput(targetQuiz.subject);
+        }
+      }
+
+      // Reset to Step 1
+      backToAiConfigStep();
+      setAiGenSource('ai');
+      lucide.createIcons();
+    }
+
+    function openCsvQuestionModal(caller = 'studio') {
+      openAiQuestionGeneratorModal(caller);
+      setAiGenSource('csv');
+    }
+
+    function closeAiGenModal() {
+      const modal = document.getElementById('aiQuestionGenModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function setAiGenSource(source) {
+      aiGenCurrentSource = source;
+      const btnAi = document.getElementById('sourceTabAi');
+      const btnCsv = document.getElementById('sourceTabCsv');
+      const btnBoth = document.getElementById('sourceTabBoth');
+      if (btnAi) btnAi.classList.toggle('active', source === 'ai');
+      if (btnCsv) btnCsv.classList.toggle('active', source === 'csv');
+      if (btnBoth) btnBoth.classList.toggle('active', source === 'both');
+
+      const aiSec = document.getElementById('aiGenSourceSection');
+      const csvSec = document.getElementById('aiCsvSourceSection');
+      const btnText = document.getElementById('aiStartGenBtnText');
+
+      if (source === 'ai') {
+        if (aiSec) aiSec.style.display = 'block';
+        if (csvSec) csvSec.style.display = 'none';
+        if (btnText) btnText.textContent = 'Generate Questions & Preview';
+      } else if (source === 'csv') {
+        if (aiSec) aiSec.style.display = 'none';
+        if (csvSec) csvSec.style.display = 'block';
+        if (btnText) btnText.textContent = 'Validate CSV & Preview';
+      } else if (source === 'both') {
+        if (aiSec) aiSec.style.display = 'block';
+        if (csvSec) csvSec.style.display = 'block';
+        if (btnText) btnText.textContent = 'Generate AI + Import CSV & Preview';
+      }
+      lucide.createIcons();
+    }
+
+    // Syllabus Catalog & Suggestions Loader
+    async function initSyllabusCatalog() {
+      if (syllabusCatalog.length > 0) {
+        populateSubjectSuggestions();
+        return;
+      }
+      try {
+        const base = QuizAPI.apiBase;
+        const res = await fetch(base + '/syllabus');
+        if (res.ok) {
+          const json = await res.json();
+          syllabusCatalog = json.data || [];
+        }
+      } catch (e) {
+        console.warn('Failed to load live syllabus catalog, using fallback:', e);
+      }
+
+      if (!syllabusCatalog || syllabusCatalog.length === 0) {
+        syllabusCatalog = [
+          {
+            subject_name: 'Data Structures & Algorithms',
+            units: [
+              { unit_number: 1, unit_title: 'Unit I — Algorithm Analysis & Linear Data Structures', topics: ['Asymptotic notation', 'Arrays and linked lists', 'Stacks and queues applications', 'Infix to postfix conversion'] },
+              { unit_number: 2, unit_title: 'Unit II — Trees & Binary Search Trees', topics: ['Binary tree traversals', 'Binary search trees (BST)', 'AVL balanced trees', 'B-Trees and Heaps'] },
+              { unit_number: 3, unit_title: 'Unit III — Graph Algorithms', topics: ['Graph representations', 'BFS and DFS traversal', 'Minimum Spanning Trees (Prim, Kruskal)', 'Shortest Path (Dijkstra, Bellman-Ford)'] },
+              { unit_number: 4, unit_title: 'Unit IV — Sorting, Searching & Hashing', topics: ['Divide and conquer sorting (Merge, Quick)', 'Hash functions and collision resolution', 'Universal hashing'] },
+              { unit_number: 5, unit_title: 'Unit V — Dynamic Programming & Greedy Algorithms', topics: ['Greedy choice property (Huffman, Fractional Knapsack)', 'Dynamic programming (0/1 Knapsack, LCS)', 'Backtracking'] }
+            ]
+          },
+          {
+            subject_name: 'Operating Systems',
+            units: [
+              { unit_number: 1, unit_title: 'Unit I — OS Fundamentals & Process Management', topics: ['Process states and PCB', 'CPU scheduling algorithms (FCFS, SJF, RR, Priority)', 'Threads and concurrency'] },
+              { unit_number: 2, unit_title: 'Unit II — Synchronization & Deadlocks', topics: ['Critical section problem', 'Semaphores and Mutexes', 'Banker algorithm for deadlock avoidance', 'Deadlock detection and recovery'] },
+              { unit_number: 3, unit_title: 'Unit III — Memory Management', topics: ['Paging and segmentation', 'Page replacement algorithms (FIFO, LRU, Optimal)', 'Virtual memory and thrashing'] },
+              { unit_number: 4, unit_title: 'Unit IV — File Systems & Storage', topics: ['File allocation methods', 'Disk scheduling algorithms (SSTF, SCAN, LOOK)'] }
+            ]
+          },
+          {
+            subject_name: 'Database Management Systems',
+            units: [
+              { unit_number: 1, unit_title: 'Unit I — ER Modeling & Relational Algebra', topics: ['Entity-Relationship (ER) model', 'Relational algebra and tuple relational calculus'] },
+              { unit_number: 2, unit_title: 'Unit II — SQL & Normalization', topics: ['Complex SQL queries, joins and aggregations', 'Functional dependencies', 'Normal forms (1NF, 2NF, 3NF, BCNF)'] },
+              { unit_number: 3, unit_title: 'Unit III — Transaction & Concurrency Control', topics: ['ACID properties', 'Serializability', 'Two-Phase Locking (2PL)', 'Timestamp ordering'] }
+            ]
+          },
+          {
+            subject_name: 'Computer Networks',
+            units: [
+              { unit_number: 1, unit_title: 'Unit I — OSI & TCP/IP Reference Models', topics: ['Layering architecture', 'Physical and Data Link layers', 'Framing and error detection (CRC)'] },
+              { unit_number: 2, unit_title: 'Unit II — Network Layer & Routing', topics: ['IPv4 and IPv6 addressing and subnetting', 'Distance Vector routing (RIP)', 'Link State routing (OSPF)', 'BGP'] },
+              { unit_number: 3, unit_title: 'Unit III — Transport & Application Layers', topics: ['TCP 3-way handshake and flow control', 'Congestion control algorithms', 'DNS, HTTP/HTTPS, FTP'] }
+            ]
+          },
+          {
+            subject_name: 'Artificial Intelligence & Machine Learning',
+            units: [
+              { unit_number: 1, unit_title: 'Unit I — Search & Knowledge Representation', topics: ['Informed and Uninformed Search (A*, Heuristics)', 'Propositional and First-Order Logic', 'Adversarial Search (Minimax, Alpha-Beta)'] },
+              { unit_number: 2, unit_title: 'Unit II — Supervised Learning', topics: ['Linear and Logistic Regression', 'Decision Trees and Random Forests', 'Support Vector Machines (SVM)'] },
+              { unit_number: 3, unit_title: 'Unit III — Neural Networks & Deep Learning', topics: ['Perceptrons and Multilayer Perceptrons', 'Backpropagation and Gradient Descent', 'Convolutional Neural Networks (CNN)'] }
+            ]
+          }
+        ];
+      }
+      populateSubjectSuggestions();
+    }
+
+    function populateSubjectSuggestions() {
+      const dataList = document.getElementById('subjectDatalist');
+      if (dataList) {
+        const standardSubjects = [
+          'Data Structures & Algorithms',
+          'Data Structures',
+          'Operating Systems',
+          'Database Management Systems',
+          'Computer Networks',
+          'Artificial Intelligence',
+          'Object Oriented Programming',
+          'Theory of Computation',
+          'Compiler Design',
+          'Software Engineering'
+        ];
+        const catalogSubjects = (syllabusCatalog || []).map(s => s.subject_name || s.name).filter(Boolean);
+        const combinedSubjects = Array.from(new Set([...standardSubjects, ...catalogSubjects]));
+        dataList.innerHTML = combinedSubjects.map(sub => `<option value="${escapeHtmlSafe(sub)}"></option>`).join('');
+      }
+
+      // Populate target class dropdown if availableClasses is loaded
+      const classSelect = document.getElementById('aiGenClass');
+      if (classSelect && availableClasses && availableClasses.length > 0) {
+        const currentVal = classSelect.value;
+        const optionsHtml = availableClasses.map(c => 
+          `<option value="${escapeHtmlSafe(c.class_name)}">${escapeHtmlSafe(c.class_name)} (${escapeHtmlSafe(c.division || 'CSE')})</option>`
+        ).join('');
+        classSelect.innerHTML = optionsHtml;
+        if (currentVal && availableClasses.some(c => c.class_name === currentVal)) {
+          classSelect.value = currentVal;
+        }
+      }
+    }
+
+    function onSubjectInput(subVal) {
+      const topicList = document.getElementById('topicDatalist');
+      if (!topicList) return;
+      if (!subVal || !subVal.trim()) {
+        topicList.innerHTML = '';
+        return;
+      }
+      const valLower = subVal.trim().toLowerCase();
+      const matched = (syllabusCatalog || []).find(s => {
+        const name = (s.subject_name || s.name || '').toLowerCase();
+        return name.includes(valLower) || valLower.includes(name);
+      });
+
+      if (matched && matched.units) {
+        const topics = [];
+        matched.units.forEach(u => {
+          if (Array.isArray(u.topics)) {
+            u.topics.forEach(t => topics.push(t));
+          }
+        });
+        const uniqueTopics = Array.from(new Set(topics));
+        topicList.innerHTML = uniqueTopics.map(t => `<option value="${escapeHtmlSafe(t)}"></option>`).join('');
+      } else {
+        topicList.innerHTML = '';
+      }
+    }
+
+    function toggleReferenceDocPanel() {
+      const panel = document.getElementById('aiReferenceDocPanel');
+      const btnText = document.getElementById('toggleRefDocBtnText');
+      if (!panel) return;
+      const isOpen = panel.style.display !== 'none';
+      panel.style.display = isOpen ? 'none' : 'block';
+      if (btnText) {
+        btnText.textContent = isOpen 
+          ? '+ Add Reference Syllabus / Document Excerpt (Optional)' 
+          : '− Hide Reference Document Panel';
+      }
+      lucide.createIcons();
+    }
+
+    function handleReferenceFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      const badge = document.getElementById('referenceAttachedBadge');
+      const textarea = document.getElementById('aiGenReferenceContent');
+      if (!file) {
+        if (badge) badge.style.display = 'none';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (textarea) {
+          textarea.value = e.target.result || '';
+        }
+        if (badge) {
+          badge.textContent = `Attached: ${file.name}`;
+          badge.style.display = 'inline-block';
+        }
+        showToast(`Loaded reference file: ${file.name}`, 'info');
+      };
+      reader.readAsText(file);
+    }
+
+    function setAiQuestionCount(val) {
+      const input = document.getElementById('aiGenCount');
+      const badge = document.getElementById('aiCountDisplayBadge');
+      const num = Math.max(1, Math.min(300, parseInt(val) || 10));
+      if (input) input.value = num;
+      if (badge) badge.textContent = `${num} Questions`;
+
+      document.querySelectorAll('#aiCountPresetBtns .btn-count-pill').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-count')) === num) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function adjustAiQuestionCount(delta) {
+      const input = document.getElementById('aiGenCount');
+      let cur = parseInt(input ? input.value : 10) || 10;
+      setAiQuestionCount(cur + delta);
+    }
+
+    function onAiCountInput(val) {
+      const badge = document.getElementById('aiCountDisplayBadge');
+      const num = Math.max(1, Math.min(300, parseInt(val) || 1));
+      if (badge) badge.textContent = `${num} Questions`;
+      document.querySelectorAll('#aiCountPresetBtns .btn-count-pill').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-count')) === num) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function onAiGenCountChange() {
+      const input = document.getElementById('aiGenCount');
+      if (input) onAiCountInput(input.value);
+    }
+
+    function onAiGenDifficultyChange() {
+      const sel = document.getElementById('aiGenDifficulty');
+      const panel = document.getElementById('aiGenDistPanel');
+      if (sel && panel) {
+        panel.style.display = sel.value === 'custom_dist' ? 'block' : 'none';
+      }
+    }
+
+    function updateDifficultyDistribution() {
+      const e = parseInt(document.getElementById('sliderEasyDist').value) || 0;
+      const m = parseInt(document.getElementById('sliderMedDist').value) || 0;
+      const h = parseInt(document.getElementById('sliderHardDist').value) || 0;
+
+      document.getElementById('valEasyDist').textContent = e + '%';
+      document.getElementById('valMedDist').textContent = m + '%';
+      document.getElementById('valHardDist').textContent = h + '%';
+
+      const sum = e + m + h;
+      const badge = document.getElementById('aiDistSumBadge');
+      if (badge) {
+        badge.textContent = `Sum: ${sum}%`;
+        if (sum === 100) {
+          badge.style.background = '#10B981';
+          badge.style.color = '#fff';
+        } else {
+          badge.style.background = '#EF4444';
+          badge.style.color = '#fff';
+        }
+      }
+    }
+
+    // CSV Template Download
+    function downloadCsvTemplate() {
+      const template = `question,type,option_a,option_b,option_c,option_d,correct_answer,explanation,difficulty,unit,topic
+"What is the time complexity of binary search on a sorted array of size n?","MCQ","O(log n)","O(n)","O(n log n)","O(1)","A","Binary search repeatedly divides the search space into half.","Easy","Unit IV","Searching"
+"Which data structure follows the First In First Out (FIFO) property?","MCQ","Queue","Stack","Binary Tree","Graph","A","Queue operates strictly on FIFO principle.","Easy","Unit I","Linear Data Structures"
+"In an AVL tree, what is the maximum allowed difference between heights of left and right subtrees?","MCQ","1","0","2","Any value","A","AVL balance factor must be in {-1, 0, +1}.","Medium","Unit II","Balanced Trees"
+"Which process scheduling algorithm can cause starvation for CPU-intensive processes?","MCQ","Shortest Job First (SJF)","Round Robin (RR)","First Come First Served (FCFS)","FIFO","A","SJF favors short bursts, starving long jobs.","Medium","Unit I","CPU Scheduling"
+`;
+      const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'SSGMCE_CSE_Question_Bank_Template.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Downloaded sample CSV question template!', 'success');
+    }
+
+    function handleCsvFileSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      const btn = document.getElementById('aiValidateCsvBtn');
+      if (btn) btn.disabled = !file;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          lastUploadedCsvContent = e.target.result;
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    async function validateSelectedCsvFile() {
+      if (!lastUploadedCsvContent) {
+        showToast('Please select a CSV file first.', 'warning');
+        return;
+      }
+      try {
+        const res = await QuizAPI.validateCsvQuestions(lastUploadedCsvContent);
+        displayCsvValidationResults(res);
+      } catch (err) {
+        showToast('CSV Validation Error: ' + err.message, 'error');
+      }
+    }
+
+    function displayCsvValidationResults(res) {
+      const box = document.getElementById('csvValidationBox');
+      if (!box) return;
+      box.style.display = 'block';
+
+      if (res.invalid_count === 0) {
+        box.style.background = '#ECFDF5';
+        box.style.border = '1px solid #10B981';
+        box.innerHTML = `
+          <div style="color: #065F46; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem;">
+            <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+            Validation Succeeded: All ${res.valid_count} rows are valid and ready to import!
+          </div>
+        `;
+        currentUploadedCsvQuestions = res.valid_questions || [];
+      } else {
+        box.style.background = '#FEF2F2';
+        box.style.border = '1px solid #EF4444';
+        const errorList = (res.errors || []).slice(0, 5).map(e => `<li>Row ${e.row}: ${escapeHtmlSafe(e.error)} (${escapeHtmlSafe(e.question || '')})</li>`).join('');
+        box.innerHTML = `
+          <div style="color: #991B1B; font-weight: 700; font-size: 0.88rem; margin-bottom: 0.35rem;">
+            Validation Notice: ${res.valid_count} valid rows, ${res.invalid_count} errors detected.
+          </div>
+          <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: #7F1D1D;">${errorList}</ul>
+          <div style="font-size: 0.78rem; color: #4B5563; margin-top: 0.4rem;">
+            Valid questions can still be previewed and imported; invalid rows have been isolated.
+          </div>
+        `;
+        currentUploadedCsvQuestions = res.valid_questions || [];
+      }
+      lucide.createIcons();
+    }
+
+    // Generation / Execution Handler (Step 1 -> Step 2)
+    async function executeQuestionGenerationOrCsv() {
+      const btn = document.getElementById('aiStartGenBtn');
+      const btnText = document.getElementById('aiStartGenBtnText');
+      const origText = btnText ? btnText.textContent : 'Generate Questions & Preview';
+
+      try {
+        currentAiQuestionPool = [];
+        let generatedQuestions = [];
+
+        // 1. If AI or Both, run AI Generation
+        if (aiGenCurrentSource === 'ai' || aiGenCurrentSource === 'both') {
+          const subject = (document.getElementById('aiGenSubject').value || '').trim();
+          const targetClass = (document.getElementById('aiGenClass').value || '3R').trim();
+          const unit = (document.getElementById('aiGenUnit').value || '').trim();
+          const topic = (document.getElementById('aiGenTopic').value || '').trim();
+          const subtopics = (document.getElementById('aiGenSubtopics').value || '').trim();
+          const questionType = (document.getElementById('aiGenType').value || 'single_choice').trim();
+          const additionalInstructions = (document.getElementById('aiGenInstructions').value || '').trim();
+          const referenceContent = (document.getElementById('aiGenReferenceContent') ? document.getElementById('aiGenReferenceContent').value : '').trim();
+
+          // Field validations
+          if (!subject) {
+            showToast('Please enter a Subject Name (e.g. Data Structures, Operating Systems).', 'warning');
+            document.getElementById('aiGenSubject').focus();
+            return;
+          }
+          if (!topic) {
+            showToast('Please enter a Main Topic (e.g. Trees, CPU Scheduling).', 'warning');
+            document.getElementById('aiGenTopic').focus();
+            return;
+          }
+
+          let count = Math.max(1, Math.min(300, parseInt(document.getElementById('aiGenCount').value) || 10));
+
+          let difficulty = document.getElementById('aiGenDifficulty').value;
+          let diffDist = null;
+          if (difficulty === 'custom_dist') {
+            diffDist = {
+              easy: parseInt(document.getElementById('sliderEasyDist').value) || 30,
+              medium: parseInt(document.getElementById('sliderMedDist').value) || 50,
+              hard: parseInt(document.getElementById('sliderHardDist').value) || 20
+            };
+          }
+
+          if (btn) btn.disabled = true;
+          if (btnText) btnText.innerHTML = '<i data-lucide="loader-2" class="spin" style="width:16px;height:16px;margin-right:4px;"></i> Generating Questions...';
+          lucide.createIcons();
+
+          showToast('Generating high-quality CSE syllabus questions...', 'info');
+          const resp = await QuizAPI.generateAiQuestions({
+            subject: subject,
+            main_topic: topic,
+            topic: topic,
+            subtopics: subtopics,
+            unit_number: unit,
+            unit: unit,
+            target_class: targetClass,
+            question_type: questionType,
+            additional_instructions: additionalInstructions,
+            reference_content: referenceContent,
+            branch: 'CSE',
+            count: count,
+            difficulty: difficulty,
+            difficulty_dist: diffDist
+          });
+
+          generatedQuestions = (resp && resp.questions) || [];
+          currentAiQuestionPool = generatedQuestions;
+        }
+
+        // 2. If CSV or Both, parse CSV if present
+        if (aiGenCurrentSource === 'csv' || aiGenCurrentSource === 'both') {
+          if (lastUploadedCsvContent && currentUploadedCsvQuestions.length === 0) {
+            const csvRes = await QuizAPI.validateCsvQuestions(lastUploadedCsvContent);
+            currentUploadedCsvQuestions = csvRes.valid_questions || [];
+          }
+        }
+
+        // 3. Combine pools, preventing duplicates
+        const combined = [];
+        const seen = new Set();
+
+        const addQ = (q) => {
+          const key = (q.question || q.question_text || '').toLowerCase().replace(/\s+/g, ' ').trim();
+          if (!seen.has(key)) {
+            seen.add(key);
+            combined.push(q);
+          }
+        };
+
+        if (aiGenCurrentSource === 'csv') {
+          currentUploadedCsvQuestions.forEach(addQ);
+        } else if (aiGenCurrentSource === 'ai') {
+          generatedQuestions.forEach(addQ);
+        } else if (aiGenCurrentSource === 'both') {
+          currentUploadedCsvQuestions.forEach(addQ);
+          generatedQuestions.forEach(addQ);
+        }
+
+        if (combined.length === 0) {
+          throw new Error('No valid questions generated or uploaded. Please check your criteria or CSV file.');
+        }
+
+        currentCombinedPool = combined;
+        selectedQuestionIds = new Set(combined.map(q => q.id));
+
+        // Set default Quiz Question Count to full pool
+        const countInput = document.getElementById('previewQuizQuestionCount');
+        if (countInput) {
+          countInput.value = combined.length;
+        }
+        updatePreviewQuizPresetButtons(combined.length);
+
+        // Switch to Step 2
+        document.getElementById('aiGenConfigStep').style.display = 'none';
+        document.getElementById('aiGenPreviewStep').style.display = 'flex';
+        document.getElementById('aiGenReviewStep').style.display = 'none';
+
+        renderAiPreviewList();
+        showToast(`Loaded ${combined.length} questions into question pool!`, 'success');
+      } catch (err) {
+        showToast('Generation / Import Failed: ' + err.message, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = origText;
+        lucide.createIcons();
+      }
+    }
+
+    // Step 2: Render Preview List Cards
+    function renderAiPreviewList() {
+      const container = document.getElementById('aiPreviewListContainer');
+      const countEl = document.getElementById('previewTotalCount');
+      const manCountEl = document.getElementById('previewManualCount');
+      if (!container) return;
+
+      if (countEl) countEl.textContent = currentCombinedPool.length;
+      if (manCountEl) manCountEl.textContent = selectedQuestionIds.size;
+
+      container.innerHTML = '';
+
+      if (currentCombinedPool.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <i data-lucide="inbox" style="width: 36px; height: 36px; margin: 0 auto 0.5rem auto; color: #94A3B8;"></i>
+            <p style="margin: 0; font-weight: 600;">No questions available in pool.</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem;">Click "Back to Criteria" to generate or upload questions.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      currentCombinedPool.forEach((q, idx) => {
+        const isSelected = selectedQuestionIds.has(q.id);
+        const card = document.createElement('div');
+        card.id = `preview_card_${q.id}`;
+        card.className = 'ai-preview-card' + (isSelected ? ' selected' : '');
+        card.style.cssText = `
+          border: 1.5px solid ${isSelected ? '#2563EB' : '#E2E8F0'};
+          background: ${isSelected ? '#FFFFFF' : '#F8FAFC'};
+          padding: 1.1rem 1.25rem;
+          border-radius: 10px;
+          margin-bottom: 0.85rem;
+          flex-shrink: 0;
+          min-height: fit-content;
+          height: auto;
+          max-height: none;
+          width: 100%;
+          box-sizing: border-box;
+          overflow: visible;
+          box-shadow: ${isSelected ? '0 4px 12px rgba(37, 99, 235, 0.08)' : '0 1px 3px rgba(0,0,0,0.04)'};
+          transition: all 0.2s ease;
+        `;
+
+        const diffColors = {
+          'Easy': { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' },
+          'Medium': { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' },
+          'Hard': { bg: '#FEF2F2', text: '#DC2626', border: '#FECACA' }
+        };
+        const diffStyle = diffColors[q.difficulty] || diffColors['Medium'];
+        let srcBadge = '';
+        if (q.source === 'CSV_IMPORTED') {
+          srcBadge = '<span class="badge" style="background: #F0FDF4; color: #16A34A; font-size: 0.72rem; font-weight: 700; border: 1px solid #BBF7D0;"><i data-lucide="file-spreadsheet" style="width:11px;height:11px;margin-right:3px;"></i> CSV</span>';
+        } else if (q.source_type === 'SYLLABUS_GROUNDED' || q.grounded) {
+          srcBadge = '<span class="badge" style="background: #ECFDF5; color: #047857; font-size: 0.72rem; font-weight: 700; border: 1px solid #6EE7B7;" title="Grounded in teacher-provided syllabus or reference document"><i data-lucide="book-open" style="width:11px;height:11px;margin-right:3px;"></i> Grounded</span>';
+        } else {
+          srcBadge = '<span class="badge" style="background: #FDF4FF; color: #9333EA; font-size: 0.72rem; font-weight: 700; border: 1px solid #F5D0FE;" title="Generated from CSE academic curriculum"><i data-lucide="sparkles" style="width:11px;height:11px;margin-right:3px;"></i> AI</span>';
+        }
+
+        const qType = q.type || q.question_type || 'MCQ';
+        const qMarks = q.marks || 2;
+
+        const optHtml = (q.options || []).map(opt => {
+          const isCorr = opt.is_correct || opt.key === q.correct_answer;
+          return `
+            <div style="display: flex; align-items: flex-start; gap: 0.45rem; padding: 0.45rem 0.65rem; border-radius: 6px; font-size: 0.82rem; background: ${isCorr ? '#DCFCE7' : '#FFFFFF'}; border: 1px solid ${isCorr ? '#86EFAC' : '#E2E8F0'}; font-weight: ${isCorr ? '700' : '500'}; color: ${isCorr ? '#15803D' : 'var(--text-main)'}; line-height: 1.45; word-break: break-word; overflow-wrap: anywhere;">
+              <span style="font-weight: 700; font-size: 0.8rem; flex-shrink: 0; min-width: 18px;">${opt.key || ''}.</span>
+              <span style="flex: 1; word-break: break-word; overflow-wrap: anywhere; white-space: normal;">${escapeHtmlSafe(opt.text || opt.option_text || '')}</span>
+              ${isCorr ? '<span class="badge" style="background: #16A34A; color: #FFFFFF; font-size: 0.68rem; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; font-weight: 700; margin-left: 4px;">Correct</span>' : ''}
+            </div>
+          `;
+        }).join('');
+
+        card.innerHTML = `
+          <!-- Card Header: Checkbox + Question Details + Action Buttons -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.85rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; flex: 1; min-width: 0;">
+              <input type="checkbox" id="chk_q_${q.id}" ${isSelected ? 'checked' : ''} onchange="toggleQuestionSelection('${q.id}', this.checked)" style="width: 18px; height: 18px; margin-top: 3px; cursor: pointer; flex-shrink: 0; accent-color: var(--primary);" title="Select this question for the quiz">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.45rem;">
+                  <span class="badge" style="background: var(--navy); color: #fff; font-size: 0.72rem; font-weight: 700;">Q${idx + 1}</span>
+                  <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.72rem; font-weight: 700; border: 1px solid #FDE68A;">${escapeHtmlSafe(qType)}</span>
+                  <span class="badge" style="background: #EEF2FF; color: #4338CA; font-size: 0.72rem; font-weight: 700; border: 1px solid #C7D2FE;">${qMarks} Mark${qMarks > 1 ? 's' : ''}</span>
+                  <span class="badge" style="background: ${diffStyle.bg}; color: ${diffStyle.text}; font-size: 0.72rem; font-weight: 700; border: 1px solid ${diffStyle.border};">${escapeHtmlSafe(q.difficulty || 'Medium')}</span>
+                  ${srcBadge}
+                  <span style="font-size: 0.74rem; color: var(--text-muted); background: #F1F5F9; padding: 2px 7px; border-radius: 4px;">Topic: <strong style="color: var(--navy);">${escapeHtmlSafe(q.topic || 'General')}</strong>${q.subtopic ? ` &bull; Subtopic: <strong style="color: #2563EB;">${escapeHtmlSafe(q.subtopic)}</strong>` : ''}</span>
+                </div>
+                <div id="q_text_display_${q.id}" style="font-size: 0.94rem; font-weight: 600; color: var(--navy); line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; white-space: normal;">
+                  ${escapeHtmlSafe(q.question || q.question_text || '')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons: Inline Edit, Regenerate Single, Delete -->
+            <div style="display: flex; gap: 0.35rem; align-items: center; flex-shrink: 0; margin-left: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="startInlineEditPreviewQuestion('${q.id}')" style="padding: 0.28rem 0.55rem; font-size: 0.76rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;" title="Edit Question & Options">
+                <i data-lucide="edit-2" style="width:12px;height:12px;"></i> Edit
+              </button>
+              ${q.source !== 'CSV_IMPORTED' ? `
+                <button type="button" class="btn btn-secondary" onclick="regenerateSingleAiQuestion('${q.id}')" style="padding: 0.28rem 0.55rem; font-size: 0.76rem; color: #2563EB; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;" title="Regenerate this question with AI">
+                  <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Regen
+                </button>
+              ` : ''}
+              <button type="button" class="btn btn-secondary" onclick="deletePreviewQuestion('${q.id}')" style="padding: 0.28rem 0.5rem; font-size: 0.76rem; color: #EF4444; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;" title="Remove Question">
+                <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Options Grid -->
+          <div id="q_options_display_${q.id}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.5rem; margin-bottom: 0.65rem; width: 100%;">
+            ${optHtml}
+          </div>
+
+          <!-- Explanation Note -->
+          ${q.explanation ? `
+            <div style="font-size: 0.8rem; color: #1E3A8A; background: #EFF6FF; border-left: 3px solid #2563EB; padding: 0.45rem 0.75rem; border-radius: 4px; line-height: 1.45; word-break: break-word; overflow-wrap: anywhere; margin-top: 0.4rem;">
+              <strong>Explanation:</strong> ${escapeHtmlSafe(q.explanation)}
+            </div>
+          ` : ''}
+
+          <!-- Inline Edit Panel -->
+          <div id="q_edit_panel_${q.id}" style="display: none; margin-top: 0.75rem; padding: 0.85rem; border-radius: 8px; border: 1px dashed #3B82F6; background: #F8FAFC;">
+            <div class="form-group" style="margin-bottom: 0.55rem;">
+              <label style="font-size: 0.78rem; font-weight: 700; color: var(--navy); margin-bottom: 0.25rem; display: block;">Edit Question Statement:</label>
+              <textarea id="edit_text_${q.id}" class="form-control" rows="2" style="font-size: 0.85rem; width: 100%; box-sizing: border-box;">${escapeHtmlSafe(q.question || q.question_text || '')}</textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.45rem; margin-bottom: 0.55rem;">
+              <input type="text" id="edit_opt_A_${q.id}" class="form-control" style="font-size: 0.8rem;" value="${escapeHtmlSafe(q.options && q.options[0] ? (q.options[0].text || q.options[0].option_text || '') : '')}" placeholder="Option A">
+              <input type="text" id="edit_opt_B_${q.id}" class="form-control" style="font-size: 0.8rem;" value="${escapeHtmlSafe(q.options && q.options[1] ? (q.options[1].text || q.options[1].option_text || '') : '')}" placeholder="Option B">
+              <input type="text" id="edit_opt_C_${q.id}" class="form-control" style="font-size: 0.8rem;" value="${escapeHtmlSafe(q.options && q.options[2] ? (q.options[2].text || q.options[2].option_text || '') : '')}" placeholder="Option C">
+              <input type="text" id="edit_opt_D_${q.id}" class="form-control" style="font-size: 0.8rem;" value="${escapeHtmlSafe(q.options && q.options[3] ? (q.options[3].text || q.options[3].option_text || '') : '')}" placeholder="Option D">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <div style="display: flex; gap: 0.45rem; align-items: center;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--navy);">Correct Answer:</label>
+                <select id="edit_corr_${q.id}" class="form-control" style="width: 85px; font-size: 0.82rem; font-weight: 700;">
+                  <option value="A" ${q.correct_answer === 'A' ? 'selected' : ''}>A</option>
+                  <option value="B" ${q.correct_answer === 'B' ? 'selected' : ''}>B</option>
+                  <option value="C" ${q.correct_answer === 'C' ? 'selected' : ''}>C</option>
+                  <option value="D" ${q.correct_answer === 'D' ? 'selected' : ''}>D</option>
+                </select>
+              </div>
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn btn-secondary" onclick="cancelInlineEditPreviewQuestion('${q.id}')" style="padding: 0.28rem 0.6rem; font-size: 0.76rem;">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveInlineEditPreviewQuestion('${q.id}')" style="padding: 0.28rem 0.7rem; font-size: 0.76rem;">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function toggleQuestionSelection(qid, isChecked) {
+      if (isChecked) {
+        selectedQuestionIds.add(qid);
+      } else {
+        selectedQuestionIds.delete(qid);
+      }
+      const card = document.getElementById(`preview_card_${qid}`);
+      if (card) {
+        card.classList.toggle('selected', isChecked);
+        card.style.borderColor = isChecked ? '#2563EB' : '#E2E8F0';
+        card.style.background = isChecked ? '#FFFFFF' : '#F8FAFC';
+        card.style.boxShadow = isChecked ? '0 4px 12px rgba(37, 99, 235, 0.08)' : '0 1px 3px rgba(0,0,0,0.04)';
+      }
+      const manCountEl = document.getElementById('previewManualCount');
+      if (manCountEl) manCountEl.textContent = selectedQuestionIds.size;
+    }
+
+    function selectAllPreviewQuestions(selectState) {
+      if (selectState) {
+        selectedQuestionIds = new Set(currentCombinedPool.map(q => q.id));
+      } else {
+        selectedQuestionIds.clear();
+      }
+      renderAiPreviewList();
+    }
+
+    function setSelectionMode(mode) {
+      currentSelectionMode = mode;
+      const bMan = document.getElementById('selModeManual');
+      const bRand = document.getElementById('selModeRandom');
+      if (bMan) bMan.classList.toggle('active', mode === 'manual');
+      if (bRand) bRand.classList.toggle('active', mode === 'random');
+
+      if (mode === 'random') {
+        applyRandomQuestionSelection();
+      }
+    }
+
+    function updatePreviewQuizPresetButtons(val) {
+      const poolLen = currentCombinedPool ? currentCombinedPool.length : 0;
+      document.querySelectorAll('#previewQuizCountPresets .btn-count-pill').forEach(btn => {
+        const text = btn.textContent.trim();
+        if ((val >= poolLen && text.startsWith('Use All')) || parseInt(text) === val) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function setPreviewQuizQuestionCount(target) {
+      const input = document.getElementById('previewQuizQuestionCount');
+      if (!input) return;
+      let val;
+      const poolLen = currentCombinedPool ? currentCombinedPool.length : 10;
+      if (target === 'all') {
+        val = poolLen;
+      } else {
+        val = Math.min(parseInt(target) || 10, poolLen);
+      }
+      input.value = Math.max(1, val);
+      updatePreviewQuizPresetButtons(val);
+      onQuizQuestionCountChange();
+    }
+
+    function onQuizQuestionCountChange() {
+      const input = document.getElementById('previewQuizQuestionCount');
+      const val = parseInt(input ? input.value : 10) || 10;
+      updatePreviewQuizPresetButtons(val);
+      if (currentSelectionMode === 'random') {
+        applyRandomQuestionSelection();
+      }
+    }
+
+    function applyRandomQuestionSelection() {
+      const countInput = document.getElementById('previewQuizQuestionCount');
+      let requiredCount = parseInt(countInput ? countInput.value : 10) || 10;
+      requiredCount = Math.min(requiredCount, currentCombinedPool.length);
+
+      // Randomly sample without duplicate questions
+      const poolCopy = [...currentCombinedPool];
+      // Fisher-Yates shuffle
+      for (let i = poolCopy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [poolCopy[i], poolCopy[j]] = [poolCopy[j], poolCopy[i]];
+      }
+
+      const picked = poolCopy.slice(0, requiredCount);
+      selectedQuestionIds = new Set(picked.map(q => q.id));
+      renderAiPreviewList();
+      showToast(`Randomly selected ${picked.length} questions from pool!`, 'info');
+    }
+
+    // Inline Edit Handlers
+    function startInlineEditPreviewQuestion(qid) {
+      const panel = document.getElementById(`q_edit_panel_${qid}`);
+      if (panel) panel.style.display = 'block';
+    }
+
+    function cancelInlineEditPreviewQuestion(qid) {
+      const panel = document.getElementById(`q_edit_panel_${qid}`);
+      if (panel) panel.style.display = 'none';
+    }
+
+    function saveInlineEditPreviewQuestion(qid) {
+      const q = currentCombinedPool.find(x => x.id === qid);
+      if (!q) return;
+
+      const newText = document.getElementById(`edit_text_${qid}`).value.trim();
+      const optA = document.getElementById(`edit_opt_A_${qid}`).value.trim();
+      const optB = document.getElementById(`edit_opt_B_${qid}`).value.trim();
+      const optC = document.getElementById(`edit_opt_C_${qid}`).value.trim();
+      const optD = document.getElementById(`edit_opt_D_${qid}`).value.trim();
+      const corr = document.getElementById(`edit_corr_${qid}`).value;
+
+      if (!newText || !optA || !optB) {
+        showToast('Question statement, Option A and Option B cannot be empty.', 'warning');
+        return;
+      }
+
+      q.question = newText;
+      q.question_text = newText;
+      q.correct_answer = corr;
+      q.options = [
+        { key: 'A', text: optA, is_correct: corr === 'A' },
+        { key: 'B', text: optB, is_correct: corr === 'B' }
+      ];
+      if (optC) q.options.push({ key: 'C', text: optC, is_correct: corr === 'C' });
+      if (optD) q.options.push({ key: 'D', text: optD, is_correct: corr === 'D' });
+
+      renderAiPreviewList();
+      showToast('Question updated successfully!', 'success');
+    }
+
+    // Single Question Regeneration
+    async function regenerateSingleAiQuestion(qid) {
+      const qIndex = currentCombinedPool.findIndex(x => x.id === qid);
+      if (qIndex === -1) return;
+
+      const q = currentCombinedPool[qIndex];
+      const subject = (document.getElementById('aiGenSubject').value || '').trim() || q.subject || 'Data Structures';
+      const unit = (document.getElementById('aiGenUnit').value || '').trim() || q.unit || '';
+      const topic = q.topic || (document.getElementById('aiGenTopic').value || '').trim() || 'General';
+      const subtopics = q.subtopic || (document.getElementById('aiGenSubtopics').value || '').trim();
+      const questionType = (document.getElementById('aiGenType').value || 'single_choice').trim();
+      const additionalInstructions = (document.getElementById('aiGenInstructions').value || '').trim();
+      const referenceContent = (document.getElementById('aiGenReferenceContent') ? document.getElementById('aiGenReferenceContent').value : '').trim();
+
+      try {
+        showToast('Regenerating question with AI...', 'info');
+        const resp = await QuizAPI.generateAiQuestions({
+          subject: subject,
+          main_topic: topic,
+          topic: topic,
+          subtopics: subtopics,
+          unit_number: unit,
+          unit: unit,
+          question_type: questionType,
+          additional_instructions: additionalInstructions,
+          reference_content: referenceContent,
+          count: 1,
+          difficulty: q.difficulty || 'Medium'
+        });
+
+        if (resp && resp.questions && resp.questions.length > 0) {
+          const newQ = resp.questions[0];
+          newQ.id = qid; // preserve ID so selection remains consistent
+          currentCombinedPool[qIndex] = newQ;
+          renderAiPreviewList();
+          showToast('Question regenerated successfully!', 'success');
+        }
+      } catch (err) {
+        showToast('Failed to regenerate question: ' + err.message, 'error');
+      }
+    }
+
+    // Regenerate All Questions
+    async function regenerateAllAiQuestions() {
+      if (!confirm('Regenerate all questions in the pool using current criteria?')) return;
+      await executeQuestionGenerationOrCsv();
+    }
+
+    // Delete Single Question from Preview
+    function deletePreviewQuestion(qid) {
+      currentCombinedPool = currentCombinedPool.filter(q => q.id !== qid);
+      selectedQuestionIds.delete(qid);
+      renderAiPreviewList();
+    }
+
+    // Dedicated Modal Back Button Handler (Top-Left and Navigation)
+    function handleAiModalBackClick() {
+      const step3 = document.getElementById('aiGenReviewStep');
+      const step2 = document.getElementById('aiGenPreviewStep');
+
+      if (step3 && window.getComputedStyle(step3).display !== 'none') {
+        backToAiPreviewStep();
+        return;
+      }
+      if (step2 && window.getComputedStyle(step2).display !== 'none') {
+        backToAiConfigStep();
+        return;
+      }
+      // If at Step 1, close modal and return to previous workspace view
+      closeAiGenModal();
+    }
+
+    function backToAiConfigStep() {
+      document.getElementById('aiGenConfigStep').style.display = 'block';
+      document.getElementById('aiGenPreviewStep').style.display = 'none';
+      document.getElementById('aiGenReviewStep').style.display = 'none';
+
+      // Show pool resume banner if questions already exist
+      const resumeBanner = document.getElementById('aiPoolResumeBanner');
+      const resumeCount = document.getElementById('aiPoolResumeCount');
+      if (resumeBanner && resumeCount) {
+        if (currentCombinedPool && currentCombinedPool.length > 0) {
+          resumeCount.textContent = currentCombinedPool.length;
+          resumeBanner.style.display = 'flex';
+        } else {
+          resumeBanner.style.display = 'none';
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function backToAiPreviewStep() {
+      document.getElementById('aiGenConfigStep').style.display = 'none';
+      document.getElementById('aiGenPreviewStep').style.display = 'flex';
+      document.getElementById('aiGenReviewStep').style.display = 'none';
+      renderAiPreviewList();
+    }
+
+    // Step 3: Final Review Summary Card
+    function openFinalReviewSummaryModal() {
+      const selected = currentCombinedPool.filter(q => selectedQuestionIds.has(q.id));
+      if (selected.length === 0) {
+        showToast('Please select at least one question before reviewing.', 'warning');
+        return;
+      }
+
+      document.getElementById('aiGenConfigStep').style.display = 'none';
+      document.getElementById('aiGenPreviewStep').style.display = 'none';
+      document.getElementById('aiGenReviewStep').style.display = 'block';
+
+      const subject = (document.getElementById('aiGenSubject').value || '').trim() || 'General';
+      const unit = (document.getElementById('aiGenUnit').value || '').trim();
+      const topic = (document.getElementById('aiGenTopic').value || '').trim() || 'Core Topics';
+      const subtopics = (document.getElementById('aiGenSubtopics').value || '').trim();
+
+      document.getElementById('reviewCardSubject').textContent = subject;
+      const unitTopicText = unit ? `${unit} • ${topic}` : topic;
+      document.getElementById('reviewCardUnitTopic').textContent = subtopics ? `${unitTopicText} (Subtopics: ${subtopics})` : unitTopicText;
+      document.getElementById('reviewCardCounts').textContent = `${currentCombinedPool.length} in Pool • ${selected.length} to Add`;
+
+      const totalMarks = selected.reduce((acc, q) => acc + (parseFloat(q.marks) || 2.0), 0);
+      document.getElementById('reviewCardMarks').textContent = `${totalMarks.toFixed(1)} Marks`;
+
+      // Difficulties
+      let easyC = 0, medC = 0, hardC = 0;
+      let aiC = 0, csvC = 0, groundedC = 0;
+      selected.forEach(q => {
+        const d = (q.difficulty || 'Medium').toLowerCase();
+        if (d === 'easy') easyC++;
+        else if (d === 'hard') hardC++;
+        else medC++;
+
+        if (q.source === 'CSV_IMPORTED') csvC++;
+        else if (q.source_type === 'SYLLABUS_GROUNDED' || q.grounded) groundedC++;
+        else aiC++;
+      });
+
+      document.getElementById('reviewCardDifficulty').innerHTML = `
+        <span class="badge" style="background: #ECFDF5; color: #059669; font-weight: 700;">Easy: ${easyC}</span>
+        <span class="badge" style="background: #EFF6FF; color: #2563EB; font-weight: 700;">Medium: ${medC}</span>
+        <span class="badge" style="background: #FEF2F2; color: #DC2626; font-weight: 700;">Hard: ${hardC}</span>
+      `;
+
+      document.getElementById('reviewCardSources').innerHTML = `
+        <span class="badge" style="background: #FDF4FF; color: #9333EA; font-weight: 700;">AI Generated: ${aiC}</span>
+        ${groundedC > 0 ? `<span class="badge" style="background: #ECFDF5; color: #047857; font-weight: 700;">Syllabus Grounded: ${groundedC}</span>` : ''}
+        <span class="badge" style="background: #F0FDF4; color: #16A34A; font-weight: 700;">CSV Imported: ${csvC}</span>
+      `;
+
+      lucide.createIcons();
+    }
+
+    // Step 4: Atomic Commit to Database (Bulk Insert)
+    async function confirmAddSelectedQuestionsToQuiz() {
+      // Determine target quiz
+      let targetQuizId = null;
+      if (aiGenContextCaller === 'studio') {
+        targetQuizId = document.getElementById('importTargetQuiz') ? document.getElementById('importTargetQuiz').value : null;
+      } else {
+        targetQuizId = currentEditingQuizId;
+      }
+
+      if (!targetQuizId) {
+        showToast('Please select a target quiz from the dropdown before adding questions.', 'warning');
+        return;
+      }
+
+      const selectedQuestions = currentCombinedPool.filter(q => selectedQuestionIds.has(q.id));
+      if (selectedQuestions.length === 0) {
+        showToast('Please select at least 1 question to add to the quiz.', 'warning');
+        return;
+      }
+
+      const countInput = document.getElementById('previewQuizQuestionCount');
+      let maxCount = parseInt(countInput ? countInput.value : selectedQuestions.length) || selectedQuestions.length;
+      if (selectedQuestions.length < maxCount) {
+        showToast(`Note: Quiz count was set to ${maxCount}, but only ${selectedQuestions.length} are selected. Adding all ${selectedQuestions.length} selected questions.`, 'info');
+      }
+      const finalQuestionsToAdd = selectedQuestions.slice(0, maxCount);
+
+      const btn = document.getElementById('aiAddSelectedBtn');
+      if (btn) btn.disabled = true;
+
+      try {
+        showToast(`Saving ${finalQuestionsToAdd.length} questions to quiz...`, 'info');
+        const res = await QuizAPI.addBulkQuestions(targetQuizId, finalQuestionsToAdd);
+
+        showToast(`Successfully added ${res.inserted_count} questions to the quiz!`, 'success');
+        closeAiGenModal();
+
+        // Refresh Studio or Modal
+        await refreshQuizzes();
+
+        if (aiGenContextCaller === 'studio') {
+          const importSelect = document.getElementById('importTargetQuiz');
+          if (importSelect) {
+            importSelect.value = targetQuizId;
+            await onStudioQuizChange();
+          }
+        } else {
+          await openManageQuestions(targetQuizId);
+        }
+      } catch (err) {
+        showToast('Failed to commit questions: ' + err.message, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     // Init

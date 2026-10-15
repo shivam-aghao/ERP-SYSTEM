@@ -56,11 +56,27 @@
         role: roleHint || ''
       };
 
-      var res = await fetch(apiBase + '/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      var res;
+      try {
+        res = await fetch(apiBase + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (netErr) {
+        var altBase = apiBase.includes('localhost')
+          ? apiBase.replace('localhost', '127.0.0.1')
+          : (apiBase.includes('127.0.0.1') ? apiBase.replace('127.0.0.1', 'localhost') : null);
+        if (altBase && altBase !== apiBase) {
+          res = await fetch(altBase + '/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          throw netErr;
+        }
+      }
 
       if (!res.ok) {
         var errData = await res.json().catch(function () { return {}; });

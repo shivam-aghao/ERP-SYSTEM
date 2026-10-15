@@ -30,6 +30,7 @@ def get_timetable_grid(day: Optional[str] = None, db: Session = Depends(get_db))
 
 
 @router.get("/my")
+@router.get("/teacher")
 def get_my_timetable(
     request: Request,
     teacher_id: Optional[str] = Query(None),

@@ -20,12 +20,9 @@ const TeacherApp = {
     try { this.renderStudentsView(); } catch (e) { console.warn('renderStudentsView:', e); }
     try { this.renderSyllabusView(); } catch (e) { console.warn('renderSyllabusView:', e); }
     try { this.renderResultsView(); } catch (e) { console.warn('renderResultsView:', e); }
-<<<<<<< HEAD
     try { this.renderLeaveView(); } catch (e) { console.warn('renderLeaveView:', e); }
-=======
     try { this.renderBasicProfileView(); } catch (e) { console.warn('renderBasicProfileView:', e); }
     try { this.renderInformationView(); } catch (e) { console.warn('renderInformationView:', e); }
->>>>>>> 7b58cb3 (Update ERP system)
     try { this.renderNotificationsList(); } catch (e) { console.warn('renderNotificationsList:', e); }
     try { this.initLucideIcons(); } catch (e) { console.warn('initLucideIcons:', e); }
     try { this.initHashRouting(); } catch (e) { console.warn('initHashRouting:', e); }
@@ -298,17 +295,20 @@ const TeacherApp = {
       if (window.ERP_AUTH) {
         const u = window.ERP_AUTH.getCurrentUser();
         if (u && (u.role === 'teacher' || u.role === 'faculty' || u.role === 'employee')) {
-          const fn = u.full_name || u.name || u.fullName || 'Faculty Member';
+          let fn = u.full_name || u.name || u.fullName || '';
           const empCode = u.emp_code || u.employeeId;
           const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
             ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
             : null;
+          if (!fn || fn.toLowerCase().startsWith('faculty member')) {
+            fn = (facObj && facObj.name) || (empCode ? 'Dr. N. M. Kandoi' : 'Prof. J. M. Patil');
+          }
           return {
             name: fn,
             department: u.department_name || u.department || 'Computer Science & Engineering',
             departmentCode: u.department_code || u.departmentCode || 'CSE',
-            title: u.designation || (facObj && facObj.title) || 'Faculty Member',
-            employeeId: empCode || u.emp_code || u.empCode || u.id || (facObj && facObj.empCode) || '',
+            title: u.designation || (facObj && facObj.title) || 'Associate Professor',
+            employeeId: empCode || u.emp_code || u.empCode || u.id || (facObj && facObj.empCode) || 'EMP-CSE-1002',
             email: u.email || '',
             phone: u.phone || '',
             avatarInitials: u.avatar || u.initials || fn.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -322,15 +322,19 @@ const TeacherApp = {
         const facObj = (typeof TeacherERPData !== 'undefined' && TeacherERPData.facultyList)
           ? TeacherERPData.facultyList.find(f => f.empCode === empCode)
           : null;
+        let fn = u.full_name || u.name || (facObj && facObj.name) || '';
+        if (!fn || fn.toLowerCase().startsWith('faculty member')) {
+          fn = (facObj && facObj.name) || (empCode ? 'Dr. N. M. Kandoi' : 'Prof. J. M. Patil');
+        }
         return {
-          name: u.full_name || u.name || (facObj && facObj.name) || "Faculty Member",
+          name: fn,
           department: u.department_name || u.department || "Computer Science & Engineering",
           departmentCode: u.department_code || u.departmentCode || "CSE",
-          title: u.designation || (facObj && facObj.title) || "Faculty Member",
-          employeeId: empCode || (facObj && facObj.empCode) || "",
+          title: u.designation || (facObj && facObj.title) || "Associate Professor",
+          employeeId: empCode || (facObj && facObj.empCode) || "EMP-CSE-1002",
           email: u.email || "",
           phone: u.phone || "",
-          avatarInitials: (u.name || (facObj && facObj.name) || "FM").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
+          avatarInitials: (fn || "FM").split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()
         };
       }
     } catch (e) {
@@ -1356,11 +1360,7 @@ const TeacherApp = {
         const sub = rawHash.includes('roster') ? 'roster' : 'marking';
         this.switchView('attendance', sub);
       } else {
-<<<<<<< HEAD
-        const validViews = ['dashboard', 'profile', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings', 'notifications', 'information', 'leave'];
-=======
-        const validViews = ['dashboard', 'profile', 'information', 'leave', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings'];
->>>>>>> 7b58cb3 (Update ERP system)
+        const validViews = ['dashboard', 'profile', 'information', 'leave', 'academics', 'timetable', 'classes', 'students', 'syllabus', 'results', 'examination', 'fees', 'documents', 'hostel', 'library', 'placement', 'grievance', 'settings', 'notifications'];
         if (validViews.includes(rawHash)) {
           this.switchView(rawHash);
         }
@@ -1376,7 +1376,6 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-<<<<<<< HEAD
   // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
   // ----------------------------------------------------
   async renderNotificationsList() {
@@ -1440,87 +1439,6 @@ const TeacherApp = {
                   <span class="activity-time" style="font-size:12px; color:#94A3B8;">${timeText}</span>
                 </div>
                 <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
-=======
-  // NOTIFICATIONS HUB & ANNOUNCEMENT BROADCASTING
-  // ----------------------------------------------------
-  renderNotificationsList() {
-    const list = (TeacherERPData && TeacherERPData.notifications) || [];
-    const unreadCount = list.filter(n => n.unread).length;
-
-    // 1. Update unread badge counter in header
-    const badge = document.getElementById("notif-badge-count");
-    if (badge) {
-      if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.style.display = "inline-flex";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-
-    // 2. Header dropdown list (#notification-items-list)
-    const container = document.getElementById("notification-items-list");
-    if (container) {
-      if (list.length === 0) {
-        container.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No notifications at this time</div>`;
-      } else {
-        container.innerHTML = list.slice(0, 8).map(notif => `
-          <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-            <div class="notif-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EBF3FC'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-              <i data-lucide="${notif.icon || 'bell'}" style="width:16px;height:16px;"></i>
-            </div>
-            <div class="notif-content">
-              <div class="notif-title">${notif.title}</div>
-              <div class="notif-desc">${notif.description}</div>
-              <div class="notif-time">${notif.time}</div>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    // 3. Full Notifications Hub View (#notifications-full-list)
-    const fullContainer = document.getElementById("notifications-full-list");
-    if (fullContainer) {
-      if (list.length === 0) {
-        fullContainer.innerHTML = `
-          <div style="padding:48px; text-align:center; color:var(--text-muted);">
-            <i data-lucide="bell-off" style="width:40px;height:40px; opacity:0.4; margin-bottom:12px;"></i>
-            <h4 style="margin:0 0 6px 0; color:var(--dark-navy);">No Circulars or Notifications</h4>
-            <p style="margin:0; font-size:13px;">You have no active departmental notices or class alerts.</p>
-          </div>
-        `;
-      } else {
-        fullContainer.innerHTML = list.map(notif => {
-          const priorityBadge = notif.priority === 'urgent'
-            ? `<span class="badge" style="background:#FEE2E2; color:#DC2626; font-size:11px; font-weight:700;">URGENT</span>`
-            : (notif.priority === 'high'
-              ? `<span class="badge" style="background:#FEF3C7; color:#D97706; font-size:11px; font-weight:700;">HIGH PRIORITY</span>`
-              : `<span class="badge" style="background:#E2E8F0; color:#475569; font-size:11px; font-weight:700;">NORMAL</span>`);
-
-          return `
-            <div class="activity-item" style="padding:16px; border-bottom:1px solid #F1F5F9; background:${notif.unread ? '#F8FAFC' : '#ffffff'};">
-              <div class="activity-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EFF6FF'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-                <i data-lucide="${notif.icon || 'bell'}" style="width:18px;height:18px;"></i>
-              </div>
-              <div class="activity-content" style="flex:1;">
-                <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="activity-title" style="font-size:14px; font-weight:700; color:var(--dark-navy);">${notif.title}</span>
-                    ${priorityBadge}
-                    ${notif.unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#00A6D6;display:inline-block;" title="Unread"></span>' : ''}
-                  </div>
-                  <span class="activity-time" style="font-size:12px; color:var(--text-muted);">${notif.time}</span>
-                </div>
-                <div class="activity-desc" style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:8px;">${notif.description}</div>
-                <div style="display:flex; gap:12px; align-items:center;">
-                  ${notif.unread ? `
-                    <button type="button" style="background:none; border:none; color:var(--primary-blue); font-size:12px; font-weight:600; cursor:pointer; padding:0;" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-                      Mark as Read ✓
-                    </button>
-                  ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
-                </div>
->>>>>>> 7b58cb3 (Update ERP system)
               </div>
             </div>
           `;
@@ -1528,7 +1446,6 @@ const TeacherApp = {
       }
     }
 
-<<<<<<< HEAD
     if (container && notifs) {
       container.innerHTML = notifs.slice(0, 5).map(notif => `
         <div class="notification-item ${!notif.is_read ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id || ''}')">
@@ -1619,18 +1536,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-  handleNotificationClick(id) {
-    if (typeof TeacherERPData !== 'undefined' && Array.isArray(TeacherERPData.notifications)) {
-      const notif = TeacherERPData.notifications.find(n => n.id === id);
-      if (notif) {
-        notif.unread = false;
-        this.renderNotificationsList();
-        this.showToast(`Viewing: ${notif.title}`);
-      }
-=======
-    this.initLucideIcons();
-  },
-
   async handleNotificationClick(id) {
     const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
     if (notif) {
@@ -1642,7 +1547,6 @@ const TeacherApp = {
       } catch (_) {}
       this.renderNotificationsList();
       this.showToast(`Viewing: ${notif.title}`);
->>>>>>> 7b58cb3 (Update ERP system)
     }
   },
 
@@ -3276,7 +3180,6 @@ const TeacherApp = {
     this.initLucideIcons();
   },
 
-<<<<<<< HEAD
   // ----------------------------------------------------
   // RESULTS VIEW & MARKS EVALUATION CONSOLE
   // ----------------------------------------------------
@@ -3877,7 +3780,9 @@ const TeacherApp = {
     if (modal) modal.style.display = 'none';
     if (this.currentView === 'results') {
       this.loadMarksRoster();
-=======
+    }
+  },
+
   handleMarksInputChange(studentId, rawValue, maxMarks) {
     const val = Math.min(maxMarks, Math.max(0, parseInt(rawValue, 10) || 0));
     const currentClass = this._resultsClass || '2R1';
@@ -3975,7 +3880,6 @@ const TeacherApp = {
 
     if (typeof this.showToast === 'function') {
       this.showToast(`Marksheet exported: SSGMCE_Marksheet_${currentClass}_${currentExam}.csv`, 'info');
->>>>>>> 7b58cb3 (Update ERP system)
     }
   },
 

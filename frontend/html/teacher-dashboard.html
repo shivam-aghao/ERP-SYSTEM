@@ -397,11 +397,7 @@
               <span>Settings</span>
             </div>
             <div class="p-divider"></div>
-<<<<<<< HEAD
-            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="window.handleLogout ? window.handleLogout() : TeacherApp.handleLogout()">
-=======
-            <div class="profile-dropdown-item p-link-item text-danger danger" onclick="TeacherApp.openLogoutConfirmModal()">
->>>>>>> 7b58cb3 (Update ERP system)
+            <div class="profile-dropdown-item p-link-item text-danger danger" style="cursor:pointer; color:#DC2626; font-weight:600;" onclick="if(window.TeacherApp && typeof TeacherApp.openLogoutConfirmModal === 'function'){ TeacherApp.openLogoutConfirmModal(); } else if(window.handleLogout){ window.handleLogout(); } else if(window.TeacherApp && typeof TeacherApp.handleLogout === 'function'){ TeacherApp.handleLogout(); }">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               <span>Sign Out</span>
             </div>

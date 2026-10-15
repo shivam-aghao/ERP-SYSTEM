@@ -206,3 +206,43 @@ class QuizSecurityEvent(Base):
     event_type = Column(String(50), nullable=False)
     event_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     metadata = Column(JSON, nullable=True)
+
+
+class QuizRandomizationConfig(Base):
+    __tablename__ = "quiz_randomization_configs"
+    __table_args__ = {"extend_existing": True}
+
+    quiz_id = Column(String(100), primary_key=True)
+    questions_per_student = Column(Integer, nullable=True)
+    unique_question_paper = Column(Boolean, default=False)
+    prevent_duplicate_questions = Column(Boolean, default=True)
+    randomize_question_types = Column(Boolean, default=False)
+    difficulty_distribution = Column(Text, nullable=True)
+    security_settings = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class QuizAttemptPaper(Base):
+    __tablename__ = "quiz_attempt_papers"
+    __table_args__ = {"extend_existing": True}
+
+    attempt_id = Column(String(100), primary_key=True)
+    quiz_id = Column(String(100), nullable=False, index=True)
+    student_id = Column(String(100), nullable=False, index=True)
+    question_ids = Column(Text, nullable=False)
+    paper_payload = Column(Text, nullable=False)
+    options_map = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class QuizQuestionMetadata(Base):
+    __tablename__ = "quiz_question_metadata"
+    __table_args__ = {"extend_existing": True}
+
+    question_id = Column(String(100), primary_key=True)
+    quiz_id = Column(String(100), nullable=False, index=True)
+    difficulty = Column(String(30), default="MEDIUM")
+    topic = Column(String(150), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+

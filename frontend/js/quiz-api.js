@@ -156,6 +156,12 @@
       return res.data;
     },
 
+    // 9b. Teacher: Validate Pre-Publish Constraints
+    async validatePublish(quizId) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/validate-publish');
+      return res.data;
+    },
+
     // 10. Teacher: Close Quiz
     async closeQuiz(quizId) {
       var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/close', {
@@ -206,6 +212,33 @@
     async deleteQuestion(quizId, questionId) {
       var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions/' + encodeURIComponent(questionId), {
         method: 'DELETE'
+      });
+      return res.data;
+    },
+
+    // 14a. Teacher: AI Question Generator
+    async generateAiQuestions(payload) {
+      var res = await this._fetch('/quizzes/generate-questions', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return res.data;
+    },
+
+    // 14b. Teacher: Validate CSV Question Bank
+    async validateCsvQuestions(csvContent) {
+      var res = await this._fetch('/quizzes/validate-csv', {
+        method: 'POST',
+        body: JSON.stringify({ csv_content: csvContent })
+      });
+      return res.data;
+    },
+
+    // 14c. Teacher: Bulk Add Questions to Quiz
+    async addBulkQuestions(quizId, questions) {
+      var res = await this._fetch('/quizzes/' + encodeURIComponent(quizId) + '/questions/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ questions: questions })
       });
       return res.data;
     },

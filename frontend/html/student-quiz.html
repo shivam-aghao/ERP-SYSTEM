@@ -2220,7 +2220,7 @@
             rollNo: currentStudent ? (currentStudent.roll_no || '') : '',
             className: currentStudentClass || '',
             maxViolations: (activeQuiz && activeQuiz.max_violations) ? Number(activeQuiz.max_violations) : 5,
-            autoSubmitOnMaxViolations: Boolean(activeQuiz && activeQuiz.auto_submit_on_violation),
+            autoSubmitOnMaxViolations: (activeQuiz && activeQuiz.auto_submit_on_violation === false) ? false : true,
             requestFullscreen: false, // Already requested synchronously on click
             onAutoSubmit: function (reason) {
               performFinalSubmit(true, reason || 'max_security_violations');
@@ -2568,17 +2568,23 @@
 
 
 
+        const isSecurityAutoSubmit = Boolean(isAutoSubmit) && (submissionReason === 'max_security_violations');
+
         if (isReleased) {
-
           if (bannerNotice) bannerNotice.style.display = 'none';
-
           if (scoreCircle) scoreCircle.style.display = 'flex';
-
           if (metricsContainer) metricsContainer.style.display = 'grid';
 
-          if (heading) heading.textContent = 'Quiz Completed Successfully!';
-
-          if (subheading) subheading.textContent = 'Official scorecard and question-by-question solution breakdown';
+          if (heading) {
+            heading.textContent = isSecurityAutoSubmit
+              ? 'Quiz Auto-Submitted (Security Limit)'
+              : 'Quiz Completed Successfully!';
+          }
+          if (subheading) {
+            subheading.textContent = isSecurityAutoSubmit
+              ? 'Submitted automatically because the maximum allowed focus / window warnings (5 of 5) were reached.'
+              : 'Official scorecard and question-by-question solution breakdown';
+          }
 
 
 
