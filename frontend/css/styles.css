@@ -2557,25 +2557,22 @@ a {
 }
 
 /* ABSENT: circle filled with diagonal hash lines, NOT solid red */
-.circle-absent {
+.circle-absent,
+.circle-absent-shaded,
+.circle-absent.shaded {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1.5px solid #DC2626;
-  background: repeating-linear-gradient(
-    45deg,
-    #DC2626,
-    #DC2626 1.5px,
-    #FFFFFF 1.5px,
-    #FFFFFF 3.5px
-  );
+  border: 1.5px solid #d32f2f !important;
+  background: repeating-linear-gradient(45deg, #d32f2f 0 4px, #ffffff 4px 8px) !important;
+  box-shadow: 0 0 3px rgba(211, 47, 47, 0.35);
   display: inline-block;
   flex-shrink: 0;
   box-sizing: border-box;
   transition: transform 0.15s ease;
 }
 
-.circle-present:hover, .circle-absent:hover {
+.circle-present:hover, .circle-absent:hover, .circle-absent-shaded:hover {
   transform: scale(1.25);
 }
 

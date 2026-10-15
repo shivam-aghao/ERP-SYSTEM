@@ -799,14 +799,22 @@
                 </div>
 
                 <!-- Pure CSS Legend -->
-                <div class="attendance-legend">
-                  <span class="legend-item">
+                <div class="attendance-legend" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
                     <span class="circle-present"></span>
-                    <span>Present</span>
+                    <span>Past Present</span>
                   </span>
-                  <span class="legend-item">
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
                     <span class="circle-absent"></span>
-                    <span>(hashed) Absent</span>
+                    <span>Past Absent</span>
+                  </span>
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="circle-present-shaded"></span>
+                    <span>Marked Present</span>
+                  </span>
+                  <span class="legend-item" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="circle-absent-shaded"></span>
+                    <span>Marked Absent</span>
                   </span>
                 </div>
 
@@ -831,12 +839,12 @@
                   <table class="roster-table" id="leftRosterTable">
                     <thead>
                       <tr>
-                        <th style="width: 36px;">Sr No</th>
-                        <th style="width: 86px;">Student Code</th>
+                        <th style="width: 30px;">Sr</th>
+                        <th style="width: 74px;">Student Code</th>
                         <th>Student</th>
-                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
-                        <th style="width: 52px;">Roll No.</th>
-                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                        <th style="width: 155px;">10 Lecture Streak</th>
+                        <th style="width: 44px;">Roll</th>
+                        <th style="width: 62px; text-align: right; padding-right: 6px;">Status</th>
                       </tr>
                     </thead>
                     <tbody id="leftTableBody">
@@ -850,12 +858,12 @@
                   <table class="roster-table" id="rightRosterTable">
                     <thead>
                       <tr>
-                        <th style="width: 36px;">Sr No</th>
-                        <th style="width: 86px;">Student Code</th>
+                        <th style="width: 30px;">Sr</th>
+                        <th style="width: 74px;">Student Code</th>
                         <th>Student</th>
-                        <th style="width: 175px;">Previous 10 Lecture Attendance</th>
-                        <th style="width: 52px;">Roll No.</th>
-                        <th style="width: 72px; text-align: right; padding-right: 8px;">Status</th>
+                        <th style="width: 155px;">10 Lecture Streak</th>
+                        <th style="width: 44px;">Roll</th>
+                        <th style="width: 62px; text-align: right; padding-right: 6px;">Status</th>
                       </tr>
                     </thead>
                     <tbody id="rightTableBody">
@@ -1262,10 +1270,45 @@
               <span><strong>Program:</strong> <span id="stReportDept">-</span></span>
             </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Overall Attendance</div>
-            <div id="stReportRateBadge" style="font-size: 24px; font-weight: 800; color: #16A34A; margin-top: 2px;">0%</div>
-            <div style="font-size: 11px; color: #64748B;" id="stReportLectureRatio">0 / 0 Attended</div>
+          <div style="text-align: right; display: flex; gap: 16px; align-items: center;">
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Total</div>
+              <div id="stReportTotalLectures" style="font-size: 16px; font-weight: 800; color: #1E3A8A;">0</div>
+            </div>
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #15803D;">Present</div>
+              <div id="stReportPresentCount" style="font-size: 16px; font-weight: 800; color: #15803D;">0</div>
+            </div>
+            <div style="text-align: center; background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #BFDBFE;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #B91C1C;">Absent</div>
+              <div id="stReportAbsentCount" style="font-size: 16px; font-weight: 800; color: #B91C1C;">0</div>
+            </div>
+            <div style="text-align: right; min-width: 90px;">
+              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Attendance Rate</div>
+              <div id="stReportRateBadge" style="font-size: 24px; font-weight: 800; color: #16A34A; margin-top: 2px;">0%</div>
+              <div style="font-size: 11px; color: #64748B;" id="stReportLectureRatio">0 / 0 Attended</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Month-wise Attendance Breakdown Table -->
+        <div style="margin-bottom: 22px;">
+          <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span>📅 Month-wise Attendance Record</span>
+          </h4>
+          <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px;">
+            <table class="erp-table" style="margin: 0; font-size: 12.5px;">
+              <thead style="background: #F8FAFC;">
+                <tr>
+                  <th>Academic Month</th>
+                  <th style="text-align: center;">Total Lectures</th>
+                  <th style="text-align: center;">Present</th>
+                  <th style="text-align: center;">Absent</th>
+                  <th style="text-align: right;">Attendance Rate</th>
+                </tr>
+              </thead>
+              <tbody id="stReportMonthTableBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -1291,16 +1334,26 @@
           </div>
         </div>
 
-        <!-- Student Data Corner (Certificates & Completed Courses) -->
+        <!-- Uploaded Documents (Supabase Storage) -->
         <div style="margin-bottom: 22px; background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <span>🎓 Student Data Corner (Certifications & Courses)</span>
+              <span>📁 Uploaded Documents & Credentials (Supabase Storage)</span>
             </h4>
-            <span id="stReportCertsCount" style="font-size: 11px; background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 10px; font-weight: 700;">0 Uploaded</span>
+            <span id="stReportDocsCount" style="font-size: 11px; background: #DBEAFE; color: #1E40AF; padding: 2px 8px; border-radius: 10px; font-weight: 700;">0 Uploaded</span>
           </div>
-          <div id="stReportCertificatesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px;">
-            <!-- Injected via JS -->
+          <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px; background: #fff;">
+            <table class="erp-table" style="margin: 0; font-size: 12.5px;">
+              <thead style="background: #F8FAFC;">
+                <tr>
+                  <th>File Name</th>
+                  <th>Document Type</th>
+                  <th>Upload Date</th>
+                  <th style="text-align: right;">Supabase Storage Action</th>
+                </tr>
+              </thead>
+              <tbody id="stReportDocsTableBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -1401,6 +1454,27 @@
         </button>
       </div>
 
+      <!-- Loading & Empty States -->
+      <div id="trReportLoading" class="hidden" style="text-align: center; padding: 30px; color: #0B5CAD;">
+        <div style="font-size: 28px; animation: spin 1s infinite linear;">↻</div>
+        <p style="font-weight: 600; margin-top: 8px; font-size: 13px;">Fetching Live Faculty Records from Supabase...</p>
+      </div>
+
+      <!-- Per Subject/Class Curriculum & Attendance Progress Cards -->
+      <div style="margin-bottom: 24px;">
+        <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          <span>📖 Subject / Class Academic Progress &amp; Syllabus Coverage</span>
+        </h4>
+        <div id="trReportSubjectCards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Conducted Classes Table Header -->
+      <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+        <span>📋 Conducted Class Sessions Log</span>
+      </h4>
+
       <!-- Conducted Classes Table -->
       <div class="table-responsive" style="border: 1px solid #E2E8F0; border-radius: 8px;">
         <table class="erp-table" style="margin: 0; font-size: 12.5px;">
@@ -1419,6 +1493,12 @@
             <!-- Injected via JS -->
           </tbody>
         </table>
+      </div>
+
+      <div id="trReportEmptyState" class="hidden" style="text-align: center; padding: 36px 20px; color: #64748B;">
+        <div style="font-size: 36px; margin-bottom: 8px;">📚</div>
+        <h4 style="font-size: 15px; color: #1E293B; margin-bottom: 4px;">No Lecture Records Found</h4>
+        <p style="font-size: 12.5px; margin: 0;">No attendance records matching the selected class filter have been submitted yet.</p>
       </div>
 
     </div>

@@ -123,7 +123,11 @@ def get_all_quizzes(
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
+<<<<<<< HEAD
               AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
+=======
+              AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])

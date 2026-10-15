@@ -225,6 +225,7 @@ class AuthenticationService:
         except Exception as e:
             logger.debug("Supabase teacher lookup notice: %s", e)
 
+        teacher_row = None
         # Priority 2: Resilient local database lookup
         if not teacher_dict:
             try:
@@ -249,7 +250,13 @@ class AuthenticationService:
                            t.department_id, d.name as dept_name, d.code as dept_code
                     FROM teachers t
                     LEFT JOIN departments d ON t.department_id = d.id
+<<<<<<< HEAD
                     WHERE {where_sql}
+=======
+                    WHERE LOWER(t.emp_code) = LOWER(:uid) 
+                       OR LOWER(t.email) = LOWER(:uid) 
+                       OR CAST(t.id AS TEXT) = :uid
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
                     LIMIT 1
                 """), params).fetchone()
                 if teacher_row:
@@ -267,6 +274,7 @@ class AuthenticationService:
             except Exception:
                 db.rollback()
 
+<<<<<<< HEAD
         # Priority 3: Dynamic academic faculty auto-provisioning
         # If user identifier matches faculty conventions (e.g. EMP-..., T-..., FAC-...) or role hint
         if not teacher_dict and (
@@ -363,6 +371,8 @@ class AuthenticationService:
                 except Exception as _sq_e:
                     logger.debug("Auto-provision SQLite sync notice: %s", _sq_e)
 
+=======
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
         # Convenience fallback for faculty search by name if explicit faculty role hint provided
         if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
             try:
@@ -453,8 +463,9 @@ class AuthenticationService:
         # 3. Student Authentication
         # -------------------------------------------------------------
         student_dict = None
-        # Priority 1: Supabase Cloud live lookup
+        student_row = None
         try:
+<<<<<<< HEAD
             sb = get_supabase_client()
             if sb:
                 cond = f"student_code.ilike.{uid},email.ilike.{uid}"
@@ -478,36 +489,62 @@ class AuthenticationService:
                     }
         except Exception as e:
             logger.debug("Supabase student lookup notice: %s", e)
+=======
+            student_row = db.execute(text("""
+                SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
+                       s.class_id, c.class_name, c.division as class_div
+                FROM students s
+                LEFT JOIN classes c ON s.class_id = c.id
+                WHERE LOWER(s.student_code) = LOWER(:uid) 
+                   OR LOWER(s.email) = LOWER(:uid) 
+                   OR s.id::text = :uid 
+                   OR LOWER(s.roll_no) = LOWER(:uid)
+                   OR LOWER(s.full_name) LIKE LOWER(:pat)
+                LIMIT 1
+            """), {"uid": uid, "pat": f"%{uid}%"}).fetchone()
+            if student_row:
+                m = student_row._mapping
+                student_dict = {
+                    "id": str(m.get("id")),
+                    "student_code": m.get("student_code") or uid,
+                    "password": m.get("password") or "ssgmce@123",
+                    "full_name": m.get("full_name") or "Student",
+                    "email": m.get("email") or "",
+                    "roll_no": m.get("roll_no") or 1,
+                    "class_name": m.get("class_name") or "2R1",
+                    "class_id": str(m.get("class_id") or ""),
+                    "division": m.get("division") or m.get("class_div") or "A"
+                }
+        except Exception:
+            db.rollback()
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
 
-        # Priority 2: Resilient local database lookup
+        # Fallback to Supabase REST client if DB query failed or empty
         if not student_dict:
             try:
-                student_row = db.execute(text("""
-                    SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
-                           s.class_id, c.class_name, c.division as class_div
-                    FROM students s
-                    LEFT JOIN classes c ON s.class_id = c.id
-                    WHERE LOWER(s.student_code) = LOWER(:uid) 
-                       OR LOWER(s.email) = LOWER(:uid) 
-                       OR s.id = :uid 
-                       OR LOWER(s.roll_no) = LOWER(:uid)
-                    LIMIT 1
-                """), {"uid": uid}).fetchone()
-                if student_row:
-                    m = student_row._mapping
-                    student_dict = {
-                        "id": str(m.get("id")),
-                        "student_code": m.get("student_code") or uid,
-                        "password": m.get("password") or "ssgmce@123",
-                        "full_name": m.get("full_name") or "Student",
-                        "email": m.get("email") or "",
-                        "roll_no": m.get("roll_no") or 1,
-                        "class_name": m.get("class_name") or "2R1",
-                        "class_id": str(m.get("class_id") or ""),
-                        "division": m.get("division") or m.get("class_div") or "A"
-                    }
-            except Exception:
-                db.rollback()
+                sb = get_supabase_client()
+                if sb:
+                    cond = f"student_code.ilike.{uid},email.ilike.{uid}"
+                    if uid.isdigit():
+                        cond += f",roll_no.eq.{int(uid)}"
+                    if is_valid_uuid(uid):
+                        cond += f",id.eq.{uid}"
+                    sb_res = sb.table("students").select("*").or_(cond).limit(1).execute()
+                    if sb_res.data and len(sb_res.data) > 0:
+                        s_item = sb_res.data[0]
+                        student_dict = {
+                            "id": str(s_item.get("id")),
+                            "student_code": s_item.get("student_code") or uid,
+                            "password": s_item.get("password") or "ssgmce@123",
+                            "full_name": s_item.get("full_name") or "Student",
+                            "email": s_item.get("email") or "",
+                            "roll_no": s_item.get("roll_no") or 1,
+                            "class_name": s_item.get("class_name") or "2R1",
+                            "class_id": str(s_item.get("class_id") or ""),
+                            "division": s_item.get("division") or "A"
+                        }
+            except Exception as e:
+                logger.debug("Supabase student lookup notice: %s", e)
 
         if student_dict:
             stored_pwd = student_dict.get("password") or "ssgmce@123"
@@ -687,7 +724,7 @@ class AuthenticationService:
                 SELECT s.id, s.student_code, s.full_name, s.email, s.roll_no, s.class_id, c.class_name
                 FROM students s
                 LEFT JOIN classes c ON s.class_id = c.id
-                WHERE s.id = :uid OR s.student_code = :uid
+                WHERE CAST(s.id AS TEXT) = :uid OR s.student_code = :uid
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if st:
@@ -714,7 +751,7 @@ class AuthenticationService:
                 SELECT t.id, t.emp_code, t.full_name, t.email, t.department_id, d.name as dept_name
                 FROM teachers t
                 LEFT JOIN departments d ON t.department_id = d.id
-                WHERE t.id = :uid OR LOWER(t.emp_code) = LOWER(:uid)
+                WHERE CAST(t.id AS TEXT) = :uid OR LOWER(t.emp_code) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if t:
@@ -751,7 +788,7 @@ class AuthenticationService:
             a = db.execute(text("""
                 SELECT a.id, a.username, a.name, a.email
                 FROM admins a
-                WHERE a.id = :uid OR LOWER(a.username) = LOWER(:uid)
+                WHERE CAST(a.id AS TEXT) = :uid OR LOWER(a.username) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if a:

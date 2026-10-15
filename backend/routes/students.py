@@ -58,7 +58,7 @@ def get_all_students(
     clause = ""
     params = {}
     if target:
-        clause = "WHERE c.class_name = :target OR s.class_name = :target OR CAST(s.class_id AS TEXT) = :target OR c.id = :target"
+        clause = "WHERE c.class_name = :target OR s.class_name = :target OR CAST(s.class_id AS TEXT) = :target OR CAST(c.id AS TEXT) = :target"
         params["target"] = target
 
     rows = db.execute(text(f"""
