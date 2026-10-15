@@ -101,6 +101,45 @@ try:
 except Exception as _e:
     logger.warning("Notice on timetable_assessments check: %s", _e)
 
+try:
+    with engine.connect() as _con:
+        _con.execute(text("""
+            CREATE TABLE IF NOT EXISTS quiz_randomization_configs (
+                quiz_id VARCHAR(100) PRIMARY KEY,
+                questions_per_student INTEGER,
+                unique_question_paper BOOLEAN DEFAULT FALSE,
+                prevent_duplicate_questions BOOLEAN DEFAULT TRUE,
+                randomize_question_types BOOLEAN DEFAULT FALSE,
+                difficulty_distribution TEXT,
+                security_settings TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        _con.execute(text("""
+            CREATE TABLE IF NOT EXISTS quiz_attempt_papers (
+                attempt_id VARCHAR(100) PRIMARY KEY,
+                quiz_id VARCHAR(100) NOT NULL,
+                student_id VARCHAR(100) NOT NULL,
+                question_ids TEXT NOT NULL,
+                paper_payload TEXT NOT NULL,
+                options_map TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        _con.execute(text("""
+            CREATE TABLE IF NOT EXISTS quiz_question_metadata (
+                question_id VARCHAR(100) PRIMARY KEY,
+                quiz_id VARCHAR(100) NOT NULL,
+                difficulty VARCHAR(30) DEFAULT 'MEDIUM',
+                topic VARCHAR(150),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        _con.commit()
+except Exception as _e:
+    logger.warning("Notice on quiz randomization companion tables check: %s", _e)
+
 # Initialize FastAPI Application
 app = FastAPI(
     title="SSGMCE College ERP Autonomous Enterprise API",
@@ -120,8 +159,11 @@ app.add_middleware(
         "http://localhost:8000",
         "http://127.0.0.1:3000",
         "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "null",
     ],
-    allow_origin_regex=r"^https?://.*",
+    allow_origin_regex=r"^(https?://.*|null)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -298,6 +340,15 @@ logger.info(
 )
 
 
+<<<<<<< HEAD
+# ==============================================================================
+# STATIC FILES & WEB APPLICATION SERVING
+# ==============================================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ERP_ROOT = os.path.dirname(BASE_DIR)
+
+=======
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ERP_ROOT = os.path.dirname(BASE_DIR)
 
@@ -2824,6 +2875,7 @@ except Exception as e:
 # 12. STATIC FILES & CLIENT WEB APPLICATION SERVING
 # Serves the frontend directory so everything is available on port 8000!
 # ==============================================================================
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
 FRONTEND_DIR = os.path.join(ERP_ROOT, "frontend")
 HTML_DIR = os.path.join(FRONTEND_DIR, "html")
 

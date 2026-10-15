@@ -70,6 +70,455 @@ class QuizService:
         return "single_choice"
 
     # ==========================================================================
+    # 0. RANDOMIZATION & EXAM SECURITY CONFIGURATION MANAGERS
+    # ==========================================================================
+    @classmethod
+    def _save_randomization_config(cls, quiz_id: str, payload: Any, db: Session):
+        """Persists granular randomization & security policies."""
+        q_per_stud = cls.get_prop(payload, "questions_per_student", None)
+        if q_per_stud is not None:
+            try:
+                q_per_stud = int(q_per_stud)
+                if q_per_stud <= 0:
+                    q_per_stud = None
+            except Exception:
+                q_per_stud = None
+
+        uniq_paper = bool(cls.get_prop(payload, "unique_question_paper", False))
+        prev_dup = bool(cls.get_prop(payload, "prevent_duplicate_questions", True))
+        rand_types = bool(cls.get_prop(payload, "randomize_question_types", False))
+
+        diff_dist = cls.get_prop(payload, "difficulty_distribution", None)
+        if isinstance(diff_dist, (dict, list)):
+            diff_dist_str = json.dumps(diff_dist)
+        elif isinstance(diff_dist, str):
+            diff_dist_str = diff_dist.strip() or None
+        else:
+            diff_dist_str = None
+
+        sec_set = cls.get_prop(payload, "security_settings", None)
+        if isinstance(sec_set, (dict, list)):
+            sec_set_str = json.dumps(sec_set)
+        elif isinstance(sec_set, str):
+            sec_set_str = sec_set.strip() or None
+        else:
+            sec_set_str = None
+
+        # Also sync randomize_questions / randomize_options to quizzes table
+        rand_q = cls.get_prop(payload, "randomize_questions", cls.get_prop(payload, "shuffle_questions", None))
+        rand_opt = cls.get_prop(payload, "randomize_options", cls.get_prop(payload, "shuffle_options", None))
+        updates = []
+        params = {"qid": quiz_id}
+        if rand_q is not None:
+            updates.append("randomize_questions = :rq")
+            params["rq"] = bool(rand_q)
+        if rand_opt is not None:
+            updates.append("randomize_options = :ro")
+            params["ro"] = bool(rand_opt)
+        if updates:
+            try:
+                db.execute(text(f"UPDATE quizzes SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = :qid"), params)
+            except Exception:
+                pass
+
+        try:
+            db.execute(text("""
+                INSERT INTO quiz_randomization_configs (
+                    quiz_id, questions_per_student, unique_question_paper, prevent_duplicate_questions,
+                    randomize_question_types, difficulty_distribution, security_settings, created_at, updated_at
+                ) VALUES (
+                    :qid, :qps, :uqp, :pdq, :rqt, :dd, :ss, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (quiz_id) DO UPDATE SET
+                    questions_per_student = :qps,
+                    unique_question_paper = :uqp,
+                    prevent_duplicate_questions = :pdq,
+                    randomize_question_types = :rqt,
+                    difficulty_distribution = :dd,
+                    security_settings = :ss,
+                    updated_at = CURRENT_TIMESTAMP
+            """), {
+                "qid": quiz_id, "qps": q_per_stud, "uqp": uniq_paper, "pdq": prev_dup,
+                "rqt": rand_types, "dd": diff_dist_str, "ss": sec_set_str
+            })
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    @classmethod
+    def _get_randomization_config(cls, quiz_id: str, db: Session) -> Dict[str, Any]:
+        """Loads randomization & exam security configuration."""
+        try:
+            cfg = db.execute(text("SELECT * FROM quiz_randomization_configs WHERE quiz_id = :qid"), {"qid": quiz_id}).fetchone()
+        except Exception:
+            cfg = None
+
+        if not cfg:
+            return {
+                "questions_per_student": None,
+                "unique_question_paper": False,
+                "prevent_duplicate_questions": True,
+                "randomize_question_types": False,
+                "difficulty_distribution": None,
+                "security_settings": None
+            }
+        cm = dict(cfg._mapping)
+        diff_dist = None
+        if cm.get("difficulty_distribution"):
+            try:
+                diff_dist = json.loads(cm["difficulty_distribution"])
+            except Exception:
+                diff_dist = cm["difficulty_distribution"]
+        sec_set = None
+        if cm.get("security_settings"):
+            try:
+                sec_set = json.loads(cm["security_settings"])
+            except Exception:
+                sec_set = cm["security_settings"]
+
+        return {
+            "questions_per_student": cm.get("questions_per_student"),
+            "unique_question_paper": bool(cm.get("unique_question_paper")),
+            "prevent_duplicate_questions": bool(cm.get("prevent_duplicate_questions")) if cm.get("prevent_duplicate_questions") is not None else True,
+            "randomize_question_types": bool(cm.get("randomize_question_types")),
+            "difficulty_distribution": diff_dist,
+            "security_settings": sec_set
+        }
+
+    @classmethod
+    def validate_quiz_for_publishing(cls, quiz_id: str, db: Session) -> Dict[str, Any]:
+        """Validates pool size, difficulty distribution, and paper constraints before publishing."""
+        quiz = db.execute(text("SELECT * FROM quizzes WHERE id = :id"), {"id": quiz_id}).fetchone()
+        if not quiz:
+            raise ValueError("Quiz not found")
+        qm = dict(quiz._mapping)
+
+        q_rows = db.execute(text("""
+            SELECT qq.id, qq.question_text, qq.marks, qq.hint, qqm.difficulty
+            FROM quiz_questions qq
+            LEFT JOIN quiz_question_metadata qqm ON CAST(qq.id AS TEXT) = CAST(qqm.question_id AS TEXT)
+            WHERE qq.quiz_id = :qid
+        """), {"qid": quiz_id}).fetchall()
+
+        pool_size = len(q_rows)
+        if pool_size == 0:
+            return {
+                "valid": False,
+                "pool_size": 0,
+                "errors": ["Cannot publish an empty quiz. Please add at least one question to the pool first."],
+                "warnings": [],
+                "can_proceed": False
+            }
+
+        cfg = cls._get_randomization_config(quiz_id, db)
+        q_per_student = cfg.get("questions_per_student") or pool_size
+
+        errors = []
+        warnings = []
+
+        if q_per_student > pool_size:
+            errors.append(f"Configured questions per student ({q_per_student}) exceeds total question pool size ({pool_size}). Please add more questions or reduce questions per student.")
+
+        # Count available questions by difficulty
+        diff_counts = {"EASY": 0, "MEDIUM": 0, "HARD": 0}
+        for r in q_rows:
+            rm = dict(r._mapping)
+            diff = "MEDIUM"
+            if rm.get("difficulty"):
+                diff = str(rm["difficulty"]).upper()
+            elif rm.get("hint"):
+                try:
+                    h = json.loads(rm["hint"])
+                    if isinstance(h, dict) and h.get("difficulty"):
+                        diff = str(h["difficulty"]).upper()
+                except Exception:
+                    pass
+            if not rm.get("difficulty"):
+                q_txt_lower = str(rm.get("question_text", "")).lower()
+                if "hard" in q_txt_lower:
+                    diff = "HARD"
+                elif "easy" in q_txt_lower:
+                    diff = "EASY"
+            if diff in diff_counts:
+                diff_counts[diff] += 1
+            else:
+                diff_counts["MEDIUM"] += 1
+
+        diff_dist = cfg.get("difficulty_distribution")
+        if diff_dist and isinstance(diff_dist, dict):
+            for d_key in ("easy", "medium", "hard"):
+                pct = diff_dist.get(d_key, 0)
+                if isinstance(pct, (int, float)) and pct > 0:
+                    target = round(q_per_student * (pct / 100))
+                    avail = diff_counts.get(d_key.upper(), 0)
+                    if target > avail:
+                        warnings.append(f"Requested {target} {d_key.capitalize()} questions per student, but pool only contains {avail} {d_key.capitalize()} questions. System will automatically supplement remaining questions from available pool.")
+
+        if pool_size < 10 and q_per_student >= pool_size:
+            warnings.append(f"Question pool has only {pool_size} questions. For effective individual student randomization, consider generating a larger question pool (20-50 questions).")
+
+        is_valid = (len(errors) == 0)
+        return {
+            "valid": is_valid,
+            "can_proceed": is_valid,
+            "pool_size": pool_size,
+            "questions_per_student": q_per_student,
+            "difficulty_counts": diff_counts,
+            "errors": errors,
+            "warnings": warnings
+        }
+
+    @classmethod
+    def _generate_or_get_attempt_paper(
+        cls,
+        attempt_id: str,
+        quiz_id: str,
+        student_id: str,
+        qm: Dict[str, Any],
+        db: Session
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        """
+        Retrieves existing assigned paper (resilience across page refresh / reconnect)
+        or synthesizes a brand-new, difficulty-balanced, unique randomized question paper.
+        """
+        # 1. Check if paper already generated for this attempt (Refresh & Reconnect Safety)
+        existing_paper = db.execute(text("SELECT * FROM quiz_attempt_papers WHERE attempt_id = :aid"), {"aid": attempt_id}).fetchone()
+        if existing_paper:
+            ep = dict(existing_paper._mapping)
+            try:
+                paper_payload = json.loads(ep["paper_payload"])
+                options_map = json.loads(ep["options_map"]) if ep.get("options_map") else {}
+                return paper_payload, options_map
+            except Exception:
+                pass
+
+        # 2. Load Quiz Randomization & Exam Security Settings
+        cfg = cls._get_randomization_config(quiz_id, db)
+        questions_per_student = cfg.get("questions_per_student")
+        unique_paper = bool(cfg.get("unique_question_paper"))
+        prev_duplicate = bool(cfg.get("prevent_duplicate_questions", True))
+        rand_types = bool(cfg.get("randomize_question_types"))
+        diff_dist = cfg.get("difficulty_distribution")
+
+        rand_questions = bool(qm.get("randomize_questions") or qm.get("shuffle_questions"))
+        rand_options = bool(qm.get("randomize_options") or qm.get("shuffle_options"))
+
+        # 3. Retrieve all questions in quiz pool
+        q_rows = db.execute(text("""
+            SELECT qq.id, qq.question_text, qq.question_type, qq.marks, qq.negative_marks, qq.question_order, qq.hint,
+                   qqm.difficulty as meta_difficulty, qqm.topic as meta_topic
+            FROM quiz_questions qq
+            LEFT JOIN quiz_question_metadata qqm ON CAST(qq.id AS TEXT) = CAST(qqm.question_id AS TEXT)
+            WHERE qq.quiz_id = :qid
+            ORDER BY qq.question_order ASC
+        """), {"qid": quiz_id}).fetchall()
+
+        if not q_rows:
+            return [], {}
+
+        all_q_pool = []
+        for qr in q_rows:
+            qd = dict(qr._mapping)
+            qd["id"] = str(qd["id"])
+            diff = "MEDIUM"
+            if qd.get("meta_difficulty"):
+                diff = str(qd["meta_difficulty"]).upper()
+            elif qd.get("hint"):
+                try:
+                    h = json.loads(qd["hint"])
+                    if isinstance(h, dict) and h.get("difficulty"):
+                        diff = str(h["difficulty"]).upper()
+                except Exception:
+                    pass
+            if not qd.get("meta_difficulty"):
+                q_txt_lower = str(qd.get("question_text", "")).lower()
+                if "hard" in q_txt_lower:
+                    diff = "HARD"
+                elif "easy" in q_txt_lower:
+                    diff = "EASY"
+            qd["difficulty"] = diff
+            all_q_pool.append(qd)
+
+        pool_size = len(all_q_pool)
+        target_count = min(int(questions_per_student), pool_size) if (questions_per_student and int(questions_per_student) > 0) else pool_size
+
+        # 4. Question usage tracking for Unique Paper Generation
+        usage_counts = {q["id"]: 0 for q in all_q_pool}
+        if unique_paper:
+            prev_papers = db.execute(text("SELECT question_ids FROM quiz_attempt_papers WHERE quiz_id = :qid"), {"qid": quiz_id}).fetchall()
+            for pr in prev_papers:
+                try:
+                    p_ids = json.loads(pr[0])
+                    for pid in p_ids:
+                        if pid in usage_counts:
+                            usage_counts[pid] += 1
+                except Exception:
+                    pass
+
+        # 5. Difficulty-Aware Selection & Balancing
+        selected_questions = []
+
+        if diff_dist and isinstance(diff_dist, dict):
+            easy_pool = [q for q in all_q_pool if q["difficulty"] == "EASY"]
+            med_pool = [q for q in all_q_pool if q["difficulty"] == "MEDIUM"]
+            hard_pool = [q for q in all_q_pool if q["difficulty"] == "HARD"]
+
+            easy_pct = float(diff_dist.get("easy", 0))
+            med_pct = float(diff_dist.get("medium", 0))
+            hard_pct = float(diff_dist.get("hard", 0))
+            tot_pct = easy_pct + med_pct + hard_pct or 100.0
+
+            target_easy = round(target_count * (easy_pct / tot_pct))
+            target_med = round(target_count * (med_pct / tot_pct))
+            target_hard = max(0, target_count - (target_easy + target_med))
+
+            def pick_from_tier(tier_pool, count_needed, already_selected_ids):
+                avail = [q for q in tier_pool if q["id"] not in already_selected_ids]
+                if not avail or count_needed <= 0:
+                    return []
+                if unique_paper:
+                    # Sort by (usage_count, random_salt) to prefer least-used questions
+                    avail.sort(key=lambda q: (usage_counts[q["id"]], random.random()))
+                    return avail[:count_needed]
+                else:
+                    return random.sample(avail, min(len(avail), count_needed))
+
+            sel_ids = set()
+            e_picked = pick_from_tier(easy_pool, target_easy, sel_ids)
+            for q in e_picked: sel_ids.add(q["id"])
+            m_picked = pick_from_tier(med_pool, target_med, sel_ids)
+            for q in m_picked: sel_ids.add(q["id"])
+            h_picked = pick_from_tier(hard_pool, target_hard, sel_ids)
+            for q in h_picked: sel_ids.add(q["id"])
+
+            selected_questions = e_picked + m_picked + h_picked
+
+            # If any tier is short, backfill from remaining questions without duplication
+            if len(selected_questions) < target_count:
+                remain_pool = [q for q in all_q_pool if q["id"] not in sel_ids]
+                if unique_paper:
+                    remain_pool.sort(key=lambda q: (usage_counts[q["id"]], random.random()))
+                else:
+                    random.shuffle(remain_pool)
+                needed = target_count - len(selected_questions)
+                selected_questions.extend(remain_pool[:needed])
+        else:
+            # No explicit difficulty distribution -> sample from overall pool
+            if unique_paper:
+                sorted_pool = list(all_q_pool)
+                sorted_pool.sort(key=lambda q: (usage_counts[q["id"]], random.random()))
+                selected_questions = sorted_pool[:target_count]
+            else:
+                selected_questions = random.sample(all_q_pool, target_count)
+
+        # 6. Shuffle question order for student
+        if rand_questions:
+            rng_q = random.Random(f"{attempt_id}_{uuid.uuid4()}")
+            rng_q.shuffle(selected_questions)
+
+        # 7. Mix question types if enabled
+        if rand_types:
+            by_type = {}
+            for q in selected_questions:
+                by_type.setdefault(q.get("question_type", "single_choice"), []).append(q)
+            interleaved = []
+            type_keys = list(by_type.keys())
+            random.shuffle(type_keys)
+            max_len = max(len(v) for v in by_type.values())
+            for idx in range(max_len):
+                for tk in type_keys:
+                    if idx < len(by_type[tk]):
+                        interleaved.append(by_type[tk][idx])
+            selected_questions = interleaved
+
+        # 8. Options shuffling & Option mapping for evaluation
+        paper_payload = []
+        options_map = {}
+
+        for idx, q_dict in enumerate(selected_questions):
+            q_uuid = q_dict["id"]
+            opt_rows = db.execute(text("""
+                SELECT id, option_text, option_order, is_correct
+                FROM question_options
+                WHERE question_id = :qid
+                ORDER BY option_order ASC
+            """), {"qid": q_uuid}).fetchall()
+
+            raw_options = []
+            for o in opt_rows:
+                om = dict(o._mapping)
+                om["id"] = str(om["id"])
+                om["text"] = str(om.get("option_text") or "")
+                om["is_correct"] = bool(om.get("is_correct"))
+                raw_options.append(om)
+
+            if rand_options:
+                rng_opt = random.Random(f"{attempt_id}_{q_uuid}_{idx}")
+                rng_opt.shuffle(raw_options)
+
+            displayed_options = []
+            q_opt_map = {"displayed_options": {}, "correct_keys": []}
+
+            for opt_idx, opt in enumerate(raw_options):
+                disp_key = chr(65 + opt_idx)  # 'A', 'B', 'C', 'D'
+                displayed_options.append({
+                    "id": opt["id"],
+                    "key": disp_key,
+                    "text": opt["text"],
+                    "option_text": opt["text"]
+                })
+                is_corr = opt["is_correct"]
+                q_opt_map["displayed_options"][disp_key] = {
+                    "id": opt["id"],
+                    "text": opt["text"],
+                    "is_correct": is_corr
+                }
+                if is_corr:
+                    q_opt_map["correct_keys"].append(disp_key)
+
+            options_map[q_uuid] = q_opt_map
+
+            # Sanitized question payload delivered to student (no answer leaks!)
+            paper_payload.append({
+                "id": q_uuid,
+                "question_id": q_uuid,
+                "question_text": q_dict["question_text"],
+                "text": q_dict["question_text"],
+                "question_type": q_dict["question_type"],
+                "marks": float(q_dict.get("marks") or 2.0),
+                "negative_marks": float(q_dict.get("negative_marks") or 0.0),
+                "question_order": idx + 1,
+                "options": displayed_options,
+                "difficulty": q_dict.get("difficulty", "MEDIUM")
+            })
+
+        # 9. Commit paper snapshot to quiz_attempt_papers
+        question_ids_list = [q["id"] for q in paper_payload]
+        try:
+            db.execute(text("""
+                INSERT INTO quiz_attempt_papers (
+                    attempt_id, quiz_id, student_id, question_ids, paper_payload, options_map, created_at
+                ) VALUES (
+                    :aid, :qid, :sid, :qids, :payload, :optmap, CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (attempt_id) DO UPDATE SET
+                    paper_payload = :payload,
+                    options_map = :optmap
+            """), {
+                "aid": attempt_id,
+                "qid": quiz_id,
+                "sid": student_id,
+                "qids": json.dumps(question_ids_list),
+                "payload": json.dumps(paper_payload),
+                "optmap": json.dumps(options_map)
+            })
+            db.commit()
+        except Exception as err:
+            logger.warning("Notice on saving attempt paper: %s", err)
+
+        return paper_payload, options_map
+
+    # ==========================================================================
     # 1. TEACHER: CREATE QUIZ WITH ADVANCED CONFIGURATION
     # ==========================================================================
     @classmethod
@@ -222,6 +671,23 @@ class QuizService:
                 })
                 opt_order += 1
 
+            # Persist question metadata (difficulty, topic)
+            q_diff = str(cls.get_prop(q, "difficulty", "medium") or "medium").lower()
+            q_topic = str(cls.get_prop(q, "topic", "") or "")
+            try:
+                db.execute(text("""
+                    INSERT INTO quiz_question_metadata (question_id, quiz_id, difficulty, topic, created_at)
+                    VALUES (:qid, :quiz_id, :diff, :topic, CURRENT_TIMESTAMP)
+                    ON CONFLICT (question_id) DO UPDATE SET difficulty = :diff, topic = :topic
+                """), {
+                    "qid": q_id,
+                    "quiz_id": quiz_id,
+                    "diff": q_diff,
+                    "topic": q_topic
+                })
+            except Exception:
+                pass
+
             order += 1
             inserted_questions += 1
 
@@ -229,6 +695,10 @@ class QuizService:
             db.execute(text("UPDATE quizzes SET total_questions = :tq WHERE id = :id"), {"tq": inserted_questions, "id": quiz_id})
 
         db.commit()
+
+        # Persist randomization & security settings
+        cls._save_randomization_config(quiz_id, payload, db)
+        rand_cfg = cls._get_randomization_config(quiz_id, db)
 
         return {
             "id": quiz_id,
@@ -239,8 +709,11 @@ class QuizService:
             "total_marks": tot_marks,
             "total_questions": inserted_questions,
             "status": status_val,
+            "randomize_questions": bool(shuff_q),
+            "randomize_options": bool(shuff_opt),
             "start_time": start_time.isoformat() if hasattr(start_time, "isoformat") else str(start_time),
-            "end_time": end_time.isoformat() if hasattr(end_time, "isoformat") else str(end_time)
+            "end_time": end_time.isoformat() if hasattr(end_time, "isoformat") else str(end_time),
+            **rand_cfg
         }
 
     # ==========================================================================
@@ -289,6 +762,23 @@ class QuizService:
                 "id": opt_id, "qid": q_id, "txt": opt_text, "ord": opt_order, "corr": is_corr
             })
             opt_order += 1
+
+        # Persist question metadata (difficulty, topic)
+        q_diff = str(cls.get_prop(payload, "difficulty", "medium") or "medium").lower()
+        q_topic = str(cls.get_prop(payload, "topic", "") or "")
+        try:
+            db.execute(text("""
+                INSERT INTO quiz_question_metadata (question_id, quiz_id, difficulty, topic, created_at)
+                VALUES (:qid, :quiz_id, :diff, :topic, CURRENT_TIMESTAMP)
+                ON CONFLICT (question_id) DO UPDATE SET difficulty = :diff, topic = :topic
+            """), {
+                "qid": q_id,
+                "quiz_id": quiz_id,
+                "diff": q_diff,
+                "topic": q_topic
+            })
+        except Exception:
+            pass
 
         # Update total questions count and total marks
         tot_q = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :qid"), {"qid": quiz_id}).scalar() or 0
@@ -420,12 +910,24 @@ class QuizService:
         st = None
         if student_identifier:
             st = db.execute(text("SELECT * FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s LIMIT 1"), {"s": str(student_identifier)}).fetchone()
-        if not st:
-            st = db.execute(text("SELECT * FROM students LIMIT 1")).fetchone()
-        if not st:
-            raise ValueError("Student profile not found")
-        sm = dict(st._mapping)
-        actual_student_id = str(sm["id"])
+        
+        if st:
+            sm = dict(st._mapping)
+            actual_student_id = str(sm["id"])
+        elif student_identifier:
+            try:
+                actual_student_id = str(uuid.UUID(str(student_identifier)))
+            except (ValueError, AttributeError):
+                actual_student_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(student_identifier)))
+            sm = {"id": actual_student_id, "class_id": qm.get("class_id")}
+        else:
+            first_s = db.execute(text("SELECT * FROM students LIMIT 1")).fetchone()
+            if first_s:
+                sm = dict(first_s._mapping)
+                actual_student_id = str(sm["id"])
+            else:
+                actual_student_id = str(uuid.uuid4())
+                sm = {"id": actual_student_id, "class_id": qm.get("class_id")}
 
         # 2. Check quiz status & server-side schedule
         now = datetime.now(timezone.utc)
@@ -513,50 +1015,14 @@ class QuizService:
         total_allowed_seconds = duration_mins * 60
         remaining_seconds = max(0, total_allowed_seconds - elapsed_seconds)
 
-        # 6. Fetch Quiz Questions & Options (Strip Correct Keys!)
-        q_rows = db.execute(text("""
-            SELECT id, question_text, question_type, marks, negative_marks, question_order
-            FROM quiz_questions
-            WHERE quiz_id = :qid
-            ORDER BY question_order ASC
-        """), {"qid": quiz_id}).fetchall()
-
-        questions_list = []
-        for qr in q_rows:
-            q_dict = dict(qr._mapping)
-            q_uuid = str(q_dict["id"])
-            q_dict["id"] = q_uuid
-
-            opt_rows = db.execute(text("""
-                SELECT id, option_text, option_order
-                FROM question_options
-                WHERE question_id = :qid
-                ORDER BY option_order ASC
-            """), {"qid": q_uuid}).fetchall()
-
-            options = []
-            for idx, o in enumerate(opt_rows):
-                om = dict(o._mapping)
-                om["id"] = str(om["id"])
-                om["key"] = chr(65 + idx)
-                om["text"] = om.get("option_text", "")
-                options.append(om)
-
-            # Shuffling options if enabled
-            if qm.get("randomize_options"):
-                rng = random.Random(f"{attempt_id}_{q_uuid}")
-                rng.shuffle(options)
-
-            q_dict["options"] = options
-            # Security: ensure answers/explanations are never leaked in student payload
-            q_dict.pop("explanation", None)
-            q_dict.pop("hint", None)
-            questions_list.append(q_dict)
-
-        # Shuffling questions if enabled
-        if qm.get("randomize_questions"):
-            rng = random.Random(attempt_id)
-            rng.shuffle(questions_list)
+        # 6. Fetch or Generate Personalized Student Paper with Shuffled Questions & Options
+        questions_list, options_map = cls._generate_or_get_attempt_paper(
+            attempt_id=attempt_id,
+            quiz_id=quiz_id,
+            student_id=actual_student_id,
+            qm=qm,
+            db=db
+        )
 
         # 7. Fetch existing saved answers for resume
         saved_ans_rows = db.execute(text("""
@@ -578,7 +1044,9 @@ class QuizService:
             "negative_marks_per_question": float(qm.get("negative_marks_per_question") or 0.0),
             "negative_marking": bool(qm.get("negative_marking")),
             "class_id": str(qm.get("class_id")) if qm.get("class_id") else None,
-            "status": qm.get("status")
+            "status": qm.get("status"),
+            "max_violations": 5,
+            "auto_submit_on_violation": True
         }
 
         return {
@@ -592,6 +1060,8 @@ class QuizService:
             "passing_marks": float(qm.get("passing_marks") or 40.0),
             "negative_marking": bool(qm.get("negative_marking")),
             "negative_marks_per_question": float(qm.get("negative_marks_per_question") or 0.0),
+            "max_violations": 5,
+            "auto_submit_on_violation": True,
             "total_questions": len(questions_list),
             "started_at": started_at.isoformat(),
             "server_time": now.isoformat(),
@@ -772,13 +1242,35 @@ class QuizService:
         if answers:
             cls.save_attempt_answers(attempt_id, answers, student_identifier, db)
 
-        # 2. Fetch all questions and authoritative correct options from database
-        questions = db.execute(text("""
+        # 2. Check if student was assigned an individual randomized paper
+        paper_row = db.execute(text("SELECT * FROM quiz_attempt_papers WHERE attempt_id = :aid"), {"aid": attempt_id}).fetchone()
+        assigned_q_ids = None
+        assigned_q_order = []
+        attempt_options_map = {}
+        if paper_row:
+            try:
+                p_data = dict(paper_row._mapping)
+                p_payload = json.loads(p_data["paper_payload"])
+                assigned_q_ids = set(str(q["id"]) for q in p_payload)
+                assigned_q_order = [str(q["id"]) for q in p_payload]
+                if p_data.get("options_map"):
+                    attempt_options_map = json.loads(p_data["options_map"])
+            except Exception:
+                pass
+
+        # 3. Fetch questions and authoritative correct options from database
+        raw_questions = db.execute(text("""
             SELECT id, marks, negative_marks, question_text, question_type, explanation
             FROM quiz_questions
             WHERE quiz_id = :qid
             ORDER BY question_order ASC
         """), {"qid": qid}).fetchall()
+
+        if assigned_q_ids:
+            q_by_id = {str(qr[0]): qr for qr in raw_questions}
+            questions = [q_by_id[qid] for qid in assigned_q_order if qid in q_by_id]
+        else:
+            questions = raw_questions
 
         total_questions = len(questions)
         attempted_count = 0
@@ -798,7 +1290,7 @@ class QuizService:
             q_marks = float(q_row[1] or 2.0)
             q_neg = float(q_row[2] or default_neg_penalty) if is_neg_marking else 0.0
 
-            # All options from DB ordered by option_order ASC so we know their letter keys (A, B, C, D)
+            # All options from DB ordered by option_order ASC
             all_opts = db.execute(text("""
                 SELECT id, option_text, option_order, is_correct FROM question_options WHERE question_id = :qid ORDER BY option_order ASC
             """), {"qid": q_id}).fetchall()
@@ -824,6 +1316,10 @@ class QuizService:
                     correct_texts.append(opt_txt.lower())
                     correct_keys.append(opt_key.upper())
 
+            # Student attempt-specific shuffled option map
+            q_opt_map = attempt_options_map.get(q_id, {})
+            shuffled_correct_keys = [k.upper() for k in q_opt_map.get("correct_keys", [])]
+
             # Student answer from DB
             st_ans = db.execute(text("""
                 SELECT id, selected_option, text_answer FROM quiz_attempt_answers
@@ -838,18 +1334,25 @@ class QuizService:
 
             if is_attempted:
                 attempted_count += 1
-                # Check option letter key ('A','B','C','D'), option id, or option text match
-                if sel_opt and (
-                    sel_opt.upper() in correct_keys
-                    or sel_opt in correct_ids
-                    or sel_opt.lower() in correct_texts
-                ):
-                    is_correct = True
-                elif txt_ans and (
-                    txt_ans.upper() in correct_keys
-                    or txt_ans.lower() in correct_texts
-                ):
-                    is_correct = True
+                # Check randomized displayed key, option id, or option text
+                if sel_opt:
+                    s_opt_up = sel_opt.strip().upper()
+                    if shuffled_correct_keys:
+                        if s_opt_up in shuffled_correct_keys:
+                            is_correct = True
+                        elif q_opt_map.get("displayed_options", {}).get(s_opt_up, {}).get("is_correct"):
+                            is_correct = True
+                    else:
+                        if s_opt_up in correct_keys or sel_opt in correct_ids or sel_opt.lower() in correct_texts:
+                            is_correct = True
+                elif txt_ans:
+                    t_ans_up = txt_ans.strip().upper()
+                    if shuffled_correct_keys:
+                        if t_ans_up in shuffled_correct_keys:
+                            is_correct = True
+                    else:
+                        if t_ans_up in correct_keys or txt_ans in correct_ids or txt_ans.lower() in correct_texts:
+                            is_correct = True
 
                 if is_correct:
                     correct_count += 1
@@ -878,23 +1381,41 @@ class QuizService:
                     """), {"id": st_ans[0]})
 
             # Collect for result breakdown
-            primary_corr_key = correct_keys[0] if correct_keys else (correct_texts[0] if correct_texts else "A")
+            primary_corr_key = (shuffled_correct_keys[0] if shuffled_correct_keys else (correct_keys[0] if correct_keys else "A"))
+            active_correct_keys = shuffled_correct_keys if shuffled_correct_keys else correct_keys
+
+            # If student saw shuffled options, reflect their displayed order in formatted_opts
+            if q_opt_map.get("displayed_options"):
+                student_display_opts = []
+                for k, opt_info in q_opt_map["displayed_options"].items():
+                    student_display_opts.append({
+                        "id": opt_info.get("id"),
+                        "key": k,
+                        "text": opt_info.get("text", ""),
+                        "option_text": opt_info.get("text", ""),
+                        "is_correct": bool(opt_info.get("is_correct"))
+                    })
+                student_display_opts.sort(key=lambda x: x["key"])
+                display_opts_for_review = student_display_opts
+            else:
+                display_opts_for_review = formatted_opts
+
             review_items.append({
                 "question_id": q_id,
                 "question_text": q_row[3],
-                "options": formatted_opts,
+                "options": display_opts_for_review,
                 "selected_option": sel_opt or txt_ans or None,
                 "correct_option": primary_corr_key,
-                "correct_options": correct_keys,
+                "correct_options": active_correct_keys,
                 "is_correct": is_correct,
                 "marks": q_marks,
                 "marks_awarded": q_marks if is_correct else ((-q_neg) if (is_neg_marking and is_attempted and q_neg > 0) else 0.0),
                 "explanation": q_row[5] or ""
             })
 
-        # Calculate final grades
+        # Calculate final grades based on assigned paper marks
         final_marks = max(0.0, round(raw_marks - negative_marks, 2))
-        total_quiz_marks = float(qm.get("total_marks") or (total_questions * 2.0))
+        total_quiz_marks = sum(float(q[1] or 2.0) for q in questions) if questions else float(qm.get("total_marks") or 100.0)
         percentage = round((final_marks / total_quiz_marks) * 100, 2) if total_quiz_marks > 0 else 0.0
         passing_marks = float(qm.get("passing_marks") or (total_quiz_marks * 0.4))
         result_status = "pass" if final_marks >= passing_marks else "fail"
@@ -1236,13 +1757,76 @@ class QuizService:
 
         avg_accuracy = round(sum(r["percentage"] for r in rankings) / len(rankings), 1) if rankings else 0.0
 
-        # Proctoring security incidents
+        # Proctoring security incidents & suspicious attempts
         sec_count = db.execute(text("""
             SELECT count(*)
             FROM quiz_security_events qse
             JOIN quiz_attempts qa ON qse.attempt_id = CAST(qa.id AS TEXT)
             WHERE qa.quiz_id = :qid
         """), {"qid": quiz_id}).scalar() or 0
+
+        # Detailed suspicious attempts with proctoring violations
+        suspicious_rows = db.execute(text("""
+            SELECT qse.id, qse.attempt_id, qse.event_type, qse.event_time, qse.metadata,
+                   s.full_name, s.roll_no, s.student_code
+            FROM quiz_security_events qse
+            JOIN quiz_attempts qa ON qse.attempt_id = CAST(qa.id AS TEXT)
+            JOIN students s ON qa.student_id = s.id
+            WHERE qa.quiz_id = :qid
+            ORDER BY qse.event_time DESC
+            LIMIT 50
+        """), {"qid": quiz_id}).fetchall()
+        suspicious_attempts = [dict(r._mapping) for r in suspicious_rows]
+
+        # Paper randomization metrics & Question exposure
+        attempt_papers = db.execute(text("""
+            SELECT attempt_id, student_id, question_ids
+            FROM quiz_attempt_papers
+            WHERE quiz_id = :qid
+        """), {"qid": quiz_id}).fetchall()
+
+        unique_combinations = set()
+        question_exposure = {}
+        for ap in attempt_papers:
+            try:
+                q_ids = json.loads(ap[2])
+                unique_combinations.add(tuple(sorted(q_ids)))
+                for qid in q_ids:
+                    question_exposure[qid] = question_exposure.get(qid, 0) + 1
+            except Exception:
+                pass
+
+        # Query question metadata for difficulty and topic
+        q_meta_rows = db.execute(text("""
+            SELECT question_id, difficulty, topic
+            FROM quiz_question_metadata
+            WHERE quiz_id = :qid
+        """), {"qid": quiz_id}).fetchall()
+        meta_dict = {str(r[0]): {"difficulty": r[1], "topic": r[2]} for r in q_meta_rows}
+
+        # Attach exposure count to questions_analysis and build exposure_list
+        exposure_list = []
+        for qa_item in question_accuracy:
+            qid_str = str(qa_item.get("question_id") or "")
+            count = question_exposure.get(qid_str, 0)
+            pct = round((count / len(attempt_papers)) * 100, 1) if attempt_papers else 0.0
+            qa_item["exposure_count"] = count
+            qa_item["exposure_percentage"] = pct
+            m = meta_dict.get(qid_str, {})
+            qa_item["difficulty"] = m.get("difficulty") or "medium"
+            qa_item["topic"] = m.get("topic")
+
+            exposure_list.append({
+                "question_id": qid_str,
+                "question_text": qa_item.get("question_text"),
+                "question_order": qa_item.get("question_order"),
+                "difficulty": m.get("difficulty") or "medium",
+                "topic": m.get("topic"),
+                "exposure_count": count,
+                "exposure_percentage": pct
+            })
+
+        rand_cfg = cls._get_randomization_config(quiz_id, db)
 
         return {
             "quiz_id": quiz_id,
@@ -1268,7 +1852,17 @@ class QuizService:
             "questions_analysis": question_accuracy,
             "student_ranking": rankings,
             "top_performers": rankings[:10],
-            "security_incidents_count": sec_count
+            "security_incidents_count": sec_count,
+            "suspicious_attempts": suspicious_attempts,
+            "unique_papers_count": len(unique_combinations),
+            "total_papers_generated": len(attempt_papers),
+            "question_exposure": exposure_list,
+            "question_exposure_map": question_exposure,
+            "randomization_config": {
+                **rand_cfg,
+                "randomize_questions": bool(qm.get("randomize_questions") or qm.get("shuffle_questions")),
+                "randomize_options": bool(qm.get("randomize_options") or qm.get("shuffle_options"))
+            }
         }
 
     # ==========================================================================

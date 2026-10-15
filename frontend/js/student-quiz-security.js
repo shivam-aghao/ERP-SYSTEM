@@ -191,9 +191,18 @@
         '</div>';
       document.body.appendChild(warnModal);
 
+      var styleEl = document.getElementById('quizSecModalStyles');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'quizSecModalStyles';
+        styleEl.textContent = '@keyframes quizSecSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(styleEl);
+      }
+
       var ackBtn = document.getElementById('quizSecAckBtn');
       if (ackBtn) {
         ackBtn.addEventListener('click', function () {
+          if (state.isSubmitting || state.violationCount >= (state.maxViolations || 5)) return;
           warnModal.classList.remove('active');
           setBlurCurtain(false);
         });
@@ -201,6 +210,7 @@
       var fsBtn = document.getElementById('quizSecReenterFsBtn');
       if (fsBtn) {
         fsBtn.addEventListener('click', function () {
+          if (state.isSubmitting || state.violationCount >= (state.maxViolations || 5)) return;
           requestExamFullscreen();
           warnModal.classList.remove('active');
           setBlurCurtain(false);
@@ -237,10 +247,13 @@
     var fsSupported = checkFullscreenSupport();
     var rollLabel = state.rollNo ? ('Roll: ' + state.rollNo) : (state.studentCode ? ('ID: ' + state.studentCode) : '');
     var studentBadge = escapeHtml(state.studentName) + (rollLabel ? (' (' + escapeHtml(rollLabel) + ')') : '');
+    var maxV = (state.maxViolations > 0) ? state.maxViolations : 5;
 
     var violationColor = state.violationCount === 0
       ? 'background:#ECFDF5; color:#047857; border:1px solid #A7F3D0;'
-      : 'background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA;';
+      : (state.violationCount >= maxV
+          ? 'background:#FEF2F2; color:#DC2626; border:1px solid #EF4444; font-weight:800;'
+          : 'background:#FFFBEB; color:#B45309; border:1px solid #FDE68A;');
 
     var fsBtnHtml = '';
     if (fsSupported && !fsActive) {
@@ -263,7 +276,7 @@
       '<div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">' +
         fsBtnHtml +
         '<span style="padding:0.2rem 0.6rem; border-radius:999px; font-size:0.75rem; font-weight:700; ' + violationColor + '">' +
-          'Focus Warnings: ' + state.violationCount + (state.maxViolations > 0 ? (' / ' + state.maxViolations) : '') +
+          'Focus Warnings: ' + Math.min(state.violationCount, maxV) + ' / ' + maxV + (state.violationCount >= maxV ? ' (Auto-Submitting)' : '') +
         '</span>' +
       '</div>';
   }
@@ -278,24 +291,65 @@
     }
   }
 
-  function showSecurityWarningModal(title, message, showFullscreenBtn) {
+  function showSecurityWarningModal(title, message, showFullscreenBtn, isFinalAutoSubmit) {
     var modal = document.getElementById('quizSecurityWarningModal');
     if (!modal) return;
     var titleEl = document.getElementById('quizSecWarnTitle');
     var badgeEl = document.getElementById('quizSecWarnCountBadge');
     var msgEl = document.getElementById('quizSecWarnMessage');
     var fsBtn = document.getElementById('quizSecReenterFsBtn');
+    var ackBtn = document.getElementById('quizSecAckBtn');
+    var maxV = (state.maxViolations > 0) ? state.maxViolations : 5;
+    var isLimitReached = Boolean(isFinalAutoSubmit || state.violationCount >= maxV);
 
-    if (titleEl) titleEl.textContent = title || 'Active Quiz Security Warning';
+    if (titleEl) {
+      titleEl.textContent = isLimitReached ? 'Maximum Allowed Warnings Reached' : (title || 'Please Remain on the Quiz Screen');
+    }
+
     if (badgeEl) {
-      badgeEl.textContent = state.maxViolations > 0
-        ? ('Recorded Warning ' + state.violationCount + ' of ' + state.maxViolations)
-        : ('Recorded Warning #' + state.violationCount);
+      if (isLimitReached) {
+        badgeEl.textContent = 'Recorded Warning ' + maxV + ' of ' + maxV + ' — Limit Reached';
+        badgeEl.style.color = '#DC2626';
+        badgeEl.style.fontWeight = '800';
+      } else {
+        badgeEl.textContent = 'Recorded Warning ' + state.violationCount + ' of ' + maxV;
+        badgeEl.style.color = state.violationCount >= (maxV - 1) ? '#DC2626' : '#D97706';
+        badgeEl.style.fontWeight = '700';
+      }
     }
-    if (msgEl) msgEl.textContent = message;
+
+    if (msgEl) {
+      if (isLimitReached) {
+        msgEl.innerHTML =
+          '<strong>Exam Security Limit Reached:</strong> You have received <strong>' + maxV + ' of ' + maxV + '</strong> ' +
+          'focus/tab-switch warnings. Per examination policy, your quiz is being <strong>automatically submitted now</strong>.';
+      } else {
+        var remaining = Math.max(0, maxV - state.violationCount);
+        var warnNote = (remaining === 1)
+          ? '<div style="margin-top:0.5rem; font-weight:700; color:#DC2626;">⚠️ FINAL WARNING: 1 more focus loss or tab switch will automatically submit your quiz!</div>'
+          : '<div style="margin-top:0.5rem; font-size:0.78rem; color:#64748B;">Notice: The quiz will automatically submit after ' + maxV + ' warnings. (' + remaining + ' warnings remaining)</div>';
+        msgEl.innerHTML = (message ? ('<div>' + message + '</div>') : '') + warnNote;
+      }
+    }
+
     if (fsBtn) {
-      fsBtn.style.display = (showFullscreenBtn && checkFullscreenSupport() && !isFullscreenActive()) ? 'inline-flex' : 'none';
+      fsBtn.style.display = (!isLimitReached && showFullscreenBtn && checkFullscreenSupport() && !isFullscreenActive()) ? 'inline-flex' : 'none';
     }
+
+    if (ackBtn) {
+      if (isLimitReached) {
+        ackBtn.className = 'btn btn-danger';
+        ackBtn.disabled = true;
+        ackBtn.style.cursor = 'not-allowed';
+        ackBtn.innerHTML = '<span style="display:inline-block; width:13px; height:13px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:quizSecSpin 0.8s linear infinite; margin-right:7px; vertical-align:middle;"></span> Submitting Quiz Responses...';
+      } else {
+        ackBtn.className = 'btn btn-primary';
+        ackBtn.disabled = false;
+        ackBtn.style.cursor = 'pointer';
+        ackBtn.textContent = 'I Understand — Resume Quiz';
+      }
+    }
+
     modal.classList.add('active');
   }
 
@@ -304,6 +358,7 @@
   // ---------------------------------------------------------------------------
   function recordFocusOrVisibilityIncident(eventType, humanMessage, showFsBtn) {
     if (!isRunnerVisible()) return;
+    if (state.isSubmitting) return;
 
     var now = Date.now();
     // Ignore events during initial grace window (e.g. browser fullscreen transition)
@@ -321,27 +376,34 @@
     else if (eventType === 'window_blur') state.blurCount++;
     else if (eventType === 'fullscreen_exit') state.fullscreenExitCount++;
 
-    updateSecurityStatusBar();
-    logBackendSecurityEvent(eventType, { reason: humanMessage });
+    var maxV = (state.maxViolations > 0) ? state.maxViolations : 5;
 
-    // Check if quiz configured automatic submission on repeated violations
-    if (
-      state.autoSubmitOnMaxViolations &&
-      state.maxViolations > 0 &&
-      state.violationCount >= state.maxViolations &&
-      typeof state.onAutoSubmitCallback === 'function'
-    ) {
+    // Check if maximum warnings limit is reached (e.g. after 5 warnings)
+    if (state.violationCount >= maxV) {
       state.isSubmitting = true;
-      showSecurityWarningModal(
-        'Maximum Security Warnings Reached',
-        'You have reached the maximum allowed focus/tab-switch warnings (' + state.maxViolations + '). Your quiz is being submitted automatically.',
-        false
-      );
-      state.onAutoSubmitCallback('max_security_violations');
+      state.violationCount = maxV; // Cap so it never displays > maxV (e.g. never 6 or 7)
+      updateSecurityStatusBar();
+      logBackendSecurityEvent(eventType, {
+        reason: humanMessage || 'max_violations_auto_submit',
+        violationCount: maxV,
+        action: 'auto_submit'
+      });
+
+      // Show final auto-submit warning modal with disabled button
+      showSecurityWarningModal('Maximum Allowed Warnings Reached', '', false, true);
+
+      // Execute auto-submit callback
+      if (typeof state.onAutoSubmitCallback === 'function') {
+        setTimeout(function () {
+          state.onAutoSubmitCallback('max_security_violations');
+        }, 500);
+      }
       return;
     }
 
-    showSecurityWarningModal('Please Remain on the Quiz Screen', humanMessage, Boolean(showFsBtn));
+    updateSecurityStatusBar();
+    logBackendSecurityEvent(eventType, { reason: humanMessage });
+    showSecurityWarningModal('Please Remain on the Quiz Screen', humanMessage, Boolean(showFsBtn), false);
   }
 
   // ---------------------------------------------------------------------------
@@ -570,8 +632,12 @@
       state.studentCode = options.studentCode || '';
       state.rollNo = options.rollNo || '';
       state.className = options.className || '';
-      state.maxViolations = options.maxViolations !== undefined ? Number(options.maxViolations) : 5;
-      state.autoSubmitOnMaxViolations = Boolean(options.autoSubmitOnMaxViolations);
+      state.maxViolations = (options.maxViolations !== undefined && options.maxViolations !== null && Number(options.maxViolations) > 0)
+        ? Number(options.maxViolations)
+        : 5;
+      state.autoSubmitOnMaxViolations = (options.autoSubmitOnMaxViolations !== undefined && options.autoSubmitOnMaxViolations !== null)
+        ? Boolean(options.autoSubmitOnMaxViolations)
+        : true;
       state.onAutoSubmitCallback = typeof options.onAutoSubmit === 'function' ? options.onAutoSubmit : null;
 
       // Reset attempt-specific counters
@@ -606,8 +672,12 @@
 
     markSubmitting: function () {
       state.isSubmitting = true;
-      var modal = document.getElementById('quizSecurityWarningModal');
-      if (modal) modal.classList.remove('active');
+      var maxV = (state.maxViolations > 0) ? state.maxViolations : 5;
+      // If we are auto-submitting on max violations, keep the warning modal visible with the spinner
+      if (state.violationCount < maxV) {
+        var modal = document.getElementById('quizSecurityWarningModal');
+        if (modal) modal.classList.remove('active');
+      }
       setBlurCurtain(false);
     },
 

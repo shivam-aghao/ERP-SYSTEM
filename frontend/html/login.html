@@ -2039,8 +2039,7 @@
 
                             <i class="fa-regular fa-user input-icon"></i>
 
-
-                            <input type="text" id="userId" name="userId" class="input" placeholder="Enter your User ID"
+                            <input type="text" id="userId" name="userId" class="input" placeholder="User ID / Employee Code (e.g. EMP-CSE-1002)"
                                 autocomplete="username" required>
 
 
@@ -2126,22 +2125,6 @@
                     </button>
                 </form>
 
-                <!-- DEMO QUICK LOGIN PRESETS -->
-                <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); text-align: center;">
-                    <span style="font-size: 11px; font-weight: 700; color: var(--normal-text); text-transform: uppercase; letter-spacing: 0.5px;">Quick Demo Logins</span>
-                    <div style="display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
-                        <button type="button" onclick="quickFill('308637','ssgmce@123')" style="background: #eef5fc; border: 1px solid #bfd9f2; color: #1565C0; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                            🎓 Student (308637)
-                        </button>
-                        <button type="button" onclick="quickFill('EMP-CSE-1002','teacher@123')" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                            👨‍🏫 Faculty (Kandoi)
-                        </button>
-                        <button type="button" onclick="quickFill('admin','admin@123')" style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #be185d; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                            🛡️ Admin
-                        </button>
-                    </div>
-                </div>
-
                 <!-- CONTACT ADMIN -->
                 <div class="contact">
                     Need help?
@@ -2188,12 +2171,9 @@
                 var redirectTarget = (params.get('redirect') || '').toLowerCase();
 
                 if (targetRole === 'teacher' || redirectTarget.includes('teacher')) {
-                    quickFill('EMP-CSE-1002', 'teacher@123');
                     if (window.ERPToast) {
                         window.ERPToast.info('Please sign in with your Faculty ID to access the Teacher Dashboard.', 'Faculty Portal Access');
                     }
-                } else if (targetRole === 'admin' || redirectTarget.includes('admin')) {
-                    quickFill('admin', 'admin@123');
                 }
             } catch (e) {}
         });
@@ -2216,17 +2196,6 @@
                 password.type = "password";
                 eyeIcon.classList.remove("fa-eye-slash");
                 eyeIcon.classList.add("fa-eye");
-            }
-        }
-
-        /* =====================================================
-           QUICK FILL CREDENTIALS
-        ===================================================== */
-        function quickFill(uid, pwd) {
-            document.getElementById("userId").value = uid;
-            document.getElementById("password").value = pwd;
-            if (window.ERPToast) {
-                window.ERPToast.info("Filled credentials for " + uid, "Quick Login");
             }
         }
 

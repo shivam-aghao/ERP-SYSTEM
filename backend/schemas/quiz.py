@@ -23,6 +23,8 @@ class QuizQuestionInput(BaseModel):
     id: Optional[str] = None
     question_text: str
     question_type: str = "mcq"  # 'mcq', 'single_choice', 'multiple_choice', 'true_false', 'short_answer'
+    difficulty: Optional[str] = "medium"
+    topic: Optional[str] = None
     marks: float = 2.0
     negative_marks: float = 0.0
     explanation: Optional[str] = None
@@ -73,6 +75,12 @@ class QuizCreateSchema(BaseModel):
     negative_marks: float = 0.0
     negative_marks_per_question: Optional[float] = None
     status: Optional[str] = "draft"
+    questions_per_student: Optional[int] = None
+    unique_question_paper: Optional[bool] = False
+    prevent_duplicate_questions: Optional[bool] = True
+    randomize_question_types: Optional[bool] = False
+    difficulty_distribution: Optional[Union[Dict[str, Any], str]] = None
+    security_settings: Optional[Union[Dict[str, Any], str]] = None
     questions: Optional[List[QuizQuestionInput]] = []
 
 
@@ -94,6 +102,12 @@ class QuizUpdateSchema(BaseModel):
     randomize_options: Optional[bool] = None
     shuffle_questions: Optional[bool] = None
     shuffle_options: Optional[bool] = None
+    questions_per_student: Optional[int] = None
+    unique_question_paper: Optional[bool] = None
+    prevent_duplicate_questions: Optional[bool] = None
+    randomize_question_types: Optional[bool] = None
+    difficulty_distribution: Optional[Union[Dict[str, Any], str]] = None
+    security_settings: Optional[Union[Dict[str, Any], str]] = None
     show_result_immediately: Optional[bool] = None
     show_correct_answers: Optional[bool] = None
     result_release_mode: Optional[str] = None

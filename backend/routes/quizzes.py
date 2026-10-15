@@ -18,6 +18,7 @@ from backend.rbac.service import RBACService
 from backend.rbac.models import Permission
 from backend.schemas.quiz import QuestionBankCreate, QuizCreateSchema, QuizUpdateSchema
 from backend.services.quiz_service import QuizService
+from backend.services.ai_question_service import AIQuestionService
 from backend.utils.helpers import success_response, error_response
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes & Examination Assessment"])
@@ -122,7 +123,11 @@ def get_all_quizzes(
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
+<<<<<<< HEAD
+              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
+=======
               AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
+>>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])
@@ -285,6 +290,11 @@ def get_quiz_details(
             qm.pop("hint", None)
         questions.append(qm)
     data["questions"] = questions
+
+    # Attach randomization & exam security configuration
+    rand_cfg = QuizService._get_randomization_config(quiz_id, db)
+    data.update(rand_cfg)
+
     return success_response(data)
 
 
@@ -365,7 +375,11 @@ def update_quiz_config(
         db.execute(text(sql), params)
         db.commit()
 
-    return success_response({"id": quiz_id, "updated": True}, "Quiz updated successfully")
+    # Persist randomization & security policy settings
+    QuizService._save_randomization_config(quiz_id, payload, db)
+    rand_cfg = QuizService._get_randomization_config(quiz_id, db)
+
+    return success_response({"id": quiz_id, "updated": True, **rand_cfg}, "Quiz updated successfully")
 
 
 @router.delete("/{quiz_id}")
@@ -403,6 +417,21 @@ def delete_quiz(
     db.execute(text("DELETE FROM quizzes WHERE id = :id"), {"id": quiz_id})
     db.commit()
     return success_response({"id": quiz_id, "deleted": True}, "Quiz deleted")
+
+
+@router.get("/{quiz_id}/validate-publish")
+def validate_quiz_publishing(quiz_id: str, db: Session = Depends(get_db)):
+    """
+    GET /api/v1/quizzes/{quiz_id}/validate-publish
+    Pre-publish check for question pool size, difficulty distribution, and paper constraints.
+    """
+    try:
+        res = QuizService.validate_quiz_for_publishing(quiz_id, db)
+        return success_response(res)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 
 @router.put("/{quiz_id}/publish")
@@ -444,13 +473,14 @@ def publish_quiz(
     else:
         new_stat = "draft" if is_currently_published else "active"
 
-    # Validate that quiz has at least 1 question before making it active
-    q_cnt = db.execute(text("SELECT count(*) FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id}).scalar() or 0
-    if new_stat == "active" and q_cnt == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot publish a quiz with 0 questions. Please add at least one question first."
-        )
+    # Validate that quiz has questions and satisfies pool constraints before making it active
+    if new_stat == "active":
+        val_res = QuizService.validate_quiz_for_publishing(quiz_id, db)
+        if not val_res["valid"]:
+            raise HTTPException(
+                status_code=400,
+                detail="; ".join(val_res["errors"])
+            )
 
     db.execute(text("UPDATE quizzes SET status = :s, updated_at = CURRENT_TIMESTAMP WHERE id = :id"), {"s": new_stat, "id": quiz_id})
     db.commit()
@@ -477,6 +507,7 @@ def publish_quiz(
             db.commit()
         except Exception:
             db.rollback()
+    q_cnt = db.execute(text("SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = :id"), {"id": quiz_id}).scalar() or 0
     return success_response({
         "id": quiz_id,
         "is_published": (new_stat == "active"),
@@ -838,3 +869,124 @@ def create_question_bank_item(
 
     db.commit()
     return success_response({"id": qid}, "Question created in question bank", code=201)
+
+
+# ==============================================================================
+# AI QUESTION GENERATOR & CSV QUESTION BANK ENDPOINTS (TEACHER MODULE)
+# ==============================================================================
+
+@router.post("/generate-questions")
+def generate_ai_questions(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    """
+    POST /api/v1/quizzes/generate-questions
+    Generates syllabus-aligned CSE questions via Gemini API / Curriculum Engine.
+    Exclusively available to Teachers & Admins.
+    """
+    if current_user and current_user.role and current_user.role.lower() not in ("teacher", "faculty", "hod", "admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Forbidden: Only faculty and admins can generate quiz questions.")
+
+    subject = (payload.get("subject") or "").strip()
+    topic = (payload.get("main_topic") or payload.get("topic") or "").strip()
+    if not subject:
+        return error_response("Subject name is required for question generation.", 400)
+    if not topic:
+        return error_response("Main topic is required for question generation.", 400)
+
+    subtopics = payload.get("subtopics") or payload.get("subtopic") or ""
+    unit = (payload.get("unit_number") or payload.get("unit") or "").strip()
+    additional_instructions = (payload.get("additional_instructions") or payload.get("instructions") or "").strip()
+    target_class = (payload.get("target_class") or payload.get("class") or payload.get("class_name") or "").strip()
+    question_type = (payload.get("question_type") or payload.get("type") or "single_choice").strip()
+    reference_content = (payload.get("reference_content") or payload.get("syllabus_content") or "").strip()
+
+    branch = payload.get("branch", "CSE")
+    try:
+        count = max(1, min(int(payload.get("count", 10)), 300))
+    except (ValueError, TypeError):
+        count = 10
+
+    difficulty = payload.get("difficulty", "Mixed")
+    difficulty_dist = payload.get("difficulty_dist", None)
+
+    questions = AIQuestionService.generate_questions(
+        subject=subject,
+        topic=topic,
+        main_topic=topic,
+        subtopics=subtopics,
+        subtopic=subtopics if isinstance(subtopics, str) else ", ".join(subtopics),
+        unit=unit,
+        unit_number=unit,
+        additional_instructions=additional_instructions,
+        target_class=target_class,
+        question_type=question_type,
+        reference_content=reference_content,
+        branch=branch,
+        count=count,
+        difficulty=difficulty,
+        difficulty_dist=difficulty_dist
+    )
+
+    return success_response({
+        "subject": subject,
+        "main_topic": topic,
+        "topic": topic,
+        "subtopics": subtopics,
+        "unit": unit,
+        "question_type": question_type,
+        "target_class": target_class,
+        "count": len(questions),
+        "questions": questions
+    }, message=f"Successfully generated {len(questions)} syllabus-aligned questions.")
+
+
+@router.post("/validate-csv")
+def validate_csv_questions(
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)
+):
+    """
+    POST /api/v1/quizzes/validate-csv
+    Validates uploaded CSV question bank content row-by-row.
+    """
+    if current_user and current_user.role and current_user.role.lower() not in ("teacher", "faculty", "hod", "admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Forbidden: Only faculty and admins can validate CSV question banks.")
+
+    csv_content = payload.get("csv_content", "")
+    if not csv_content:
+        raise HTTPException(status_code=400, detail="csv_content string is required.")
+
+    result = AIQuestionService.parse_and_validate_csv(csv_content)
+    return success_response(result, message="CSV parsed and validated successfully.")
+
+
+@router.post("/{quiz_id}/questions/bulk")
+def add_bulk_questions(
+    quiz_id: str,
+    payload: Dict[str, Any] = Body(...),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """
+    POST /api/v1/quizzes/{quiz_id}/questions/bulk
+    Atomically adds questions from AI Generator or CSV Import to the quiz.
+    Recalculates total_questions, total_marks, and passing_marks.
+    """
+    if current_user and current_user.role and current_user.role.lower() not in ("teacher", "faculty", "hod", "admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Forbidden: Only faculty and admins can add questions to quizzes.")
+
+    questions = payload.get("questions", [])
+    if not questions or not isinstance(questions, list):
+        raise HTTPException(status_code=400, detail="A non-empty 'questions' array is required.")
+
+    try:
+        result = AIQuestionService.add_bulk_questions_to_quiz(quiz_id=quiz_id, questions=questions, db=db)
+        return success_response(result, message=f"Successfully added {result['inserted_count']} questions to quiz.")
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to add bulk questions: {str(e)}")
+
