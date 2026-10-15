@@ -245,6 +245,53 @@ def get_student_attendance_report(
     return success_response(data)
 
 
+@router.get("/reports/student/{identifier}")
+def get_student_attendance_report_by_id(
+    identifier: str,
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """GET /api/v1/attendance/reports/student/{identifier} - Path param alias."""
+    data = AttendanceService.get_student_attendance(identifier, current_user, db)
+    return success_response(data)
+
+
+@router.get("/student/{student_id}/day-wise")
+def get_day_wise_attendance(
+    student_id: str,
+    subject_id: Optional[str] = Query(None),
+    current_user: Optional[AuthenticatedUser] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """GET /api/v1/attendance/student/{student_id}/day-wise - Day-wise attendance records."""
+    # Resolve student UUID
+    st_row = db.execute(text("""
+        SELECT id FROM users WHERE id::text = :s OR roll_no = :s OR email = :s
+        UNION
+        SELECT id FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s
+        LIMIT 1
+    """), {"s": student_id}).fetchone()
+    
+    sid = str(st_row[0]) if st_row else student_id
+
+    query = """
+        SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
+               s.name as subject_name, s.code as subject_code
+        FROM attendance a
+        LEFT JOIN subjects s ON a.subject_id = s.id
+        WHERE a.student_id::text = :sid
+    """
+    params = {"sid": sid}
+    if subject_id:
+        query += " AND a.subject_id::text = :sub"
+        params["sub"] = subject_id
+    query += " ORDER BY a.date ASC"
+
+    rows = db.execute(text(query), params).fetchall()
+    return success_response([dict(r._mapping) for r in rows])
+
+
+
 @router.get("/reports/teacher")
 def get_teacher_attendance_report(
     teacher_id: str = Query(...),
