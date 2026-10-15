@@ -1376,7 +1376,6 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-<<<<<<< HEAD
   // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
   // ----------------------------------------------------
   async renderNotificationsList() {
@@ -1440,87 +1439,6 @@ const TeacherApp = {
                   <span class="activity-time" style="font-size:12px; color:#94A3B8;">${timeText}</span>
                 </div>
                 <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
-=======
-  // NOTIFICATIONS HUB & ANNOUNCEMENT BROADCASTING
-  // ----------------------------------------------------
-  renderNotificationsList() {
-    const list = (TeacherERPData && TeacherERPData.notifications) || [];
-    const unreadCount = list.filter(n => n.unread).length;
-
-    // 1. Update unread badge counter in header
-    const badge = document.getElementById("notif-badge-count");
-    if (badge) {
-      if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.style.display = "inline-flex";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-
-    // 2. Header dropdown list (#notification-items-list)
-    const container = document.getElementById("notification-items-list");
-    if (container) {
-      if (list.length === 0) {
-        container.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No notifications at this time</div>`;
-      } else {
-        container.innerHTML = list.slice(0, 8).map(notif => `
-          <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-            <div class="notif-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EBF3FC'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-              <i data-lucide="${notif.icon || 'bell'}" style="width:16px;height:16px;"></i>
-            </div>
-            <div class="notif-content">
-              <div class="notif-title">${notif.title}</div>
-              <div class="notif-desc">${notif.description}</div>
-              <div class="notif-time">${notif.time}</div>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    // 3. Full Notifications Hub View (#notifications-full-list)
-    const fullContainer = document.getElementById("notifications-full-list");
-    if (fullContainer) {
-      if (list.length === 0) {
-        fullContainer.innerHTML = `
-          <div style="padding:48px; text-align:center; color:var(--text-muted);">
-            <i data-lucide="bell-off" style="width:40px;height:40px; opacity:0.4; margin-bottom:12px;"></i>
-            <h4 style="margin:0 0 6px 0; color:var(--dark-navy);">No Circulars or Notifications</h4>
-            <p style="margin:0; font-size:13px;">You have no active departmental notices or class alerts.</p>
-          </div>
-        `;
-      } else {
-        fullContainer.innerHTML = list.map(notif => {
-          const priorityBadge = notif.priority === 'urgent'
-            ? `<span class="badge" style="background:#FEE2E2; color:#DC2626; font-size:11px; font-weight:700;">URGENT</span>`
-            : (notif.priority === 'high'
-              ? `<span class="badge" style="background:#FEF3C7; color:#D97706; font-size:11px; font-weight:700;">HIGH PRIORITY</span>`
-              : `<span class="badge" style="background:#E2E8F0; color:#475569; font-size:11px; font-weight:700;">NORMAL</span>`);
-
-          return `
-            <div class="activity-item" style="padding:16px; border-bottom:1px solid #F1F5F9; background:${notif.unread ? '#F8FAFC' : '#ffffff'};">
-              <div class="activity-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EFF6FF'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-                <i data-lucide="${notif.icon || 'bell'}" style="width:18px;height:18px;"></i>
-              </div>
-              <div class="activity-content" style="flex:1;">
-                <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="activity-title" style="font-size:14px; font-weight:700; color:var(--dark-navy);">${notif.title}</span>
-                    ${priorityBadge}
-                    ${notif.unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#00A6D6;display:inline-block;" title="Unread"></span>' : ''}
-                  </div>
-                  <span class="activity-time" style="font-size:12px; color:var(--text-muted);">${notif.time}</span>
-                </div>
-                <div class="activity-desc" style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:8px;">${notif.description}</div>
-                <div style="display:flex; gap:12px; align-items:center;">
-                  ${notif.unread ? `
-                    <button type="button" style="background:none; border:none; color:var(--primary-blue); font-size:12px; font-weight:600; cursor:pointer; padding:0;" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-                      Mark as Read ✓
-                    </button>
-                  ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
-                </div>
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
               </div>
             </div>
           `;
@@ -1528,7 +1446,6 @@ const TeacherApp = {
       }
     }
 
-<<<<<<< HEAD
     if (container && notifs) {
       container.innerHTML = notifs.slice(0, 5).map(notif => `
         <div class="notification-item ${!notif.is_read ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id || ''}')">
@@ -1543,9 +1460,7 @@ const TeacherApp = {
         </div>
       `).join('');
     }
-=======
     this.initLucideIcons();
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
   },
 
   async markAllTeacherNotificationsRead() {
@@ -1569,7 +1484,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-<<<<<<< HEAD
   async dispatchClassAnnouncement() {
     const classVal = document.getElementById("teacherNotifClass")?.value || '3R';
     const priorityVal = document.getElementById("teacherNotifPriority")?.value || 'normal';
@@ -1623,8 +1537,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-=======
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
   async handleNotificationClick(id) {
     const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
     if (notif) {

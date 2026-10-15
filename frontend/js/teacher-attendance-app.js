@@ -1801,8 +1801,6 @@ document.addEventListener("DOMContentLoaded", () => {
             this.state.selectedDept.code,
             this.state.selectedClass.id
           );
-        }
-<<<<<<< HEAD
         if (this.state.students && this.state.students.length > 0) {
           this.state.students.sort((a, b) => (a.roll || a.rollNo || 0) - (b.roll || b.rollNo || 0));
           if (this.state.selectedBatch) {
@@ -1820,24 +1818,6 @@ document.addEventListener("DOMContentLoaded", () => {
               this.state.students = this.state.students.slice(minRoll - 1, maxRoll);
             }
           }
-=======
-        if (!this.state.students || this.state.students.length === 0) {
-          const clsName = this.state.selectedClass?.name || "2R1";
-          this.state.students = Array.from({ length: 30 }, (_, i) => {
-            const roll = i + 1;
-            const rollStr = roll < 10 ? `0${roll}` : `${roll}`;
-            return {
-              id: `std-${clsName}-${roll}`,
-              roll: roll,
-              rollFormatted: `ROLL ${rollStr}`,
-              name: `Student ${roll}`,
-              prn: `PRN-2026-${rollStr}`,
-              isProvisional: false,
-              status: null,
-              recentHistory: ["P", "P", "P", "P", "P"]
-            };
-          });
->>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
         }
       }
 
@@ -1851,18 +1831,12 @@ document.addEventListener("DOMContentLoaded", () => {
           this.state.selectedSubject.code
         );
 
-<<<<<<< HEAD
-      if (draft && draft.students && (!this.state.selectedBatch || draft.students.length <= 25)) {
-        this.state.students = draft.students;
-        this.showToast("Loaded saved attendance draft for this session", "info");
-=======
-        if (draft && Array.isArray(draft.students) && draft.students.length > 0) {
+        if (draft && draft.students && (!this.state.selectedBatch || draft.students.length <= 25)) {
           this.state.students = draft.students;
           this.showToast("Loaded saved attendance draft for this session", "info");
         }
       } catch (e) {
         console.warn("Draft check notice:", e);
->>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
       }
 
       // Determine first uncompleted student index

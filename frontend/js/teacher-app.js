@@ -444,7 +444,6 @@ const TeacherApp = {
         setHeaderBadge("Academics Hub");
         break;
       case 'attendance':
-<<<<<<< HEAD
         document.getElementById("attendance-module").style.display = "block";
         setHeaderBadge("Teacher Attendance Hub");
         this.initIntegratedAttendance(subView);
@@ -460,14 +459,6 @@ const TeacherApp = {
           setHeaderBadge("Teacher Attendance Hub");
           this.switchAttendanceSubView('marking');
         }
-=======
-        window.location.href = subView === 'roster' ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
-        return;
-      case 'attendance-mark':
-        document.getElementById("attendance-module").style.display = "block";
-        setHeaderBadge("Teacher Attendance Hub");
-        this.switchAttendanceSubView('marking');
->>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
         break;
       }
       case 'attendance-roster':
@@ -739,7 +730,6 @@ const TeacherApp = {
     window.location.href = subView === 'roster' ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
   },
 
-<<<<<<< HEAD
   navigateToAttendance(params = {}) {
     let { classCode, subject, date, timeSlot, room, batch } = params;
 
@@ -809,11 +799,6 @@ const TeacherApp = {
 
   openAttendanceForClass(classCode, subject) {
     this.navigateToAttendance({ classCode, subject });
-=======
-  openAttendanceForClass(classCode, subject) {
-    const q = `teacher-attendance.html?class=${encodeURIComponent(classCode || '')}&subject=${encodeURIComponent(subject || '')}`;
-    window.location.href = q;
->>>>>>> 8e059777418b65cfab7ef9224ae0769515c1909c
   },
 
   initIntegratedAttendance(subView) {
