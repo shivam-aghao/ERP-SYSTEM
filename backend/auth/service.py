@@ -578,7 +578,7 @@ class AuthenticationService:
                 SELECT s.id, s.student_code, s.full_name, s.email, s.roll_no, s.class_id, c.class_name
                 FROM students s
                 LEFT JOIN classes c ON s.class_id = c.id
-                WHERE s.id = :uid OR s.student_code = :uid
+                WHERE CAST(s.id AS TEXT) = :uid OR s.student_code = :uid
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if st:
@@ -605,7 +605,7 @@ class AuthenticationService:
                 SELECT t.id, t.emp_code, t.full_name, t.email, t.department_id, d.name as dept_name
                 FROM teachers t
                 LEFT JOIN departments d ON t.department_id = d.id
-                WHERE t.id = :uid OR LOWER(t.emp_code) = LOWER(:uid)
+                WHERE CAST(t.id AS TEXT) = :uid OR LOWER(t.emp_code) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if t:
@@ -642,7 +642,7 @@ class AuthenticationService:
             a = db.execute(text("""
                 SELECT a.id, a.username, a.name, a.email
                 FROM admins a
-                WHERE a.id = :uid OR LOWER(a.username) = LOWER(:uid)
+                WHERE CAST(a.id AS TEXT) = :uid OR LOWER(a.username) = LOWER(:uid)
                 LIMIT 1
             """), {"uid": user_id}).fetchone()
             if a:
