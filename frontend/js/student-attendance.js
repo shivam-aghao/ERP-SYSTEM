@@ -808,6 +808,8 @@
       `;
     }).join('');
 
+    state.selectedSubjectDayRecords = dayRecords;
+
     bodyEl.innerHTML = `
       <div style="border: 1px solid #CBD5E1; border-radius: 8px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -824,13 +826,118 @@
           </tbody>
         </table>
       </div>
-      <div style="display: flex; justify-content: flex-end; padding-top: 8px;">
-        <button type="button" class="btn btn-primary" onclick="closeSubjectModal()" style="background: #334155; border: none; padding: 8px 24px; font-weight: 600; border-radius: 6px; color: #FFFFFF; cursor: pointer; font-size: 0.875rem;">Close</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+        <button type="button" class="btn btn-outline" onclick="closeSubjectModal()" style="font-size: 0.85rem; padding: 8px 20px; border-radius: 6px; border: 1.5px solid #CBD5E1; color: #475569; background: #fff; cursor: pointer; font-weight: 600;">Close</button>
+        <button type="button" class="btn btn-primary" onclick="downloadStudentDayWisePdf()" style="background: #0B5CAD; border: none; padding: 8px 20px; font-weight: 700; border-radius: 6px; color: #FFFFFF; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,92,173,0.3);">
+          <span>📥</span> Download Student Attendance Record (PDF)
+        </button>
       </div>
     `;
     backdrop.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
+
+  window.downloadStudentDayWisePdf = async function () {
+    const subject = state.selectedSubjectForModal;
+    const records = state.selectedSubjectDayRecords || [];
+    if (!records || records.length === 0) {
+      alert("No attendance records to download.");
+      return;
+    }
+    const subName = subject?.subject || subject?.name || subject?.subject_name || "Subject";
+    const subCode = subject?.code || subject?.subject_code || "";
+    const stName = state.profile?.name || state.profile?.full_name || "Student";
+    const stRoll = state.profile?.roll_no || state.profile?.rollNo || "-";
+
+    let jsPDFClass = window.jspdf ? window.jspdf.jsPDF : null;
+    if (!jsPDFClass && typeof jspdf !== 'undefined') jsPDFClass = jspdf.jsPDF;
+
+    if (!jsPDFClass) {
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        const s2 = document.createElement('script');
+        s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+        await new Promise((resolve) => { s2.onload = resolve; document.head.appendChild(s2); });
+        jsPDFClass = window.jspdf.jsPDF;
+      } catch (e) {
+        console.error("jsPDF load error:", e);
+      }
+    }
+
+    if (jsPDFClass) {
+      try {
+        const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        doc.setFillColor(21, 101, 192);
+        doc.rect(0, 0, 210, 26, 'F');
+        doc.setFontSize(13);
+        doc.setTextColor(255, 255, 255);
+        doc.text("SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING", 105, 11, { align: "center" });
+        doc.setFontSize(9);
+        doc.text("STUDENT DAY-WISE ATTENDANCE RECORD", 105, 18, { align: "center" });
+
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10.5);
+        doc.text(`Student Name: ${stName}`, 14, 34);
+        doc.text(`Roll No: ${stRoll}`, 14, 40);
+        doc.text(`Subject: ${subName} (${subCode})`, 120, 34);
+        doc.text(`Generated Date: ${new Date().toLocaleDateString('en-GB')}`, 120, 40);
+
+        const tableBody = records.map((r, idx) => [
+          idx + 1,
+          r.date ? new Date(r.date).toLocaleDateString('en-GB') : '-',
+          (r.status || 'PRESENT').toUpperCase(),
+          r.period_type || 'REGULAR'
+        ]);
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            startY: 46,
+            head: [['Sl. No', 'Date', 'Attendance Status', 'Period Type']],
+            body: tableBody,
+            headStyles: { fillColor: [21, 101, 192], textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            didParseCell: function (data) {
+              if (data.section === 'body' && data.column.index === 2) {
+                if (data.cell.raw === 'ABSENT') {
+                  data.cell.styles.textColor = [220, 38, 38];
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+            }
+          });
+          doc.save(`Attendance_${subCode}_${stName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+          return;
+        }
+      } catch (err) {
+        console.warn("jsPDF error:", err);
+      }
+    }
+
+    // Fallback print window
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write(`
+        <html><head><title>Day Wise Attendance - ${subName}</title>
+        <style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:8px;text-align:left;} th{background:#1565C0;color:#fff;}</style>
+        </head><body>
+        <h2>SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h2>
+        <h3>Day Wise Attendance: ${subName} (${subCode})</h3>
+        <p><strong>Student:</strong> ${stName} | <strong>Roll No:</strong> ${stRoll}</p>
+        <table><thead><tr><th>Sl. No</th><th>Date</th><th>Status</th><th>Period Type</th></tr></thead><tbody>
+        ${records.map((r, idx) => `<tr><td>${idx+1}</td><td>${r.date||'-'}</td><td style="color:${(r.status||'').toUpperCase()==='ABSENT'?'red':'black'}">${r.status||'PRESENT'}</td><td>${r.period_type||'REGULAR'}</td></tr>`).join('')}
+        </tbody></table>
+        <script>window.onload=function(){window.print();};<\/script>
+        </body></html>
+      `);
+      printWin.document.close();
+    }
+  };
 
   window.closeSubjectModal = function () {
     const backdrop = document.getElementById('subjectModalBackdrop');

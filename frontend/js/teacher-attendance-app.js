@@ -72,12 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
 
-    startFlow() {
-      if (!this.state.selectedDate) this.state.selectedDate = new Date();
+    async startFlow() {
+      this.state.selectedDate = new Date();
       const now = this._ensureDate(this.state.selectedDate);
       this.state.selectedDate = now;
       this.state.calendarViewingMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      this.goToStep(2);
+      this.updateSelectedDateDisplay();
+      await this.goToStep(3);
     },
 
     async syncTeacherFromBackend() {
@@ -386,11 +387,8 @@ document.addEventListener("DOMContentLoaded", () => {
       this.globalBackBtn.addEventListener("click", () => this.handleBackNavigation());
 
       // Step 1: Start Flow
-      this.btnStartFlow.addEventListener("click", () => {
-        if (!this.state.selectedDate) this.state.selectedDate = new Date();
-        const now = this.state.selectedDate;
-        this.state.calendarViewingMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        this.goToStep(2);
+      this.btnStartFlow.addEventListener("click", async () => {
+        await this.startFlow();
       });
       if (this.btnRefreshRecent) {
         this.btnRefreshRecent.addEventListener("click", () => {
@@ -2688,7 +2686,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Strict Filter: Teacher should ONLY see subjects they teach (teacher_id = auth.uid())
         const allSummaries = data.courseWiseSummary || [];
-        const summaries = allSummaries.filter(c => {
+        let summaries = allSummaries.filter(c => {
           const cTeacher = (c.teacherName || "").toLowerCase();
           const cTeacherId = (c.teacherId || "").toLowerCase();
           if (curTeacherId && (cTeacherId.includes(curTeacherId.toLowerCase()) || curTeacherId.toLowerCase().includes(cTeacherId))) {
@@ -2703,23 +2701,37 @@ document.addEventListener("DOMContentLoaded", () => {
           return false;
         });
 
+        // Fallback: If strict teacher filter has 0 matches, display all enrolled subjects with teacher indication
+        if (summaries.length === 0 && allSummaries.length > 0) {
+          summaries = allSummaries;
+        }
+
         const courseTbody = document.getElementById("stReportCourseTableBody");
         courseTbody.innerHTML = "";
-        const summaries = data.courseWiseSummary || [];
         if (summaries.length === 0) {
           courseTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748B; padding: 16px;">No course lectures recorded yet.</td></tr>`;
         } else {
           summaries.forEach((c) => {
             const tr = document.createElement("tr");
+            tr.style.cursor = "pointer";
+            tr.title = "Click to view Day-Wise Attendance";
             const pctColor = c.percentage >= 75 ? "#15803D" : (c.percentage >= 60 ? "#B45309" : "#B91C1C");
             tr.innerHTML = `
-              <td><strong style="color: #0B5CAD;">${c.courseCode}</strong></td>
-              <td style="font-weight: 600;">${c.courseName}</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="color: #0B5CAD;">${c.courseCode}</strong>
+                  <span style="font-size: 10px; background: #EFF6FF; color: #1D4ED8; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid #BFDBFE;">View Day-Wise ↗</span>
+                </div>
+              </td>
+              <td style="font-weight: 600; color: #0F172A;">${c.courseName}</td>
               <td style="color: #475569;">${c.teacherName}</td>
               <td style="text-align: center;">${c.totalLectures}</td>
               <td style="text-align: center; font-weight: 600;">${c.presentLectures}</td>
               <td style="text-align: right; font-weight: 700; color: ${pctColor};">${c.percentage}%</td>
             `;
+            tr.addEventListener("click", () => {
+              this.openTeacherSubjectDayWise(c, data.student);
+            });
             courseTbody.appendChild(tr);
           });
         }
