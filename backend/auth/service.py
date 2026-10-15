@@ -225,6 +225,7 @@ class AuthenticationService:
         except Exception as e:
             logger.debug("Supabase teacher lookup notice: %s", e)
 
+        teacher_row = None
         # Priority 2: Resilient local database lookup
         if not teacher_dict:
             try:
@@ -235,7 +236,7 @@ class AuthenticationService:
                     LEFT JOIN departments d ON t.department_id = d.id
                     WHERE LOWER(t.emp_code) = LOWER(:uid) 
                        OR LOWER(t.email) = LOWER(:uid) 
-                       OR t.id = :uid
+                       OR CAST(t.id AS TEXT) = :uid
                     LIMIT 1
                 """), {"uid": uid}).fetchone()
                 if teacher_row:
@@ -254,7 +255,7 @@ class AuthenticationService:
                 db.rollback()
 
         # Convenience fallback for faculty search by name if explicit faculty role hint provided
-        if not teacher_row and hint_role in ("teacher", "faculty", "employee"):
+        if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
             try:
                 teacher_row = db.execute(text("""
                     SELECT t.id, t.emp_code, t.password, t.full_name, t.email, t.designation,
