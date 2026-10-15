@@ -2615,6 +2615,7 @@ img {
   border-radius: 6px;
   text-decoration: none;
   transition: all 0.18s ease;
+  cursor: pointer;
 }
 
 .dropdown-subtab-link:hover,

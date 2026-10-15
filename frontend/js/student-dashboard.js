@@ -389,8 +389,17 @@ function initSidebarLinks() {
       if (navKey === 'dashboard') {
         if (!href || href === 'index.html' || href === '#' || href === 'javascript:void(0)') {
           e.preventDefault();
+          if (window.closeFeesMainView) window.closeFeesMainView();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           showToast('Welcome to SSGMCE Student ERP Dashboard', 'info');
+        }
+        return;
+      }
+
+      if (navKey === 'fees') {
+        e.preventDefault();
+        if (window.toggleFeesSubmenu) {
+          window.toggleFeesSubmenu();
         }
         return;
       }
@@ -417,6 +426,19 @@ function initSidebarLinks() {
           setTimeout(() => targetCard.classList.remove('card-highlight-pulse'), 1500);
           return;
         }
+      }
+    });
+  });
+
+  // Dedicated handler for Fees submenu links (Payable, Fee Online Payment, Receipt)
+  const feeSubLinks = sidebar.querySelectorAll('.submenu-link[data-fees-tab]');
+  feeSubLinks.forEach(sub => {
+    sub.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const tab = sub.getAttribute('data-fees-tab');
+      if (tab && typeof window.openFeesView === 'function') {
+        window.openFeesView(tab);
       }
     });
   });
@@ -989,6 +1011,16 @@ function initStudentModules() {
 }
 
 function openStudentModule(moduleKey, requestedSubtab) {
+  if (moduleKey === 'fees') {
+    let target = 'payable';
+    if (requestedSubtab === 'online-payment' || requestedSubtab === 'payment') target = 'online-payment';
+    else if (requestedSubtab === 'payment-receipt' || requestedSubtab === 'receipt') target = 'receipt';
+    if (window.openFeesView) {
+      window.openFeesView(target);
+      return;
+    }
+  }
+
   const modal = document.getElementById('studentModuleModal');
   const cfg = studentModuleConfig[moduleKey];
   if (!modal || !cfg) return;

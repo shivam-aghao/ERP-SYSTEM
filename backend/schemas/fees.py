@@ -14,6 +14,8 @@ class FeePaymentRequest(BaseModel):
     invoice_id: Optional[str] = Field(None, description="Target invoice UUID")
     payment_reference: Optional[str] = Field(None, description="External reference number")
     student_code: Optional[str] = Field(None, description="Student identification code")
+    fee_head: Optional[str] = Field("CURRENT_YEAR", description="Target payment category: OUTSTANDING, OTHER, SOCIETY, EXAM, CURRENT_YEAR, HOSTEL")
+    payment_status: Optional[str] = Field("success", description="Gateway verification status: success, pending, failed, cancelled")
 
     @field_validator("payment_method")
     @classmethod
