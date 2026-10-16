@@ -495,10 +495,13 @@ def get_attendance_records(
     class_name: Optional[str] = None,
     teacher_id: Optional[str] = None,
     subject_code: Optional[str] = None,
+    date: Optional[str] = None,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
     limit: int = 50,
     db: Session = Depends(get_db)
 ):
-    """GET /api/v1/attendance/records - List detailed attendance session records."""
+    """GET /api/v1/attendance/records - List detailed attendance session records with dynamic search/filters."""
     target_class = class_name or class_id
     clauses = []
     params = {"lim": limit}
@@ -511,6 +514,15 @@ def get_attendance_records(
     if subject_code:
         clauses.append("ass.subject_code = :scode")
         params["scode"] = subject_code
+    if date:
+        clauses.append("CAST(ass.session_date AS TEXT) LIKE :dt")
+        params["dt"] = f"{date}%"
+    if status and status.lower() != "all":
+        clauses.append("LOWER(ass.status) = :st")
+        params["st"] = status.lower()
+    if search:
+        clauses.append("(ass.class_name ILIKE :sq OR ass.subject_code ILIKE :sq OR ass.topic_taught ILIKE :sq OR CAST(ass.id AS TEXT) ILIKE :sq)")
+        params["sq"] = f"%{search}%"
 
     where_str = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = db.execute(text(f"""

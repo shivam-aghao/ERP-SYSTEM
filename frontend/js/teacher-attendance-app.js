@@ -67,6 +67,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetClass || targetSubject) {
           await this.handleDirectClassLaunch(targetClass, targetSubject, targetDate, targetSlot, targetBatch);
         }
+        const openParam = urlParams.get('open');
+        if (openParam === 'wallet') {
+          setTimeout(() => this.openEmployeeRecordCorner('wallet'), 250);
+        } else if (openParam === 'reports') {
+          setTimeout(() => this.openReportsCenter(), 250);
+        } else if (openParam === 'student-report') {
+          setTimeout(() => this.openStudentSearchModal(), 250);
+        } else if (openParam === 'mark') {
+          setTimeout(() => this.startFlow(), 250);
+        }
       } catch (e) {
         console.warn("Direct class launch check failed:", e);
       }
@@ -395,6 +405,27 @@ document.addEventListener("DOMContentLoaded", () => {
           this.renderRecentAttendance();
           this.showToast("Recent attendance records refreshed", "info");
         });
+      }
+
+
+      // Live Database Attendance Filters
+      const btnApplyFilter = document.getElementById("btnApplyAttendanceFilter");
+      if (btnApplyFilter) {
+        btnApplyFilter.addEventListener("click", () => this.searchAttendanceSessions());
+      }
+      const btnResetFilter = document.getElementById("btnResetAttendanceFilter");
+      if (btnResetFilter) {
+        btnResetFilter.addEventListener("click", () => this.resetAttendanceFilter());
+      }
+      const inputSearch = document.getElementById("filterAttendanceSearch");
+      if (inputSearch) {
+        inputSearch.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") this.searchAttendanceSessions();
+        });
+      }
+      const btnDownloadFiltered = document.getElementById("btnDownloadFilteredPdf");
+      if (btnDownloadFiltered) {
+        btnDownloadFiltered.addEventListener("click", () => this.downloadAttendanceRecordsPdf());
       }
 
       // Step 2: Calendar controls
@@ -1030,14 +1061,125 @@ document.addEventListener("DOMContentLoaded", () => {
     // STEP 1: RECENT ATTENDANCE
     // =========================================================================
 
-    async renderRecentAttendance() {
+    openReportsCenter() {
+      const modal = document.getElementById("modalPdfCenter");
+      if (modal) modal.classList.remove("hidden");
+    },
+
+    openCertificationWalletModal() {
+      this.openEmployeeRecordCorner("wallet");
+    },
+
+    async searchAttendanceSessions() {
+      const date = document.getElementById("filterAttendanceDate")?.value || "";
+      const className = document.getElementById("filterAttendanceClass")?.value || "";
+      const status = document.getElementById("filterAttendanceStatus")?.value || "all";
+      const search = (document.getElementById("filterAttendanceSearch")?.value || "").trim();
+
+      if (this.recentAttendanceTbody) {
+        this.recentAttendanceTbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; color: #0284C7; padding: 24px;">
+              <div style="display:inline-block; width:20px; height:20px; border:2.5px solid #CBD5E1; border-top-color:#0284C7; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle;"></div>
+              Searching attendance records from database...
+            </td>
+          </tr>
+        `;
+      }
+      this.showToast("Querying database...", "info");
+      await this.renderRecentAttendance({ date, className, status, search });
+      const count = this.currentAttendanceRecords ? this.currentAttendanceRecords.length : 0;
+      this.showToast(`Found ${count} attendance records from database`, "success");
+    },
+
+    async resetAttendanceFilter() {
+      const dateEl = document.getElementById("filterAttendanceDate");
+      const classEl = document.getElementById("filterAttendanceClass");
+      const statusEl = document.getElementById("filterAttendanceStatus");
+      const searchEl = document.getElementById("filterAttendanceSearch");
+      if (dateEl) dateEl.value = "";
+      if (classEl) classEl.value = "";
+      if (statusEl) statusEl.value = "all";
+      if (searchEl) searchEl.value = "";
+      this.showToast("Filters reset to default", "info");
+      await this.renderRecentAttendance();
+    },
+
+    downloadAttendanceRecordsPdf() {
+      const records = this.currentAttendanceRecords || [];
+      if (records.length === 0) {
+        this.showToast("No attendance records to download. Try resetting search filters.", "warning");
+        return;
+      }
+      this.showToast("Generating Attendance PDF Report...", "info");
+
+      let rowsHtml = "";
+      records.forEach((r, idx) => {
+        rowsHtml += `
+          <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">
+            <td style="padding: 7px 9px;">${idx + 1}</td>
+            <td style="padding: 7px 9px; font-weight: 700;">${r.id}</td>
+            <td style="padding: 7px 9px;">${r.dateFormatted || r.date}</td>
+            <td style="padding: 7px 9px;"><span style="background:#EEF2FF; color:#4338CA; padding:2px 6px; border-radius:4px; font-weight:700;">${r.classId}</span></td>
+            <td style="padding: 7px 9px;"><strong>${r.subjectName}</strong> <div style="color:#64748B; font-size:9.5px;">${r.subjectCode || ''}</div></td>
+            <td style="padding: 7px 9px; text-align:center;">${r.presentCount} / ${r.totalStudents}</td>
+            <td style="padding: 7px 9px; text-align:center; font-weight:700; color:#0B5CAD;">${r.percentage}</td>
+            <td style="padding: 7px 9px; text-align:center;"><span style="background:${r.status==='Submitted'?'#DCFCE7':'#FEF3C7'}; color:${r.status==='Submitted'?'#166534':'#92400E'}; padding:2px 7px; border-radius:10px; font-weight:700; font-size:10px;">${r.status}</span></td>
+          </tr>
+        `;
+      });
+
+      const htmlContent = `
+        <div style="font-family: 'Inter', sans-serif; color: #0F172A; padding: 24px; max-width: 900px; margin: 0 auto; background: #fff;">
+          <div style="border-bottom: 2.5px solid #0B5CAD; padding-bottom: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h1 style="font-size: 17px; font-weight: 800; color: #0B1F3A; margin: 0;">SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING</h1>
+              <div style="font-size: 11.5px; font-weight: 600; color: #64748B;">SHEGAON, MAHARASHTRA • (An Autonomous Institute)</div>
+              <div style="font-size: 11px; font-weight: 700; color: #0B5CAD; text-transform: uppercase; margin-top: 3px;">CLASSROOM ATTENDANCE SESSIONS LOG REPORT</div>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #64748B;">
+              <div>Generated: <strong>${new Date().toLocaleString()}</strong></div>
+              <div>Total Records: <strong>${records.length}</strong></div>
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background: #0B1F3A; color: #fff; font-size: 11px; text-align: left;">
+                <th style="padding: 8px 9px;">#</th>
+                <th style="padding: 8px 9px;">Session ID</th>
+                <th style="padding: 8px 9px;">Date</th>
+                <th style="padding: 8px 9px;">Class</th>
+                <th style="padding: 8px 9px;">Subject</th>
+                <th style="padding: 8px 9px; text-align:center;">Attended</th>
+                <th style="padding: 8px 9px; text-align:center;">Rate</th>
+                <th style="padding: 8px 9px; text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #CBD5E1; font-size: 10.5px; color: #64748B; display: flex; justify-content: space-between;">
+            <span>SSGMCE Autonomous ERP • Faculty Attendance Management System</span>
+            <span>Digitally Verified & Validated via Supabase Cloud</span>
+          </div>
+        </div>
+      `;
+
+      this.openPrintDialog(htmlContent, `SSGMCE_Attendance_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+    },
+
+    async renderRecentAttendance(filters = {}) {
       let records = [];
       try {
-        records = await AttendanceService.getAllRecords();
+        records = await AttendanceService.getAllRecords(filters);
       } catch (e) {
         console.warn("Could not load recent attendance records:", e);
         records = [];
       }
+      this.currentAttendanceRecords = records;
       if (this.recentAttendanceTbody) {
         this.recentAttendanceTbody.innerHTML = "";
       }
@@ -1061,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         this.recentAttendanceTbody.innerHTML = `
           <tr>
             <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
-              No attendance records found yet.
+              No attendance records found matching criteria.
             </td>
           </tr>
         `;
@@ -1799,6 +1941,7 @@ document.addEventListener("DOMContentLoaded", () => {
             this.state.selectedDept.code,
             this.state.selectedClass.id
           );
+        }
         if (this.state.students && this.state.students.length > 0) {
           this.state.students.sort((a, b) => (a.roll || a.rollNo || 0) - (b.roll || b.rollNo || 0));
           if (this.state.selectedBatch) {

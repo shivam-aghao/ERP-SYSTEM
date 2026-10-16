@@ -115,35 +115,20 @@
     // -------------------------------------------------------------
     // 1. GET ALL ATTENDANCE RECORDS (LIVE DATABASE + FALLBACK)
     // -------------------------------------------------------------
-    async getAllRecords() {
+    async getAllRecords(filters = {}) {
       const apiBase = getApiBase();
       const localRecords = readLocalJson(LOCAL_RECORDS_KEY, []);
-      try {
-        if (window.ErpApi && typeof window.ErpApi.getRecords === 'function') {
-          const live = await window.ErpApi.getRecords();
-          if (Array.isArray(live) && live.length > 0) {
-            const mapped = live.map(r => ({
-              id: r.idDisplay || r.id_display || r.session_code || r.id,
-              department: r.departmentCode || r.department_code || "CSE",
-              departmentName: "Computer Science & Engineering",
-              classId: r.className || r.class_name || "3R",
-              subjectCode: r.subjectCode || r.subject_code,
-              subjectName: r.subjectName || r.subject_name,
-              date: r.sessionDate || r.session_date,
-              dateFormatted: r.dateFormatted || r.date_formatted || r.sessionDate || r.session_date,
-              totalStudents: r.totalStudents !== undefined ? r.totalStudents : (r.total_students || 0),
-              presentCount: r.presentCount !== undefined ? r.presentCount : (r.present_count || 0),
-              absentCount: r.absentCount !== undefined ? r.absentCount : ((r.total_students || 0) - (r.present_count || 0)),
-              percentage: `${r.attendanceRate !== undefined ? r.attendanceRate : (r.attendance_rate || 0)}%`,
-              attendanceRate: r.attendanceRate !== undefined ? r.attendanceRate : (r.attendance_rate || 0),
-              status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
-              savedAt: (r.createdAt || r.created_at) ? new Date(r.createdAt || r.created_at).toLocaleDateString() : "Recorded"
-            }));
-            return [...localRecords, ...mapped];
-          }
-        }
+      const qParams = new URLSearchParams();
+      qParams.set("limit", filters.limit || "100");
+      if (filters.className || filters.class_name) qParams.set("class_name", filters.className || filters.class_name);
+      if (filters.date) qParams.set("date", filters.date);
+      if (filters.status) qParams.set("status", filters.status);
+      if (filters.search) qParams.set("search", filters.search);
+      if (filters.teacherId || filters.teacher_id) qParams.set("teacher_id", filters.teacherId || filters.teacher_id);
+      if (filters.subjectCode || filters.subject_code) qParams.set("subject_code", filters.subjectCode || filters.subject_code);
 
-        const res = await fetch(`${apiBase}/attendance/records?limit=50`, {
+      try {
+        const res = await fetch(`${apiBase}/attendance/records?${qParams.toString()}`, {
           headers: getAuthHeaders()
         });
 
@@ -164,13 +149,13 @@
             absentCount: r.absent_count || 0,
             percentage: `${r.attendance_rate || 0}%`,
             attendanceRate: r.attendance_rate || 0,
-            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : "Draft",
+            status: (r.status || "SUBMITTED").toUpperCase() === "SUBMITTED" ? "Submitted" : (r.status || "Draft"),
             savedAt: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recorded"
           }));
-          return [...localRecords, ...mapped];
+          return mapped;
         }
       } catch (err) {
-        console.warn("[AttendanceService] Using local attendance records fallback:", err);
+        console.warn("[AttendanceService] Live query fallback:", err);
       }
       return localRecords;
     },
