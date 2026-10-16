@@ -19,6 +19,7 @@
 
   <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="../css/fees-module.css">
+  <link rel="stylesheet" href="../css/mobile-nav.css">
   <link rel="stylesheet" href="../css/toast.css">
   <script src="../js/toast.js"></script>
   <!-- Authentication Guard -->
@@ -1652,93 +1653,116 @@
           </div>
         </div>
 
-        <!-- 5. UPDATION OF INFORMATION MODULE -->
+        <!-- 5. UPDATION OF INFORMATION MODULE (CONNECTED TO LIVE STUDENT RECORDS DATA MODULE) -->
         <div class="module-content-pane" data-module="update-info">
+          <!-- Live Synced Status & Action Bar -->
+          <div class="updation-connection-bar" style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span id="updateInfoSyncBadge" class="badge-status-safe" style="font-size: 11.5px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                🟢 Live Synced with Student Records Data Module
+              </span>
+              <span id="updateInfoTotalCount" style="font-size: 12.5px; color: #475569; font-weight: 600;">
+                Loading records...
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm btn-primary" onclick="openAddUpdationModal()" style="font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; background: #0B5CAD; border: none; color: #fff; cursor: pointer;">
+                <span>➕</span> Add New Record
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="openStudentRecordReportModal()" style="font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid #0B5CAD; color: #0B5CAD; cursor: pointer;">
+                <span>📑</span> View in Student Records Report
+              </button>
+              <button type="button" class="btn btn-sm btn-light" onclick="hydrateStudentUpdationInfo(true)" title="Refresh from Database" style="font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid #CBD5E1; background: #fff; cursor: pointer;">
+                🔄
+              </button>
+            </div>
+          </div>
+
           <!-- Subtab 1: Industrial Visit -->
           <div class="subtab-pane active" data-subpane="industrial-visit">
-            <div class="pane-section-header">
-              <h4>Industrial Visits &amp; Practical Field Experiences</h4>
-              <span class="badge-status-safe">Autonomous Industrial Credit</span>
+            <div class="pane-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700;">Industrial Visits &amp; Practical Field Experiences</h4>
+                <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">Direct industry immersions and field study credits verified by department coordinator</p>
+              </div>
+              <span class="badge-status-safe" id="ivCreditsCountBadge">Autonomous Industrial Credit</span>
             </div>
-            <div class="iv-list">
-              <div class="iv-item-card">
-                <span class="iv-badge">Completed ✓</span>
-                <h5>Infosys Development Center &amp; Campus Tour (Pune Hinjewadi)</h5>
-                <p>3-day industrial study on Large Scale Enterprise Cloud Infrastructure and Agile DevOps pipelines.</p>
-                <span class="iv-date">Date: 12 - 14 Feb 2026 • Certificate Issued</span>
-              </div>
-              <div class="iv-item-card">
-                <span class="iv-badge badge-cyan">Upcoming</span>
-                <h5>Tata Consultancy Services (TCS) Mihan Innovation Hub (Nagpur)</h5>
-                <p>Industrial exposure on Autonomous AI Systems, Cybersecurity Operations, and Big Data Analytics.</p>
-                <span class="iv-date text-accent">Scheduled: April 2026 • Registration Confirmed</span>
-              </div>
+            <div class="iv-list" id="updateInfoIvList">
+              <div style="text-align: center; padding: 20px; color: #64748B;">Loading industrial visit records...</div>
             </div>
           </div>
 
           <!-- Subtab 2: Seminar -->
           <div class="subtab-pane" data-subpane="seminar">
-            <div class="info-form-card">
-              <h4>Technical Seminar Presentation Submission</h4>
-              <p>Third Year B.Tech Technical Seminar Topic Registration &amp; Mentor Allocation.</p>
-              <form class="academic-form" onsubmit="event.preventDefault(); showToast('Technical seminar topic registered successfully.', 'success')">
+            <div class="info-form-card" style="margin-bottom: 18px;">
+              <h4 style="margin: 0 0 4px 0; font-size: 1.05rem; font-weight: 700;">Technical Seminar Presentation Submission</h4>
+              <p style="margin: 0 0 14px 0; font-size: 0.8rem; color: var(--text-secondary);">Third Year B.Tech Technical Seminar Topic Registration &amp; Mentor Allocation. Automatically synchronizes with HOD &amp; Faculty Reports.</p>
+              <form class="academic-form" id="formUpdateSeminar" onsubmit="handleSeminarFormSubmit(event)">
                 <div class="form-group">
-                  <label>Seminar Topic Title</label>
-                  <input type="text" class="form-control" placeholder="Enter seminar topic title" required>
+                  <label style="font-weight: 600; font-size: 0.82rem;">Seminar Topic Title *</label>
+                  <input type="text" class="form-control" id="seminarTopicTitle" placeholder="e.g. Distributed Graph Neural Networks for Fraud Detection" required>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Allocated Guide / Faculty</label>
-                    <input type="text" class="form-control" placeholder="Allocated Faculty Guide" readonly>
+                    <label style="font-weight: 600; font-size: 0.82rem;">Allocated Guide / Faculty *</label>
+                    <input type="text" class="form-control" id="seminarGuideFaculty" placeholder="e.g. Dr. N. M. Kandoi" required>
                   </div>
                   <div class="form-group">
-                    <label>Seminar Stage</label>
-                    <input type="text" class="form-control" placeholder="Seminar Stage" readonly>
+                    <label style="font-weight: 600; font-size: 0.82rem;">Seminar Stage</label>
+                    <select class="form-control" id="seminarStageSelect">
+                      <option value="Stage I - Topic Approval">Stage I - Topic Approval</option>
+                      <option value="Stage II - Literature Review" selected>Stage II - Literature Review</option>
+                      <option value="Stage III - Technical Implementation">Stage III - Technical Implementation</option>
+                      <option value="Final Stage - Evaluation & Presentation">Final Stage - Evaluation & Presentation</option>
+                    </select>
                   </div>
                 </div>
-                <button type="submit" class="btn-submit-form">Update Seminar Details</button>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.82rem;">Seminar Registration / Credential Code</label>
+                    <input type="text" class="form-control" id="seminarCredentialId" placeholder="e.g. SEM-CSE-2026-037">
+                  </div>
+                  <div class="form-group">
+                    <label style="font-weight: 600; font-size: 0.82rem;">Presentation / Verification URL</label>
+                    <input type="url" class="form-control" id="seminarReportUrl" placeholder="https://verify.ssgmce.ac.in/seminar/...">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label style="font-weight: 600; font-size: 0.82rem;">Abstract / Topic Scope</label>
+                  <textarea class="form-control" id="seminarAbstract" rows="2" placeholder="Brief technical summary of methodology, algorithms, and application domain..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit-form" id="btnSubmitSeminar" style="background: #0B5CAD; color: #fff; font-weight: 700; border: none; padding: 9px 18px; border-radius: 6px; cursor: pointer;">
+                  Update &amp; Register Seminar Details
+                </button>
               </form>
+            </div>
+            <div class="pane-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">Registered Seminar Records</h4>
+              <span class="badge-status-safe" id="seminarStatusBadge">Verified</span>
+            </div>
+            <div id="updateInfoSeminarList" class="iv-list">
+              <div style="text-align: center; padding: 20px; color: #64748B;">Loading seminar submissions...</div>
             </div>
           </div>
 
           <!-- Subtab 3: Workshop -->
           <div class="subtab-pane" data-subpane="workshop">
-            <div class="pane-section-header">
-              <h4>Technical Workshops &amp; Skill Certifications</h4>
-              <span class="badge-status-safe">3 Completed</span>
+            <div class="pane-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700;">Technical Workshops &amp; Skill Certifications</h4>
+                <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">Hands-on boot camps, industry certifications, and authorized training completions</p>
+              </div>
+              <span class="badge-status-safe" id="workshopCountBadge">Completed</span>
             </div>
-            <div class="workshop-grid">
-              <div class="workshop-card">
-                <span class="ws-tag">Certification</span>
-                <h5>AWS Cloud Architect Practitioner Workshop</h5>
-                <p>3-day intensive boot camp covering EC2, S3, IAM, Lambda, and CloudFormation architectures.</p>
-                <span class="ws-hours">24 Hours • Issued by AWS Academy</span>
-              </div>
-              <div class="workshop-card">
-                <span class="ws-tag">Hands-on</span>
-                <h5>Generative AI &amp; LLM Engineering with Python</h5>
-                <p>Building Retrieval-Augmented Generation (RAG) pipelines, LangChain agents, and vector embeddings.</p>
-                <span class="ws-hours">16 Hours • SSGMCE ACM Student Chapter</span>
-              </div>
+            <div class="workshop-grid" id="updateInfoWorkshopGrid">
+              <div style="text-align: center; padding: 20px; color: #64748B;">Loading workshop certifications...</div>
             </div>
           </div>
 
           <!-- Subtab 4: Activities -->
           <div class="subtab-pane" data-subpane="activities">
-            <div class="aicte-activity-card">
-              <div class="activity-top">
-                <h4>AICTE 100 Activity Points Tracker</h4>
-                <span class="badge-status-safe">68 / 100 Points Earned</span>
-              </div>
-              <div class="progress-bar-wrap">
-                <div class="progress-fill" style="width: 68%;"></div>
-              </div>
-              <p class="progress-info">You need <strong>32 more activity points</strong> before Semester VIII to satisfy the B.Tech Autonomous degree award requirement.</p>
-              <div class="activity-breakdown-row">
-                <div class="act-pill">NSS &amp; Community Service: <strong>20 Pts</strong></div>
-                <div class="act-pill">Sports &amp; Cultural: <strong>18 Pts</strong></div>
-                <div class="act-pill">Technical Hackathons: <strong>30 Pts</strong></div>
-              </div>
+            <div id="updateInfoActivitiesContainer">
+              <div style="text-align: center; padding: 20px; color: #64748B;">Loading AICTE Activity Points Tracker...</div>
             </div>
           </div>
         </div>
@@ -3021,6 +3045,200 @@
     </div>
   </div>
 
+  <!-- Modal 1: Add New Updation Information Record -->
+  <div class="student-module-modal" id="modalAddUpdationRecord" role="dialog" aria-modal="true" aria-hidden="true" style="display: none; z-index: 10050;">
+    <div class="module-modal-overlay" onclick="closeAddUpdationModal()"></div>
+    <div class="module-modal-dialog" style="max-width: 620px; max-height: 90vh; overflow-y: auto; background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.25);">
+      <div class="module-modal-header" style="background: linear-gradient(135deg, #0B1F3A 0%, #0B5CAD 100%); color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+            📑
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff;">Add Student Updation Record</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #BAE6FD;">Synchronizes with Reports Section &amp; Student Records Data Module</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAddUpdationModal()" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 6px; line-height: 1;">&times;</button>
+      </div>
+
+      <div style="padding: 24px; background: #fff;">
+        <form id="formAddUpdationRecord" onsubmit="handleNewUpdationRecordSubmit(event)">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Record Category *</label>
+            <select class="form-control" id="newRecCategory" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;" onchange="handleCategoryFieldHints(this.value)">
+              <option value="industrial_visit">Industrial Visit &amp; Field Experience</option>
+              <option value="seminar">Technical Seminar Presentation</option>
+              <option value="workshop" selected>Technical Workshop &amp; Skill Certification</option>
+              <option value="activities">AICTE 100 Activity Points Tracker</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label id="lblNewRecTitle" style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Title / Course / Topic *</label>
+            <input type="text" class="form-control" id="newRecTitle" required placeholder="e.g. AWS Cloud Practitioner Boot Camp" style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+          </div>
+
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label id="lblNewRecOrg" style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Issuing Authority / Company *</label>
+              <input type="text" class="form-control" id="newRecOrg" required placeholder="e.g. AWS Academy / TCS" style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+            </div>
+            <div class="form-group">
+              <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Date / Timeline *</label>
+              <input type="text" class="form-control" id="newRecDate" required placeholder="e.g. 15 - 18 March 2026" style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+            </div>
+          </div>
+
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Points / Hours / Score</label>
+              <input type="text" class="form-control" id="newRecScore" placeholder="e.g. 24 Hours / 20 Pts / Grade A" style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+            </div>
+            <div class="form-group">
+              <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Credential ID / Reg No.</label>
+              <input type="text" class="form-control" id="newRecCredId" placeholder="e.g. CERT-2026-904" style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Verification / Certificate Link (Optional)</label>
+            <input type="url" class="form-control" id="newRecUrl" placeholder="https://..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label style="display: block; font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 6px;">Description / Learning Summary</label>
+            <textarea class="form-control" id="newRecDesc" rows="3" placeholder="Brief technical summary or scope of activities..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #CBD5E1; border-radius: 6px; font-size: 13.5px;"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+            <button type="button" onclick="closeAddUpdationModal()" class="btn btn-sm btn-light" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #475569; font-weight: 600; cursor: pointer;">Cancel</button>
+            <button type="submit" id="btnSaveUpdationRecord" class="btn btn-sm btn-primary" style="padding: 8px 20px; border-radius: 6px; border: none; background: #0B5CAD; color: #fff; font-weight: 700; cursor: pointer;">
+              Save &amp; Sync Record
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Official Student Records Data Module & Attendance Report Preview -->
+  <div class="student-module-modal" id="modalStudentRecordReport" role="dialog" aria-modal="true" aria-hidden="true" style="display: none; z-index: 10040;">
+    <div class="module-modal-overlay" onclick="closeStudentRecordReportModal()"></div>
+    <div class="module-modal-dialog" style="max-width: 860px; max-height: 92vh; overflow-y: auto; background: #fff; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0B1F3A 0%, #0B5CAD 100%); color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+            🎓
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff;">Official Student Records Report</h3>
+            <p style="margin: 2px 0 0; font-size: 12px; color: #BAE6FD;">Authoritative Academic Attendance &amp; Student Data Corner (Live PostgreSQL)</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeStudentRecordReportModal()" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 6px; line-height: 1;">&times;</button>
+      </div>
+
+      <div style="padding: 22px; background: #fff;" id="modalStudentRecordReportContent">
+        <!-- Student Header Card -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div id="stRepAvatar" style="width: 52px; height: 52px; border-radius: 50%; background: #0B5CAD; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700;">
+              ST
+            </div>
+            <div>
+              <h3 id="stRepName" style="margin: 0; font-size: 17px; font-weight: 800; color: #0F172A;">Loading Student...</h3>
+              <div style="font-size: 12.5px; color: #64748B; margin-top: 3px;">
+                Roll No: <strong id="stRepRoll" style="color: #0F172A;">--</strong> &bull;
+                Code: <strong id="stRepCode" style="color: #0F172A;">--</strong> &bull;
+                Class: <strong id="stRepClass" style="color: #0F172A;">--</strong>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B; font-weight: 700;">Overall Attendance</div>
+            <div id="stRepOverallPct" style="font-size: 26px; font-weight: 800; color: #059669;">--%</div>
+            <div id="stRepOverallStatus" style="font-size: 11px; font-weight: 700; color: #059669;">ELIGIBLE</div>
+          </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 22px;">
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 11.5px; color: #64748B; font-weight: 600;">Total Conducted</div>
+            <div id="stRepTotalConducted" style="font-size: 20px; font-weight: 800; color: #0F172A; margin-top: 2px;">--</div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 11.5px; color: #64748B; font-weight: 600;">Lectures Attended</div>
+            <div id="stRepTotalAttended" style="font-size: 20px; font-weight: 800; color: #059669; margin-top: 2px;">--</div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 11.5px; color: #64748B; font-weight: 600;">Lectures Absent</div>
+            <div id="stRepTotalAbsent" style="font-size: 20px; font-weight: 800; color: #DC2626; margin-top: 2px;">--</div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 11.5px; color: #64748B; font-weight: 600;">Shortage Subjects</div>
+            <div id="stRepShortageCount" style="font-size: 20px; font-weight: 800; color: #D97706; margin-top: 2px;">0</div>
+          </div>
+        </div>
+
+        <!-- Section 1: Subject-wise Breakdown Table -->
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin: 0 0 10px 0;">
+            📚 Subject-Wise Attendance Breakdown
+          </h4>
+          <div style="border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+              <thead style="background: #0B5CAD; color: #fff;">
+                <tr>
+                  <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Code</th>
+                  <th style="padding: 10px 12px; text-align: left; font-weight: 600;">Subject Name</th>
+                  <th style="padding: 10px 12px; text-align: center; font-weight: 600;">Total</th>
+                  <th style="padding: 10px 12px; text-align: center; font-weight: 600;">Attended</th>
+                  <th style="padding: 10px 12px; text-align: right; font-weight: 600;">Percentage</th>
+                </tr>
+              </thead>
+              <tbody id="stRepSubjectTableBody">
+                <!-- Dynamically rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 2: Student Data Corner (Certificates & Updation Records) -->
+        <div style="margin-bottom: 24px; background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="font-size: 14.5px; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>🎓 Student Data Corner (Certifications, Industrial Visits &amp; Seminars)</span>
+            </h4>
+            <span id="stRepCertsCount" style="font-size: 11px; background: #DBEAFE; color: #1E40AF; padding: 3px 9px; border-radius: 10px; font-weight: 700;">
+              0 Records
+            </span>
+          </div>
+          <div id="stRepCertificatesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
+            <!-- Dynamically rendered -->
+          </div>
+        </div>
+
+        <!-- Actions Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #E2E8F0; flex-wrap: wrap; gap: 10px;">
+          <span style="font-size: 11.5px; color: #64748B;">
+            Verified Autonomous Institute Academic Record &bull; Generated Live
+          </span>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="closeStudentRecordReportModal()" class="btn btn-sm btn-light" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #475569; font-weight: 600; cursor: pointer;">
+              Close
+            </button>
+            <button type="button" onclick="downloadStudentRecordReportPdf()" class="btn btn-sm btn-primary" style="padding: 8px 20px; border-radius: 6px; border: none; background: #0B5CAD; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>📥</span> Download Official Student Attendance Record (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
 
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
@@ -3029,5 +3247,6 @@
   <script src="../js/student-api.js"></script>
   <script src="../js/student-dashboard.js"></script>
   <script src="../js/fees-module.js"></script>
+  <script src="../js/mobile-nav.js"></script>
 </body>
 </html>

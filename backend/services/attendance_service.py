@@ -822,6 +822,69 @@ class AttendanceService:
             sub_names = ", ".join(s["subject_code"] for s in shortage_subjects)
             warning_msg = f"Subject Shortage Warning: Your attendance is below 75% in {len(shortage_subjects)} subject(s) ({sub_names}). Regular attendance is required to avoid exam debarment."
 
+        # 4. Fetch Student Certificates & Portfolio Updation Records
+        cert_records = []
+        try:
+            cert_rows = db.execute(text("""
+                SELECT id, title, certificate_type, issued_by,
+                       issue_date, verification_code, status
+                FROM student_certificates
+                WHERE student_id = CAST(:suid AS UUID) OR student_id::text = :sc
+                ORDER BY issue_date DESC
+            """), {"sc": target_code, "suid": student_uuid if student_uuid else "00000000-0000-0000-0000-000000000000"}).fetchall()
+
+            for cr in cert_rows:
+                cm = dict(cr._mapping)
+                d_str = cm["issue_date"].strftime("%b %Y") if hasattr(cm["issue_date"], "strftime") else str(cm["issue_date"] or "")
+                cert_records.append({
+                    "id": str(cm["id"]),
+                    "title": cm["title"],
+                    "type": cm["certificate_type"] or "Certificate",
+                    "issuing_authority": cm.get("issued_by") or "SSGMCE Shegaon",
+                    "issue_date": d_str,
+                    "credential_id": cm.get("verification_code") or "VERIFIED",
+                    "score": cm.get("status") or "Valid",
+                    "url": f"https://verify.ssgmce.ac.in/cert/{cm.get('verification_code', '')}",
+                    "source": "certificate"
+                })
+        except Exception as e_cert:
+            logger.warning("Notice querying student_certificates: %s", e_cert)
+
+        try:
+            upd_rows = db.execute(text("""
+                SELECT id, category, title, organization, description,
+                       event_date, status, credential_id, score_or_points, certificate_url
+                FROM student_updation_records
+                WHERE student_code = :sc OR student_id = :suid OR student_id = :sc
+                ORDER BY created_at DESC
+            """), {"sc": target_code, "suid": str(student_uuid) if student_uuid else target_code}).fetchall()
+
+            for ur in upd_rows:
+                um = dict(ur._mapping)
+                cat_label = {
+                    "industrial_visit": "Industrial Visit",
+                    "seminar": "Technical Seminar",
+                    "workshop": "Workshop & Skills",
+                    "activities": "AICTE Activity"
+                }.get(um["category"], um["category"].replace("_", " ").title())
+
+                cert_records.append({
+                    "id": str(um["id"]),
+                    "title": um["title"],
+                    "type": cat_label,
+                    "issuing_authority": um.get("organization") or "Accredited Body",
+                    "issue_date": um.get("event_date") or "",
+                    "credential_id": um.get("credential_id") or "VERIFIED-RECORD",
+                    "score": um.get("score_or_points") or um.get("status") or "Verified",
+                    "url": um.get("certificate_url") or "",
+                    "description": um.get("description") or "",
+                    "status": um.get("status") or "COMPLETED",
+                    "category": um["category"],
+                    "source": "updation_info"
+                })
+        except Exception as e_upd:
+            logger.warning("Notice querying student_updation_records: %s", e_upd)
+
         return {
             "student_code": target_code,
             "student_name": student_name,
@@ -842,7 +905,9 @@ class AttendanceService:
             "subjectWise": subjects_list,
             "shortage_subjects": shortage_subjects,
             "monthly_attendance": monthly_list,
-            "lecture_history": lecture_history
+            "lecture_history": lecture_history,
+            "certifications": cert_records,
+            "updation_records": cert_records
         }
 
     # =========================================================================
