@@ -473,10 +473,16 @@ class AttendanceService:
             stu_cache[k] = res
             return res
 
-        # Insert student attendance records
+        # Insert student attendance records and prepare student notifications
+        notif_items = []
         for sid in present_set:
             rec_id = str(uuid.uuid4())
             stu_uuid, stu_code = resolve_stu(sid)
+            notif_items.append({
+                "student_id": stu_uuid,
+                "student_code": stu_code,
+                "is_present": True
+            })
 
             db.execute(text("""
                 INSERT INTO attendance_records (
@@ -541,6 +547,11 @@ class AttendanceService:
         for sid in absent_set:
             rec_id = str(uuid.uuid4())
             stu_uuid, stu_code = resolve_stu(sid)
+            notif_items.append({
+                "student_id": stu_uuid,
+                "student_code": stu_code,
+                "is_present": False
+            })
 
             db.execute(text("""
                 INSERT INTO attendance_records (
@@ -601,6 +612,44 @@ class AttendanceService:
                 except Exception as e_att:
                     logger.debug("Notice syncing legacy attendance row: %s", e_att)
 
+        # Sync attendance stats and dispatch automated student notifications
+        dispatched_count = 0
+        try:
+            stats_rows = db.execute(text("""
+                SELECT student_code, CAST(student_id AS TEXT), present_periods, total_periods
+                FROM student_attendance_subjects
+                WHERE (subject_code = :scode_val OR subject_name = :sname)
+            """), {"scode_val": subject_code, "sname": subject_name}).fetchall()
+            stats_map = {}
+            for r in stats_rows:
+                pct = round((r[2] / r[3] * 100), 1) if (r[3] and r[3] > 0) else None
+                if r[0]:
+                    stats_map[str(r[0])] = pct
+                if r[1]:
+                    stats_map[str(r[1])] = pct
+
+            for it in notif_items:
+                sc = it.get("student_code")
+                su = it.get("student_id")
+                it["percentage"] = stats_map.get(str(sc)) or stats_map.get(str(su))
+
+            from backend.services.notification_service import NotificationService
+            dispatched_count = NotificationService.dispatch_attendance_notifications(
+                session_id=sess_id,
+                class_id=actual_class_id,
+                class_name=class_name,
+                subject_id=actual_subject_id,
+                subject_code=subject_code,
+                subject_name=subject_name,
+                session_date=payload.session_date,
+                period_number=payload.period_number,
+                attendance_items=notif_items,
+                teacher_id=teacher_uuid,
+                db=db
+            )
+        except Exception as e_notif:
+            logger.warning("Notice on dispatching attendance notifications: %s", e_notif)
+
         db.commit()
 
         # Audit Log
@@ -615,7 +664,8 @@ class AttendanceService:
                 "status": "SUBMITTED",
                 "present_count": pres_count,
                 "absent_count": abs_count,
-                "rate": rate
+                "rate": rate,
+                "notifications_dispatched": dispatched_count
             },
             reason=f"Attendance submitted for {class_name} - {subject_code} (Period {payload.period_number})",
             db=db
@@ -629,7 +679,8 @@ class AttendanceService:
             "total_students": total_count,
             "present_count": pres_count,
             "absent_count": abs_count,
-            "attendance_rate": rate
+            "attendance_rate": rate,
+            "notifications_dispatched": dispatched_count
         }
 
     # =========================================================================

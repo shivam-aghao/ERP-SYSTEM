@@ -959,7 +959,75 @@
   }
 
   /* ==========================================================================
-     9. MOBILE DRAWER, PROFILE, AND ACTION BUTTONS
+     9. LIVE NOTIFICATIONS & DROPDOWN ENGINE
+     ========================================================================== */
+  async function loadStudentAttendanceNotifications() {
+    const studentCode = '308637';
+    try {
+      const res = await fetch(`/api/v1/notifications/list?user_id=${encodeURIComponent(studentCode)}&limit=15`);
+      const json = await res.json();
+      const notifs = (json && json.data) ? json.data : [];
+
+      const notifBadge = document.querySelector('.notif-badge');
+      const unreadTag = document.querySelector('.unread-tag');
+      const notifList = document.querySelector('.notif-list');
+
+      const unreadCount = notifs.filter(n => !n.is_read).length;
+      if (notifBadge) {
+        notifBadge.textContent = unreadCount;
+        notifBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+      }
+      if (unreadTag) {
+        unreadTag.textContent = `${unreadCount} New`;
+      }
+
+      if (notifList) {
+        if (notifs.length === 0) {
+          notifList.innerHTML = `
+            <li class="notif-item" style="padding:16px; text-align:center; color:#64748B;">
+              <p style="margin:0; font-size:12px;">No notifications yet.</p>
+            </li>
+          `;
+          return;
+        }
+
+        notifList.innerHTML = notifs.map(n => {
+          const isUnread = !n.is_read;
+          const prio = (n.priority || 'normal').toLowerCase();
+          let bulletClass = 'bg-primary';
+          if (prio === 'urgent') bulletClass = 'bg-error';
+          else if (prio === 'high') bulletClass = 'bg-warning';
+          else if (n.notification_type === 'attendance') bulletClass = 'bg-success';
+
+          const timeStr = n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+
+          return `
+            <li class="notif-item ${isUnread ? 'unread' : ''}" style="cursor:pointer; padding:10px 14px; border-bottom:1px solid #f1f5f9; display:flex; gap:10px; align-items:flex-start;" onclick="markSingleNotifRead('${n.notification_id || n.id}')">
+              <span class="notif-bullet ${bulletClass}" style="width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0;"></span>
+              <div class="notif-info" style="flex:1;">
+                <p class="notif-msg" style="margin:0; font-size:12px; font-weight:${isUnread ? '700' : '500'}; color:#1e293b;">${n.title || 'Attendance Notification'}</p>
+                <p style="margin:3px 0 0; font-size:11.5px; color:#64748B; line-height:1.3;">${n.message || ''}</p>
+                <span class="notif-time" style="font-size:10.5px; color:#94a3b8; display:block; margin-top:2px;">${timeStr} • Academic Cell</span>
+              </div>
+            </li>
+          `;
+        }).join('');
+      }
+    } catch (e) {
+      console.warn('loadStudentAttendanceNotifications error:', e);
+    }
+  }
+
+  window.markSingleNotifRead = async function(notifId) {
+    if (!notifId) return;
+    try {
+      await fetch(`/api/v1/notifications/mark-read/${encodeURIComponent(notifId)}?user_id=308637`, { method: 'POST' });
+      loadStudentAttendanceNotifications();
+    } catch (e) {}
+  };
+
+  /* ==========================================================================
+     10. MOBILE DRAWER, PROFILE, AND ACTION BUTTONS
      ========================================================================== */
   function initMobileNavAndDropdowns() {
     // Mobile Drawer Toggle
@@ -992,33 +1060,59 @@
 
     // Profile Dropdown
     const profileBtn = document.getElementById('profileBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    if (profileBtn && profileDropdown) {
+    const profilePanel = document.getElementById('profilePanel');
+    if (profileBtn && profilePanel) {
       profileBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        profileDropdown.classList.toggle('active');
+        const isOpen = profilePanel.classList.toggle('open');
+        profileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
     }
 
     // Notifications Dropdown
     const notifBtn = document.getElementById('notifBtn');
-    const notifDropdown = document.getElementById('notifDropdown');
-    if (notifBtn && notifDropdown) {
+    const notifPanel = document.getElementById('notifPanel');
+    if (notifBtn && notifPanel) {
       notifBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        notifDropdown.classList.toggle('active');
+        const isOpen = notifPanel.classList.toggle('open');
+        notifBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (isOpen) {
+          loadStudentAttendanceNotifications();
+        }
+      });
+    }
+
+    // Mark All Read Button
+    const markAllBtn = document.getElementById('markAllReadBtn');
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          await fetch('/api/v1/notifications/mark-all-read?user_id=308637', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+          });
+          loadStudentAttendanceNotifications();
+        } catch (err) {}
       });
     }
 
     // Close dropdowns on outside click
     document.addEventListener('click', (e) => {
-      if (profileDropdown && !profileDropdown.contains(e.target) && e.target !== profileBtn) {
-        profileDropdown.classList.remove('active');
+      if (profilePanel && !profilePanel.contains(e.target) && e.target !== profileBtn) {
+        profilePanel.classList.remove('open');
+        if (profileBtn) profileBtn.setAttribute('aria-expanded', 'false');
       }
-      if (notifDropdown && !notifDropdown.contains(e.target) && e.target !== notifBtn) {
-        notifDropdown.classList.remove('active');
+      if (notifPanel && !notifPanel.contains(e.target) && e.target !== notifBtn) {
+        notifPanel.classList.remove('open');
+        if (notifBtn) notifBtn.setAttribute('aria-expanded', 'false');
       }
     });
+
+    // Initial load of live notifications
+    loadStudentAttendanceNotifications();
 
     // Action buttons
     const btnExport = document.getElementById('btnExportPDF');

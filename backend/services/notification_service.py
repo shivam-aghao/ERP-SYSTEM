@@ -6,11 +6,13 @@ Unified Autonomous Notification & Alert Service connecting to Supabase Cloud
 """
 
 import json
+import uuid
 import logging
 import urllib.parse
 import urllib.request
 import urllib.error
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
+from sqlalchemy import text
 from backend.config.settings import settings
 
 logger = logging.getLogger("notification_service")
@@ -363,3 +365,163 @@ class NotificationService:
             "p_subject_name": subject_name,
             "p_percentage": float(percentage)
         })
+
+    @classmethod
+    def dispatch_attendance_notifications(
+        cls,
+        session_id: str,
+        class_id: Optional[str],
+        class_name: str,
+        subject_id: Optional[str],
+        subject_code: str,
+        subject_name: str,
+        session_date: str,
+        period_number: Any,
+        attendance_items: List[Dict[str, Any]],
+        teacher_id: Optional[str] = None,
+        db: Optional[Any] = None
+    ) -> int:
+        """
+        Dispatches individual notifications to students when attendance is submitted by a teacher.
+        - Notifies both Present and Absent students.
+        - Provides Subject, Date, Period, Status, and Current Attendance Percentage.
+        - Marks shortage alerts (<75%) as Urgent.
+        - Persists to notifications & notification_recipients tables.
+        - Broadcasts real-time WebSocket alert to active student sessions.
+        """
+        delivered_count = 0
+        if not attendance_items:
+            return 0
+
+        # Helper to emit WebSocket ping to student clients
+        def _emit_ws(uid: str, payload: dict):
+            try:
+                from backend.routes.notifications import ws_hub
+                import asyncio
+                import threading
+
+                def _send():
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        loop.run_until_complete(ws_hub.send_to_user(str(uid), payload))
+                        loop.close()
+                    except Exception:
+                        pass
+
+                threading.Thread(target=_send, daemon=True).start()
+            except Exception:
+                pass
+
+        for item in attendance_items:
+            stu_id = item.get("student_id")
+            stu_code = item.get("student_code") or ""
+            is_pres = bool(item.get("is_present"))
+            pct = item.get("percentage")
+
+            if not stu_id:
+                stu_id = cls.resolve_user_id(stu_code)
+            if not stu_id or len(str(stu_id)) != 36:
+                continue
+
+            status_text = "PRESENT" if is_pres else "ABSENT"
+            pct_str = f" Subject Attendance: {pct}%." if pct is not None else ""
+
+            if is_pres:
+                title = "Attendance Recorded: Present"
+                message = f"You were marked PRESENT for {subject_name} ({subject_code}) on {session_date} (Period {period_number}).{pct_str}"
+                priority = "normal"
+            else:
+                if pct is not None and float(pct) < 75.0:
+                    title = f"⚠️ Attendance Alert: Shortage Risk ({pct}%)"
+                    message = f"You were marked ABSENT for {subject_name} ({subject_code}) on {session_date} (Period {period_number}). Your attendance has fallen to {pct}%, below the mandatory 75% requirement."
+                    priority = "urgent"
+                else:
+                    title = "Attendance Notice: Marked Absent"
+                    message = f"You were marked ABSENT for {subject_name} ({subject_code}) on {session_date} (Period {period_number}).{pct_str}"
+                    priority = "high"
+
+            meta = {
+                "type": "attendance_submission",
+                "session_id": str(session_id),
+                "subject_code": subject_code,
+                "subject_name": subject_name,
+                "class_name": class_name,
+                "session_date": str(session_date),
+                "period_number": period_number,
+                "status": status_text,
+                "percentage": pct
+            }
+
+            notif_uuid = str(uuid.uuid4())
+            rec_uuid = str(uuid.uuid4())
+
+            if db:
+                try:
+                    db.execute(text("""
+                        INSERT INTO notifications (
+                            id, notification_type, title, message, priority, sender_id,
+                            action_url, entity_type, entity_id, metadata, class_id, class_name, created_at
+                        ) VALUES (
+                            CAST(:id AS UUID), 'attendance', :title, :message, :priority, CAST(:sender_id AS UUID),
+                            '/student-attendance.html', 'attendance_session', CAST(:entity_id AS UUID),
+                            CAST(:metadata AS JSONB), CAST(:class_id AS UUID), :class_name, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": notif_uuid,
+                        "title": title,
+                        "message": message,
+                        "priority": priority,
+                        "sender_id": teacher_id if (teacher_id and len(str(teacher_id)) == 36) else None,
+                        "entity_id": session_id if (session_id and len(str(session_id)) == 36) else None,
+                        "metadata": json.dumps(meta),
+                        "class_id": class_id if (class_id and len(str(class_id)) == 36) else None,
+                        "class_name": class_name
+                    })
+
+                    db.execute(text("""
+                        INSERT INTO notification_recipients (
+                            id, notification_id, recipient_id, delivered_at, created_at
+                        ) VALUES (
+                            CAST(:id AS UUID), CAST(:notif_id AS UUID), CAST(:recipient_id AS UUID), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": rec_uuid,
+                        "notif_id": notif_uuid,
+                        "recipient_id": str(stu_id)
+                    })
+                    delivered_count += 1
+                except Exception as e_sql:
+                    logger.warning("Error saving attendance notification for student %s: %s", stu_id, e_sql)
+            else:
+                res = cls.create_notification(
+                    notification_type="attendance",
+                    title=title,
+                    message=message,
+                    priority=priority,
+                    sender_id=teacher_id,
+                    action_url="/student-attendance.html",
+                    target_type="user",
+                    target_id=str(stu_id),
+                    entity_type="attendance_session",
+                    entity_id=str(session_id) if session_id else None,
+                    metadata=meta
+                )
+                if res:
+                    delivered_count += 1
+
+            ws_payload = {
+                "event": "new_notification",
+                "notification_id": notif_uuid,
+                "title": title,
+                "message": message,
+                "priority": priority,
+                "notification_type": "attendance",
+                "action_url": "/student-attendance.html",
+                "status": status_text
+            }
+            if stu_code:
+                _emit_ws(stu_code, ws_payload)
+            _emit_ws(str(stu_id), ws_payload)
+
+        return delivered_count

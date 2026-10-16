@@ -264,27 +264,17 @@ def get_day_wise_attendance(
     db: Session = Depends(get_db)
 ):
     """GET /api/v1/attendance/student/{student_id}/day-wise - Day-wise attendance records."""
-<<<<<<< HEAD
     # Resolve student UUID and student_code
     st_row = db.execute(text("""
-        SELECT id, student_code FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s
+        SELECT id, student_code FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s OR LOWER(full_name) = LOWER(:s)
         UNION
-        SELECT id, roll_no FROM users WHERE id::text = :s OR roll_no = :s OR email = :s
+        SELECT id, roll_no FROM users WHERE id::text = :s OR roll_no = :s OR email = :s OR LOWER(full_name) = LOWER(:s)
         LIMIT 1
     """), {"s": str(student_id).strip()}).fetchone()
-=======
-    st_row = db.execute(text("""
-        SELECT id FROM users WHERE CAST(id AS TEXT) = :s OR roll_no = :s OR email = :s OR LOWER(full_name) = LOWER(:s) OR LOWER(full_name) LIKE LOWER(:sp)
-        UNION
-        SELECT id FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s OR LOWER(full_name) = LOWER(:s) OR LOWER(full_name) LIKE LOWER(:sp)
-        LIMIT 1
-    """), {"s": student_id, "sp": f"%{student_id}%"}).fetchone()
->>>>>>> 7698f21d09d61c93e9983e0cb017996839100e02
     
     sid = str(st_row[0]) if st_row else str(student_id).strip()
     scode = str(st_row[1]) if (st_row and len(st_row) > 1 and st_row[1]) else str(student_id).strip()
 
-<<<<<<< HEAD
     # Query attendance_records joined with attendance_sessions (authoritative live source)
     query_records = """
         SELECT ar.id, ass.session_date as date, ar.status, 
@@ -296,16 +286,6 @@ def get_day_wise_attendance(
         WHERE (ar.student_id::text = :sid OR ar.student_code = :scode OR ar.student_code = :orig)
     """
     params = {"sid": sid, "scode": scode, "orig": str(student_id).strip()}
-=======
-    query = """
-        SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
-               s.name as subject_name, s.code as subject_code
-        FROM attendance a
-        LEFT JOIN subjects s ON a.subject_id = s.id
-        WHERE (a.student_id::text = :sid OR a.student_id::text = :orig_s)
-    """
-    params = {"sid": sid, "orig_s": student_id}
->>>>>>> 7698f21d09d61c93e9983e0cb017996839100e02
     if subject_id:
         query_records += " AND (CAST(ass.subject_id AS TEXT) = :sub OR ass.subject_code = :sub OR ass.subject_name ILIKE :sub_like)"
         params["sub"] = subject_id
@@ -330,32 +310,6 @@ def get_day_wise_attendance(
         legacy_query += " ORDER BY a.date ASC"
         rows = db.execute(text(legacy_query), leg_params).fetchall()
 
-<<<<<<< HEAD
-=======
-    rows = db.execute(text(query), params).fetchall()
-
-    if len(rows) == 0:
-        alt_query = """
-            SELECT ar.id, ass.session_date as date,
-                   (CASE WHEN ar.is_present THEN 'PRESENT' ELSE 'ABSENT' END) as status,
-                   COALESCE(ass.session_type, 'REGULAR') as period_type,
-                   ass.subject_id,
-                   ass.subject_name,
-                   ass.subject_code
-            FROM attendance_records ar
-            JOIN attendance_sessions ass ON ar.session_id = ass.id
-            WHERE (ar.student_id::text = :sid OR ar.student_code = :orig_s OR ar.student_id::text = :orig_s)
-        """
-        alt_params = {"sid": sid, "orig_s": student_id}
-        if subject_id:
-            alt_query += " AND ass.subject_id::text = :sub"
-            alt_params["sub"] = subject_id
-        alt_query += " ORDER BY ass.session_date ASC"
-        alt_rows = db.execute(text(alt_query), alt_params).fetchall()
-        if alt_rows:
-            rows = alt_rows
-
->>>>>>> 7698f21d09d61c93e9983e0cb017996839100e02
     return success_response([dict(r._mapping) for r in rows])
 
 
