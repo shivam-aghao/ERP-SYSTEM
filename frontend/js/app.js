@@ -1536,6 +1536,7 @@ const TeacherApp = {
     if (cardEl) cardEl.style.display = "none";
     this.renderNotificationsList();
   },
+
   async handleNotificationClick(id) {
     const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
     if (notif) {

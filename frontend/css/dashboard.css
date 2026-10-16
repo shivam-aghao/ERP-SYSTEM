@@ -6458,60 +6458,15 @@ img {
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .profile-summary-top {
                 flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-                padding: 24px 20px;
-            }
-
-            .profile-image-container {
-                margin: 0 auto 14px auto;
-            }
-
-            .profile-info {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-                min-width: 0;
+                align-items: flex-start;
+                padding: 20px;
             }
 
             .profile-info h2 {
-                text-align: center;
-                width: 100%;
-                margin-left: auto;
-                margin-right: auto;
                 font-size: 1.25rem;
-            }
-
-            .profile-id {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 12px auto;
-                text-align: center;
-            }
-
-            .profile-details,
-            .profile-info-details {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                margin-left: auto;
-                margin-right: auto;
-                width: 100%;
-            }
-
-            .profile-detail {
-                justify-content: center;
-                text-align: center;
             }
 
             .profile-info-item {

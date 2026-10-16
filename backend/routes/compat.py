@@ -539,3 +539,16 @@ def compat_mgmt_reports_classes(current_user: Optional[AuthenticatedUser] = Depe
 def compat_mgmt_reports_faculty(current_user: Optional[AuthenticatedUser] = Depends(get_optional_user)):
     """Deprecated. Canonical: GET /api/v1/admin/reports/faculty"""
     return get_faculty_report(current_user)
+
+@router.get("/reports/student/{identifier}")
+def compat_student_report(identifier: str, current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: GET /api/v1/attendance/reports/student/{identifier}"""
+    from backend.routes.attendance import get_student_attendance_report_by_id
+    return get_student_attendance_report_by_id(identifier, current_user, db)
+
+@router.get("/reports/teacher-classes")
+def compat_teacher_classes_report(request: Request, emp_code: Optional[str] = Query(None), teacher_id: Optional[str] = Query(None), class_code: Optional[str] = Query(None), semester: Optional[str] = Query(None), current_user: Optional[AuthenticatedUser] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Deprecated. Canonical: GET /api/v1/teachers/reports/teacher-classes"""
+    from backend.routes.teachers import get_teacher_classes_report
+    return get_teacher_classes_report(request, teacher_id, emp_code, class_code, semester, current_user, db)
+
