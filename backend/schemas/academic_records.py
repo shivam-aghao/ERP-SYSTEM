@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — ACADEMIC RECORDS & MARKS SCHEMAS
+SSGMCE COLLEGE ERP - ACADEMIC RECORDS & MARKS SCHEMAS
 Standardized Pydantic Request & Response Models for Marks Entry, Locking,
 Publication, Revaluation, and Institutional Reporting
 ================================================================================

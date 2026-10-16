@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — FastAPI Authentication & Role Authorization Dependencies
+SSGMCE College ERP - FastAPI Authentication & Role Authorization Dependencies
 Enforces cryptographic JWT token verification and server-side RBAC role gating.
 NEVER trusts client-provided query parameters or browser storage.
 """

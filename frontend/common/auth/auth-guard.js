@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Central Page-Level Authorization Guard
+ * SSGMCE College ERP - Central Page-Level Authorization Guard
  * frontend/common/auth/auth-guard.js
  *
  * Prevents unauthorized page access and privilege escalation.

@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Role × Permission Matrix
+SSGMCE College ERP - Role × Permission Matrix
 backend/rbac/matrix.py
 
 Defines the explicit Role-Based Access Control matrix across all ERP roles and permissions.

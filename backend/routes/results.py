@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL RESULTS & ACADEMIC RECORDS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL RESULTS & ACADEMIC RECORDS ROUTER
 Namespace: /api/v1/results/...
 Authoritative Academic Results, Semester Grade Sheets, Marks Publishing,
 Locking Governance, Revaluation Lifecycle, and Institutional Reporting

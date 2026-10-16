@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 6: STUDENT ACADEMIC RECORDS & DIGITAL WALLET ROUTES
+SSGMCE COLLEGE ERP - STEP 6: STUDENT ACADEMIC RECORDS & DIGITAL WALLET ROUTES
 FastAPI REST Routes providing end-to-end Student, Teacher & Admin functionality
 ================================================================================
 """

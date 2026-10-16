@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Centralized Configuration
+ * SSGMCE College ERP - Centralized Configuration
  * Sets up global API base URLs, Supabase configurations, and storage keys.
  */
 (function (window) {

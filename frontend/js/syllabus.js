@@ -406,7 +406,7 @@ function renderSyllabus(code) {
         <div class="syllabus-hero">
             <div class="code">${subject.code} · ${subject.type}</div>
             <h3>${subject.name}</h3>
-            <p>B.Tech ${subject.dept === 'CSE' ? 'Computer Science & Engineering' : subject.dept} · ${subject.semester} · Academic Year 2026–27</p>
+            <p>B.Tech ${subject.dept === 'CSE' ? 'Computer Science & Engineering' : subject.dept} · ${subject.semester} · Academic Year 2026-27</p>
             <div style="margin-top:10px; display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.22); padding:5px 14px; border-radius:20px; font-size:12px; font-weight:500;">
                 <i class="fa-solid fa-chalkboard-user"></i> Faculty Instructor: <strong>${subject.faculty}</strong> (${subject.facultyRole})
             </div>

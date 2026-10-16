@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SSGMCE AUTONOMOUS COLLEGE ERP — STEP 5: ASSESSMENT & ONLINE QUIZ PORTAL
+-- SSGMCE AUTONOMOUS COLLEGE ERP - STEP 5: ASSESSMENT & ONLINE QUIZ PORTAL
 -- Complete Production-Grade PostgreSQL / Supabase Cloud Schema
 -- Supports Student, Teacher/Faculty, and Admin roles
 -- ==============================================================================

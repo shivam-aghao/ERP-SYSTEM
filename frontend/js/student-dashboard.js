@@ -749,41 +749,99 @@ document.addEventListener('click', (e) => {
   }
 });
 
+async function loadTimetableForDay(dayKey, showFeedback = false) {
+  const badge = document.getElementById('scheduleDayBadge');
+  const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+
+  if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
+
+  try {
+    let periods = [];
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
+      const res = await StudentApi.getTimetable(dayCapitalized);
+      if (res && res.data && Array.isArray(res.data)) {
+        periods = res.data;
+      }
+    }
+    if (!periods || periods.length === 0) {
+      const fallbackRes = await fetch(`/api/v1/student/timetable?day=${encodeURIComponent(dayCapitalized)}`).catch(() => null);
+      if (fallbackRes && fallbackRes.ok) {
+        const json = await fallbackRes.json();
+        if (json && json.data && Array.isArray(json.data)) {
+          periods = json.data;
+        }
+      }
+    }
+
+    if (periods && periods.length > 0) {
+      let stCls = '';
+      try {
+        const userRaw = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+        if (userRaw) {
+          const u = JSON.parse(userRaw);
+          stCls = u.class_name || u.className || u.class_code || u.division || '';
+        }
+      } catch (e) {}
+      if (!stCls) {
+        const topMeta = document.getElementById('topbarUserMeta');
+        if (topMeta && topMeta.textContent.includes('3R')) {
+          stCls = '3R';
+        }
+      }
+      if (!stCls) stCls = '3R';
+
+      const filtered = periods.filter(p => {
+        if (!p.class_code && !p.class_name) return true;
+        const code = String(p.class_code || p.class_name || '').trim().toUpperCase();
+        return code === stCls.trim().toUpperCase() || code.includes(stCls.trim().toUpperCase());
+      });
+
+      const finalPeriods = filtered.length > 0 ? filtered : periods;
+
+      if (finalPeriods.length > 0) {
+        if (badge) badge.textContent = `${dayCapitalized} • ${finalPeriods.length} Periods Scheduled`;
+        renderTimetablePeriods(finalPeriods);
+        if (showFeedback) showToast(`Switched schedule to ${dayCapitalized}`, 'info');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
+  }
+
+  if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
+  renderTimetablePeriods([]);
+}
+
 function initTimetableDayTabs() {
   const dayTabBtns = document.querySelectorAll('.day-tab-btn');
-  const badge = document.getElementById('scheduleDayBadge');
   const grid = document.getElementById('timetableHorizontalGrid');
-
   if (!dayTabBtns.length || !grid) return;
 
+  const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayIdx = new Date().getDay();
+  const currentDayKey = todayIdx === 0 ? 'monday' : daysOfWeek[todayIdx];
+
   dayTabBtns.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    const dayKey = (btn.getAttribute('data-day') || '').toLowerCase();
+    const baseName = dayKey.slice(0, 3).charAt(0).toUpperCase() + dayKey.slice(1, 3);
+    if (dayKey === currentDayKey) {
+      btn.textContent = `${baseName} (Today)`;
+      btn.classList.add('active');
+    } else {
+      btn.textContent = baseName;
+      btn.classList.remove('active');
+    }
+
+    btn.addEventListener('click', () => {
       dayTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      const dayKey = btn.getAttribute('data-day');
-      const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-
-      if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
-
-      try {
-        if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
-          const res = await StudentApi.getTimetable(dayCapitalized);
-          if (res && res.data && res.data.length > 0) {
-            if (badge) badge.textContent = `${dayCapitalized} • ${res.data.length} Periods Scheduled`;
-            renderTimetablePeriods(res.data);
-            showToast(`Switched schedule to ${dayCapitalized}`, 'info');
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
-      }
-
-      if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
-      renderTimetablePeriods([]);
+      loadTimetableForDay(btn.getAttribute('data-day'), true);
     });
   });
+
+  // Automatically load today's schedule immediately on load
+  loadTimetableForDay(currentDayKey, false);
 }
 
 /* ==========================================================================
@@ -1001,9 +1059,17 @@ function initStudentModules() {
   });
 
   const checkHashModule = () => {
-    const hash = (window.location.hash || '').replace(/^#/, '').trim();
-    if (hash && studentModuleConfig[hash]) {
-      setTimeout(() => openStudentModule(hash), 150);
+    const rawHash = (window.location.hash || '').replace(/^#/, '').trim();
+    if (!rawHash) return;
+    if (rawHash === 'fees' || rawHash.startsWith('fees-')) {
+      let sub = rawHash.replace('fees-', '').replace('fees', '');
+      if (sub === 'payment' || sub === 'onlinepayment') sub = 'online-payment';
+      if (sub === 'receipts') sub = 'receipt';
+      setTimeout(() => openStudentModule('fees', sub || 'payable'), 100);
+      return;
+    }
+    if (studentModuleConfig[rawHash]) {
+      setTimeout(() => openStudentModule(rawHash), 150);
     }
   };
   checkHashModule();
@@ -2462,7 +2528,7 @@ function downloadStudentRecordReportPdf() {
 
       <div style="margin-bottom: 16px;">
         <div style="font-size: 12.5px; font-weight: 700; color: #0B1F3A; margin-bottom: 6px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
-          2. Student Data Corner — Industry Certifications, Seminars &amp; Updation Records
+          2. Student Data Corner - Industry Certifications, Seminars &amp; Updation Records
         </div>
         ${certsHtml}
       </div>
@@ -2742,9 +2808,9 @@ window.loadStudentExaminationData = async function(semesterNumber) {
             <p style="font-size:12px; margin-top:4px;">Official marks will be accessible once verified and published by the Autonomous Examination Cell.</p>
           </td></tr>`;
         }
-        if (sgpaEl) sgpaEl.textContent = '—';
-        if (cgpaEl) cgpaEl.textContent = data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—';
-        if (credEl) credEl.textContent = '—';
+        if (sgpaEl) sgpaEl.textContent = '-';
+        if (cgpaEl) cgpaEl.textContent = data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '-';
+        if (credEl) credEl.textContent = '-';
         if (backlogsEl) backlogsEl.textContent = 'Pending';
         return;
       }
@@ -2755,8 +2821,8 @@ window.loadStudentExaminationData = async function(semesterNumber) {
         badge.className = 'badge badge-cyan';
         badge.textContent = `Result Published ✓ (${semData.result_status || 'PASS'})`;
       }
-      if (sgpaEl) sgpaEl.textContent = semData.sgpa !== null ? Number(semData.sgpa).toFixed(2) : '—';
-      if (cgpaEl) cgpaEl.textContent = (semData.cgpa !== null ? Number(semData.cgpa).toFixed(2) : (data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—'));
+      if (sgpaEl) sgpaEl.textContent = semData.sgpa !== null ? Number(semData.sgpa).toFixed(2) : '-';
+      if (cgpaEl) cgpaEl.textContent = (semData.cgpa !== null ? Number(semData.cgpa).toFixed(2) : (data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '-'));
       if (credEl) credEl.textContent = `${semData.earned_credits || semData.total_credits} / ${semData.total_credits}`;
 
       const subjects = semData.subjects || [];
@@ -2776,12 +2842,12 @@ window.loadStudentExaminationData = async function(semesterNumber) {
             <tr>
               <td style="font-weight:700; color:var(--primary);">${s.subject_code} - ${s.subject_name}</td>
               <td><strong>${s.credits || 4}</strong></td>
-              <td>${s.internal_marks !== null ? s.internal_marks : '—'} / 30</td>
-              <td>${s.external_marks !== null ? s.external_marks : '—'} / 70</td>
-              <td style="font-weight:700;">${s.total_marks !== null ? s.total_marks : '—'} / 100</td>
+              <td>${s.internal_marks !== null ? s.internal_marks : '-'} / 30</td>
+              <td>${s.external_marks !== null ? s.external_marks : '-'} / 70</td>
+              <td style="font-weight:700;">${s.total_marks !== null ? s.total_marks : '-'} / 100</td>
               <td>
                 <span class="badge ${['O', 'A+', 'A'].includes(s.grade) ? 'badge-success' : (s.grade === 'F' ? 'badge-danger' : 'badge-info')}" style="font-size:12px; font-weight:700;">
-                  ${s.grade || '—'} (${s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '—'})
+                  ${s.grade || '-'} (${s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '-'})
                 </span>
               </td>
               <td>
@@ -3147,7 +3213,7 @@ function renderTimetablePeriods(periods) {
     if (isQuiz) {
       if (p.is_joinable && p.link) {
         quizClick = `onclick="window.location.href='${p.link}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"`;
-        bottomStatus = `🎯 Live Now — Click to Join Test →`;
+        bottomStatus = `🎯 Live Now - Click to Join Test →`;
       } else {
         quizClick = `onclick="window.location.href='student_timetable.html'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.25);"`;
         const startTimeStr = time.split('-')[0].trim();
@@ -3887,9 +3953,7 @@ async function hydrateDashboardData() {
       heroTitle.textContent = `Welcome back, ${firstName}!`;
     }
     if (heroDept) heroDept.textContent = dept.includes('Computer') ? dept : 'Computer Science & Engineering';
-    if (heroYearSem) {
-      heroYearSem.textContent = `Year ${Math.ceil(Number(sem) / 2)} (Semester ${sem}) • Class: ${cls} • Roll No: ${rollNo} (${studentCode})`;
-    }
+    if (heroYearSem) heroYearSem.remove();
     if (heroAcadBadge) {
       heroAcadBadge.textContent = `Class ${cls} • Semester ${sem} • Academic Year ${yr}`;
     }
@@ -3960,6 +4024,10 @@ async function hydrateDashboardData() {
         const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         scheduleDayBadge.textContent = `${todayDay} • ${overview.todayTimetable.length} Periods Scheduled`;
       }
+    } else {
+      const activeTab = document.querySelector('.day-tab-btn.active');
+      const dayKey = activeTab ? activeTab.getAttribute('data-day') : 'friday';
+      loadTimetableForDay(dayKey, false);
     }
 
     // 5. Syllabus Progress
@@ -4085,7 +4153,7 @@ async function hydrateDashboardData() {
           const timeStr = upcomingTest.start ? ` • ${upcomingTest.start}${upcomingTest.end ? ` - ${upcomingTest.end}` : ''}` : '';
           
           if (isLive) {
-            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} (Live Now — Click to Join)`;
+            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} (Live Now - Click to Join)`;
             stripText.style.cursor = 'pointer';
             stripText.onclick = () => {
               window.location.href = upcomingTest.link;

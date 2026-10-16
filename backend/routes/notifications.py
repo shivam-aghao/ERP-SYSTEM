@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 7: NOTIFICATIONS & REAL-TIME ALERTS API ROUTES
+SSGMCE COLLEGE ERP - STEP 7: NOTIFICATIONS & REAL-TIME ALERTS API ROUTES
 FastAPI Endpoints with Real-Time WebSocket and Supabase Cloud Integration
 ================================================================================
 """

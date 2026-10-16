@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL QUIZZES ROUTER
+SSGMCE COLLEGE ERP - CANONICAL QUIZZES ROUTER
 Namespace: /api/v1/quizzes/...
 Authoritative Online Examination, Question Bank & Quiz Administration
 ================================================================================

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 6: STUDENT ACADEMIC RECORDS & DIGITAL WALLET SERVICE
+SSGMCE COLLEGE ERP - STEP 6: STUDENT ACADEMIC RECORDS & DIGITAL WALLET SERVICE
 Unified Autonomous Enterprise Service connecting directly to Supabase Cloud
 ================================================================================
 """

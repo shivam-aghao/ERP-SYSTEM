@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>SSGMCE College ERP â€” Student Quiz & Assessment Portal</title>
+  <title>SSGMCE College ERP - Student Quiz & Assessment Portal</title>
 
   
 
@@ -1064,16 +1064,39 @@
               </a>
             </li>
 
-            <!-- 5. Fees -->
-            <li class="sidebar-item" data-module="fees">
-              <a href="student-dashboard.html#fees" class="sidebar-link" data-nav="fees">
+            <!-- 5. Fees (Interactive Submenu with Payable, Fee Online Payment, Receipt) -->
+            <li class="sidebar-item has-submenu" data-module="fees" id="sidebarItemFees">
+              <a href="student-dashboard.html#fees" class="sidebar-link" data-nav="fees" id="feesMenuToggle" aria-expanded="false" aria-haspopup="true">
                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
                   <circle cx="7" cy="15" r="1"></circle>
                 </svg>
                 <span class="nav-label">Fees</span>
+                <svg class="nav-expand-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
               </a>
+              <ul class="sidebar-submenu" id="feesSubmenu" aria-label="Fees Submenu">
+                <li class="sidebar-subitem">
+                  <a href="student-dashboard.html#fees-payable" class="submenu-link" data-fees-tab="payable" id="sublinkPayable">
+                    <span class="submenu-dot"></span>
+                    <span class="submenu-text">Payable</span>
+                  </a>
+                </li>
+                <li class="sidebar-subitem">
+                  <a href="student-dashboard.html#fees-online-payment" class="submenu-link" data-fees-tab="online-payment" id="sublinkOnlinePayment">
+                    <span class="submenu-dot"></span>
+                    <span class="submenu-text">Fee Online Payment</span>
+                  </a>
+                </li>
+                <li class="sidebar-subitem">
+                  <a href="student-dashboard.html#fees-receipt" class="submenu-link" data-fees-tab="receipt" id="sublinkReceipt">
+                    <span class="submenu-dot"></span>
+                    <span class="submenu-text">Receipt</span>
+                  </a>
+                </li>
+              </ul>
             </li>
 
             <!-- 6. Profile -->
@@ -1322,7 +1345,7 @@
 
             <button class="btn btn-secondary" id="btnPrevQ" onclick="prevQuestion()" style="padding: 0.6rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); background: white; cursor: pointer;">
 
-              â† Previous
+              <- Previous
 
             </button>
 
@@ -1336,7 +1359,7 @@
 
               <button class="btn btn-primary" id="btnNextQ" onclick="nextQuestion()" style="padding: 0.6rem 1.25rem; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer;">
 
-                Next â†’
+                Next ->
 
               </button>
 
@@ -1749,7 +1772,7 @@
 
   <script>
 
-    // State Store — 100% Dynamic & Synchronized with FastAPI & Supabase
+    // State Store - 100% Dynamic & Synchronized with FastAPI & Supabase
 
     let currentStudent = null;
 

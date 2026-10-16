@@ -1,5 +1,5 @@
 -- ====================================================================
--- SSGMCE COLLEGE ERP — RLS SECURITY DEFINER HELPER FUNCTIONS
+-- SSGMCE COLLEGE ERP - RLS SECURITY DEFINER HELPER FUNCTIONS
 -- ====================================================================
 
 -- 1. Get Student ID for currently authenticated session

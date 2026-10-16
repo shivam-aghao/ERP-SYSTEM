@@ -406,8 +406,8 @@ class FacultyService:
                     # Friday
                     {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "OOP(2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
                     {"day": "Friday", "slot_index": 2, "period_num": 2, "course_name": "OOP(2R1-C)", "venue": "Lab", "class_code": "2R1", "is_lab": True, "batch": "Batch C"},
-                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III – DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
-                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III – DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III - DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III - DF (H)", "venue": "ET Lab III", "class_code": "4R", "is_lab": True, "batch": "Batch H"},
                 ]
             elif is_sable:
                 # Official Timetable for Prof. K. P. Sable (Assistant Professor, CSE)
@@ -450,16 +450,16 @@ class FacultyService:
                     # Wednesday
                     {"day": "Wednesday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab-I DSS (E)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch E"},
                     {"day": "Wednesday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab-I DSS (E)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch E"},
-                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab III – DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
-                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab III – DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
+                    {"day": "Wednesday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab III - DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
+                    {"day": "Wednesday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab III - DW&M (G)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch G"},
                     # Thursday
                     {"day": "Thursday", "slot_index": 4, "period_num": 4, "course_name": "DWM", "venue": "B206", "class_code": "4R", "is_lab": False, "batch": None},
                     {"day": "Thursday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab III- DWM(F)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch F"},
                     {"day": "Thursday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab III- DWM(F)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch F"},
                     # Friday
                     {"day": "Friday", "slot_index": 1, "period_num": 1, "course_name": "PE - 1 DSS", "venue": "B206", "class_code": "3N", "is_lab": False, "batch": None},
-                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III – DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
-                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III – DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Friday", "slot_index": 3, "period_num": 3, "course_name": "ET Lab III - DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
+                    {"day": "Friday", "slot_index": 4, "period_num": 4, "course_name": "ET Lab III - DW&M (E)", "venue": "Lab", "class_code": "4R", "is_lab": True, "batch": "Batch E"},
                     {"day": "Friday", "slot_index": 5, "period_num": 5, "course_name": "ET Lab-I DSS (F)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch F"},
                     {"day": "Friday", "slot_index": 6, "period_num": 6, "course_name": "ET Lab-I DSS (F)", "venue": "Lab", "class_code": "3N", "is_lab": True, "batch": "Batch F"},
                 ]

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL STUDENTS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL STUDENTS ROUTER
 Namespace: /api/v1/students/...
 Authoritative Student Profile, Enrollment & Academic Information
 ================================================================================

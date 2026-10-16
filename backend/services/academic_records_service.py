@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION ACADEMIC RECORDS SERVICE
+SSGMCE COLLEGE ERP - PRODUCTION ACADEMIC RECORDS SERVICE
 Autonomous Server-Side Evaluation, Marks Entry, Submission Governance,
 SGPA/CGPA Authoritative Calculations, Results Publication, and Revaluation
 ================================================================================

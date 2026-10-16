@@ -1,5 +1,5 @@
 -- ============================================================================
--- SSGMCE COLLEGE ERP — STEP 8: TEACHER & ADMIN MANAGEMENT TOOLS
+-- SSGMCE COLLEGE ERP - STEP 8: TEACHER & ADMIN MANAGEMENT TOOLS
 -- Database Migration: 04_teacher_admin_management.sql
 -- Production-Ready PostgreSQL Schema for Supabase Cloud
 -- ============================================================================

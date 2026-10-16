@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — UNIFIED MASTER BACKEND SERVER
+SSGMCE COLLEGE ERP - UNIFIED MASTER BACKEND SERVER
 Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 ================================================================================
 Single command execution:
@@ -13,21 +13,21 @@ or
     backend.bat
 
 This file boots the unified FastAPI backend serving all ERP modules:
-  [1]  /api/v1/auth          — Multi-persona Authentication, JWT Tokens & Sessions
-  [2]  /api/v1/students      — Student Profiles, Records, E-Learning, Dashboard
-  [3]  /api/v1/teachers      — Teacher Assignments, Rosters & Classes
-  [4]  /api/v1/admin         — System Administration, Governance & Audit Logs
-  [5]  /api/v1/attendance    — Database-Driven Attendance, Rosters, Sessions & Locks
-  [6]  /api/v1/timetable     — Instructional Timetable & Scheduled Tests
-  [7]  /api/v1/quizzes       — Autonomous Quiz Engine & Question Bank
-  [8]  /api/v1/attempts      — Student Attempts & Auto-Grading Engine
-  [9]  /api/v1/results       — Authoritative Marks Roster, SGPA/CGPA & Gazettes
-  [10] /api/v1/fees          — Fee Ledger, Payments & Official Receipts
-  [11] /api/v1/documents     — Private Supabase Storage Document Vault
-  [12] /api/v1/notifications — Real-time Multi-Channel Notifications
-  [13] /health               — System Health Check (Database + Supabase)
-  [14] /docs                 — OpenAPI / Swagger Interactive Documentation
-  [15] Frontend Static Apps  — Student, Teacher, Admin Dashboards & Login
+  [1]  /api/v1/auth          - Multi-persona Authentication, JWT Tokens & Sessions
+  [2]  /api/v1/students      - Student Profiles, Records, E-Learning, Dashboard
+  [3]  /api/v1/teachers      - Teacher Assignments, Rosters & Classes
+  [4]  /api/v1/admin         - System Administration, Governance & Audit Logs
+  [5]  /api/v1/attendance    - Database-Driven Attendance, Rosters, Sessions & Locks
+  [6]  /api/v1/timetable     - Instructional Timetable & Scheduled Tests
+  [7]  /api/v1/quizzes       - Autonomous Quiz Engine & Question Bank
+  [8]  /api/v1/attempts      - Student Attempts & Auto-Grading Engine
+  [9]  /api/v1/results       - Authoritative Marks Roster, SGPA/CGPA & Gazettes
+  [10] /api/v1/fees          - Fee Ledger, Payments & Official Receipts
+  [11] /api/v1/documents     - Private Supabase Storage Document Vault
+  [12] /api/v1/notifications - Real-time Multi-Channel Notifications
+  [13] /health               - System Health Check (Database + Supabase)
+  [14] /docs                 - OpenAPI / Swagger Interactive Documentation
+  [15] Frontend Static Apps  - Student, Teacher, Admin Dashboards & Login
 ================================================================================
 """
 
@@ -55,7 +55,7 @@ def main():
 
     print("\n" + "=" * 80)
     print("  SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING, SHEGAON")
-    print("  SSGMCE AUTONOMOUS COLLEGE ERP — UNIFIED FULL-STACK BACKEND")
+    print("  SSGMCE AUTONOMOUS COLLEGE ERP - UNIFIED FULL-STACK BACKEND")
     print("=" * 80)
     print(f"  [✓] Server URL:       http://localhost:{port}")
     print(f"  [✓] Swagger Docs:     http://localhost:{port}/docs")

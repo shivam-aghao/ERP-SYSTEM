@@ -1,5 +1,5 @@
 /**
- * College ERP — Teacher Attendance Service Layer
+ * College ERP - Teacher Attendance Service Layer
  * frontend/js/teacher-attendance-service.js
  *
  * Strict Zero-LocalStorage Policy for Business Data:

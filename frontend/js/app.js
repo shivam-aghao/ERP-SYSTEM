@@ -3282,7 +3282,7 @@ const TeacherApp = {
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Graded Entries</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">—</div>
+            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">-</div>
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Class Average Marks</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
@@ -3419,7 +3419,7 @@ const TeacherApp = {
     const avgEl = document.getElementById('statAvgMarks');
     if (totalEl) totalEl.textContent = students.length;
     if (gradedEl) gradedEl.textContent = gradedCount;
-    if (avgEl) avgEl.textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '—';
+    if (avgEl) avgEl.textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '-';
 
     if (students.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">No enrolled students found for class ${classId}.</td></tr>`;
@@ -3429,15 +3429,15 @@ const TeacherApp = {
     tbody.innerHTML = students.map(s => {
       const intVal = s.internal_marks !== null && s.internal_marks !== undefined ? s.internal_marks : '';
       const extVal = s.external_marks !== null && s.external_marks !== undefined ? s.external_marks : '';
-      const totVal = s.total_marks !== null && s.total_marks !== undefined ? s.total_marks : '—';
-      const gradeVal = s.grade || '—';
-      const gpVal = s.grade_point !== null && s.grade_point !== undefined ? Number(s.grade_point).toFixed(1) : '—';
-      const stVal = s.result_status || '—';
+      const totVal = s.total_marks !== null && s.total_marks !== undefined ? s.total_marks : '-';
+      const gradeVal = s.grade || '-';
+      const gpVal = s.grade_point !== null && s.grade_point !== undefined ? Number(s.grade_point).toFixed(1) : '-';
+      const stVal = s.result_status || '-';
       const disabledAttr = isLocked ? 'disabled' : '';
 
       return `
         <tr style="border-bottom:1px solid #e2e8f0;" data-student-id="${s.student_id}" data-student-code="${s.student_code}">
-          <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '—'}</td>
+          <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '-'}</td>
           <td style="padding:10px 12px; font-weight:600;">${s.full_name || 'Student'}</td>
           <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${s.student_code}</td>
           <td style="padding:8px 12px;">
@@ -3453,13 +3453,13 @@ const TeacherApp = {
                    oninput="TeacherApp.calcRosterRow(this)">
           </td>
           <td style="padding:10px 12px; font-weight:700; color:var(--dark-navy);" class="roster-total-cell">
-            ${totVal !== '—' ? totVal + ' / 100' : '—'}
+            ${totVal !== '-' ? totVal + ' / 100' : '-'}
           </td>
           <td style="padding:10px 12px;" class="roster-grade-cell">
-            ${gradeVal !== '—' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-completed' : 'badge-cyan'}">${gradeVal} (${gpVal})</span>` : '—'}
+            ${gradeVal !== '-' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-completed' : 'badge-cyan'}">${gradeVal} (${gpVal})</span>` : '-'}
           </td>
           <td style="padding:10px 12px;" class="roster-status-cell">
-            ${stVal !== '—' ? `<span class="badge ${stVal === 'PASS' ? 'badge-completed' : 'badge-pending'}">${stVal}</span>` : '—'}
+            ${stVal !== '-' ? `<span class="badge ${stVal === 'PASS' ? 'badge-completed' : 'badge-pending'}">${stVal}</span>` : '-'}
           </td>
         </tr>
       `;
@@ -3489,9 +3489,9 @@ const TeacherApp = {
     }
 
     if (isNaN(intVal) && isNaN(extVal)) {
-      totalCell.textContent = '—';
-      gradeCell.textContent = '—';
-      statusCell.textContent = '—';
+      totalCell.textContent = '-';
+      gradeCell.textContent = '-';
+      statusCell.textContent = '-';
       return;
     }
 
@@ -4577,11 +4577,11 @@ const TeacherApp = {
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Designation</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.designation || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.designation || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Department</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.department || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.department || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Date of Joining</span>
@@ -4602,11 +4602,11 @@ const TeacherApp = {
             <div style="display: flex; flex-direction: column; gap: 14px;">
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Official Email</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0B5CAD;">${p.email || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0B5CAD;">${p.email || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Phone / Mobile</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.phone || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.phone || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Academic Block / Cabin</span>
@@ -5436,7 +5436,7 @@ const TeacherApp = {
                   <div>
                     <div style="display:flex; align-items:center; gap:8px;">
                       <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${exp.designation || 'Position'}</h4>
-                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${exp.fromDate || ''} – ${exp.toDate || 'Present'}</span>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${exp.fromDate || ''} - ${exp.toDate || 'Present'}</span>
                     </div>
                     <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${exp.organization || 'Organization'}</p>
                     <p style="font-size:12.5px; color:#475569; margin:4px 0 0 0; line-height:1.5;">${exp.responsibilities || 'Key responsibilities not specified'}</p>
@@ -5841,7 +5841,7 @@ const TeacherApp = {
               </div>
             </div>
             <div style="display:inline-block; background:#0B1F3A; color:#FFFFFF; padding:4px 16px; border-radius:20px; font-size:12px; font-weight:700; margin-top:6px;">
-              ANNUAL FACULTY ACTIVITY & APPRAISAL DOSSIER — ACADEMIC YEAR ${report?.academicYear || '2026-2027'}
+              ANNUAL FACULTY ACTIVITY & APPRAISAL DOSSIER - ACADEMIC YEAR ${report?.academicYear || '2026-2027'}
             </div>
           </div>
 

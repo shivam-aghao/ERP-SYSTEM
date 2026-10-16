@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Production Readiness Checklist & Audit Report
+# SSGMCE College ERP - Production Readiness Checklist & Audit Report
 
 **Institution:** Shri Sant Gajanan Maharaj College of Engineering, Shegaon  
 **Audit Date:** 2026-10-09  
@@ -258,11 +258,11 @@ This document certifies the final production-readiness evaluation of the **SSGMC
 As required by the production audit criteria, the following obsolete and redundant assets were identified and removed without impacting any active routes or features:
 
 1. **Obsolete Duplicate Directory Removed:**
-   - `d:\ERP-SYSTEM\student/` — Removed unmounted, duplicate timetable CSS/JS files that were in a git merge conflict state. Active assets are served from `frontend/css/` and `frontend/js/`.
+   - `d:\ERP-SYSTEM\student/` - Removed unmounted, duplicate timetable CSS/JS files that were in a git merge conflict state. Active assets are served from `frontend/css/` and `frontend/js/`.
 2. **Empty Seed File Removed:**
-   - `backend/seed/seed_roles.sql` — Removed 0-byte placeholder file.
+   - `backend/seed/seed_roles.sql` - Removed 0-byte placeholder file.
 3. **Scratch Debug Script Removed:**
-   - `tests/inspect_schema.py` — Removed scratch schema inspector script.
+   - `tests/inspect_schema.py` - Removed scratch schema inspector script.
 4. **Dead Demo Functions Pruned:**
    - `loginAsDemo()` and `DEMO_PROFILES` pruned from `frontend/js/erp-auth-guard.js`. Zero mock production data or backdoors remain.
 5. **No Regressions Confirmed:**
@@ -275,7 +275,7 @@ As required by the production audit criteria, the following obsolete and redunda
 | Verification Check | Command Executed | Result | Details |
 | :--- | :--- | :---: | :--- |
 | **Database Connectivity** | `python -c "from backend.config.database import engine; ..."` | **PASS** | Connected to `postgres` as user `erp_app` on PostgreSQL 17.6. |
-| **API Health Check** | `python -c "import urllib.request; ..."` | **PASS** | HTTP 200 OK — `{"status":"healthy","database":"connected","supabase":"connected"}`. |
+| **API Health Check** | `python -c "import urllib.request; ..."` | **PASS** | HTTP 200 OK - `{"status":"healthy","database":"connected","supabase":"connected"}`. |
 | **Frontend Assets** | `python tests/test_frontend_assets.py` | **PASS** | 15/15 static routes & dashboards returned HTTP 200. |
 | **Row Level Security** | `python tests/test_supabase_rls.py` | **PASS** | 7/7 RLS isolation and policy tests passed. |
 | **Authentication Security** | `python tests/test_auth_security.py` | **PASS** | 13/13 authentication & session tests passed. |

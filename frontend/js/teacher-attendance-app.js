@@ -1535,7 +1535,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         this.state.students = batchStudents;
-        this.showToast(`Loaded Batch ${b} (${this.state.students.length} students: Roll ${minRoll}–${maxRoll})`, "success");
+        this.showToast(`Loaded Batch ${b} (${this.state.students.length} students: Roll ${minRoll}-${maxRoll})`, "success");
       } else {
         this.state.students = allStudents;
         this.showToast(`Loaded ${this.state.students.length} students from database`, "success");
@@ -2949,7 +2949,7 @@ document.addEventListener("DOMContentLoaded", () => {
           doc.setTextColor(255, 255, 255);
           doc.text("SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING", 105, 11, { align: "center" });
           doc.setFontSize(9.5);
-          doc.text("DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING — STUDENT ATTENDANCE RECORD", 105, 19, { align: "center" });
+          doc.text("DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING - STUDENT ATTENDANCE RECORD", 105, 19, { align: "center" });
 
           doc.setFontSize(11);
           doc.setTextColor(15, 23, 42);
@@ -3749,7 +3749,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <!-- Section 2: Student Data Corner (Certificates) -->
           <div style="margin-bottom: 16px;">
             <div style="font-size: 12.5px; font-weight: 700; color: #0B1F3A; margin-bottom: 6px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
-              2. Student Data Corner — Industry Certifications & Completed Courses
+              2. Student Data Corner - Industry Certifications & Completed Courses
             </div>
             ${certsHtml}
           </div>

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — DOCUMENTED BACKWARD COMPATIBILITY LAYER
+SSGMCE COLLEGE ERP - DOCUMENTED BACKWARD COMPATIBILITY LAYER
 ================================================================================
 Documented Compatibility Requirement:
 Translates deprecated route paths (e.g. /api/v1/student/..., /api/v1/teacher/...,

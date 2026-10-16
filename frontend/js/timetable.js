@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * SSGMCE TEACHER ERP — TIMETABLE MODULE (STEP 3)
+ * SSGMCE TEACHER ERP - TIMETABLE MODULE (STEP 3)
  * File: frontend/js/timetable.js
  * Dedicated, modular Timetable management for SSGMCE Teacher ERP Portal.
  * Sourced directly from official PDF: DATA/Personal Timtable for teacher.pdf
@@ -837,7 +837,7 @@
           </div>
 
           <div style="color: #64748B; font-size: 11.5px;">
-            Break: <strong>1:00 PM – 1:15 PM</strong> &bull; Recess: <strong>3:15 PM – 3:45 PM</strong>
+            Break: <strong>1:00 PM - 1:15 PM</strong> &bull; Recess: <strong>3:15 PM - 3:45 PM</strong>
           </div>
         </div>
 

@@ -1506,7 +1506,7 @@ const AttendanceWorkflow = {
     // Enforce duplicate attendance prevention
     if (AttendanceState.isSessionAlreadySubmitted(date, classCode, subCode, lectureTime)) {
       if (window.TeacherApp) {
-        TeacherApp.showToast(`⚠ Duplicate Attendance Prevented: Attendance for Division ${classCode} — ${subCode} on ${date} (${lectureTime}) has already been submitted.`, "warning");
+        TeacherApp.showToast(`⚠ Duplicate Attendance Prevented: Attendance for Division ${classCode} - ${subCode} on ${date} (${lectureTime}) has already been submitted.`, "warning");
       }
       return;
     }
@@ -1835,7 +1835,7 @@ const AttendanceDrawer = {
       if (daySchedule && daySchedule.slots) {
         slotSelect.innerHTML = daySchedule.slots.map(s => {
           const val = JSON.stringify({ subject: s.subject, room: s.room, timeslot: s.time, classCode: s.classCode || '2R1' });
-          return '<option value=\'' + val + '\'>' + s.time + ' — ' + s.subject + ' (' + s.room + ', Class ' + (s.classCode || '2R1') + ')</option>';
+          return '<option value=\'' + val + '\'>' + s.time + ' - ' + s.subject + ' (' + s.room + ', Class ' + (s.classCode || '2R1') + ')</option>';
         }).join('');
       } else {
         slotSelect.innerHTML = '<option value="">No classes scheduled for ' + dayName + '</option>';

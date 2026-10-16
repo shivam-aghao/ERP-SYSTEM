@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION QUIZ SYSTEM VERIFICATION SUITE
+SSGMCE COLLEGE ERP - PRODUCTION QUIZ SYSTEM VERIFICATION SUITE
 Tests the entire lifecycle for Teacher, Student, Anti-Cheating Proctoring,
 Server-Side Evaluation, Analytics, RLS Compliance & Exporting
 ================================================================================
@@ -22,7 +22,7 @@ client = TestClient(app)
 
 def run_quiz_test_suite():
     print("=" * 80)
-    print("SSGMCE COLLEGE ERP — QUIZ SYSTEM PRODUCTION READINESS AUDIT")
+    print("SSGMCE COLLEGE ERP - QUIZ SYSTEM PRODUCTION READINESS AUDIT")
     print("=" * 80)
 
     db = SessionLocal()

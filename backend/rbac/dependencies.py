@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — FastAPI RBAC Route Dependencies
+SSGMCE College ERP - FastAPI RBAC Route Dependencies
 backend/rbac/dependencies.py
 
 Enforces backend-level permission and role gating.

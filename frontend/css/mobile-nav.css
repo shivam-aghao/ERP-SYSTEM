@@ -1,5 +1,5 @@
 /* ==============================================================================
-   SSGMCE College ERP — Professional Role-Based Mobile Bottom Navigation
+   SSGMCE College ERP - Professional Role-Based Mobile Bottom Navigation
    STRICTLY MOBILE ONLY: Visible only on mobile screens (viewport <= 768px).
    Completely hidden on tablet & desktop (> 768px) to protect existing layouts.
    ============================================================================== */
@@ -152,7 +152,7 @@
     display: none !important;
   }
 
-  /* Student Profile Hero Card Centering — Strictly Mobile Only (<= 768px) */
+  /* Student Profile Hero Card Centering - Strictly Mobile Only (<= 768px) */
   .profile-summary-top {
     flex-direction: column !important;
     align-items: center !important;

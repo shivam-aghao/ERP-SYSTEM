@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Canonical Fees Module Frontend Controller
+ * SSGMCE College ERP - Canonical Fees Module Frontend Controller
  * Strictly scoped to Payable, Fee Online Payment, and Receipt views.
  */
 
@@ -24,6 +24,15 @@ function getStudentAuthContext() {
   }
   if (!studentCode) studentCode = '308637'; // Canonical fallback
   return { token, studentCode };
+}
+
+// Helper: Dynamically determine API Base URL across protocols and hostnames
+function getFeesApiBase() {
+  if (window.__API_BASE__) return window.__API_BASE__;
+  if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+    return window.location.origin + '/api/v1';
+  }
+  return 'http://127.0.0.1:8000/api/v1';
 }
 
 // Function: Toggle or set expanded state of Fees sidebar submenu (debounced against duplicate event listeners)
@@ -210,7 +219,7 @@ function closeFeesMainView() {
 // 5. Load Live Fees Ledger from Server
 async function loadFeesLedgerData() {
   const { token, studentCode } = getStudentAuthContext();
-  const apiBase = window.__API_BASE__ || 'http://127.0.0.1:8000/api/v1';
+  const apiBase = getFeesApiBase();
 
   const loadingEl = document.getElementById('payableLoading');
   const tableContainer = document.getElementById('payableTableContainer');
@@ -514,7 +523,7 @@ function renderCategoryPaymentDetails(catKey) {
   contentEl.innerHTML = `
     <div class="category-active-box">
       <div class="category-box-header">
-        <span>Payment Particulars — ${cat.label}</span>
+        <span>Payment Particulars - ${cat.label}</span>
         <span style="font-size:12px; font-weight:600; opacity:0.9;">Total Outstanding: ₹ ${formatINR(amount)}</span>
       </div>
       <div class="category-box-body">
@@ -607,7 +616,7 @@ async function submitCategoryPayment(event, catKey, maxAmount) {
   if (event) event.preventDefault();
 
   const { token, studentCode } = getStudentAuthContext();
-  const apiBase = window.__API_BASE__ || 'http://127.0.0.1:8000/api/v1';
+  const apiBase = getFeesApiBase();
 
   const amtInp = document.getElementById('payAmountInput');
   const submitBtn = document.getElementById('btnSubmitPayment');
@@ -766,7 +775,7 @@ async function viewFeeReceiptModal(receiptId) {
   modal.style.display = 'flex';
 
   const { token } = getStudentAuthContext();
-  const apiBase = window.__API_BASE__ || 'http://127.0.0.1:8000/api/v1';
+  const apiBase = getFeesApiBase();
 
   try {
     const headers = {};
@@ -881,12 +890,12 @@ function downloadReceiptPDF() {
 }
 
 function printOfficialFeeReceipt(receiptId) {
-  const apiBase = window.__API_BASE__ || 'http://127.0.0.1:8000/api/v1';
+  const apiBase = getFeesApiBase();
   window.open(`${apiBase}/fees/receipts/${encodeURIComponent(receiptId)}/download?format=html`, '_blank', 'width=800,height=900');
 }
 
 function downloadOfficialFeeReceiptFile(receiptId) {
-  const apiBase = window.__API_BASE__ || 'http://127.0.0.1:8000/api/v1';
+  const apiBase = getFeesApiBase();
   window.open(`${apiBase}/fees/receipts/${encodeURIComponent(receiptId)}/download?format=html`, '_blank');
 }
 

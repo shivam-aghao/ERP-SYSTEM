@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Legacy AuthService Adapter
+SSGMCE College ERP - Legacy AuthService Adapter
 Delegates directly to the centralized backend.auth.AuthenticationService.
 """
 

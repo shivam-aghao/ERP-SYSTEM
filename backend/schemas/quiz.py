@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION QUIZ SCHEMAS
+SSGMCE COLLEGE ERP - PRODUCTION QUIZ SCHEMAS
 Comprehensive validation models for Quizzes, Questions, Attempts, Proctoring & Grading
 ================================================================================
 """

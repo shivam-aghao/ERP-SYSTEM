@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Central Client Authentication SDK
+ * SSGMCE College ERP - Central Client Authentication SDK
  * frontend/common/auth/auth-client.js
  *
  * Enforces server-side token validation, automatic token refresh,

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SSGMCE COLLEGE ERP — DYNAMIC ATTENDANCE & TEACHER CERTIFICATION SCHEMA
+-- SSGMCE COLLEGE ERP - DYNAMIC ATTENDANCE & TEACHER CERTIFICATION SCHEMA
 -- Institution: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 -- File: supabase/migrations/20261013_attendance_records_rls.sql
 -- ==============================================================================

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — BACKEND PACKAGE EXECUTABLE ENTRYPOINT
+SSGMCE COLLEGE ERP - BACKEND PACKAGE EXECUTABLE ENTRYPOINT
 Enables running:
     python -m backend
 or

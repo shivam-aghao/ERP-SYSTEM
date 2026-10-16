@@ -1,5 +1,5 @@
 /* ========================================================
-   STUDENT ERP — TIMETABLE MODULE CONTROLLER
+   STUDENT ERP - TIMETABLE MODULE CONTROLLER
    student_timetable.js
    SSGMCE Student Portal
    Read-Only Timetable & Scheduled Test/Assessment Display
@@ -14,10 +14,10 @@ const SSGMCE_CLASS_TIMETABLES = {
   "3R": {
     code: "3R",
     label: "Class 3R (Third Year • Section A)",
-    fullTitle: "Third Year B.Tech CSE — Section A (3R)",
+    fullTitle: "Third Year B.Tech CSE - Section A (3R)",
     classRoom: "B206",
-    term: "Semester – V",
-    semester: "Semester – V • Autumn 2026-2027",
+    term: "Semester - V",
+    semester: "Semester - V • Autumn 2026-2027",
     wef: "21/07/2026",
     rev: "01",
     sessionYear: "Session: 2026-2027 (Autumn)",
@@ -147,10 +147,10 @@ const SSGMCE_CLASS_TIMETABLES = {
   "2R1": {
     code: "2R1",
     label: "Class 2R1 (Second Year • Section A)",
-    fullTitle: "Second Year B.Tech CSE — Section A (2R 1)",
+    fullTitle: "Second Year B.Tech CSE - Section A (2R 1)",
     classRoom: "B007/B108/B206",
-    term: "Semester – III",
-    semester: "Semester – III • Autumn 2026-2027",
+    term: "Semester - III",
+    semester: "Semester - III • Autumn 2026-2027",
     wef: "17/08/2026",
     rev: "02",
     sessionYear: "Session:2026-2027 (Autumn)",
@@ -281,10 +281,10 @@ const SSGMCE_CLASS_TIMETABLES = {
   "2R2": {
     code: "2R2",
     label: "Class 2R2 (Second Year • Section B)",
-    fullTitle: "Second Year B.Tech CSE — Section B (2R 2)",
+    fullTitle: "Second Year B.Tech CSE - Section B (2R 2)",
     classRoom: "B007/B108/B206",
-    term: "Semester – III",
-    semester: "Semester – III • Autumn 2026-2027",
+    term: "Semester - III",
+    semester: "Semester - III • Autumn 2026-2027",
     wef: "03/08/2026",
     rev: "01",
     sessionYear: "Session:2026-2027 (Autumn)",
@@ -415,10 +415,10 @@ const SSGMCE_CLASS_TIMETABLES = {
   "4R": {
     code: "4R",
     label: "Class 4R (Final Year • Section A)",
-    fullTitle: "Final Year B.Tech CSE — Section A (4R)",
+    fullTitle: "Final Year B.Tech CSE - Section A (4R)",
     classRoom: "B007/B206",
-    term: "Semester – VII",
-    semester: "Semester – VII • Autumn 2026-2027",
+    term: "Semester - VII",
+    semester: "Semester - VII • Autumn 2026-2027",
     wef: "21/07/2026",
     rev: "01",
     sessionYear: "Session: 2026-2027 (Autumn)",
@@ -443,7 +443,7 @@ const SSGMCE_CLASS_TIMETABLES = {
         dayShort: "Tue",
         part1: [
           { subject: "CC", faculty: "JMP", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [0] },
-          { subject: "PE – III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • DBMS Lab/B007", isLab: false, colspan: 1, slotIndices: [1] }
+          { subject: "PE - III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • DBMS Lab/B007", isLab: false, colspan: 1, slotIndices: [1] }
         ],
         part2: [
           { subject: "SSEE", faculty: "KPS", batch: "Lecture • B206", isLab: false, colspan: 1, slotIndices: [2] },
@@ -479,7 +479,7 @@ const SSGMCE_CLASS_TIMETABLES = {
           { subject: "PE - III DF / DW&M", faculty: "SBP / PKB", batch: "Lecture • B2/B206", isLab: false, colspan: 1, slotIndices: [3] }
         ],
         part3: [
-          { subject: "ET Lab III – DW&M (F)", faculty: "PKB", batch: "Batch F (DW&M)", isLab: true, colspan: 2, slotIndices: [4, 5] }
+          { subject: "ET Lab III - DW&M (F)", faculty: "PKB", batch: "Batch F (DW&M)", isLab: true, colspan: 2, slotIndices: [4, 5] }
         ]
       },
       {
@@ -490,7 +490,7 @@ const SSGMCE_CLASS_TIMETABLES = {
           { subject: "BF", faculty: "NMK", batch: "Lecture • B007", isLab: false, colspan: 1, slotIndices: [1] }
         ],
         part2: [
-          { subject: "ET Lab III – DF (H) / DW&M (E)", faculty: "SBP / PKB", batch: "Batches H, E", isLab: true, colspan: 2, slotIndices: [2, 3] }
+          { subject: "ET Lab III - DF (H) / DW&M (E)", faculty: "SBP / PKB", batch: "Batches H, E", isLab: true, colspan: 2, slotIndices: [2, 3] }
         ],
         part3: [
           { subject: "CG (A) / BF (D) / Project & Seminar (B & C)", faculty: "RVD / NMK", batch: "Batches A, D, B & C", isLab: true, colspan: 2, slotIndices: [4, 5] }
@@ -521,7 +521,7 @@ const SSGMCE_CLASS_TIMETABLES = {
     ],
     practicalsTable: [
       { code: "7KS06", name: "Computer Graphics - CG", lab: "DBMS Lab" },
-      { code: "7KS07", name: "Emerging Technology Lab III: DW&M and DF", lab: "DW&M – Project Lab / DF – Data Science Lab" },
+      { code: "7KS07", name: "Emerging Technology Lab III: DW&M and DF", lab: "DW&M - Project Lab / DF - Data Science Lab" },
       { code: "7KS08", name: "Emerging Technology Lab IV: BF", lab: "SS Lab" },
       { code: "7KS09", name: "Project & Seminar", lab: "--" }
     ],
@@ -1327,7 +1327,7 @@ const StudentTimetableApp = {
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="clock" style="width:14px;height:14px;"></i> Time Slot:</span>
-            <span class="detail-val">${start12} – ${end12}</span>
+            <span class="detail-val">${start12} - ${end12}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="activity" style="width:14px;height:14px;"></i> Current Status:</span>
@@ -1490,7 +1490,7 @@ const StudentTimetableApp = {
                 <span style="opacity:0.6;">•</span>
                 <span><i data-lucide="calendar" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${readableTestDate}</span>
                 <span style="opacity:0.6;">•</span>
-                <span><i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${start12} – ${end12}</span>
+                <span><i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${start12} - ${end12}</span>
               </div>
             </div>
             <div class="upcoming-item-right">
@@ -1565,7 +1565,7 @@ const StudentTimetableApp = {
                 <span>${t.date}</span>
                 <span style="margin: 0 4px; opacity:0.5;">•</span>
                 <i data-lucide="clock" style="width:11px;height:11px;"></i>
-                <span>${start12} – ${end12}</span>
+                <span>${start12} - ${end12}</span>
               </div>
             </div>
           `;

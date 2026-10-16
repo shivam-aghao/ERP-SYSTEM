@@ -89,6 +89,21 @@ class StudentService:
         sgpa_val = float((dash and dash.get("latest_sgpa")) or 9.25)
         cgpa_val = float((dash and dash.get("latest_cgpa")) or 8.87)
 
+        today_timetable = []
+        try:
+            from backend.services.syllabus_service import SyllabusService
+            from datetime import datetime
+            today_day = datetime.now().strftime("%A").lower()
+            tt_entries = SyllabusService.get_timetable(today_day, db)
+            target_cls = str(class_name or "").strip().upper()
+            filtered_tt = [
+                e for e in tt_entries
+                if not e.get("class_code") or str(e.get("class_code", "")).strip().upper() == target_cls
+            ]
+            today_timetable = filtered_tt if filtered_tt else tt_entries
+        except Exception:
+            today_timetable = []
+
         return {
             "name": full_name,
             "fullName": full_name,
@@ -117,7 +132,8 @@ class StudentService:
             "active_backlogs": int((dash and dash.get("active_backlogs")) or 0),
             "fee_status": (dash and dash.get("fee_status")) or "partial",
             "fee_pending": float((dash and dash.get("fee_pending")) or 0.0),
-            "alerts_count": 0
+            "alerts_count": 0,
+            "todayTimetable": today_timetable
         }
 
     @staticmethod

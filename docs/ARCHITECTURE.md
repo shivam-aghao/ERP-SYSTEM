@@ -1,4 +1,4 @@
-# SSGMCE College ERP — System Architecture Specification
+# SSGMCE College ERP - System Architecture Specification
 
 ## 1. Executive Summary
 
@@ -153,7 +153,7 @@ d:\ERP-SYSTEM\
 │       ├── teacher-dashboard.js    # Teacher portal controller
 │       └── supabaseClient.js       # Supabase Realtime client
 ├── supabase\
-│   ├── migrations\                 # Step 5–8 Canonical PostgreSQL Migrations
+│   ├── migrations\                 # Step 5-8 Canonical PostgreSQL Migrations
 │   │   ├── 01_step5_quiz_schema.sql
 │   │   ├── 02_step6_academic_wallet_schema.sql
 │   │   ├── 03_notifications_realtime_alerts.sql

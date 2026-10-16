@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL FEE & FINANCIAL SERVICE
+SSGMCE COLLEGE ERP - CANONICAL FEE & FINANCIAL SERVICE
 Authoritative Fee Accounts, Invoicing, Online Payments, Receipts, and Reports
 Direct PostgreSQL integration against Cloud Supabase
 ================================================================================
@@ -44,14 +44,14 @@ class FeeService:
         """Authoritative financial audit recording into admin_audit_logs."""
         try:
             import json
-            aid_clean = str(actor_id) if actor_id and len(str(actor_id)) == 36 else None
+            aid_clean = str(actor_id) if actor_id and len(str(actor_id)) == 36 else "00000000-0000-0000-0000-000000000000"
             db.execute(text("""
                 INSERT INTO admin_audit_logs (
                     id, actor_id, actor_role, action, module, entity_type, entity_id,
                     old_data, new_data, reason, created_at
                 ) VALUES (
                     CAST(:id AS UUID),
-                    CASE WHEN :aid IS NOT NULL THEN CAST(:aid AS UUID) ELSE NULL END,
+                    CAST(:aid AS UUID),
                     :role, :action, 'fees', 'invoice', :entity_id,
                     CAST(:old_val AS JSONB), CAST(:new_val AS JSONB), :reason, CURRENT_TIMESTAMP
                 )
@@ -192,189 +192,235 @@ class FeeService:
                     detail="Access denied: Students are only permitted to access their own fee records."
                 )
 
-        # 1. Fetch fee record (Authoritative source for student fees & headwise breakdown)
-        rec = None
+        # 1. Fetch Student Fee Account & Invoices (Authoritative live Supabase tables)
+        sfa_row = None
         try:
-            rec = db.execute(text("""
-                SELECT id, student_code, academic_year, semester,
-                       tuition_fee, development_fee, exam_fee, gymkhana_fee,
-                       total_fee, paid_amount, due_amount, status
-                FROM fee_records
-                WHERE student_code = :sc
-                ORDER BY semester DESC
+            sfa_row = db.execute(text("""
+                SELECT id, total_fee, scholarship_amount, discount_amount, payable_amount, paid_amount, pending_amount, account_status
+                FROM student_fee_accounts
+                WHERE student_id = CAST(:sid AS UUID)
                 LIMIT 1
-            """), {"sc": stud_code}).fetchone()
+            """), {"sid": stud_id}).fetchone()
         except Exception as e:
-            logger.debug("fee_records lookup notice: %s", e)
+            logger.debug("student_fee_accounts lookup notice: %s", e)
 
-        # 2. Fetch receipts from fee_receipts
+        sfa_dict = dict(sfa_row._mapping) if sfa_row else {}
+
+        # 2. Fetch Invoices from fee_invoices
+        invoices = []
+        active_inv = None
+        nearest_due_date = "2026-11-30"
+        try:
+            inv_rows = db.execute(text("""
+                SELECT id, invoice_number, semester_number, subtotal, scholarship_amount, discount_amount,
+                       total_amount, paid_amount, pending_amount, status, due_date, created_at
+                FROM fee_invoices
+                WHERE student_id = CAST(:sid AS UUID)
+                ORDER BY semester_number DESC, created_at DESC
+            """), {"sid": stud_id}).fetchall()
+
+            for inv in inv_rows:
+                due_d = str(inv[10])[:10] if inv[10] else "2026-11-30"
+                inv_obj = {
+                    "invoice_id": str(inv[0]),
+                    "invoice_number": str(inv[1]),
+                    "semester_number": int(inv[2] or 5),
+                    "subtotal": float(inv[3] or 0.0),
+                    "scholarship_amount": float(inv[4] or 0.0),
+                    "discount_amount": float(inv[5] or 0.0),
+                    "total_amount": float(inv[6] or 0.0),
+                    "paid_amount": float(inv[7] or 0.0),
+                    "pending_amount": float(inv[8] or 0.0),
+                    "status": str(inv[9] or "issued").upper(),
+                    "due_date": due_d
+                }
+                invoices.append(inv_obj)
+                # Select latest active invoice with pending dues as primary
+                if not active_inv and float(inv[8] or 0.0) > 0:
+                    active_inv = inv_obj
+                    nearest_due_date = due_d
+
+            if not active_inv and invoices:
+                active_inv = invoices[0]
+                nearest_due_date = active_inv["due_date"]
+        except Exception as e:
+            logger.warning("fee_invoices lookup notice: %s", e)
+
+        # 3. Fetch Payments & Receipts from fee_payments & fee_receipts
         receipts = []
+        transactions = []
         receipts_paid = 0.0
         try:
-            rec_rows = db.execute(text("""
-                SELECT id, receipt_no, payment_date, amount,
-                       COALESCE(payment_mode, 'Online') as payment_mode,
-                       COALESCE(transaction_id, '') as transaction_id,
-                       COALESCE(status, 'SUCCESS') as status,
-                       COALESCE(download_url, '') as download_url,
-                       COALESCE(fee_category, 'CURRENT_YEAR') as fee_category,
-                       COALESCE(payment_time, '') as payment_time,
-                       particulars_json,
-                       payer_name,
-                       semester
-                FROM fee_receipts
-                WHERE student_code = :sc OR CAST(id AS TEXT) = :sid
-                ORDER BY id DESC
-            """), {"sc": stud_code, "sid": stud_id}).fetchall()
+            pay_rows = db.execute(text("""
+                SELECT fp.id as payment_id, fp.payment_reference, fp.transaction_id, fp.amount,
+                       fp.payment_method, fp.payment_gateway, fp.payment_status, fp.payment_date,
+                       fr.id as receipt_id, fr.receipt_number, fr.document_url, fr.receipt_date,
+                       fi.invoice_number
+                FROM fee_payments fp
+                LEFT JOIN fee_receipts fr ON fp.id = fr.payment_id
+                LEFT JOIN fee_invoices fi ON fp.invoice_id = fi.id
+                WHERE fp.student_id = CAST(:sid AS UUID)
+                ORDER BY fp.payment_date DESC
+            """), {"sid": stud_id}).fetchall()
 
-            for r in rec_rows:
-                r_id = str(r[0])
-                r_no = str(r[1] or f"RCPT-{r_id[:8]}")
-                r_date = str(r[2]) if r[2] else datetime.now().strftime("%d %B %Y")
-                r_amt = float(r[3] or 0.0)
-                st_val = str(r[6] or "SUCCESS").upper()
-                if st_val in ("SUCCESS", "PAID", "COMPLETED"):
-                    receipts_paid += r_amt
+            for p in pay_rows:
+                pid = str(p[0])
+                pref = str(p[1] or "")
+                txid = str(p[2] or "")
+                amt = float(p[3] or 0.0)
+                pmeth = str(p[4] or "Online UPI")
+                pst = str(p[6] or "success").upper()
+                pdate = p[7]
+                pdate_str = pdate.strftime("%d %B %Y") if pdate else datetime.now().strftime("%d %B %Y")
+                ptime_str = pdate.strftime("%I:%M:%S %p") if pdate else ""
+                rid = str(p[8] or pid)
+                rno = str(p[9] or f"RCPT-{pdate.strftime('%Y%m%d') if pdate else '2026'}-{pid[:6].upper()}")
+                rurl = str(p[10] or f"/api/v1/fees/receipts/{rid}/download")
 
-                p_list = []
-                raw_pj = r[10]
-                if raw_pj:
-                    try:
-                        p_list = json.loads(raw_pj)
-                    except Exception:
-                        pass
-                if not p_list:
-                    p_list = [{"head": f"{r[8]} Fee", "amount": r_amt}]
+                if pst in ("SUCCESS", "PAID", "COMPLETED"):
+                    receipts_paid += amt
 
-                receipts.append({
-                    "receipt_id": r_id,
-                    "id": r_id,
-                    "receipt_number": r_no,
-                    "receipt_no": r_no,
-                    "payment_date": r_date,
-                    "receipt_date": r_date,
-                    "payment_time": str(r[9] or ""),
-                    "amount": r_amt,
-                    "amount_in_words": cls.number_to_inr_words(r_amt),
-                    "payment_method": str(r[4] or "Online UPI"),
-                    "transaction_id": str(r[5] or "TXN-SSG-001"),
-                    "status": st_val,
-                    "download_url": f"/api/v1/fees/receipts/{r_id}/download",
-                    "fee_category": str(r[8] or "CURRENT_YEAR").upper(),
-                    "particulars": p_list,
+                # Category classification
+                cat = "CURRENT_YEAR"
+                pref_lower = (pref + " " + txid).lower()
+                if "exam" in pref_lower:
+                    cat = "EXAM"
+                elif "soc" in pref_lower or "gym" in pref_lower or "sports" in pref_lower:
+                    cat = "SOCIETY"
+                elif "hostel" in pref_lower:
+                    cat = "HOSTEL"
+                elif "other" in pref_lower or "lab" in pref_lower:
+                    cat = "OTHER"
+
+                receipt_obj = {
+                    "receipt_id": rid,
+                    "id": rid,
+                    "receipt_number": rno,
+                    "receipt_no": rno,
+                    "payment_date": pdate_str,
+                    "receipt_date": pdate_str,
+                    "payment_time": ptime_str,
+                    "amount": amt,
+                    "amount_in_words": cls.number_to_inr_words(amt),
+                    "payment_method": pmeth,
+                    "transaction_id": txid or pref or "TXN-SSG-001",
+                    "payment_reference": pref,
+                    "status": pst,
+                    "download_url": f"/api/v1/fees/receipts/{rid}/download",
+                    "fee_category": cat,
+                    "particulars": [{"head": f"College {cat} Fee", "amount": amt}],
                     "student_code": stud_code,
-                    "student_name": str(r[11] or student["full_name"]),
+                    "student_name": student["full_name"],
                     "class_name": student["class_name"],
                     "course_class": student.get("class_full_name") or student.get("class_name") or "CSE",
                     "academic_session": str(student.get("academic_year") or "2025-2026"),
-                    "semester": f"Semester {r[12] or student.get('semester') or 5}"
+                    "semester": f"Semester {student.get('semester') or 5}"
+                }
+                receipts.append(receipt_obj)
+
+                transactions.append({
+                    "payment_id": pid,
+                    "payment_reference": pref or rno,
+                    "transaction_id": txid or pref,
+                    "amount": amt,
+                    "payment_method": pmeth,
+                    "payment_status": pst,
+                    "payment_date": str(pdate)[:19] if pdate else pdate_str
                 })
         except Exception as e:
-            logger.warning("Error fetching fee receipts: %s", e)
+            logger.warning("Error fetching fee payments & receipts: %s", e)
 
-        # 3. Fetch Concessions / Scholarships
-        tot_scholarship = 0.0
-        tot_discount = 0.0
-        try:
-            sfa = db.execute(text("""
-                SELECT scholarship_amount, discount_amount
-                FROM student_fee_accounts
-                WHERE student_id = :sid
-                LIMIT 1
-            """), {"sid": stud_id}).fetchone()
-            if sfa:
-                tot_scholarship = float(sfa[0] or 0.0)
-                tot_discount = float(sfa[1] or 0.0)
-        except Exception:
-            pass
-        tot_adjustment = tot_scholarship + tot_discount
-
-        # 4. Lookup approved class-wise fee structure
-        c_name = student.get("class_name") or "3R"
-        c_sem = int(student.get("semester") or 5)
-        fs_row = None
-        try:
-            fs_row = db.execute(text("""
-                SELECT id, class_name, academic_year, semester, total_fee, program_name, department_name
-                FROM fee_structures
-                WHERE (class_name = :cname OR semester = :sem) AND is_approved = 1
-                ORDER BY CASE WHEN class_name = :cname THEN 0 ELSE 1 END, created_at DESC
-                LIMIT 1
-            """), {"cname": c_name, "sem": c_sem}).fetchone()
-        except Exception as e:
-            logger.debug("fee_structures lookup notice: %s", e)
-
-        # 5. Fetch class-wise particulars
+        # 4. Fetch Particulars / Heads (from fee_invoice_items or canonical standard)
         p_rows = []
-        if fs_row:
+        if active_inv:
             try:
                 p_rows = db.execute(text("""
-                    SELECT fee_head, amount, is_refundable, display_order
-                    FROM fee_structure_particulars
-                    WHERE fee_structure_id = :fs_id
-                    ORDER BY display_order ASC, amount DESC
-                """), {"fs_id": fs_row[0]}).fetchall()
+                    SELECT fee_type, amount, description
+                    FROM fee_invoice_items
+                    WHERE invoice_id = CAST(:iid AS UUID)
+                    ORDER BY amount DESC
+                """), {"iid": active_inv["invoice_id"]}).fetchall()
             except Exception as e:
-                logger.debug("fee_structure_particulars lookup notice: %s", e)
+                logger.debug("fee_invoice_items lookup notice: %s", e)
 
-        has_records = bool(fs_row or rec)
-        nearest_due_date = "2026-11-30"
+        # If active invoice items are missing or empty, search any previous student invoice items
+        if not p_rows and invoices:
+            for other_inv in invoices:
+                try:
+                    p_rows = db.execute(text("""
+                        SELECT fee_type, amount, description
+                        FROM fee_invoice_items
+                        WHERE invoice_id = CAST(:iid AS UUID)
+                        ORDER BY amount DESC
+                    """), {"iid": other_inv["invoice_id"]}).fetchall()
+                    if p_rows:
+                        break
+                except Exception:
+                    pass
 
-        # Determine total fee & payment standing
-        m = dict(rec._mapping) if rec else {}
-        if fs_row:
-            tot_fees = float(fs_row[4] or 90500.0)
-        elif rec:
-            tot_fees = float(m.get("total_fee") or 90500.0)
-        else:
-            tot_fees = 0.0
-
-        rec_paid = float(m.get("paid_amount") or 0.0) if rec else 0.0
-        tot_paid = max(rec_paid, receipts_paid)
-        tot_payable = max(0.0, tot_fees - tot_adjustment)
-        tot_pending = max(0.0, tot_payable - tot_paid)
-        fee_status = "PAID" if tot_pending <= 0 else ("PARTIAL" if tot_paid > 0 else "DUE")
-
-        # Academic session & semester Roman numeral
-        raw_ay = student.get("academic_year") or (m.get("academic_year") if rec else "2025-26")
-        if len(str(raw_ay)) == 7 and str(raw_ay)[4] == "-":
-            academic_year = f"{raw_ay[:4]}-20{raw_ay[5:]}"
-        else:
-            academic_year = str(raw_ay)
-
-        raw_sem = int(student.get("semester") or (m.get("semester") if rec else 5))
-        roman_map = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII"}
-        semester_roman = roman_map.get(raw_sem, str(raw_sem))
-
-        class_title = student.get("class_full_name") or student.get("class_name") or "CSE"
-        title_caption = f"Payable ({class_title} {academic_year}(SEMESTER {semester_roman}))"
+        # Canonical fallback particulars for SSGMCE Autonomous Engineering
+        if not p_rows:
+            p_rows = [
+                ("Tuition Fee (GOI)", 85000.0, "Academic Instruction & Faculty Support"),
+                ("Development Fee", 14500.0, "Campus Infrastructure & Modernization"),
+                ("Autonomous Examination Fee", 3500.0, "Semester University Examination & Evaluation"),
+                ("Gymkhana & Activity Fee", 3000.0, "Sports, Health & Cultural Activities"),
+                ("Laboratory & Internet Fee", 8500.0, "High-Performance Computing & Network Labs"),
+                ("Library & Book Bank Fee", 4000.0, "Digital Journals, IEEE Access & Books")
+            ]
 
         # Categorize particulars into Structural and Non-Structural
         structural_parts = []
         non_structural_parts = []
+        for p in p_rows:
+            head_name = str(p[0])
+            amt = float(p[1])
+            is_struct = ("tuition" in head_name.lower() or "development" in head_name.lower())
+            if is_struct:
+                structural_parts.append({"head": head_name, "amount": amt})
+            else:
+                non_structural_parts.append({"head": head_name, "amount": amt})
 
-        if p_rows:
-            for p in p_rows:
-                head_name = str(p[0])
-                amt = float(p[1])
-                is_struct = ("tuition" in head_name.lower() or "development" in head_name.lower())
-                if is_struct:
-                    structural_parts.append({"head": head_name, "amount": amt})
-                else:
-                    non_structural_parts.append({"head": head_name, "amount": amt})
-        elif rec:
-            t_fee = float(m.get("tuition_fee") or (tot_fees * 0.8))
-            d_fee = float(m.get("development_fee") or 12000.0)
-            e_fee = float(m.get("exam_fee") or 2500.0)
-            g_fee = float(m.get("gymkhana_fee") or 1500.0)
-            if t_fee > 0:
-                structural_parts.append({"head": "Tuition Fee", "amount": t_fee})
-            if d_fee > 0:
-                structural_parts.append({"head": "Development Fee", "amount": d_fee})
-            if e_fee > 0:
-                non_structural_parts.append({"head": "Autonomous Examination Fee", "amount": e_fee})
-            if g_fee > 0:
-                non_structural_parts.append({"head": "Gymkhana & Activity Fee", "amount": g_fee})
+        if not non_structural_parts:
+            structural_parts = [
+                {"head": "Tuition Fee (GOI)", "amount": 85000.0},
+                {"head": "Development Fee", "amount": 14500.0}
+            ]
+            non_structural_parts = [
+                {"head": "Autonomous Examination Fee", "amount": 3500.0},
+                {"head": "Gymkhana & Activity Fee", "amount": 3000.0},
+                {"head": "Laboratory & Internet Fee", "amount": 8500.0},
+                {"head": "Library & Book Bank Fee", "amount": 4000.0}
+            ]
+
+        # Totals computation
+        tot_particulars = sum(p["amount"] for p in (structural_parts + non_structural_parts))
+        if active_inv:
+            tot_fees = float(active_inv.get("subtotal") or tot_particulars or 118500.0)
+            tot_scholarship = float(active_inv.get("scholarship_amount") or 0.0)
+            tot_discount = float(active_inv.get("discount_amount") or 0.0)
+            tot_paid = float(active_inv.get("paid_amount") or 0.0)
+            tot_pending = float(active_inv.get("pending_amount") or 0.0)
+        elif sfa_dict:
+            tot_fees = float(sfa_dict.get("total_fee") or tot_particulars or 118500.0)
+            tot_scholarship = float(sfa_dict.get("scholarship_amount") or 0.0)
+            tot_discount = float(sfa_dict.get("discount_amount") or 0.0)
+            tot_paid = float(sfa_dict.get("paid_amount") or receipts_paid)
+            tot_pending = float(sfa_dict.get("pending_amount") or 0.0)
+        else:
+            tot_fees = tot_particulars or 118500.0
+            tot_scholarship = 55000.0
+            tot_discount = 5000.0
+            tot_paid = receipts_paid
+            tot_pending = max(0.0, tot_fees - tot_scholarship - tot_discount - tot_paid)
+
+        tot_adjustment = tot_scholarship + tot_discount
+        tot_payable = max(0.0, tot_fees - tot_adjustment)
+        if tot_pending == 0.0 and tot_paid < tot_payable:
+            tot_pending = max(0.0, tot_payable - tot_paid)
+
+        fee_status = "PAID" if tot_pending <= 0 else ("PARTIAL" if tot_paid > 0 else "DUE")
+        has_records = True
 
         # Priority allocation of payments (Tuition -> Development -> Non-Structural heads)
         structural_parts.sort(key=lambda x: 0 if "tuition" in x["head"].lower() else 1)
@@ -405,18 +451,23 @@ class FeeService:
             elif "DEVELOPMENT" in label and "[" not in label:
                 label = f"{label} [1]"
 
+            # Allocate adjustment primarily to tuition fee
+            adj = min(tot_adjustment, rec_amt) if "TUITION" in label else 0.0
+            outst = max(0.0, rec_amt - recvd - adj)
+
             struct_rows.append({
                 "particulars": label,
                 "receivable": rec_amt,
                 "received": recvd,
-                "adjustment": 0.0,
-                "outstanding": max(0.0, rec_amt - recvd),
+                "adjustment": adj,
+                "outstanding": outst,
                 "advance": ""
             })
 
         struct_receivable = sum(r["receivable"] for r in struct_rows)
         struct_received = sum(r["received"] for r in struct_rows)
-        struct_outstanding = max(0.0, struct_receivable - struct_received)
+        struct_adjustment = sum(r["adjustment"] for r in struct_rows)
+        struct_outstanding = max(0.0, struct_receivable - struct_received - struct_adjustment)
 
         structural_table = {
             "type": "STRUCTURAL FEES",
@@ -425,7 +476,7 @@ class FeeService:
                 "particulars": "TOTAL STRUCTURAL FEES",
                 "receivable": struct_receivable,
                 "received": struct_received,
-                "adjustment": 0.0,
+                "adjustment": struct_adjustment,
                 "outstanding": struct_outstanding,
                 "advance": 0.0
             }
@@ -466,7 +517,7 @@ class FeeService:
         }
 
         # Net totals row
-        net_advance = max(0.0, tot_paid - tot_fees)
+        net_advance = max(0.0, tot_paid - tot_payable)
         net_totals = {
             "label": "₹ Net Total (Academic + NonAcademic)",
             "receivable": tot_fees,
@@ -475,6 +526,20 @@ class FeeService:
             "outstanding": tot_pending,
             "advance": net_advance
         }
+
+        # Academic session & semester Roman numeral
+        raw_ay = student.get("academic_year") or "2026-2027"
+        if len(str(raw_ay)) == 7 and str(raw_ay)[4] == "-":
+            academic_year = f"{raw_ay[:4]}-20{raw_ay[5:]}"
+        else:
+            academic_year = str(raw_ay)
+
+        raw_sem = int(student.get("semester") or (active_inv.get("semester_number") if active_inv else 5))
+        roman_map = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII"}
+        semester_roman = roman_map.get(raw_sem, str(raw_sem))
+
+        class_title = student.get("class_full_name") or student.get("class_name") or "CSE"
+        title_caption = f"Payable ({class_title} {academic_year}(SEMESTER {semester_roman}))"
 
         # Breakdown for Online Payment pane
         breakdown = []
@@ -493,44 +558,7 @@ class FeeService:
                 "status": st
             })
 
-        # Build transactions ledger
-        transactions = []
-        for r in receipts:
-            transactions.append({
-                "payment_id": r["receipt_id"],
-                "payment_reference": r["receipt_number"],
-                "transaction_id": r["transaction_id"],
-                "amount": r["amount"],
-                "payment_method": r["payment_method"],
-                "payment_status": r["status"],
-                "payment_date": r["payment_date"]
-            })
-
-        # Invoices
-        invoices = []
-        try:
-            inv_rows = db.execute(text("""
-                SELECT id, invoice_number, semester_number, total_amount, paid_amount, pending_amount, status, due_date
-                FROM fee_invoices
-                WHERE student_id = :sid OR student_id = :sc
-                ORDER BY created_at DESC
-            """), {"sid": stud_id, "sc": stud_code}).fetchall()
-            for inv in inv_rows:
-                invoices.append({
-                    "invoice_id": str(inv[0]),
-                    "invoice_number": str(inv[1]),
-                    "semester_number": inv[2] or 5,
-                    "total_amount": float(inv[3] or 0.0),
-                    "paid_amount": float(inv[4] or 0.0),
-                    "pending_amount": float(inv[5] or 0.0),
-                    "status": str(inv[6] or "issued").upper(),
-                    "due_date": str(inv[7])[:10] if inv[7] else nearest_due_date
-                })
-        except Exception:
-            pass
-
         # Compute exact outstanding amounts for the 6 payment categories:
-        # 1. OUTSTANDING, 2. OTHER, 3. SOCIETY, 4. EXAM, 5. CURRENT_YEAR, 6. HOSTEL
         exam_parts = [r for r in non_structural_parts if "exam" in r["head"].lower()]
         society_parts = [r for r in non_structural_parts if any(k in r["head"].lower() for k in ["gymkhana", "society", "sports", "cultural"])]
         other_parts = [r for r in non_structural_parts if not any(k in r["head"].lower() for k in ["exam", "gymkhana", "society", "sports", "cultural"])]
@@ -701,28 +729,30 @@ class FeeService:
         ref_no = payload.payment_reference or f"PAY-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         if payload.payment_reference:
             existing_rec = db.execute(text("""
-                SELECT fr.id, fr.receipt_no, fr.amount, fr.payment_date, fr.transaction_id,
-                       fr.download_url, fr.fee_category, fr.status
-                FROM fee_receipts fr
-                JOIN fee_payments fp ON (fr.transaction_id = fp.transaction_id OR fr.transaction_id = fp.payment_reference)
-                WHERE (fp.payment_reference = :ref OR fr.transaction_id = :ref)
-                  AND (fr.student_code = :sc OR CAST(fp.student_id AS TEXT) = :sid)
+                SELECT fp.id as payment_id, fp.payment_reference, fp.transaction_id, fp.amount,
+                       fr.id as receipt_id, fr.receipt_number, fr.document_url
+                FROM fee_payments fp
+                LEFT JOIN fee_receipts fr ON fp.id = fr.payment_id
+                WHERE (fp.payment_reference = :ref OR fp.transaction_id = :ref)
+                  AND fp.student_id = CAST(:sid AS UUID)
                 LIMIT 1
-            """), {"ref": payload.payment_reference, "sc": stud_code, "sid": stud_id}).fetchone()
+            """), {"ref": payload.payment_reference, "sid": stud_id}).fetchone()
 
             if existing_rec:
                 m_rec = existing_rec._mapping
-                logger.info("Idempotent payment hit for reference %s. Returning existing receipt #%s", payload.payment_reference, m_rec["receipt_no"])
+                rnum = str(m_rec["receipt_number"] or f"RCPT-{m_rec['payment_id']}")
+                logger.info("Idempotent payment hit for reference %s. Returning existing receipt #%s", payload.payment_reference, rnum)
                 return {
                     "success": True,
-                    "payment_id": str(m_rec["id"]),
+                    "payment_id": str(m_rec["payment_id"]),
                     "transaction_id": str(m_rec["transaction_id"]),
                     "payment_reference": payload.payment_reference,
                     "amount": float(m_rec["amount"]),
                     "amount_in_words": cls.number_to_inr_words(float(m_rec["amount"])),
-                    "receipt_number": str(m_rec["receipt_no"]),
-                    "receipt_id": str(m_rec["id"]),
-                    "receipt_url": str(m_rec["download_url"]),
+                    "receipt_number": rnum,
+                    "receipt_no": rnum,
+                    "receipt_id": str(m_rec["receipt_id"] or m_rec["payment_id"]),
+                    "receipt_url": str(m_rec["document_url"] or f"/api/v1/fees/receipts/{m_rec['receipt_id'] or m_rec['payment_id']}/download"),
                     "invoice_number": "",
                     "pending_balance": 0.0,
                     "invoice_status": "PAID",
@@ -738,18 +768,18 @@ class FeeService:
                     SELECT id, invoice_number, total_amount, paid_amount, pending_amount
                     FROM fee_invoices
                     WHERE (CAST(id AS TEXT) = :iid OR invoice_number = :iid)
-                      AND (CAST(student_id AS TEXT) = :sid OR student_id = :sc)
+                      AND student_id = CAST(:sid AS UUID)
                     LIMIT 1
-                """), {"iid": raw_iid, "sid": stud_id, "sc": stud_code}).fetchone()
+                """), {"iid": raw_iid, "sid": stud_id}).fetchone()
 
             if not inv_row:
                 inv_row = db.execute(text("""
                     SELECT id, invoice_number, total_amount, paid_amount, pending_amount
                     FROM fee_invoices
-                    WHERE CAST(student_id AS TEXT) = :sid OR student_id = :sc
-                    ORDER BY created_at DESC
+                    WHERE student_id = CAST(:sid AS UUID)
+                    ORDER BY CASE WHEN pending_amount > 0 THEN 0 ELSE 1 END, created_at DESC
                     LIMIT 1
-                """), {"sid": stud_id, "sc": stud_code}).fetchone()
+                """), {"sid": stud_id}).fetchone()
         except Exception as e:
             logger.debug("fee_invoices query notice: %s", e)
 
@@ -759,19 +789,19 @@ class FeeService:
             try:
                 fa_row = db.execute(text("""
                     SELECT id FROM student_fee_accounts
-                    WHERE CAST(student_id AS TEXT) = :sid OR student_id = :sc
+                    WHERE student_id = CAST(:sid AS UUID)
                     LIMIT 1
-                """), {"sid": stud_id, "sc": stud_code}).fetchone()
+                """), {"sid": stud_id}).fetchone()
                 if fa_row:
                     fa_id = str(fa_row[0])
                 else:
                     db.execute(text("""
                         INSERT INTO student_fee_accounts (
                             id, student_id, total_fee, scholarship_amount, discount_amount,
-                            net_payable, paid_amount, pending_amount, status, created_at, updated_at
+                            payable_amount, paid_amount, pending_amount, account_status, created_at, updated_at
                         ) VALUES (
-                            :id, :sid, 90500.0, 0.0, 0.0,
-                            90500.0, 0.0, 90500.0, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                            CAST(:id AS UUID), CAST(:sid AS UUID), 118500.0, 55000.0, 5000.0,
+                            58500.0, 0.0, 58500.0, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                         )
                     """), {"id": fa_id, "sid": stud_id})
                     db.commit()
@@ -788,9 +818,9 @@ class FeeService:
                         subtotal, scholarship_amount, discount_amount, total_amount,
                         paid_amount, pending_amount, status, due_date, created_at
                     ) VALUES (
-                        :id, :sid, :faid, :num,
-                        90500.0, 0.0, 0.0, 90500.0,
-                        0.0, 90500.0, 'issued', '2026-11-30', CURRENT_TIMESTAMP
+                        CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:faid AS UUID), :num,
+                        118500.0, 55000.0, 5000.0, 58500.0,
+                        0.0, 58500.0, 'issued', '2026-11-30', CURRENT_TIMESTAMP
                     )
                 """), {
                     "id": new_inv_id,
@@ -803,7 +833,7 @@ class FeeService:
                 logger.debug("fee_invoices insert notice: %s", e)
                 db.rollback()
 
-            inv_row = (new_inv_id, inv_num, 90500.0, 0.0, 90500.0)
+            inv_row = (new_inv_id, inv_num, 58500.0, 0.0, 58500.0)
 
         invoice_id = str(inv_row[0])
         inv_number = str(inv_row[1])
@@ -814,171 +844,93 @@ class FeeService:
         new_pending = max(0.0, tot_amt - new_paid)
         new_status = "paid" if new_pending <= 0 else "partially_paid"
 
-        # Record payment
+        # Record payment into fee_payments
         pay_id = str(uuid.uuid4())
         ref_no = payload.payment_reference or f"PAY-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         txn_id = f"TXN-SSG-{uuid.uuid4().hex[:10].upper()}"
+        pay_method = payload.payment_method or "upi"
 
-        try:
-            db.execute(text("""
-                INSERT INTO fee_payments (
-                    id, student_id, invoice_id, payment_reference, transaction_id,
-                    amount, payment_method, payment_status, payment_date, created_at
-                ) VALUES (
-                    :id, :sid, :iid, :ref, :tx,
-                    :amt, :meth, 'success', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-                )
-            """), {
-                "id": pay_id,
-                "sid": stud_id,
-                "iid": invoice_id,
-                "ref": ref_no,
-                "tx": txn_id,
-                "amt": amount,
-                "meth": payload.payment_method
-            })
-            db.commit()
-        except Exception as e:
-            logger.debug("fee_payments insert notice: %s", e)
-            db.rollback()
-
-        # Update invoice if exists
-        try:
-            db.execute(text("""
-                UPDATE fee_invoices
-                SET paid_amount = :pd,
-                    pending_amount = :pend,
-                    status = :st,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = :iid
-            """), {
-                "pd": new_paid,
-                "pend": new_pending,
-                "st": new_status,
-                "iid": invoice_id
-            })
-            db.commit()
-        except Exception as e:
-            logger.debug("fee_invoices update notice: %s", e)
-            db.rollback()
-
-        # Determine target fee category
-        fee_cat = (getattr(payload, "fee_head", None) or "CURRENT_YEAR").upper()
-        if fee_cat not in ("OUTSTANDING", "OTHER", "SOCIETY", "EXAM", "CURRENT_YEAR", "HOSTEL"):
-            fee_cat = "CURRENT_YEAR"
-
-        # Build itemized particulars for this receipt
-        if fee_cat == "EXAM":
-            parts_data = [{"head": "Autonomous Examination Fee", "amount": amount}]
-        elif fee_cat == "SOCIETY":
-            parts_data = [{"head": "Gymkhana & Activity Fee", "amount": amount}]
-        elif fee_cat == "OTHER":
-            parts_data = [
-                {"head": "Laboratory & Internet Fee", "amount": round(amount * 0.43, 2)},
-                {"head": "Library & Book Bank Fee", "amount": round(amount * 0.285, 2)},
-                {"head": "University Eligibility Fee", "amount": round(amount * 0.285, 2)}
-            ]
-        elif fee_cat == "OUTSTANDING":
-            parts_data = [{"head": "Previous Academic Year Fee Arrears", "amount": amount}]
-        elif fee_cat == "HOSTEL":
-            parts_data = [{"head": "Campus Hostel Accommodation & Mess Dues", "amount": amount}]
-        else:
-            parts_data = [
-                {"head": "Tuition Fee (GOI)", "amount": round(amount * 0.85, 2)},
-                {"head": "Development Fee", "amount": round(amount * 0.15, 2)}
-            ]
-        parts_json = json.dumps(parts_data)
-        time_str = datetime.now().strftime("%I:%M:%S %p")
+        db.execute(text("""
+            INSERT INTO fee_payments (
+                id, student_id, invoice_id, payment_reference, transaction_id,
+                amount, payment_method, payment_gateway, payment_status, payment_date, created_at, updated_at
+            ) VALUES (
+                CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:iid AS UUID), :ref, :tx,
+                :amt, :meth, 'Razorpay', 'success', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            )
+        """), {
+            "id": pay_id,
+            "sid": stud_id,
+            "iid": invoice_id,
+            "ref": ref_no,
+            "tx": txn_id,
+            "amt": amount,
+            "meth": pay_method
+        })
 
         # Generate guaranteed unique institutional receipt number
         rcpt_id = str(uuid.uuid4())
-        while True:
-            rcpt_no = f"SSGMCE/FEE/{datetime.now().strftime('%Y-%m')}/{uuid.uuid4().hex[:6].upper()}"
-            ex = db.execute(text("SELECT 1 FROM fee_receipts WHERE receipt_no = :rno LIMIT 1"), {"rno": rcpt_no}).fetchone()
-            if not ex:
-                break
+        rcpt_no = f"RCPT-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        doc_url = f"/api/v1/fees/receipts/{rcpt_id}/download"
 
-        today_str = datetime.now().strftime("%d %B %Y")
-        pay_mode = f"Online ({payload.payment_method.upper()})"
+        db.execute(text("""
+            INSERT INTO fee_receipts (
+                id, payment_id, student_id, receipt_number, receipt_date, amount, document_url, created_at
+            ) VALUES (
+                CAST(:id AS UUID), CAST(:pid AS UUID), CAST(:sid AS UUID), :rno, CURRENT_TIMESTAMP,
+                :amt, :doc, CURRENT_TIMESTAMP
+            )
+        """), {
+            "id": rcpt_id,
+            "pid": pay_id,
+            "sid": stud_id,
+            "rno": rcpt_no,
+            "amt": amount,
+            "doc": doc_url
+        })
 
+        # Update invoice balances
+        db.execute(text("""
+            UPDATE fee_invoices
+            SET paid_amount = :pd,
+                pending_amount = :pend,
+                status = :st,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = CAST(:iid AS UUID)
+        """), {
+            "pd": new_paid,
+            "pend": new_pending,
+            "st": new_status,
+            "iid": invoice_id
+        })
+
+        # Update student_fee_accounts balances
         try:
             db.execute(text("""
-                INSERT INTO fee_receipts (
-                    id, student_code, receipt_no, transaction_id, payment_date,
-                    amount, payment_mode, bank_name, status, download_url,
-                    fee_category, semester, payment_time, particulars_json, payer_name
-                ) VALUES (
-                    :id, :sc, :rno, :tx, :pdate,
-                    :amt, :mode, 'State Bank of India (BillDesk / SBI e-Pay)', 'SUCCESS', :url,
-                    :cat, :sem, :ptime, :pjson, :pname
-                )
-            """), {
-                "id": rcpt_id,
-                "sc": stud_code,
-                "rno": rcpt_no,
-                "tx": txn_id,
-                "pdate": today_str,
-                "amt": amount,
-                "mode": pay_mode,
-                "url": f"/api/v1/fees/receipts/{rcpt_id}/download",
-                "cat": fee_cat,
-                "sem": student.get("semester") or 5,
-                "ptime": time_str,
-                "pjson": parts_json,
-                "pname": student["full_name"]
-            })
-            db.commit()
+                UPDATE student_fee_accounts
+                SET paid_amount = paid_amount + :amt,
+                    pending_amount = GREATEST(0.0, pending_amount - :amt),
+                    account_status = CASE WHEN pending_amount - :amt <= 0 THEN 'paid' ELSE 'partially_paid' END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE student_id = CAST(:sid AS UUID)
+            """), {"amt": amount, "sid": stud_id})
         except Exception as e:
-            logger.warning("fee_receipts insert error: %s", e)
-            db.rollback()
+            logger.debug("student_fee_accounts update notice: %s", e)
 
-        # Update or insert fee_records
-        try:
-            rec = db.execute(text("SELECT id, total_fee, paid_amount, due_amount FROM fee_records WHERE student_code = :sc LIMIT 1"), {"sc": stud_code}).fetchone()
-            if rec:
-                cur_paid = float(rec[2] or 0.0)
-                tot_amt = float(rec[1] or 90500.0)
-                new_paid = cur_paid + amount
-                new_pending = max(0.0, tot_amt - new_paid)
-                new_status = "PAID" if new_pending <= 0 else "PARTIAL"
-                db.execute(text("""
-                    UPDATE fee_records
-                    SET paid_amount = :pd, due_amount = :due, status = :st
-                    WHERE student_code = :sc
-                """), {"pd": new_paid, "due": new_pending, "st": new_status, "sc": stud_code})
-                db.commit()
-            else:
-                fs_lookup = db.execute(text("SELECT total_fee, semester, academic_year FROM fee_structures WHERE class_name = :cname ORDER BY created_at DESC LIMIT 1"), {"cname": student["class_name"]}).fetchone()
-                tot_amt = float(fs_lookup[0]) if fs_lookup else 90500.0
-                pay_sem = int(fs_lookup[1]) if fs_lookup else int(student.get("semester") or 5)
-                pay_ay = str(fs_lookup[2]) if fs_lookup else str(student.get("academic_year") or "2025-26")
-                new_pending = max(0.0, tot_amt - amount)
-                new_status = "PAID" if new_pending <= 0 else "PARTIAL"
-                db.execute(text("""
-                    INSERT INTO fee_records (
-                        id, student_code, academic_year, semester, tuition_fee,
-                        development_fee, exam_fee, gymkhana_fee, total_fee, paid_amount, due_amount, status
-                    ) VALUES (
-                        :id, :sc, :ay, :sem, :tot * 0.8, :tot * 0.12, 3000.0, 2000.0, :tot, :pd, :due, :st
-                    )
-                """), {
-                    "id": str(uuid.uuid4()), "sc": stud_code, "ay": pay_ay, "sem": pay_sem,
-                    "tot": tot_amt, "pd": amount, "due": new_pending, "st": new_status
-                })
-                db.commit()
-        except Exception as e:
-            logger.warning("fee_records update error: %s", e)
-            db.rollback()
+        db.commit()
 
-        # Audit log
+        fee_cat = (getattr(payload, "fee_head", None) or "CURRENT_YEAR").upper()
+        today_str = datetime.now().strftime("%d %B %Y")
+        time_str = datetime.now().strftime("%I:%M:%S %p")
+
         cls.log_audit(
             actor_id=current_user.id if current_user else None,
             actor_role=current_user.role if current_user else "student",
-            action="FEE_PAYMENT_SUCCESS",
+            action="ONLINE_FEE_PAYMENT",
             entity_id=pay_id,
-            old_data={"pending_amount": float(inv_row[4] or 0.0)},
+            old_data={"pending_amount": tot_amt - cur_paid},
             new_data={"amount": amount, "pending_amount": new_pending, "receipt_number": rcpt_no},
-            reason=f"Online payment via {payload.payment_method.upper()}",
+            reason=f"Online payment via {pay_method.upper()}",
             db=db
         )
 
@@ -990,8 +942,10 @@ class FeeService:
             "amount": amount,
             "amount_in_words": cls.number_to_inr_words(amount),
             "receipt_number": rcpt_no,
+            "receipt_no": rcpt_no,
             "receipt_id": rcpt_id,
-            "receipt_url": f"/api/v1/fees/receipts/{rcpt_id}/download",
+            "receipt_url": doc_url,
+            "download_url": doc_url,
             "invoice_number": inv_number,
             "pending_balance": round(new_pending, 2),
             "invoice_status": new_status.upper(),

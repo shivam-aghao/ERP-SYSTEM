@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SSGMCE COLLEGE ERP: STEP 6 — STUDENT ACADEMIC RECORDS & DIGITAL WALLET
+-- SSGMCE COLLEGE ERP: STEP 6 - STUDENT ACADEMIC RECORDS & DIGITAL WALLET
 -- Migration: 02_student_academic_records_digital_wallet.sql
 -- Integrates seamlessly with existing public.students, classes, subjects, etc.
 -- ==============================================================================
