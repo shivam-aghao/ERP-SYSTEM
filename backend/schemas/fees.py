@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — FEE WALLET & FINANCIAL SCHEMAS
+SSGMCE COLLEGE ERP - FEE WALLET & FINANCIAL SCHEMAS
 ================================================================================
 """
 

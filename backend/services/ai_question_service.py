@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — AI QUESTION GENERATOR & CSV QUESTION BANK SERVICE
+SSGMCE COLLEGE ERP - AI QUESTION GENERATOR & CSV QUESTION BANK SERVICE
 Institution: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 Department of Computer Science & Engineering (CSE)
 

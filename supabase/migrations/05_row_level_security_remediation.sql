@@ -1,5 +1,5 @@
 -- ====================================================================
--- SSGMCE COLLEGE ERP — COMPLETE ROW LEVEL SECURITY (RLS) REMEDIATION
+-- SSGMCE COLLEGE ERP - COMPLETE ROW LEVEL SECURITY (RLS) REMEDIATION
 -- Instituted: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 -- File: supabase/migrations/05_row_level_security_remediation.sql
 -- ====================================================================

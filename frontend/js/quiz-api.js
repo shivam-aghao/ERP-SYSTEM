@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Production Central Quiz API Client
+ * SSGMCE College ERP - Production Central Quiz API Client
  * Seamless integration with Canonical FastAPI Backend (/api/v1/quizzes, /api/v1/attempts)
  * Zero-trust security, real-time autosave, server-side evaluation, anti-cheat proctoring & analytics.
  */

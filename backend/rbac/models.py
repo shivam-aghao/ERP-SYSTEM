@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Centralized RBAC Definitions & Enums
+SSGMCE College ERP - Centralized RBAC Definitions & Enums
 backend/rbac/models.py
 
 Defines standard roles, granular permissions, and permission categories.

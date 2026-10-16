@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 8: TEACHER & ADMIN MANAGEMENT TEST SUITE
+SSGMCE COLLEGE ERP - STEP 8: TEACHER & ADMIN MANAGEMENT TEST SUITE
 Automated Verification of API Endpoints & Role-Based Workflows
 ================================================================================
 """

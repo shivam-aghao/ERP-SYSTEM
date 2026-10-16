@@ -1,4 +1,4 @@
-# SSGMCE COLLEGE ERP — COMPREHENSIVE AUTOMATED & MANUAL TEST REPORT
+# SSGMCE COLLEGE ERP - COMPREHENSIVE AUTOMATED & MANUAL TEST REPORT
 
 **Document Identifier:** SSGMCE-QA-PROD-2026-V1  
 **Target Institution:** Shri Sant Gajanan Maharaj College of Engineering, Shegaon  

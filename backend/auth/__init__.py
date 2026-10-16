@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Centralized Authentication Module
+SSGMCE College ERP - Centralized Authentication Module
 """
 
 from backend.auth.jwt_handler import (

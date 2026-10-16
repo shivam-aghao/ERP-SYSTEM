@@ -1,5 +1,5 @@
 /* ========================================================
-   TEACHER ERP — TIMETABLE MODULE CONTROLLER
+   TEACHER ERP - TIMETABLE MODULE CONTROLLER
    teacher_timetable.js / teacher-timetable.js
    SSGMCE Teacher Portal
    Integrated Regular Timetable & Test/Assessment Scheduling
@@ -219,7 +219,7 @@ const TeacherTimetableApp = {
       defaultSubjects = [
         { code: "3CS201PC", name: "Object Oriented Programming (OOP)", class_code: "2R2", semester: "III" },
         { code: "3CS203PC", name: "Object Oriented Programming Lab (OOP_LAB)", class_code: "2R2", semester: "III" },
-        { code: "5KS04", name: "PE – I (ICS)", class_code: "3R", semester: "V" },
+        { code: "5KS04", name: "PE - I (ICS)", class_code: "3R", semester: "V" },
         { code: "5KS08", name: "ET LAB-I (ICS)", class_code: "3R", semester: "V" }
       ];
     } else if (teacherId === "EMP-CSE-1003" || (activeTeacher.name && activeTeacher.name.includes("Mankar"))) {
@@ -1171,7 +1171,7 @@ const TeacherTimetableApp = {
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="clock" style="width:14px;height:14px;"></i> Timing:</span>
-            <span class="detail-val">${start12} – ${end12}</span>
+            <span class="detail-val">${start12} - ${end12}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="activity" style="width:14px;height:14px;"></i> Status:</span>
@@ -1675,9 +1675,9 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "III", code: "3CS202PC / 3CS204PC", name: "DS-R2", detail: "Data Structures Theory & DS Lab — Class 2R2 (Classroom B007/B108 & Lab 02)", th: 4, pr: 8, total: 12 },
-        { sem: "V", code: "5CS229ML", name: "(MDM#5)", detail: "MDM#5: Web Technology Lab — Class 3N (Lab 02, Batch B6 & B7)", th: 0, pr: 4, total: 4 },
-        { sem: "V", code: "5CS230OE", name: "OE-III", detail: "Open Elective - III (OE-III) — Class 3N (Classroom C1)", th: 2, pr: 0, total: 2 }
+        { sem: "III", code: "3CS202PC / 3CS204PC", name: "DS-R2", detail: "Data Structures Theory & DS Lab - Class 2R2 (Classroom B007/B108 & Lab 02)", th: 4, pr: 8, total: 12 },
+        { sem: "V", code: "5CS229ML", name: "(MDM#5)", detail: "MDM#5: Web Technology Lab - Class 3N (Lab 02, Batch B6 & B7)", th: 0, pr: 4, total: 4 },
+        { sem: "V", code: "5CS230OE", name: "OE-III", detail: "Open Elective - III (OE-III) - Class 3N (Classroom C1)", th: 2, pr: 0, total: 2 }
       ];
       totalTheoryLoad = 6;
       totalPracticalLoad = 12;
@@ -1769,10 +1769,10 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "II", code: "1AL102ES / 1AL105ES", name: "CP", detail: "Computer Programming — Second Semester / First Year (Classroom & Lab)", th: 4, pr: 6, total: 10 },
-        { sem: "III", code: "3CS205MD", name: "MDM#1", detail: "Multidisciplinary Minor #1 (MDM#1) — Class 2R1 (Classroom C2)", th: 2, pr: 0, total: 2 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R2 (Batch A)", th: 0, pr: 4, total: 4 },
-        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab — Class 3N (Lab 02, Batch B3)", th: 0, pr: 2, total: 2 }
+        { sem: "II", code: "1AL102ES / 1AL105ES", name: "CP", detail: "Computer Programming - Second Semester / First Year (Classroom & Lab)", th: 4, pr: 6, total: 10 },
+        { sem: "III", code: "3CS205MD", name: "MDM#1", detail: "Multidisciplinary Minor #1 (MDM#1) - Class 2R1 (Classroom C2)", th: 2, pr: 0, total: 2 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R2 (Batch A)", th: 0, pr: 4, total: 4 },
+        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab - Class 3N (Lab 02, Batch B3)", th: 0, pr: 2, total: 2 }
       ];
       totalTheoryLoad = 6;
       totalPracticalLoad = 12;
@@ -1870,10 +1870,10 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "III", code: "3CS200PC", name: "DSGT-R1", detail: "Discrete Structures & Graph Theory — Class 2R1 (Classroom B108)", th: 4, pr: 0, total: 4 },
-        { sem: "III", code: "3CS200PC", name: "DSGT-R2", detail: "Discrete Structures & Graph Theory — Class 2R2 (Classroom B007)", th: 4, pr: 0, total: 4 },
-        { sem: "I", code: "1FY-SKL", name: "Skill lab-I", detail: "Skill Lab-I — First Year (Classroom & Lab)", th: 1, pr: 6, total: 7 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R2 (Batch B)", th: 0, pr: 4, total: 4 }
+        { sem: "III", code: "3CS200PC", name: "DSGT-R1", detail: "Discrete Structures & Graph Theory - Class 2R1 (Classroom B108)", th: 4, pr: 0, total: 4 },
+        { sem: "III", code: "3CS200PC", name: "DSGT-R2", detail: "Discrete Structures & Graph Theory - Class 2R2 (Classroom B007)", th: 4, pr: 0, total: 4 },
+        { sem: "I", code: "1FY-SKL", name: "Skill lab-I", detail: "Skill Lab-I - First Year (Classroom & Lab)", th: 1, pr: 6, total: 7 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R2 (Batch B)", th: 0, pr: 4, total: 4 }
       ];
       totalTheoryLoad = 9;
       totalPracticalLoad = 10;
@@ -1965,10 +1965,10 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "I", code: "1FY-CP", name: "CP", detail: "Computer Programming — First Year (Classroom & Lab)", th: 4, pr: 6, total: 10 },
-        { sem: "V", code: "5CS227MD", name: "MDM#3", detail: "Multidisciplinary Minor #3 (MDM#3) — Class 3N (Classroom C2)", th: 2, pr: 0, total: 2 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R1 (Batch A)", th: 0, pr: 4, total: 4 },
-        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab — Class 3N (Lab 02, Batch B2)", th: 0, pr: 2, total: 2 }
+        { sem: "I", code: "1FY-CP", name: "CP", detail: "Computer Programming - First Year (Classroom & Lab)", th: 4, pr: 6, total: 10 },
+        { sem: "V", code: "5CS227MD", name: "MDM#3", detail: "Multidisciplinary Minor #3 (MDM#3) - Class 3N (Classroom C2)", th: 2, pr: 0, total: 2 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R1 (Batch A)", th: 0, pr: 4, total: 4 },
+        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab - Class 3N (Lab 02, Batch B2)", th: 0, pr: 2, total: 2 }
       ];
       totalTheoryLoad = 6;
       totalPracticalLoad = 12;
@@ -2064,9 +2064,9 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "VII", code: "7KS02 / 7KS06", name: "CG", detail: "Computer Graphics & CG Lab — Class 4R (Classroom B206 & Graphics Lab)", th: 3, pr: 8, total: 11 },
-        { sem: "V", code: "5CS220PC", name: "DBMS", detail: "Database Management Systems (DMS) — Class 3N (Classroom B206)", th: 3, pr: 0, total: 3 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R2 (Batch C)", th: 0, pr: 4, total: 4 }
+        { sem: "VII", code: "7KS02 / 7KS06", name: "CG", detail: "Computer Graphics & CG Lab - Class 4R (Classroom B206 & Graphics Lab)", th: 3, pr: 8, total: 11 },
+        { sem: "V", code: "5CS220PC", name: "DBMS", detail: "Database Management Systems (DMS) - Class 3N (Classroom B206)", th: 3, pr: 0, total: 3 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R2 (Batch C)", th: 0, pr: 4, total: 4 }
       ];
       totalTheoryLoad = 6;
       totalPracticalLoad = 12;
@@ -2161,10 +2161,10 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "V", code: "5CS222PC", name: "CAO", detail: "Computer Architecture & Organization — Class 3N (Classroom B206)", th: 3, pr: 0, total: 3 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R1 (Batch B)", th: 0, pr: 4, total: 4 },
-        { sem: "I", code: "WS(R1)", name: "WS(R1)", detail: "Workshop Practice — Class 1R1 (Workshop)", th: 0, pr: 6, total: 6 },
-        { sem: "V", code: "5CS228MD / 5CS229ML", name: "WT (MDM#4 / MDM#5)", detail: "Web Technology Theory (MDM#4) & Lab (MDM#5) — Class 3N (C2 & Lab 01)", th: 2, pr: 2, total: 4 }
+        { sem: "V", code: "5CS222PC", name: "CAO", detail: "Computer Architecture & Organization - Class 3N (Classroom B206)", th: 3, pr: 0, total: 3 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R1 (Batch B)", th: 0, pr: 4, total: 4 },
+        { sem: "I", code: "WS(R1)", name: "WS(R1)", detail: "Workshop Practice - Class 1R1 (Workshop)", th: 0, pr: 6, total: 6 },
+        { sem: "V", code: "5CS228MD / 5CS229ML", name: "WT (MDM#4 / MDM#5)", detail: "Web Technology Theory (MDM#4) & Lab (MDM#5) - Class 3N (C2 & Lab 01)", th: 2, pr: 2, total: 4 }
       ];
       totalTheoryLoad = 5;
       totalPracticalLoad = 12;
@@ -2238,7 +2238,7 @@ const TeacherTimetableApp = {
             { subject: "OOP(2R1-C)", room: "Lab", class_code: "2R1 (Sem III)", batch: "Batch C", fullTitle: "OOP Lab (Batch C)", isLab: true, colspan: 2, slotIndices: [0, 1] }
           ],
           part2: [
-            { subject: "ET Lab III – DF (H)", room: "ET Lab III", class_code: "4R (Sem VII)", batch: "Batch H", fullTitle: "ET Lab III – DF (Batch H)", isLab: true, colspan: 2, slotIndices: [2, 3] }
+            { subject: "ET Lab III - DF (H)", room: "ET Lab III", class_code: "4R (Sem VII)", batch: "Batch H", fullTitle: "ET Lab III - DF (Batch H)", isLab: true, colspan: 2, slotIndices: [2, 3] }
           ],
           part3: [
             { subject: "Free / Prep", isFree: true, colspan: 2, slotIndices: [4, 5] }
@@ -2260,8 +2260,8 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "III", code: "3CS201PC / 3CS203PC", name: "OOP", detail: "Object Oriented Programming & OOP Lab — Class 2R1 (Classroom B108 & Lab)", th: 4, pr: 8, total: 12 },
-        { sem: "VII", code: "7KS04 / 7KS07", name: "PE-III DF", detail: "Digital Forensics & ET Lab III DF — Class 4R (Classroom B6/B2 & Lab)", th: 3, pr: 2, total: 5 }
+        { sem: "III", code: "3CS201PC / 3CS203PC", name: "OOP", detail: "Object Oriented Programming & OOP Lab - Class 2R1 (Classroom B108 & Lab)", th: 4, pr: 8, total: 12 },
+        { sem: "VII", code: "7KS04 / 7KS07", name: "PE-III DF", detail: "Digital Forensics & ET Lab III DF - Class 4R (Classroom B6/B2 & Lab)", th: 3, pr: 2, total: 5 }
       ];
       totalTheoryLoad = 7;
       totalPracticalLoad = 10;
@@ -2358,9 +2358,9 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "III", code: "3CS202PC / 3CS204PC", name: "DS", detail: "Data Structures & DS Lab — Class 2R1 (Classroom B108 & Lab)", th: 4, pr: 8, total: 12 },
-        { sem: "VII", code: "7KS01", name: "SSEE", detail: "System Software & Engineering Economics — Class 4R", th: 3, pr: 0, total: 3 },
-        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab — Class 3N/3R (Batch B4)", th: 0, pr: 2, total: 2 }
+        { sem: "III", code: "3CS202PC / 3CS204PC", name: "DS", detail: "Data Structures & DS Lab - Class 2R1 (Classroom B108 & Lab)", th: 4, pr: 8, total: 12 },
+        { sem: "VII", code: "7KS01", name: "SSEE", detail: "System Software & Engineering Economics - Class 4R", th: 3, pr: 0, total: 3 },
+        { sem: "V", code: "5CS229ML", name: "MDM#5", detail: "MDM#5: Web Technology Lab - Class 3N/3R (Batch B4)", th: 0, pr: 2, total: 2 }
       ];
       totalTheoryLoad = 7;
       totalPracticalLoad = 10;
@@ -2409,7 +2409,7 @@ const TeacherTimetableApp = {
             { subject: "ET Lab-I DSS (E)", room: "Lab", class_code: "3N (Sem V)", batch: "Batch E", fullTitle: "ET Lab-I DSS (Batch E)", isLab: true, colspan: 2, slotIndices: [2, 3] }
           ],
           part3: [
-            { subject: "ET Lab III – DW&M (G)", room: "Lab", class_code: "4R (Sem VII)", batch: "Batch G", fullTitle: "ET Lab III – DW&M (Batch G)", isLab: true, colspan: 2, slotIndices: [4, 5] }
+            { subject: "ET Lab III - DW&M (G)", room: "Lab", class_code: "4R (Sem VII)", batch: "Batch G", fullTitle: "ET Lab III - DW&M (Batch G)", isLab: true, colspan: 2, slotIndices: [4, 5] }
           ]
         },
         {
@@ -2434,7 +2434,7 @@ const TeacherTimetableApp = {
             { subject: "Free Slot", isFree: true, colspan: 1, slotIndices: [1] }
           ],
           part2: [
-            { subject: "ET Lab III – DW&M (E)", room: "Lab", class_code: "4R (Sem VII)", batch: "Batch E", fullTitle: "ET Lab III – DW&M (Batch E)", isLab: true, colspan: 2, slotIndices: [2, 3] }
+            { subject: "ET Lab III - DW&M (E)", room: "Lab", class_code: "4R (Sem VII)", batch: "Batch E", fullTitle: "ET Lab III - DW&M (Batch E)", isLab: true, colspan: 2, slotIndices: [2, 3] }
           ],
           part3: [
             { subject: "ET Lab-I DSS (F)", room: "Lab", class_code: "3N (Sem V)", batch: "Batch F", fullTitle: "ET Lab-I DSS (Batch F)", isLab: true, colspan: 2, slotIndices: [4, 5] }
@@ -2456,8 +2456,8 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "V", code: "5CS223PE / 5CS226PE", name: "PE-I DSS", detail: "Decision Support Systems (DSS) & Lab — Class 3N (Classroom B206 & Lab)", th: 3, pr: 6, total: 9 },
-        { sem: "VII", code: "7KS04 / 7KS07", name: "PE-III DWM", detail: "Data Warehousing & Mining (DWM) & Lab — Class 4R (Classroom B206/B007 & Lab)", th: 3, pr: 6, total: 9 }
+        { sem: "V", code: "5CS223PE / 5CS226PE", name: "PE-I DSS", detail: "Decision Support Systems (DSS) & Lab - Class 3N (Classroom B206 & Lab)", th: 3, pr: 6, total: 9 },
+        { sem: "VII", code: "7KS04 / 7KS07", name: "PE-III DWM", detail: "Data Warehousing & Mining (DWM) & Lab - Class 4R (Classroom B206/B007 & Lab)", th: 3, pr: 6, total: 9 }
       ];
       totalTheoryLoad = 6;
       totalPracticalLoad = 12;
@@ -2554,10 +2554,10 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "III", code: "3CS201PC", name: "OOP", detail: "Object Oriented Programming (OOP) — Class 2R2 (Classroom B007)", th: 4, pr: 0, total: 4 },
-        { sem: "III", code: "3CS203PC", name: "OOP_LAB", detail: "Object Oriented Programming Lab — Class 2R2 (Batches A, B, C, D)", th: 0, pr: 8, total: 8 },
-        { sem: "V", code: "5KS04", name: "PE – I (ICS)", detail: "PE-I: Introduction to Cyber Security — Class 3R (DBMS Lab)", th: 3, pr: 0, total: 3 },
-        { sem: "V", code: "5KS08", name: "ET LAB-I (ICS)", detail: "ET LAB-I (ICS) Practical — Class 3R (Batch H)", th: 0, pr: 2, total: 2 }
+        { sem: "III", code: "3CS201PC", name: "OOP", detail: "Object Oriented Programming (OOP) - Class 2R2 (Classroom B007)", th: 4, pr: 0, total: 4 },
+        { sem: "III", code: "3CS203PC", name: "OOP_LAB", detail: "Object Oriented Programming Lab - Class 2R2 (Batches A, B, C, D)", th: 0, pr: 8, total: 8 },
+        { sem: "V", code: "5KS04", name: "PE - I (ICS)", detail: "PE-I: Introduction to Cyber Security - Class 3R (DBMS Lab)", th: 3, pr: 0, total: 3 },
+        { sem: "V", code: "5KS08", name: "ET LAB-I (ICS)", detail: "ET LAB-I (ICS) Practical - Class 3R (Batch H)", th: 0, pr: 2, total: 2 }
       ];
       totalTheoryLoad = 7;
       totalPracticalLoad = 10;
@@ -2652,9 +2652,9 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "V", code: "5CS221PC / 5CS225PC", name: "CD", detail: "Compiler Design (CD) — Class 3N (Classroom B206 & Lab)", th: 3, pr: 8, total: 11 },
-        { sem: "V", code: "5CS227MD", name: "MDM#3", detail: "Multidisciplinary Minor #3 (MDM#3) — Classroom C1", th: 2, pr: 0, total: 2 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R1 (Batch C)", th: 0, pr: 4, total: 4 }
+        { sem: "V", code: "5CS221PC / 5CS225PC", name: "CD", detail: "Compiler Design (CD) - Class 3N (Classroom B206 & Lab)", th: 3, pr: 8, total: 11 },
+        { sem: "V", code: "5CS227MD", name: "MDM#3", detail: "Multidisciplinary Minor #3 (MDM#3) - Classroom C1", th: 2, pr: 0, total: 2 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R1 (Batch C)", th: 0, pr: 4, total: 4 }
       ];
       totalTheoryLoad = 5;
       totalPracticalLoad = 12;
@@ -2747,9 +2747,9 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "VII", code: "7KS05", name: "BF", detail: "Blockchain Fundamentals — Class 4R (Classroom B007)", th: 3, pr: 0, total: 3 },
-        { sem: "VII", code: "7KS08", name: "ET LAB IV BF", detail: "ET LAB IV BF (Practical) — Class 4R (Batches A, B, C, D)", th: 0, pr: 8, total: 8 },
-        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) — Class 2R2 (Batch D)", th: 0, pr: 4, total: 4 }
+        { sem: "VII", code: "7KS05", name: "BF", detail: "Blockchain Fundamentals - Class 4R (Classroom B007)", th: 3, pr: 0, total: 3 },
+        { sem: "VII", code: "7KS08", name: "ET LAB IV BF", detail: "ET LAB IV BF (Practical) - Class 4R (Batches A, B, C, D)", th: 0, pr: 8, total: 8 },
+        { sem: "III", code: "3CS400EL", name: "Community / Field Project", detail: "Community / Field Project (CEP) - Class 2R2 (Batch D)", th: 0, pr: 4, total: 4 }
       ];
       totalTheoryLoad = 3;
       totalPracticalLoad = 12;
@@ -2843,8 +2843,8 @@ const TeacherTimetableApp = {
       ];
 
       teachingLoadRows = [
-        { sem: "VII", code: "7KS03", name: "Cloud Computing (CC)", detail: "Cloud Computing (CC) — Class 4R (Classroom B007)", th: 4, pr: 0, total: 4 },
-        { sem: "V", code: "5CS224PC", name: "Database Management Systems Lab (DBMS / DMS)", detail: "Database Management Systems Lab (DBMS / DMS) — Class 3N (Batches A, B, C, D)", th: 0, pr: 8, total: 8 }
+        { sem: "VII", code: "7KS03", name: "Cloud Computing (CC)", detail: "Cloud Computing (CC) - Class 4R (Classroom B007)", th: 4, pr: 0, total: 4 },
+        { sem: "V", code: "5CS224PC", name: "Database Management Systems Lab (DBMS / DMS)", detail: "Database Management Systems Lab (DBMS / DMS) - Class 3N (Batches A, B, C, D)", th: 0, pr: 8, total: 8 }
       ];
       totalTheoryLoad = 4;
       totalPracticalLoad = 8;
@@ -2932,7 +2932,7 @@ const TeacherTimetableApp = {
                 <span style="opacity:0.6;">•</span>
                 <span><i data-lucide="calendar" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${readableTestDate}</span>
                 <span style="opacity:0.6;">•</span>
-                <span><i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${start12} – ${end12}</span>
+                <span><i data-lucide="clock" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${start12} - ${end12}</span>
                 <span style="opacity:0.6;">•</span>
                 <span style="color:#0284C7; font-weight:600;"><i data-lucide="user" style="width:11px;height:11px;display:inline;vertical-align:-1px;"></i> ${t.faculty_name || 'Dr. J. M. Patil'}</span>
               </div>
@@ -3008,7 +3008,7 @@ const TeacherTimetableApp = {
                 <span>${t.date}</span>
                 <span style="margin: 0 4px; opacity:0.5;">•</span>
                 <i data-lucide="clock" style="width:11px;height:11px;"></i>
-                <span>${start12} – ${end12}</span>
+                <span>${start12} - ${end12}</span>
               </div>
               <div class="test-faculty-author" style="margin-top:4px; font-size:10.5px; color:#475569; display:flex; align-items:center; gap:4px; font-weight:600;">
                 <i data-lucide="user" style="width:10px;height:10px;color:#0284C7;"></i>
@@ -3358,7 +3358,7 @@ const TeacherTimetableApp = {
                 <tr>
                   <td><strong>${row.sem}</strong></td>
                   <td><code>${row.code}</code></td>
-                  <td style="text-align:left;">${row.detail || `<strong>${row.name}</strong>${row.class_code ? ` — Class ${row.class_code}` : ''}`}</td>
+                  <td style="text-align:left;">${row.detail || `<strong>${row.name}</strong>${row.class_code ? ` - Class ${row.class_code}` : ''}`}</td>
                   <td>${thVal > 0 ? `<strong>${String(thVal).padStart(2, '0')}</strong>` : '--'}</td>
                   <td>${prVal > 0 ? `<strong>${String(prVal).padStart(2, '0')}</strong>` : '--'}</td>
                   <td><strong>${String(row.total).padStart(2, '0')} Hrs</strong></td>

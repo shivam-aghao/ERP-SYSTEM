@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Admin Portal API Client
+ * SSGMCE College ERP - Admin Portal API Client
  */
 (function (window) {
   'use strict';

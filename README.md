@@ -275,7 +275,7 @@ Implemented in [`frontend/js/student-quiz-security.js`](file:///d:/ERP-SYSTEM/fr
 | :--- | :--- | :--- |
 | **Window Blur / Tab Switch (Warnings 1 - 3)** | Screen blurs. Modal displays: `Recorded Warning X of 5`. Student must acknowledge notice to resume. | Event logged to `quiz_security_events` with timestamp and metadata. |
 | **Warning 4 of 5** | Caution banner: `⚠️ FINAL WARNING: 1 more focus loss will automatically submit your quiz!` | Flagged in faculty proctoring logs. |
-| **Warning 5 of 5 (Limit Exceeded)** | Modal locks permanently. Badge indicates `Recorded Warning 5 of 5 — Limit Reached`. Button changes to disabled `Submitting Quiz Responses...`. Resume is disabled. | **Immediate Automatic Submit**: Submits attempt payload with `is_auto_submit: true, submission_reason: "max_security_violations"`. |
+| **Warning 5 of 5 (Limit Exceeded)** | Modal locks permanently. Badge indicates `Recorded Warning 5 of 5 - Limit Reached`. Button changes to disabled `Submitting Quiz Responses...`. Resume is disabled. | **Immediate Automatic Submit**: Submits attempt payload with `is_auto_submit: true, submission_reason: "max_security_violations"`. |
 | **Attempt Resubmission** | Blocked. Attempts in `auto_submitted` or `submitted` status reject subsequent modifications. | HTTP 400 rejection on subsequent answer posts. |
 
 ---

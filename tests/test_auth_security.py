@@ -280,7 +280,7 @@ def test_student_idor_protection():
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("SSGMCE COLLEGE ERP — CENTRAL AUTHENTICATION & SECURITY TEST SUITE")
+    print("SSGMCE COLLEGE ERP - CENTRAL AUTHENTICATION & SECURITY TEST SUITE")
     print("=" * 70)
 
     tests = [

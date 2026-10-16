@@ -1,5 +1,5 @@
 -- ============================================================================
--- SSGMCE COLLEGE ERP — STEP 7: NOTIFICATIONS & REAL-TIME ALERTS
+-- SSGMCE COLLEGE ERP - STEP 7: NOTIFICATIONS & REAL-TIME ALERTS
 -- Database Migration: 03_notifications_realtime_alerts.sql
 -- Production-Ready PostgreSQL Schema for Supabase Cloud
 -- ============================================================================

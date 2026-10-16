@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Centralized JWT Token Handler
+SSGMCE College ERP - Centralized JWT Token Handler
 Issues, verifies, and decodes cryptographically signed JWT access & refresh tokens.
 """
 

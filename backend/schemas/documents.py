@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — DIGITAL DOCUMENT WALLET SCHEMAS
+SSGMCE COLLEGE ERP - DIGITAL DOCUMENT WALLET SCHEMAS
 ================================================================================
 """
 

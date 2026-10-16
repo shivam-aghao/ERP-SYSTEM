@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 8: TEACHER & ADMIN MANAGEMENT SERVICE
+SSGMCE COLLEGE ERP - STEP 8: TEACHER & ADMIN MANAGEMENT SERVICE
 Business Logic Layer for Role-Based Academic & Administrative Management
 ================================================================================
 """

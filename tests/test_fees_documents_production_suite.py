@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — FEES & DOCUMENTS PRODUCTION INTEGRATION TEST SUITE
+SSGMCE COLLEGE ERP - FEES & DOCUMENTS PRODUCTION INTEGRATION TEST SUITE
 ================================================================================
 Comprehensive verification of Student Financials & Digital Document Vault:
   1. Real User Authentication (Student 308637, Student 308638, Admin)
@@ -407,7 +407,7 @@ def run_tests():
             print(f"  ✓ Cryptographic verification confirmed for code: {code}")
 
     print("\n" + "=" * 80)
-    print("ALL 13 TESTS PASSED PERFECTLY — FEES & DOCUMENTS SUITE FULLY OPERATIONAL!")
+    print("ALL 13 TESTS PASSED PERFECTLY - FEES & DOCUMENTS SUITE FULLY OPERATIONAL!")
     print("=" * 80)
 
 

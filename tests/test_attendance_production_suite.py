@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — ATTENDANCE PRODUCTION TEST SUITE
+SSGMCE COLLEGE ERP - ATTENDANCE PRODUCTION TEST SUITE
 Comprehensive verification of database-driven, role-secure attendance system.
 ================================================================================
 """

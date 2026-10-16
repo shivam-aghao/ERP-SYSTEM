@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL TIMETABLE ROUTER
+SSGMCE COLLEGE ERP - CANONICAL TIMETABLE ROUTER
 Namespace: /api/v1/timetable/...
 Authoritative Timetable Grid, Faculty Schedules & Scheduled Assessments
 ================================================================================

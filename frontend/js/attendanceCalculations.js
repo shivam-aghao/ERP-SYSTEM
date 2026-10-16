@@ -23,8 +23,8 @@
     /**
      * Return semantic status metadata based on percentage thresholds:
      * 80%+       -> Good
-     * 75–79%     -> Warning
-     * 50–74%     -> Low
+     * 75-79%     -> Warning
+     * 50-74%     -> Low
      * Below 50%  -> Critical
      */
     getStatus(percentage) {

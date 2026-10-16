@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL ATTENDANCE ROUTER
+SSGMCE COLLEGE ERP - CANONICAL ATTENDANCE ROUTER
 Namespace: /api/v1/attendance/...
 Authoritative Attendance Roster, Session Tracking, Marking, Audit & Governance
 ================================================================================

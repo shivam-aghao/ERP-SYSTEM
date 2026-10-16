@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Role-Based Access Control (RBAC) Specification
+# SSGMCE College ERP - Role-Based Access Control (RBAC) Specification
 
 **Institution:** Shri Sant Gajanan Maharaj College of Engineering, Shegaon  
 **Document:** Enterprise Role-Based Access Control Architecture  

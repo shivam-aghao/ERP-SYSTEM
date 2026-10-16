@@ -14,7 +14,7 @@ def main():
     teachers = teachers_resp["data"]
     print(f"Total CSE Faculty Members in DB: {len(teachers)}")
     for t in teachers:
-        print(f"  [{t['emp_code']}] {t['full_name']} — Load: {t['total_load_hours']} hrs")
+        print(f"  [{t['emp_code']}] {t['full_name']} - Load: {t['total_load_hours']} hrs")
 
     print("\n==================================================")
     print("TEST 2: Personal Timetable Isolation Verification")

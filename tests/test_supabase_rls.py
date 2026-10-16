@@ -1,6 +1,6 @@
 """
 ======================================================================
-SSGMCE COLLEGE ERP — COMPLETE SUPABASE ROW LEVEL SECURITY (RLS) TEST SUITE
+SSGMCE COLLEGE ERP - COMPLETE SUPABASE ROW LEVEL SECURITY (RLS) TEST SUITE
 ======================================================================
 Tests row-level isolation and security policy enforcement across:
 1. Unauthenticated (anon) access denial & public verification
@@ -61,7 +61,7 @@ def execute_rls_sql(sql: str):
 
 def run_tests():
     print("=" * 70)
-    print("SSGMCE COLLEGE ERP — ROW LEVEL SECURITY (RLS) AUDIT SUITE")
+    print("SSGMCE COLLEGE ERP - ROW LEVEL SECURITY (RLS) AUDIT SUITE")
     print("=" * 70)
 
     passed_tests = 0

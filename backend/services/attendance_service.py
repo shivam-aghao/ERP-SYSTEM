@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION ATTENDANCE SERVICE
+SSGMCE COLLEGE ERP - PRODUCTION ATTENDANCE SERVICE
 Authoritative Database-Driven Attendance Architecture & Role Security
 ================================================================================
 """

@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Central Authentication Service
+SSGMCE College ERP - Central Authentication Service
 Authoritatively authenticates Students, Teachers, and Administrators against Supabase PostgreSQL.
 Issues cryptographically signed JWT tokens and handles session verification, refresh, and revocation.
 """

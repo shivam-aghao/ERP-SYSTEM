@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — UNIFIED AUTONOMOUS ENTERPRISE BACKEND
+SSGMCE COLLEGE ERP - UNIFIED AUTONOMOUS ENTERPRISE BACKEND
 Institution: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 Clean Canonical API Architecture under /api/v1:
   - /api/v1/auth/...

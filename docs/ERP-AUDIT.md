@@ -1,4 +1,4 @@
-# SSGMCE COLLEGE ERP — COMPREHENSIVE ARCHITECTURAL AUDIT REPORT
+# SSGMCE COLLEGE ERP - COMPREHENSIVE ARCHITECTURAL AUDIT REPORT
 **Document Reference:** `docs/ERP-AUDIT.md`  
 **Institution:** Shri Sant Gajanan Maharaj College of Engineering, Shegaon  
 **Date of Audit:** October 8, 2026  
@@ -94,8 +94,8 @@ Configured in `run_backend.bat`.
 
 ### 3.2 Backend Route Organization & Shadowing Issue
 The FastAPI application in `backend/main.py` has two conflicting route mounting patterns:
-1. **Inline Monolithic Router (`api = APIRouter(prefix="/api/v1")`):** Contains ~164 endpoint handlers declared directly in `backend/main.py` lines 102–2776.
-2. **Modular Routers (`backend/routes/*`):** Included at lines 2781–2802:
+1. **Inline Monolithic Router (`api = APIRouter(prefix="/api/v1")`):** Contains ~164 endpoint handlers declared directly in `backend/main.py` lines 102-2776.
+2. **Modular Routers (`backend/routes/*`):** Included at lines 2781-2802:
    - `admin_router` (`backend/routes/admin.py`) -> mounted at `/api/v1`
    - `faculty_router` (`backend/routes/faculty.py`) -> mounted at `/api/v1`
    - `attendance_router` (`backend/routes/attendance.py`) -> mounted at `/api/v1`
@@ -184,7 +184,7 @@ Authentication is managed via `frontend/js/auth.js`, `frontend/js/config.js`, an
 5. **Route Protection (`frontend/js/erp-auth-guard.js`):** Every dashboard runs a client-side auth guard that inspects `localStorage` on page load. If missing or role mismatches, redirects user to `login.html`.
 
 ### 5.2 Unresolved Merge Conflict in Auth Flow
-In `frontend/js/auth.js` (lines 150–158):
+In `frontend/js/auth.js` (lines 150-158):
 ```javascript
 if (role === 'teacher' || role === 'faculty') {
   localStorage.setItem(STORAGE_TEACHER_TOKEN, token);
@@ -220,7 +220,7 @@ The repository contains extensive duplication from earlier development stages:
 ### 7.1 Orphaned Subdirectories
 1. **`Teacher_Dashboard/` (Complete Parallel Node.js Application):**
    - Contains a separate Express backend (`Teacher_Dashboard/backend/server.js`, 15 controllers, 15 route files, Prisma schemas, 10 services).
-   - Contains a duplicate frontend (`Teacher_Dashboard/frontend/index.html` — 105 KB, React components, CSS).
+   - Contains a duplicate frontend (`Teacher_Dashboard/frontend/index.html` - 105 KB, React components, CSS).
    - **Status:** Orphaned. The active system runs on FastAPI port 8000. `Teacher_Dashboard` is not used by the unified system, but batch scripts (`start_all_servers.bat`, `start_teacher_backend.bat`) still reference it.
 2. **`faculty/` (Legacy Standalone Faculty Backend & Frontend):**
    - `faculty/backend/attendance_api/`: Standalone FastAPI attendance API.
@@ -332,7 +332,7 @@ flowchart TD
    - While `anon` keys are meant for public client access, direct frontend PostgREST queries must be protected by strict RLS policies.
 3. **Corrupted Root `.env`:**
    - File: `.env` (root directory).
-   - Lines 3–6 contain copied terminal output (`PS D:\ERP-SYSTEM> npx supabase start ... failed to inspect container health ...`). This causes syntax errors in standard `.env` parsers.
+   - Lines 3-6 contain copied terminal output (`PS D:\ERP-SYSTEM> npx supabase start ... failed to inspect container health ...`). This causes syntax errors in standard `.env` parsers.
 
 ### 9.2 Git Merge Conflict Markers in Executable Files (CRITICAL)
 The following active code files contain unmerged Git conflict markers (`<<<<<<< HEAD` / `=======` / `>>>>>>>`):
@@ -358,7 +358,7 @@ The following active code files contain unmerged Git conflict markers (`<<<<<<< 
    - `backend/main.py` defines 164 inline routes on `api = APIRouter(prefix="/api/v1")`, and later includes `backend.routes.*` on `/api/v1`.
    - When endpoints have matching paths, FastAPI serves the first one declared, creating confusion during development and making modular route files appear unresponsive to updates.
 2. **Port 5001 Probe Latency:**
-   - `frontend/js/api.js` (lines 66–105) contains a fallback probe that attempts to query `http://localhost:5001/health` (the old Node.js backend). If the Node.js server is not running, the browser waits for connection timeout before failing over, introducing UI latency on startup.
+   - `frontend/js/api.js` (lines 66-105) contains a fallback probe that attempts to query `http://localhost:5001/health` (the old Node.js backend). If the Node.js server is not running, the browser waits for connection timeout before failing over, introducing UI latency on startup.
 3. **Dual Persistence Divergence (SQLite vs Supabase Cloud):**
    - In `backend/services/attendance_service.py` and `backend/routes/attendance.py`, some queries attempt to read from Supabase and fall back to SQLite `SessionLocal()`. This can lead to split data where attendance taken on one machine is missing from cloud queries.
 

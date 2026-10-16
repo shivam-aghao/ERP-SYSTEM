@@ -1507,7 +1507,7 @@ const AttendanceWorkflow = {
     // Enforce duplicate attendance prevention
     if (AttendanceState.isSessionAlreadySubmitted(date, classCode, subCode, lectureTime)) {
       if (window.TeacherApp) {
-        TeacherApp.showToast(`⚠ Duplicate Attendance Prevented: Attendance for Division ${classCode} — ${subCode} on ${date} (${lectureTime}) has already been submitted.`, "warning");
+        TeacherApp.showToast(`⚠ Duplicate Attendance Prevented: Attendance for Division ${classCode} - ${subCode} on ${date} (${lectureTime}) has already been submitted.`, "warning");
       }
       return;
     }

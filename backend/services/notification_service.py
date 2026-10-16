@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 7: NOTIFICATIONS & REAL-TIME ALERTS SERVICE
+SSGMCE COLLEGE ERP - STEP 7: NOTIFICATIONS & REAL-TIME ALERTS SERVICE
 Unified Autonomous Notification & Alert Service connecting to Supabase Cloud
 ================================================================================
 """

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL ADMIN ROUTER
+SSGMCE COLLEGE ERP - CANONICAL ADMIN ROUTER
 Namespace: /api/v1/admin/...
 Authoritative Administrative Dashboard, Institutional Analytics & Oversight
 ================================================================================

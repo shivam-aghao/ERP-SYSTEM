@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — ACADEMIC RECORDS MODULE PRODUCTION TEST SUITE
+SSGMCE COLLEGE ERP - ACADEMIC RECORDS MODULE PRODUCTION TEST SUITE
 Comprehensive End-to-End Verification of Student, Teacher, and Admin Flows
 Against Live Cloud Supabase PostgreSQL
 ================================================================================

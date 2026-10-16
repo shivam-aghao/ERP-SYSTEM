@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL DIGITAL DOCUMENT WALLET (D-WALLET) SERVICE
+SSGMCE COLLEGE ERP - CANONICAL DIGITAL DOCUMENT WALLET (D-WALLET) SERVICE
 Authoritative Private Document Storage, Signed URLs, and Governance
 Direct Supabase Private Storage & PostgreSQL Integration
 ================================================================================
@@ -371,7 +371,7 @@ class DocumentService:
         """
         Fetches student's own documents.
         Zero-trust ownership: Students only access own records.
-        Never returns public URLs — produces secure signed URLs and download endpoints.
+        Never returns public URLs - produces secure signed URLs and download endpoints.
         """
         student = cls.resolve_student(student_code, db)
         stud_id = student["id"]

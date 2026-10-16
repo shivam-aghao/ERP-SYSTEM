@@ -1,7 +1,7 @@
-# SSGMCE College ERP — Quiz & Examination Module Comprehensive Report
+# SSGMCE College ERP - Quiz & Examination Module Comprehensive Report
 
 **Shri Sant Gajanan Maharaj College of Engineering, Shegaon**  
-**Autonomous Engineering Institute — Assessment System Architecture**  
+**Autonomous Engineering Institute - Assessment System Architecture**  
 **Document Revision:** 2.0.0-PROD  
 **Database:** Cloud Supabase PostgreSQL (`aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require`)  
 **Backend:** FastAPI Unified Master Backend (`/api/v1/quizzes`, `/api/v1/attempts`, `/api/v1/results`)  

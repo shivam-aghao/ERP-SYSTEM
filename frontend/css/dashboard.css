@@ -2576,7 +2576,8 @@ img {
 }
 
 .sidebar-item.has-dropdown.expanded > .sidebar-link .nav-expand-icon,
-.sidebar-item.has-submenu.expanded > .sidebar-link .nav-expand-icon {
+.sidebar-item.has-submenu.expanded > .sidebar-link .nav-expand-icon,
+.sidebar-item.has-submenu:hover > .sidebar-link .nav-expand-icon {
   transform: rotate(90deg);
 }
 
@@ -2593,7 +2594,9 @@ img {
 }
 
 .sidebar-item.has-dropdown.expanded > .sidebar-dropdown-menu,
-.sidebar-item.has-submenu.expanded > .sidebar-submenu {
+.sidebar-item.has-submenu.expanded > .sidebar-submenu,
+.sidebar-item.has-submenu:hover > .sidebar-submenu,
+.sidebar-item.has-submenu:focus-within > .sidebar-submenu {
   display: block;
   animation: subtabSlideDown 0.22s ease-out;
 }

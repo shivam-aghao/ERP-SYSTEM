@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Central Authentication & Role-Based Session Manager
+ * SSGMCE College ERP - Central Authentication & Role-Based Session Manager
  * frontend/js/auth.js
  *
  * Secure Token-Based Authentication Architecture:

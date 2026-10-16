@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Role-Based Access Control (RBAC) Module
+SSGMCE College ERP - Role-Based Access Control (RBAC) Module
 """
 
 from backend.rbac.models import (

@@ -1324,8 +1324,8 @@ const TeacherApp = {
                    placeholder="Filter student name, roll or code..." oninput="TeacherApp.filterStudentRoster(this.value)">
             <select id="roster-class-selector" style="padding:8px 14px; border:1px solid var(--border-light); border-radius:var(--radius-sm); font-weight:600; color:var(--dark-navy);" 
                     onchange="TeacherApp.changeRosterClass(this.value)">
-              <option value="3R" ${this.selectedRosterClass === '3R' ? 'selected' : ''}>Class 3R (Third Year CSE — 74 Students)</option>
-              <option value="2R1" ${this.selectedRosterClass === '2R1' ? 'selected' : ''}>Class 2R1 (Second Year CSE — 83 Students)</option>
+              <option value="3R" ${this.selectedRosterClass === '3R' ? 'selected' : ''}>Class 3R (Third Year CSE - 74 Students)</option>
+              <option value="2R1" ${this.selectedRosterClass === '2R1' ? 'selected' : ''}>Class 2R1 (Second Year CSE - 83 Students)</option>
             </select>
           </div>
           <div style="display:flex; gap:8px;">
@@ -2561,7 +2561,7 @@ const TeacherApp = {
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Graded Entries</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">—</div>
+            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">-</div>
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Class Average Marks</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
@@ -2673,7 +2673,7 @@ const TeacherApp = {
 
       document.getElementById('statTotalStudents').textContent = students.length;
       document.getElementById('statGradedCount').textContent = gradedCount;
-      document.getElementById('statAvgMarks').textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '—';
+      document.getElementById('statAvgMarks').textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '-';
 
       // Render Rows
       if (students.length === 0) {
@@ -2684,15 +2684,15 @@ const TeacherApp = {
       tbody.innerHTML = students.map(s => {
         const intVal = s.internal_marks !== null ? s.internal_marks : '';
         const extVal = s.external_marks !== null ? s.external_marks : '';
-        const totVal = s.total_marks !== null ? s.total_marks : '—';
-        const gradeVal = s.grade || '—';
-        const gpVal = s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '—';
-        const stVal = s.result_status || '—';
+        const totVal = s.total_marks !== null ? s.total_marks : '-';
+        const gradeVal = s.grade || '-';
+        const gpVal = s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '-';
+        const stVal = s.result_status || '-';
         const disabledAttr = isLocked ? 'disabled' : '';
 
         return `
           <tr style="border-bottom:1px solid #e2e8f0;" data-student-id="${s.student_id}" data-student-code="${s.student_code}">
-            <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '—'}</td>
+            <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '-'}</td>
             <td style="padding:10px 12px; font-weight:600;">${s.full_name || 'Student'}</td>
             <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${s.student_code}</td>
             <td style="padding:8px 12px;">
@@ -2708,13 +2708,13 @@ const TeacherApp = {
                      oninput="TeacherApp.calcRosterRow(this)">
             </td>
             <td style="padding:10px 12px; font-weight:700; color:var(--dark-navy);" class="roster-total-cell">
-              ${totVal !== '—' ? totVal + ' / 100' : '—'}
+              ${totVal !== '-' ? totVal + ' / 100' : '-'}
             </td>
             <td style="padding:10px 12px;" class="roster-grade-cell">
-              ${gradeVal !== '—' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-success' : (gradeVal === 'F' ? 'badge-danger' : 'badge-info')}">${gradeVal} (${gpVal})</span>` : '—'}
+              ${gradeVal !== '-' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-success' : (gradeVal === 'F' ? 'badge-danger' : 'badge-info')}">${gradeVal} (${gpVal})</span>` : '-'}
             </td>
             <td style="padding:10px 12px;" class="roster-status-cell">
-              ${stVal !== '—' ? `<span class="badge ${stVal === 'PASS' ? 'badge-status-safe' : 'badge-danger'}">${stVal}</span>` : '—'}
+              ${stVal !== '-' ? `<span class="badge ${stVal === 'PASS' ? 'badge-status-safe' : 'badge-danger'}">${stVal}</span>` : '-'}
             </td>
           </tr>
         `;
@@ -2751,9 +2751,9 @@ const TeacherApp = {
     }
 
     if (isNaN(intVal) && isNaN(extVal)) {
-      totalCell.textContent = '—';
-      gradeCell.textContent = '—';
-      statusCell.textContent = '—';
+      totalCell.textContent = '-';
+      gradeCell.textContent = '-';
+      statusCell.textContent = '-';
       return;
     }
 
