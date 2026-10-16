@@ -454,11 +454,30 @@ class AttendanceService:
         # Remove existing records for this session if it was previously a draft
         db.execute(text("DELETE FROM attendance_records WHERE session_id = :sid"), {"sid": sess_id})
 
+        # Helper: Resolve student UUID and student_code
+        stu_cache = {}
+        def resolve_stu(raw_ident: str):
+            k = str(raw_ident).strip()
+            if k in stu_cache:
+                return stu_cache[k]
+            st = db.execute(text("""
+                SELECT id, student_code, roll_no FROM students
+                WHERE id::text = :s OR student_code = :s OR roll_no = :s
+                LIMIT 1
+            """), {"s": k}).fetchone()
+            if st:
+                res = (str(st[0]), str(st[1]) if st[1] else k)
+            else:
+                is_u = len(k) == 36
+                res = (k if is_u else None, k if not is_u else None)
+            stu_cache[k] = res
+            return res
+
         # Insert student attendance records
         for sid in present_set:
             rec_id = str(uuid.uuid4())
-            # Check if sid is UUID or student_code
-            is_uuid = len(sid) == 36
+            stu_uuid, stu_code = resolve_stu(sid)
+
             db.execute(text("""
                 INSERT INTO attendance_records (
                     id, session_id, student_id, student_code, is_present, status, marked_at, created_at
@@ -468,23 +487,61 @@ class AttendanceService:
             """), {
                 "id": rec_id,
                 "sess_id": sess_id,
-                "sid": sid if is_uuid else None,
-                "scode": sid if not is_uuid else None
+                "sid": stu_uuid,
+                "scode": stu_code
             })
 
             # Atomically increment student subject attendance stats
-            db.execute(text("""
+            upd_res = db.execute(text("""
                 UPDATE student_attendance_subjects
                 SET present_periods = COALESCE(present_periods, 0) + 1,
                     total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
-                  AND (subject_code = :scode OR subject_name = :sname)
-            """), {"sid": sid, "scode": subject_code, "sname": subject_name})
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :scode OR student_code = :orig)
+                  AND (subject_code = :scode_val OR subject_name = :sname OR subject_code ILIKE :scode_val)
+            """), {"sid": stu_uuid or "", "scode": stu_code or "", "orig": str(sid), "scode_val": subject_code, "sname": subject_name})
+
+            if upd_res.rowcount == 0 and stu_code:
+                try:
+                    db.execute(text("""
+                        INSERT INTO student_attendance_subjects (
+                            id, student_id, student_code, subject_code, subject_name,
+                            subject_type, present_periods, total_periods, created_at, updated_at
+                        ) VALUES (
+                            :id, CAST(:sid AS UUID), :scode, :scode_val, :sname,
+                            :stype, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid if (stu_uuid and len(stu_uuid) == 36) else None,
+                        "scode": stu_code,
+                        "scode_val": subject_code,
+                        "sname": subject_name,
+                        "stype": payload.session_type or "THEORY"
+                    })
+                except Exception as e_ins:
+                    logger.debug("Notice inserting student_attendance_subjects: %s", e_ins)
+
+            # Sync to legacy attendance table
+            if stu_uuid and actual_subject_id:
+                try:
+                    db.execute(text("""
+                        INSERT INTO attendance (id, student_id, subject_id, date, status, period_type, created_at)
+                        VALUES (CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:sub_id AS UUID), :sdate, 'PRESENT', :stype, CURRENT_TIMESTAMP)
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid,
+                        "sub_id": actual_subject_id,
+                        "sdate": payload.session_date,
+                        "stype": payload.session_type or "Theory"
+                    })
+                except Exception as e_att:
+                    logger.debug("Notice syncing legacy attendance row: %s", e_att)
 
         for sid in absent_set:
             rec_id = str(uuid.uuid4())
-            is_uuid = len(sid) == 36
+            stu_uuid, stu_code = resolve_stu(sid)
+
             db.execute(text("""
                 INSERT INTO attendance_records (
                     id, session_id, student_id, student_code, is_present, status, marked_at, created_at
@@ -494,18 +551,55 @@ class AttendanceService:
             """), {
                 "id": rec_id,
                 "sess_id": sess_id,
-                "sid": sid if is_uuid else None,
-                "scode": sid if not is_uuid else None
+                "sid": stu_uuid,
+                "scode": stu_code
             })
 
             # Increment only total periods for absent student
-            db.execute(text("""
+            upd_res = db.execute(text("""
                 UPDATE student_attendance_subjects
                 SET total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
-                  AND (subject_code = :scode OR subject_name = :sname)
-            """), {"sid": sid, "scode": subject_code, "sname": subject_name})
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :scode OR student_code = :orig)
+                  AND (subject_code = :scode_val OR subject_name = :sname OR subject_code ILIKE :scode_val)
+            """), {"sid": stu_uuid or "", "scode": stu_code or "", "orig": str(sid), "scode_val": subject_code, "sname": subject_name})
+
+            if upd_res.rowcount == 0 and stu_code:
+                try:
+                    db.execute(text("""
+                        INSERT INTO student_attendance_subjects (
+                            id, student_id, student_code, subject_code, subject_name,
+                            subject_type, present_periods, total_periods, created_at, updated_at
+                        ) VALUES (
+                            :id, CAST(:sid AS UUID), :scode, :scode_val, :sname,
+                            :stype, 0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid if (stu_uuid and len(stu_uuid) == 36) else None,
+                        "scode": stu_code,
+                        "scode_val": subject_code,
+                        "sname": subject_name,
+                        "stype": payload.session_type or "THEORY"
+                    })
+                except Exception as e_ins:
+                    logger.debug("Notice inserting student_attendance_subjects: %s", e_ins)
+
+            # Sync to legacy attendance table
+            if stu_uuid and actual_subject_id:
+                try:
+                    db.execute(text("""
+                        INSERT INTO attendance (id, student_id, subject_id, date, status, period_type, created_at)
+                        VALUES (CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:sub_id AS UUID), :sdate, 'ABSENT', :stype, CURRENT_TIMESTAMP)
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid,
+                        "sub_id": actual_subject_id,
+                        "sdate": payload.session_date,
+                        "stype": payload.session_type or "Theory"
+                    })
+                except Exception as e_att:
+                    logger.debug("Notice syncing legacy attendance row: %s", e_att)
 
         db.commit()
 

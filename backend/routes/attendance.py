@@ -264,30 +264,52 @@ def get_day_wise_attendance(
     db: Session = Depends(get_db)
 ):
     """GET /api/v1/attendance/student/{student_id}/day-wise - Day-wise attendance records."""
-    # Resolve student UUID
+    # Resolve student UUID and student_code
     st_row = db.execute(text("""
-        SELECT id FROM users WHERE id::text = :s OR roll_no = :s OR email = :s
+        SELECT id, student_code FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s
         UNION
-        SELECT id FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s
+        SELECT id, roll_no FROM users WHERE id::text = :s OR roll_no = :s OR email = :s
         LIMIT 1
-    """), {"s": student_id}).fetchone()
+    """), {"s": str(student_id).strip()}).fetchone()
     
-    sid = str(st_row[0]) if st_row else student_id
+    sid = str(st_row[0]) if st_row else str(student_id).strip()
+    scode = str(st_row[1]) if (st_row and len(st_row) > 1 and st_row[1]) else str(student_id).strip()
 
-    query = """
-        SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
-               s.name as subject_name, s.code as subject_code
-        FROM attendance a
-        LEFT JOIN subjects s ON a.subject_id = s.id
-        WHERE a.student_id::text = :sid
+    # Query attendance_records joined with attendance_sessions (authoritative live source)
+    query_records = """
+        SELECT ar.id, ass.session_date as date, ar.status, 
+               COALESCE(ass.session_type, 'Theory') as period_type, 
+               ass.subject_id, ass.subject_name, ass.subject_code,
+               ass.period_number
+        FROM attendance_records ar
+        JOIN attendance_sessions ass ON ar.session_id = ass.id
+        WHERE (ar.student_id::text = :sid OR ar.student_code = :scode OR ar.student_code = :orig)
     """
-    params = {"sid": sid}
+    params = {"sid": sid, "scode": scode, "orig": str(student_id).strip()}
     if subject_id:
-        query += " AND a.subject_id::text = :sub"
+        query_records += " AND (CAST(ass.subject_id AS TEXT) = :sub OR ass.subject_code = :sub OR ass.subject_name ILIKE :sub_like)"
         params["sub"] = subject_id
-    query += " ORDER BY a.date ASC"
+        params["sub_like"] = f"%{subject_id}%"
+    query_records += " ORDER BY ass.session_date ASC, ass.period_number ASC"
 
-    rows = db.execute(text(query), params).fetchall()
+    rows = db.execute(text(query_records), params).fetchall()
+    
+    # If no records found in attendance_records, fallback to legacy attendance table
+    if not rows:
+        legacy_query = """
+            SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
+                   s.name as subject_name, s.code as subject_code
+            FROM attendance a
+            LEFT JOIN subjects s ON a.subject_id = s.id
+            WHERE a.student_id::text = :sid
+        """
+        leg_params = {"sid": sid}
+        if subject_id:
+            legacy_query += " AND (a.subject_id::text = :sub OR s.code = :sub)"
+            leg_params["sub"] = subject_id
+        legacy_query += " ORDER BY a.date ASC"
+        rows = db.execute(text(legacy_query), leg_params).fetchall()
+
     return success_response([dict(r._mapping) for r in rows])
 
 
