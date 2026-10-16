@@ -363,6 +363,7 @@ class AuthenticationService:
                     conn.close()
                 except Exception as _sq_e:
                     logger.debug("Auto-provision SQLite sync notice: %s", _sq_e)
+
         # Convenience fallback for faculty search by name if explicit faculty role hint provided
         if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
             try:
@@ -462,8 +463,8 @@ class AuthenticationService:
                 LEFT JOIN classes c ON s.class_id = c.id
                 WHERE LOWER(s.student_code) = LOWER(:uid) 
                    OR LOWER(s.email) = LOWER(:uid) 
-                   OR s.id::text = :uid 
-                   OR LOWER(s.roll_no) = LOWER(:uid)
+                   OR CAST(s.id AS TEXT) = :uid 
+                   OR LOWER(CAST(s.roll_no AS TEXT)) = LOWER(:uid)
                    OR LOWER(s.full_name) LIKE LOWER(:pat)
                 LIMIT 1
             """), {"uid": uid, "pat": f"%{uid}%"}).fetchone()

@@ -785,9 +785,19 @@ class AttendanceService:
         st_row = db.execute(text("""
             SELECT id, student_code, full_name, roll_no, class_name
             FROM students
-            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc
+            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc OR roll_no = :sc OR email = :sc OR LOWER(full_name) = LOWER(:sc) OR LOWER(full_name) LIKE LOWER(:sp)
             LIMIT 1
-        """), {"sc": target_code}).fetchone()
+        """), {"sc": target_code, "sp": f"%{target_code}%"}).fetchone()
+
+        if not st_row:
+            u_row = db.execute(text("""
+                SELECT id, roll_no as student_code, full_name, roll_no, '2R1' as class_name
+                FROM users
+                WHERE CAST(id AS TEXT) = :sc OR roll_no = :sc OR email = :sc OR LOWER(full_name) = LOWER(:sc) OR LOWER(full_name) LIKE LOWER(:sp)
+                LIMIT 1
+            """), {"sc": target_code, "sp": f"%{target_code}%"}).fetchone()
+            if u_row:
+                st_row = u_row
 
         student_uuid = str(st_row[0]) if st_row else None
         student_name = st_row[2] if st_row else "Student"
@@ -850,6 +860,60 @@ class AttendanceService:
             if is_sub_shortage:
                 shortage_subjects.append(sub_item)
 
+        if not subjects_list and student_uuid:
+            live_sub_rows = db.execute(text("""
+                SELECT s.id, s.code as subject_code, s.name as subject_name,
+                       COUNT(a.id) as total_periods,
+                       SUM(CASE WHEN UPPER(a.status) = 'PRESENT' THEN 1 ELSE 0 END) as present_periods
+                FROM attendance a
+                JOIN subjects s ON a.subject_id = s.id
+                WHERE a.student_id = CAST(:suid AS UUID)
+                GROUP BY s.id, s.code, s.name
+                ORDER BY s.code ASC
+            """), {"suid": student_uuid}).fetchall()
+
+            for sr in live_sub_rows:
+                sm = dict(sr._mapping)
+                t_per = int(sm["total_periods"])
+                p_per = int(sm["present_periods"])
+                a_per = max(0, t_per - p_per)
+                pct = round((p_per / t_per * 100), 2) if t_per > 0 else 100.0
+                is_sub_shortage = pct < 75.0
+                sub_classes_needed = max(0, math.ceil(3 * t_per - 4 * p_per)) if is_sub_shortage else 0
+                sub_item = {
+                    "id": str(sm["id"]),
+                    "subject_code": sm["subject_code"],
+                    "subject_name": sm["subject_name"],
+                    "subject_type": "THEORY",
+                    "faculty_name": "Faculty",
+                    "total_periods": t_per,
+                    "present_periods": p_per,
+                    "absent_periods": a_per,
+                    "attendance_percentage": pct,
+                    "status": "ELIGIBLE" if not is_sub_shortage else "SHORTAGE",
+                    "classes_needed_to_75": sub_classes_needed,
+                    "code": sm["subject_code"],
+                    "name": sm["subject_name"],
+                    "total": t_per,
+                    "present": p_per,
+                    "attended": p_per,
+                    "absent": a_per,
+                    "percentage": pct,
+                    "faculty": "Faculty",
+                    "type": "TH",
+                    "typeName": "Theory"
+                }
+                subjects_list.append(sub_item)
+                tot_conducted += t_per
+                tot_attended += p_per
+                if is_sub_shortage:
+                    shortage_subjects.append(sub_item)
+
+            if tot_conducted > 0:
+                overall_pct = round((tot_attended / tot_conducted * 100), 2)
+                overall_shortage = overall_pct < 75.0
+                classes_needed_overall = max(0, math.ceil(3 * tot_conducted - 4 * tot_attended)) if overall_shortage else 0
+
         overall_pct = round((tot_attended / tot_conducted * 100), 2) if tot_conducted > 0 else 0.0
         overall_shortage = overall_pct < 75.0
         classes_needed_overall = max(0, math.ceil(3 * tot_conducted - 4 * tot_attended)) if overall_shortage else 0
@@ -906,6 +970,32 @@ class AttendanceService:
                 "is_present": bool(h["is_present"]),
                 "status": h.get("status") or ("PRESENT" if h["is_present"] else "ABSENT")
             })
+
+        if not lecture_history and student_uuid:
+            direct_hist = db.execute(text("""
+                SELECT a.id as session_id, a.date as session_date, 1 as period_number,
+                       s.code as subject_code, s.name as subject_name,
+                       a.period_type as session_type,
+                       (CASE WHEN UPPER(a.status) = 'PRESENT' THEN true ELSE false END) as is_present,
+                       a.status
+                FROM attendance a
+                JOIN subjects s ON a.subject_id = s.id
+                WHERE a.student_id = CAST(:suid AS UUID)
+                ORDER BY a.date DESC
+                LIMIT 50
+            """), {"suid": student_uuid}).fetchall()
+            for hr in direct_hist:
+                h = dict(hr._mapping)
+                lecture_history.append({
+                    "session_id": str(h["session_id"]),
+                    "session_date": str(h["session_date"]),
+                    "period_number": h["period_number"],
+                    "subject_code": h["subject_code"],
+                    "subject_name": h["subject_name"],
+                    "session_type": h.get("session_type") or "theory",
+                    "is_present": bool(h["is_present"]),
+                    "status": h.get("status") or ("PRESENT" if h["is_present"] else "ABSENT")
+                })
 
         # Shortage Warning Message
         shortage_warning = overall_shortage or len(shortage_subjects) > 0

@@ -206,7 +206,7 @@ class ManagementService:
                 })
 
             if not res:
-                rows = db.execute(text("SELECT id, subject_code, subject_name FROM subjects LIMIT 5")).fetchall()
+                rows = db.execute(text("SELECT id, code as subject_code, name as subject_name FROM subjects LIMIT 5")).fetchall()
                 res = [dict(r._mapping) for r in rows]
 
             return res

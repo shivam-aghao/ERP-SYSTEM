@@ -730,6 +730,14 @@ const TeacherApp = {
     window.location.href = subView === 'roster' ? 'teacher-attendance-roster.html' : 'teacher-attendance.html';
   },
 
+  openCertificationWallet() {
+    window.location.href = "teacher-attendance.html?open=wallet";
+  },
+
+  openReportsCenter() {
+    window.location.href = "teacher-attendance.html?open=reports";
+  },
+
   navigateToAttendance(params = {}) {
     let { classCode, subject, date, timeSlot, room, batch } = params;
 

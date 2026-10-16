@@ -1468,54 +1468,6 @@ Output Format: Return strictly a valid JSON array adhering to this schema:
                 })
             iteration += 1
 
-        # Parametric context expansion to fulfill full requested count up to 300
-        context_prefixes = [
-            "Given an enterprise CSE system running {sub} under peak load",
-            "In an academic examination setting testing {sub} principles",
-            "When analyzing algorithmic efficiency in {sub} with input dimension N={n}",
-            "Considering a concurrent multi-threaded environment implementing {sub}",
-            "In a mission-critical infrastructure service utilizing {sub}",
-            "Under rigorous performance profiling of {sub} operations ({op})",
-            "In a distributed cloud pipeline integrating {sub} components",
-            "For memory-constrained embedded hardware deploying {sub}",
-            "Analyzing edge-case boundary conditions during {sub} execution",
-            "In a fault-tolerant backend cluster executing {sub} routines"
-        ]
-        var_idx = 0
-        while len(generated) < count and var_idx < 6000:
-            arch_fn = archetypes[var_idx % len(archetypes)]
-            sub = active_subtopics[(var_idx // len(archetypes)) % len(active_subtopics)]
-            op = operations[(var_idx // (len(archetypes) * len(active_subtopics))) % len(operations)]
-            n = (var_idx * 17 + 31) % 2048 + 16
-            d = (var_idx % 8) + 2
-            diff = difficulties[var_idx % len(difficulties)]
-
-            q_item = arch_fn(sub, op, n, d, diff)
-            ctx = context_prefixes[var_idx % len(context_prefixes)].format(sub=sub, n=n, op=op)
-            raw_q = q_item["question"].strip()
-            varied_text = f"{ctx}, {raw_q[0].lower() + raw_q[1:]}" if raw_q else raw_q
-            norm_key = varied_text.strip().lower()
-            if norm_key not in seen_texts:
-                seen_texts.add(norm_key)
-                q_id = f"ai_gen_{uuid.uuid4().hex[:8]}"
-                generated.append({
-                    "id": q_id,
-                    "question": varied_text,
-                    "question_text": varied_text,
-                    "question_type": question_type,
-                    "options": q_item["options"],
-                    "correct_answer": q_item["correct_answer"],
-                    "explanation": f"{ctx}. {q_item['explanation']}",
-                    "difficulty": q_item.get("difficulty", diff),
-                    "subject": subject,
-                    "unit": unit_label or "Unit 1",
-                    "topic": sub if sub != topic else topic,
-                    "subtopic": sub,
-                    "source": source_label,
-                    "marks": 1.0 if question_type == "true_false" else 2.0
-                })
-            var_idx += 1
-
         random.shuffle(generated)
         return generated[:count]
 
