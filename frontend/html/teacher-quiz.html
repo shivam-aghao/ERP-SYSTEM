@@ -921,7 +921,6 @@
       background: #F8FAFC;
       border-radius: 10px;
       padding: 1.15rem 1.25rem;
-      margin-bottom: 0.85rem;
       flex-shrink: 0;
       min-height: fit-content;
       height: auto;
@@ -939,6 +938,20 @@
     }
     .ai-preview-card:hover {
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    }
+    #aiPreviewListContainer::-webkit-scrollbar {
+      width: 6px;
+    }
+    #aiPreviewListContainer::-webkit-scrollbar-track {
+      background: #F1F5F9;
+      border-radius: 4px;
+    }
+    #aiPreviewListContainer::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    #aiPreviewListContainer::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
     }
     .btn-count-pill {
       padding: 0.3rem 0.65rem;
@@ -1877,11 +1890,11 @@
 
 
 
-  <!-- CREATE QUIZ MODAL -->
+  <!-- CREATE / EDIT QUIZ MODAL -->
   <div class="modal-backdrop" id="createQuizModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="margin: 0; color: var(--navy);">Create New Quiz</h3>
+        <h3 id="createQuizModalTitle" style="margin: 0; color: var(--navy);">Create New Quiz</h3>
         <button class="btn btn-secondary" onclick="closeCreateQuizModal()" style="padding: 0.25rem 0.65rem; font-size: 1.1rem; line-height: 1;">&times;</button>
       </div>
 
@@ -2048,9 +2061,88 @@
 
         <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
           <button type="button" class="btn btn-secondary" onclick="closeCreateQuizModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Quiz &amp; Add Questions</button>
+          <button type="submit" id="createQuizSubmitBtn" class="btn btn-primary">Create Quiz &amp; Add Questions</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- PUBLISH CONFIRMATION MODAL -->
+  <div class="modal-backdrop" id="quizPublishConfirmModal">
+    <div class="modal-box" style="max-width: 540px; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25); border: 1px solid #E2E8F0; padding: 0;">
+      <!-- Modal Header -->
+      <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #FFFFFF; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+            🚀
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #FFFFFF;">Publish Quiz to Students</h3>
+            <p style="margin: 0.15rem 0 0 0; font-size: 0.76rem; color: #DBEAFE;">Verify exam details before making this quiz live for your class</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="closePublishConfirmModal()" style="background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 0.25rem 0.55rem; font-size: 1.2rem; line-height: 1; border-radius: 6px; cursor: pointer;">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div style="padding: 1.5rem; background: #FFFFFF;">
+        <!-- Alert Box -->
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-left: 4px solid #2563EB; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.2rem; font-size: 0.84rem; color: #1E40AF; line-height: 1.45;">
+          <strong>Heads up:</strong> Once published, this quiz will immediately become <strong>Active</strong> and visible to all enrolled students in the target class. Students will be able to start and submit attempts.
+        </div>
+
+        <!-- Quiz Details Summary Card -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="margin-bottom: 0.75rem;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: #64748B; font-weight: 700;">Quiz Title</div>
+            <div id="confirmPubTitle" style="font-size: 1.05rem; font-weight: 700; color: #0F172A; margin-top: 0.15rem;">-</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.83rem;">
+            <div>
+              <span style="color: #64748B;">Target Class:</span>
+              <span id="confirmPubClass" class="badge" style="background: #DBEAFE; color: #1D4ED8; font-weight: 700; margin-left: 0.35rem;">-</span>
+            </div>
+            <div>
+              <span style="color: #64748B;">Subject:</span>
+              <strong id="confirmPubSubject" style="color: #1E293B; margin-left: 0.25rem;">-</strong>
+            </div>
+            <div>
+              <span style="color: #64748B;">Duration:</span>
+              <strong id="confirmPubDuration" style="color: #1E293B; margin-left: 0.25rem;">- mins</strong>
+            </div>
+            <div>
+              <span style="color: #64748B;">Total Marks:</span>
+              <strong id="confirmPubMarks" style="color: #1E293B; margin-left: 0.25rem;">-</strong>
+            </div>
+            <div>
+              <span style="color: #64748B;">Question Pool:</span>
+              <strong id="confirmPubPoolCount" style="color: #1E293B; margin-left: 0.25rem;">- questions</strong>
+            </div>
+            <div>
+              <span style="color: #64748B;">Questions/Student:</span>
+              <strong id="confirmPubQPerStudent" style="color: #1E293B; margin-left: 0.25rem;">-</strong>
+            </div>
+          </div>
+
+          <div id="confirmPubSecurityBadge" style="margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed #CBD5E1; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #059669;">
+            <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+            <span>Server-side question &amp; option randomization enabled</span>
+          </div>
+        </div>
+
+        <div style="font-size: 0.82rem; color: #64748B;">
+          Are you sure you want to publish and activate this quiz now?
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="background: #F8FAFC; border-top: 1px solid #E2E8F0; padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="closePublishConfirmModal()" style="padding: 0.5rem 1rem;">Cancel</button>
+        <button type="button" id="confirmPublishActionBtn" class="btn btn-primary" onclick="executePublishQuiz()" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-color: #059669; padding: 0.5rem 1.25rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem;">
+          <i data-lucide="check-circle" style="width:16px;height:16px;"></i> Yes, Confirm &amp; Publish Quiz
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2063,6 +2155,9 @@
           <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);" id="manageQuizSubtitle"></p>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="openEditQuizModal(currentEditingQuizId)" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" title="Edit Quiz Settings">
+            <i data-lucide="edit" style="width:13px;height:13px;"></i> Edit Quiz
+          </button>
           <button type="button" class="btn btn-secondary" onclick="openCurrentModalQuizInStudio()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
             <i data-lucide="maximize-2" style="width:13px;height:13px;"></i> Open in Full Studio
           </button>
@@ -2186,7 +2281,7 @@
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <!-- Dedicated Visible Back Button -->
           <button type="button" id="aiModalBackBtn" class="btn btn-secondary" onclick="handleAiModalBackClick()" style="padding: 0.35rem 0.85rem; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #CBD5E1; background: #FFFFFF; color: var(--navy); border-radius: 8px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.15s ease;" title="Return to previous screen or step">
-            <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back
+            <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> <span id="aiModalBackBtnText">Back</span>
           </button>
 
           <div style="height: 20px; width: 1px; background: #CBD5E1; margin: 0 0.15rem;"></div>
@@ -2441,16 +2536,11 @@
                 Number of Questions in Quiz:
               </label>
               <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                <input type="number" id="previewQuizQuestionCount" class="form-control" min="1" max="500" style="max-width: 110px; font-weight: 700;" onchange="onQuizQuestionCountChange()">
+                <input type="number" id="previewQuizQuestionCount" class="form-control" min="1" max="500" style="max-width: 110px; font-weight: 700;" onchange="onQuizQuestionCountChange()" oninput="onQuizQuestionCountInput(this.value)">
                 <span style="font-size: 0.78rem; color: var(--text-muted);">questions will be imported to the quiz</span>
               </div>
-              <div style="display: flex; gap: 0.3rem; margin-top: 0.45rem; flex-wrap: wrap;" id="previewQuizCountPresets">
-                <button type="button" class="btn-count-pill active" onclick="setPreviewQuizQuestionCount('all')">Use All in Pool</button>
-                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(250)">250</button>
-                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(100)">100</button>
-                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(50)">50</button>
-                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(20)">20</button>
-                <button type="button" class="btn-count-pill" onclick="setPreviewQuizQuestionCount(10)">10</button>
+              <div style="display: flex; gap: 0.35rem; margin-top: 0.45rem; flex-wrap: wrap;" id="previewQuizCountPresets">
+                <!-- Dynamically populated based on available pool size -->
               </div>
             </div>
 
@@ -2469,13 +2559,13 @@
             </div>
           </div>
 
-          <!-- Interactive Questions Preview Cards (Independently Scrollable List) -->
-          <div id="aiPreviewListContainer" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 6px; display: flex; flex-direction: column; gap: 0.85rem;">
+          <!-- Interactive Questions Preview Cards (Independently Scrollable List with Generous Bottom Clearance) -->
+          <div id="aiPreviewListContainer" style="flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 8px 3rem 4px; display: flex; flex-direction: column; gap: 0.95rem;">
             <!-- Rendered dynamically -->
           </div>
 
           <!-- Bottom Action Row for Step 2 -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.75rem; flex-shrink: 0; background: #FFFFFF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 0 0.25rem 0; border-top: 1px solid #E2E8F0; flex-wrap: wrap; gap: 0.75rem; flex-shrink: 0; background: #FFFFFF; z-index: 10;">
             <button type="button" class="btn btn-secondary" onclick="backToAiConfigStep()">
               <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Criteria
             </button>
@@ -2484,7 +2574,7 @@
                 <i data-lucide="file-check" style="width:14px;height:14px;"></i> Review Summary Card
               </button>
               <button type="button" id="aiAddSelectedBtn" class="btn btn-success" onclick="confirmAddSelectedQuestionsToQuiz()" style="padding: 0.55rem 1.4rem; font-weight: 700;">
-                <i data-lucide="plus-circle" style="width:16px;height:16px;"></i> Add Selected Questions to Quiz
+                <i data-lucide="plus-circle" style="width:16px;height:16px;"></i> + Add Selected Questions (<span id="btnSelectedCount">0</span>) to Quiz
               </button>
             </div>
           </div>
@@ -2821,6 +2911,9 @@
             </div>
           </td>
           <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="openEditQuizModal('${q.id}')" title="Edit Quiz Details & Settings">
+              <i data-lucide="edit-2" style="width:13px;height:13px;"></i> Edit
+            </button>
             <button class="btn btn-success" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="exportQuizCSVDirect('${q.id}')" title="Download Excel/CSV Results directly">
               <i data-lucide="download" style="width:14px;height:14px;"></i> Export CSV
             </button>
@@ -2830,7 +2923,7 @@
             <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="openManageQuestions('${q.id}')">
               <i data-lucide="help-circle" style="width:14px;height:14px;"></i> Questions (${qCount})
             </button>
-            <button class="btn ${isPublished ? 'btn-secondary' : 'btn-primary'}" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="togglePublish('${q.id}', ${isPublished})" title="${isPublished ? 'Unpublish quiz back to Draft' : 'Publish quiz for students'}">
+            <button class="btn ${isPublished ? 'btn-secondary' : 'btn-primary'}" style="padding: 0.35rem 0.6rem; font-size: 0.78rem;" onclick="handlePublishClick('${q.id}', ${isPublished})" title="${isPublished ? 'Unpublish quiz back to Draft' : 'Publish quiz for students'}">
               ${isPublished ? 'Unpublish' : 'Publish'}
             </button>
             <button class="btn btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.78rem; color: #EF4444;" onclick="handleDeleteQuiz('${q.id}')" title="Delete Quiz">
@@ -2843,35 +2936,133 @@
       lucide.createIcons();
     }
 
-    async function togglePublish(quizId, isCurrentlyPublished) {
+    // State trackers
+    let currentEditingQuizConfigId = null;
+    let pendingPublishQuizId = null;
+
+    // PUBLISH CONFIRMATION FLOW
+    function openPublishConfirmModal(quizId) {
+      pendingPublishQuizId = quizId;
+      const q = quizzes.find(x => String(x.id) === String(quizId));
+      if (!q) {
+        showToast('Quiz not found.', 'error');
+        return;
+      }
+
+      const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
+
+      document.getElementById('confirmPubTitle').textContent = q.title || 'Untitled Quiz';
+      document.getElementById('confirmPubClass').textContent = q.class_name || 'Class';
+      document.getElementById('confirmPubSubject').textContent = q.subject || q.subject_name || 'General';
+      document.getElementById('confirmPubDuration').textContent = (q.duration_minutes || 20) + ' mins';
+      document.getElementById('confirmPubMarks').textContent = (q.total_marks || 0) + ' marks';
+      document.getElementById('confirmPubPoolCount').textContent = qCount + ' questions';
+      document.getElementById('confirmPubQPerStudent').textContent = q.questions_per_student 
+        ? (q.questions_per_student + ' Qs / student') 
+        : (qCount + ' Qs (All Pool)');
+
+      const secBadge = document.getElementById('confirmPubSecurityBadge');
+      if (secBadge) {
+        const isRand = q.randomize_questions !== false;
+        const isUniq = q.unique_question_paper !== false;
+        secBadge.innerHTML = `<i data-lucide="shield-check" style="width:14px;height:14px;"></i> <span>Server-side randomization: ${isRand ? 'Questions shuffled' : 'Standard order'} • ${isUniq ? 'Unique student papers' : 'Shared paper'}</span>`;
+      }
+
+      const modal = document.getElementById('quizPublishConfirmModal');
+      if (modal) {
+        modal.classList.add('active');
+      }
+      lucide.createIcons();
+    }
+
+    function closePublishConfirmModal() {
+      const modal = document.getElementById('quizPublishConfirmModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+      pendingPublishQuizId = null;
+    }
+
+    async function executePublishQuiz() {
+      if (!pendingPublishQuizId) return;
+      const quizId = pendingPublishQuizId;
+      const q = quizzes.find(x => String(x.id) === String(quizId));
+      const confirmBtn = document.getElementById('confirmPublishActionBtn');
+      const origBtnHtml = confirmBtn ? confirmBtn.innerHTML : '';
+
       try {
-        const q = quizzes.find(x => x.id === quizId);
-        const qCount = q ? (q.question_count || q.total_questions || 0) : 0;
-        if (!isCurrentlyPublished && qCount === 0) {
-          showToast('Cannot publish a quiz with 0 questions! Add questions first.', 'warning');
-          openManageQuestions(quizId);
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:0.35rem;"></span> Publishing...';
+        }
+
+        const res = await QuizAPI.togglePublish(quizId, 'publish');
+        closePublishConfirmModal();
+        await refreshQuizzes();
+
+        // If Manage Questions modal is open for this quiz, update its publish button
+        if (typeof currentEditingQuizId !== 'undefined' && currentEditingQuizId === quizId) {
+          const pubBtn = document.getElementById('modalPublishQuizBtn');
+          if (pubBtn) {
+            pubBtn.innerHTML = `<i data-lucide="check-circle" style="width:15px;height:15px;"></i> Quiz is Active (${currentEditingQuestions.length} Qs)`;
+          }
+        }
+
+        showToast(`Quiz '${q ? q.title : ''}' is now Published and Active for class ${q ? q.class_name : ''}!`, 'success');
+      } catch (err) {
+        showToast('Failed to publish quiz: ' + err.message, 'error');
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = origBtnHtml;
+        }
+      }
+    }
+
+    async function handlePublishClick(quizId, isCurrentlyPublished) {
+      const q = quizzes.find(x => String(x.id) === String(quizId));
+      if (!q) return;
+
+      if (isCurrentlyPublished) {
+        // Unpublish flow: ask for confirmation
+        const ok = confirm(`Are you sure you want to unpublish "${q.title}"?\n\nThe quiz will be moved back to Draft status and students in class ${q.class_name} will no longer be able to start new attempts.`);
+        if (!ok) return;
+
+        try {
+          await QuizAPI.togglePublish(quizId, 'unpublish');
+          await refreshQuizzes();
+          showToast(`Quiz '${q.title}' has been unpublished and moved back to Draft.`, 'info');
+        } catch (err) {
+          showToast('Failed to unpublish quiz: ' + err.message, 'error');
+        }
+        return;
+      }
+
+      // Publish flow: Validate questions & pool constraints, then show confirmation modal
+      const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
+      if (qCount === 0) {
+        showToast('Cannot publish a quiz with 0 questions! Add questions first.', 'warning');
+        openManageQuestions(quizId);
+        return;
+      }
+
+      try {
+        const valRes = await QuizAPI.validatePublish(quizId);
+        if (valRes && !valRes.valid) {
+          const errList = (valRes.errors || []).join('; ');
+          showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
           return;
         }
-
-        if (!isCurrentlyPublished) {
-          const valRes = await QuizAPI.validatePublish(quizId);
-          if (valRes && !valRes.valid) {
-            const errList = (valRes.errors || []).join('; ');
-            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
-            return;
-          }
-          if (valRes && valRes.warnings && valRes.warnings.length > 0) {
-            console.warn('Publish validation warnings:', valRes.warnings);
-          }
-        }
-
-        const res = await QuizAPI.togglePublish(quizId);
-        await refreshQuizzes();
-        const actionLabel = (res && res.is_published) ? 'published and active for students' : 'set to draft';
-        showToast(`Quiz is now ${actionLabel}!`, (res && res.is_published) ? 'success' : 'info');
-      } catch (err) {
-        showToast('Failed to update status: ' + err.message, 'error');
+      } catch (e) {
+        console.warn('Pre-publish validation warning:', e);
       }
+
+      openPublishConfirmModal(quizId);
+    }
+
+    // Backwards compatibility alias
+    async function togglePublish(quizId, isCurrentlyPublished) {
+      await handlePublishClick(quizId, isCurrentlyPublished);
     }
 
     async function handleDeleteQuiz(quizId) {
@@ -2885,23 +3076,138 @@
       }
     }
 
-
-
-    // Modal logic
-
+    // ==========================================
+    // CREATE / EDIT QUIZ MODAL LOGIC
+    // ==========================================
     function openCreateQuizModal() {
+      currentEditingQuizConfigId = null;
+      const form = document.getElementById('createQuizForm');
+      if (form) form.reset();
+
+      const titleEl = document.getElementById('createQuizModalTitle');
+      if (titleEl) titleEl.textContent = 'Create New Quiz';
+      const btnEl = document.getElementById('createQuizSubmitBtn');
+      if (btnEl) btnEl.textContent = 'Create Quiz & Add Questions';
+
+      // Restore defaults
+      document.getElementById('newQuizDuration').value = 20;
+      if (document.getElementById('newQuizMaxAttempts')) document.getElementById('newQuizMaxAttempts').value = 1;
+      document.getElementById('newQuizMarks').value = 2.0;
+      document.getElementById('newQuizNegMarks').value = 0.5;
+      if (document.getElementById('newQuizRandomizeQuestions')) document.getElementById('newQuizRandomizeQuestions').checked = true;
+      if (document.getElementById('newQuizRandomizeOptions')) document.getElementById('newQuizRandomizeOptions').checked = true;
+      if (document.getElementById('newQuizUniquePaper')) document.getElementById('newQuizUniquePaper').checked = true;
+      if (document.getElementById('newQuizPreventDuplicates')) document.getElementById('newQuizPreventDuplicates').checked = true;
+      if (document.getElementById('newQuizRandomizeTypes')) document.getElementById('newQuizRandomizeTypes').checked = true;
+      if (document.getElementById('newQuizTrackTabSwitches')) document.getElementById('newQuizTrackTabSwitches').checked = true;
+      if (document.getElementById('newQuizDiffMode')) document.getElementById('newQuizDiffMode').value = 'none';
+      if (document.getElementById('newQuizDiffDistPanel')) document.getElementById('newQuizDiffDistPanel').style.display = 'none';
 
       document.getElementById('createQuizModal').classList.add('active');
+      lucide.createIcons();
+    }
 
+    async function openEditQuizModal(quizId) {
+      currentEditingQuizConfigId = quizId;
+      let q = quizzes.find(x => String(x.id) === String(quizId));
+      if (!q) {
+        try {
+          q = await QuizAPI.getQuizDetails(quizId);
+        } catch (e) {
+          showToast('Could not load quiz details: ' + e.message, 'error');
+          return;
+        }
+      }
+      if (!q) return;
+
+      // Close manage questions modal if open
+      closeManageQuestionsModal();
+
+      const titleEl = document.getElementById('createQuizModalTitle');
+      if (titleEl) titleEl.textContent = 'Edit Quiz Settings: ' + (q.title || '');
+      const btnEl = document.getElementById('createQuizSubmitBtn');
+      if (btnEl) btnEl.textContent = 'Save Changes';
+
+      // Basic fields
+      document.getElementById('newQuizTitle').value = q.title || '';
+      document.getElementById('newQuizSubject').value = q.subject || q.subject_name || '';
+
+      const classSelect = document.getElementById('newQuizClass');
+      if (classSelect) {
+        if (q.class_id) {
+          classSelect.value = q.class_id;
+        }
+        if (!classSelect.value && q.class_name) {
+          const matchOpt = Array.from(classSelect.options).find(o => o.text.trim().toLowerCase() === q.class_name.trim().toLowerCase());
+          if (matchOpt) classSelect.value = matchOpt.value;
+        }
+      }
+
+      document.getElementById('newQuizDuration').value = q.duration_minutes || 20;
+      if (document.getElementById('newQuizMaxAttempts')) {
+        document.getElementById('newQuizMaxAttempts').value = q.max_attempts || 1;
+      }
+
+      const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
+      const marksPerQ = q.marks_per_question !== undefined 
+        ? q.marks_per_question 
+        : ((qCount > 0 && q.total_marks) ? (q.total_marks / qCount) : 2.0);
+      document.getElementById('newQuizMarks').value = marksPerQ;
+
+      const negMarks = q.negative_marks !== undefined 
+        ? q.negative_marks 
+        : (q.negative_marks_per_question !== undefined ? q.negative_marks_per_question : 0.5);
+      document.getElementById('newQuizNegMarks').value = negMarks;
+
+      document.getElementById('newQuizDesc').value = q.instructions || q.description || '';
+
+      // Randomization & Exam Security checkboxes
+      if (document.getElementById('newQuizRandomizeQuestions')) {
+        document.getElementById('newQuizRandomizeQuestions').checked = q.randomize_questions !== false;
+      }
+      if (document.getElementById('newQuizRandomizeOptions')) {
+        document.getElementById('newQuizRandomizeOptions').checked = q.randomize_options !== false;
+      }
+      if (document.getElementById('newQuizUniquePaper')) {
+        document.getElementById('newQuizUniquePaper').checked = q.unique_question_paper !== false;
+      }
+      if (document.getElementById('newQuizPreventDuplicates')) {
+        document.getElementById('newQuizPreventDuplicates').checked = q.prevent_duplicate_questions !== false;
+      }
+      if (document.getElementById('newQuizRandomizeTypes')) {
+        document.getElementById('newQuizRandomizeTypes').checked = !!q.randomize_question_types;
+      }
+      if (document.getElementById('newQuizTrackTabSwitches')) {
+        const sec = q.security_settings || {};
+        document.getElementById('newQuizTrackTabSwitches').checked = sec.track_tab_switches !== false;
+      }
+      if (document.getElementById('newQuizQuestionsPerStudent')) {
+        document.getElementById('newQuizQuestionsPerStudent').value = q.questions_per_student || '';
+      }
+
+      // Difficulty distribution
+      const diffModeSelect = document.getElementById('newQuizDiffMode');
+      const diffPanel = document.getElementById('newQuizDiffDistPanel');
+      if (q.difficulty_distribution && typeof q.difficulty_distribution === 'object') {
+        if (diffModeSelect) diffModeSelect.value = 'custom';
+        if (diffPanel) diffPanel.style.display = 'block';
+        if (document.getElementById('newQuizDiffEasy')) document.getElementById('newQuizDiffEasy').value = q.difficulty_distribution.easy || 40;
+        if (document.getElementById('newQuizDiffMed')) document.getElementById('newQuizDiffMed').value = q.difficulty_distribution.medium || 40;
+        if (document.getElementById('newQuizDiffHard')) document.getElementById('newQuizDiffHard').value = q.difficulty_distribution.hard || 20;
+        updateCreateQuizDiffDist();
+      } else {
+        if (diffModeSelect) diffModeSelect.value = 'none';
+        if (diffPanel) diffPanel.style.display = 'none';
+      }
+
+      document.getElementById('createQuizModal').classList.add('active');
+      lucide.createIcons();
     }
 
     function closeCreateQuizModal() {
-
       document.getElementById('createQuizModal').classList.remove('active');
-
+      currentEditingQuizConfigId = null;
     }
-
-
 
     function toggleCreateQuizDiffDistPanel(mode) {
       const p = document.getElementById('newQuizDiffDistPanel');
@@ -2935,6 +3241,7 @@
       const subject = document.getElementById('newQuizSubject').value.trim();
       const classId = document.getElementById('newQuizClass').value;
       const duration = parseInt(document.getElementById('newQuizDuration').value);
+      const maxAttempts = parseInt(document.getElementById('newQuizMaxAttempts') ? document.getElementById('newQuizMaxAttempts').value : '1') || 1;
       const marks = parseFloat(document.getElementById('newQuizMarks').value);
       const negMarks = parseFloat(document.getElementById('newQuizNegMarks').value);
       const desc = document.getElementById('newQuizDesc').value.trim();
@@ -2970,39 +3277,77 @@
       const totalMarksVal = Math.max(1, marks * (questionsPerStudent || 5));
       const passingMarksVal = Math.round(totalMarksVal * 0.4);
 
-      const payload = {
-        title,
-        subject,
-        class_id: classId,
-        class_name: className,
-        duration_minutes: duration,
-        total_marks: totalMarksVal,
-        passing_marks: passingMarksVal,
-        marks_per_question: marks,
-        negative_marks: negMarks,
-        negative_marks_per_question: negMarks,
-        negative_marking: negMarks > 0,
-        randomize_questions: randomizeQuestions,
-        randomize_options: randomizeOptions,
-        questions_per_student: questionsPerStudent,
-        unique_question_paper: uniquePaper,
-        prevent_duplicate_questions: preventDuplicates,
-        randomize_question_types: randomizeTypes,
-        difficulty_distribution: difficultyDistribution,
-        security_settings: securitySettings,
-        description: desc,
-        status: 'draft',
-        questions: []
-      };
+      if (currentEditingQuizConfigId) {
+        // EDIT MODE
+        const updatePayload = {
+          title,
+          subject_id: subject,
+          class_id: classId,
+          duration_minutes: duration,
+          max_attempts: maxAttempts,
+          total_marks: totalMarksVal,
+          passing_marks: passingMarksVal,
+          negative_marks: negMarks,
+          negative_marks_per_question: negMarks,
+          negative_marking: negMarks > 0,
+          randomize_questions: randomizeQuestions,
+          randomize_options: randomizeOptions,
+          questions_per_student: questionsPerStudent,
+          unique_question_paper: uniquePaper,
+          prevent_duplicate_questions: preventDuplicates,
+          randomize_question_types: randomizeTypes,
+          difficulty_distribution: difficultyDistribution,
+          security_settings: securitySettings,
+          instructions: desc,
+          description: desc
+        };
 
-      try {
-        const created = await QuizAPI.createQuiz(payload);
-        closeCreateQuizModal();
-        await refreshQuizzes();
-        showToast(`Quiz '${title}' created with Randomization enabled! Add questions below before publishing.`, 'success');
-        openManageQuestions(created.id);
-      } catch (err) {
-        showToast('Failed to create quiz: ' + err.message, 'error');
+        try {
+          await QuizAPI.updateQuiz(currentEditingQuizConfigId, updatePayload);
+          closeCreateQuizModal();
+          await refreshQuizzes();
+          showToast(`Quiz '${title}' updated successfully!`, 'success');
+          currentEditingQuizConfigId = null;
+        } catch (err) {
+          showToast('Failed to update quiz: ' + err.message, 'error');
+        }
+      } else {
+        // CREATE MODE
+        const payload = {
+          title,
+          subject,
+          class_id: classId,
+          class_name: className,
+          duration_minutes: duration,
+          max_attempts: maxAttempts,
+          total_marks: totalMarksVal,
+          passing_marks: passingMarksVal,
+          marks_per_question: marks,
+          negative_marks: negMarks,
+          negative_marks_per_question: negMarks,
+          negative_marking: negMarks > 0,
+          randomize_questions: randomizeQuestions,
+          randomize_options: randomizeOptions,
+          questions_per_student: questionsPerStudent,
+          unique_question_paper: uniquePaper,
+          prevent_duplicate_questions: preventDuplicates,
+          randomize_question_types: randomizeTypes,
+          difficulty_distribution: difficultyDistribution,
+          security_settings: securitySettings,
+          description: desc,
+          status: 'draft',
+          questions: []
+        };
+
+        try {
+          const created = await QuizAPI.createQuiz(payload);
+          closeCreateQuizModal();
+          await refreshQuizzes();
+          showToast(`Quiz '${title}' created with Randomization enabled! Add questions below before publishing.`, 'success');
+          openManageQuestions(created.id);
+        } catch (err) {
+          showToast('Failed to create quiz: ' + err.message, 'error');
+        }
       }
     }
 
@@ -3317,22 +3662,21 @@
       }
       const q = quizzes.find(x => x.id === currentEditingQuizId);
       const isPub = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
-      try {
-        if (!isPub) {
-          const valRes = await QuizAPI.validatePublish(currentEditingQuizId);
-          if (valRes && !valRes.valid) {
-            const errList = (valRes.errors || []).join('; ');
-            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
-            return;
-          }
-          await QuizAPI.togglePublish(currentEditingQuizId, 'publish');
-        }
-        await refreshQuizzes();
-        closeManageQuestionsModal();
-        showToast(`Quiz is now Published and Active for class ${q ? q.class_name : ''}!`, 'success');
-      } catch (err) {
-        showToast('Failed to publish quiz: ' + err.message, 'error');
+      if (isPub) {
+        showToast('This quiz is already Active and Published for students!', 'info');
+        return;
       }
+      try {
+        const valRes = await QuizAPI.validatePublish(currentEditingQuizId);
+        if (valRes && !valRes.valid) {
+          const errList = (valRes.errors || []).join('; ');
+          showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
+          return;
+        }
+      } catch (err) {
+        console.warn('Publish validation warning:', err);
+      }
+      openPublishConfirmModal(currentEditingQuizId);
     }
 
     // ==========================================
@@ -3845,27 +4189,39 @@
       if (!qid) return;
       const q = quizzes.find(x => x.id === qid);
       const isPub = q && ((q.status || '').toLowerCase() === 'active' || (q.status || '').toLowerCase() === 'published');
-      if (!isPub && studioQuestions.length === 0) {
+
+      if (isPub) {
+        const ok = confirm(`Revert "${q ? q.title : 'this quiz'}" back to Draft? Students will no longer see it or be able to attempt it.`);
+        if (!ok) return;
+        try {
+          await QuizAPI.togglePublish(qid, 'unpublish');
+          await refreshQuizzes();
+          document.getElementById('importTargetQuiz').value = qid;
+          await onStudioQuizChange();
+          showToast('Quiz moved back to Draft.', 'info');
+        } catch (err) {
+          showToast('Failed to unpublish: ' + err.message, 'error');
+        }
+        return;
+      }
+
+      if (studioQuestions.length === 0) {
         showToast('Cannot publish a quiz with 0 questions! Add at least 1 question first.', 'warning');
         return;
       }
+
       try {
-        if (!isPub) {
-          const valRes = await QuizAPI.validatePublish(qid);
-          if (valRes && !valRes.valid) {
-            const errList = (valRes.errors || []).join('; ');
-            showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
-            return;
-          }
+        const valRes = await QuizAPI.validatePublish(qid);
+        if (valRes && !valRes.valid) {
+          const errList = (valRes.errors || []).join('; ');
+          showToast('Cannot publish quiz: ' + (errList || 'Validation failed'), 'error');
+          return;
         }
-        const res = await QuizAPI.togglePublish(qid);
-        await refreshQuizzes();
-        document.getElementById('importTargetQuiz').value = qid;
-        await onStudioQuizChange();
-        showToast(res && res.is_published ? 'Quiz is now Published and Active for students!' : 'Quiz moved back to Draft.', 'success');
       } catch (err) {
-        showToast('Failed to toggle publish status: ' + err.message, 'error');
+        console.warn('Publish validation warning:', err);
       }
+
+      openPublishConfirmModal(qid);
     }
 
     function loadSampleJsonPack() {
@@ -4715,9 +5071,14 @@
         // Set default Quiz Question Count to full pool
         const countInput = document.getElementById('previewQuizQuestionCount');
         if (countInput) {
+          countInput.max = combined.length;
           countInput.value = combined.length;
         }
-        updatePreviewQuizPresetButtons(combined.length);
+        renderAdaptivePreviewQuizPresetButtons(combined.length);
+
+        // Update top back button label
+        const backBtnText = document.getElementById('aiModalBackBtnText');
+        if (backBtnText) backBtnText.textContent = 'Back to Criteria';
 
         // Switch to Step 2
         document.getElementById('aiGenConfigStep').style.display = 'none';
@@ -4740,10 +5101,12 @@
       const container = document.getElementById('aiPreviewListContainer');
       const countEl = document.getElementById('previewTotalCount');
       const manCountEl = document.getElementById('previewManualCount');
+      const btnSelEl = document.getElementById('btnSelectedCount');
       if (!container) return;
 
       if (countEl) countEl.textContent = currentCombinedPool.length;
       if (manCountEl) manCountEl.textContent = selectedQuestionIds.size;
+      if (btnSelEl) btnSelEl.textContent = selectedQuestionIds.size;
 
       container.innerHTML = '';
 
@@ -4767,9 +5130,8 @@
         card.style.cssText = `
           border: 1.5px solid ${isSelected ? '#2563EB' : '#E2E8F0'};
           background: ${isSelected ? '#FFFFFF' : '#F8FAFC'};
-          padding: 1.1rem 1.25rem;
+          padding: 1.15rem 1.25rem;
           border-radius: 10px;
-          margin-bottom: 0.85rem;
           flex-shrink: 0;
           min-height: fit-content;
           height: auto;
@@ -4778,7 +5140,7 @@
           box-sizing: border-box;
           overflow: visible;
           box-shadow: ${isSelected ? '0 4px 12px rgba(37, 99, 235, 0.08)' : '0 1px 3px rgba(0,0,0,0.04)'};
-          transition: all 0.2s ease;
+          transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
         `;
 
         const diffColors = {
@@ -4853,8 +5215,8 @@
 
           <!-- Explanation Note -->
           ${q.explanation ? `
-            <div style="font-size: 0.8rem; color: #1E3A8A; background: #EFF6FF; border-left: 3px solid #2563EB; padding: 0.45rem 0.75rem; border-radius: 4px; line-height: 1.45; word-break: break-word; overflow-wrap: anywhere; margin-top: 0.4rem;">
-              <strong>Explanation:</strong> ${escapeHtmlSafe(q.explanation)}
+            <div style="font-size: 0.82rem; color: #1E3A8A; background: #EFF6FF; border: 1px solid #BFDBFE; border-left: 4px solid #2563EB; padding: 0.55rem 0.85rem; border-radius: 6px; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere; margin-top: 0.6rem;">
+              <strong style="color: #1E40AF;"><i data-lucide="info" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Explanation:</strong> ${escapeHtmlSafe(q.explanation)}
             </div>
           ` : ''}
 
@@ -4909,6 +5271,15 @@
       }
       const manCountEl = document.getElementById('previewManualCount');
       if (manCountEl) manCountEl.textContent = selectedQuestionIds.size;
+      const btnSelEl = document.getElementById('btnSelectedCount');
+      if (btnSelEl) btnSelEl.textContent = selectedQuestionIds.size;
+
+      // Update quiz question count input to reflect selected count
+      const input = document.getElementById('previewQuizQuestionCount');
+      if (input) {
+        input.value = selectedQuestionIds.size;
+      }
+      renderAdaptivePreviewQuizPresetButtons(selectedQuestionIds.size);
     }
 
     function selectAllPreviewQuestions(selectState) {
@@ -4917,7 +5288,12 @@
       } else {
         selectedQuestionIds.clear();
       }
+      const input = document.getElementById('previewQuizQuestionCount');
+      if (input) {
+        input.value = selectedQuestionIds.size;
+      }
       renderAiPreviewList();
+      renderAdaptivePreviewQuizPresetButtons(selectedQuestionIds.size);
     }
 
     function setSelectionMode(mode) {
@@ -4928,50 +5304,111 @@
       if (bRand) bRand.classList.toggle('active', mode === 'random');
 
       if (mode === 'random') {
-        applyRandomQuestionSelection();
+        applyRandomQuestionSelection(true);
       }
     }
 
-    function updatePreviewQuizPresetButtons(val) {
+    // Adaptive Question Count Preset Buttons Generator
+    function renderAdaptivePreviewQuizPresetButtons(val) {
       const poolLen = currentCombinedPool ? currentCombinedPool.length : 0;
-      document.querySelectorAll('#previewQuizCountPresets .btn-count-pill').forEach(btn => {
-        const text = btn.textContent.trim();
-        if ((val >= poolLen && text.startsWith('Use All')) || parseInt(text) === val) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+      const container = document.getElementById('previewQuizCountPresets');
+      if (!container) return;
+
+      if (poolLen === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let candidateMilestones = [];
+      if (poolLen <= 5) {
+        candidateMilestones = [4, 3, 2, 1];
+      } else if (poolLen <= 10) {
+        candidateMilestones = [8, 5, 3];
+      } else if (poolLen <= 25) {
+        candidateMilestones = [20, 15, 10, 5];
+      } else if (poolLen <= 50) {
+        candidateMilestones = [40, 30, 20, 10, 5];
+      } else if (poolLen <= 100) {
+        candidateMilestones = [75, 50, 25, 10];
+      } else if (poolLen <= 200) {
+        candidateMilestones = [150, 100, 50, 25, 10];
+      } else {
+        candidateMilestones = [250, 200, 150, 100, 50, 20, 10];
+      }
+
+      const validMilestones = candidateMilestones.filter(m => m < poolLen && m >= 1);
+      const currentValNum = parseInt(val) || poolLen;
+      const isAllActive = currentValNum >= poolLen;
+
+      let html = `<button type="button" class="btn-count-pill ${isAllActive ? 'active' : ''}" onclick="setPreviewQuizQuestionCount('all')" title="Select all ${poolLen} questions in pool">Use All in Pool (${poolLen})</button>`;
+
+      validMilestones.forEach(m => {
+        const isActive = (!isAllActive && currentValNum === m);
+        html += `<button type="button" class="btn-count-pill ${isActive ? 'active' : ''}" onclick="setPreviewQuizQuestionCount(${m})" title="Select ${m} questions">${m}</button>`;
       });
+
+      container.innerHTML = html;
     }
 
     function setPreviewQuizQuestionCount(target) {
       const input = document.getElementById('previewQuizQuestionCount');
       if (!input) return;
-      let val;
       const poolLen = currentCombinedPool ? currentCombinedPool.length : 10;
+      let val;
       if (target === 'all') {
         val = poolLen;
       } else {
-        val = Math.min(parseInt(target) || 10, poolLen);
+        val = Math.min(parseInt(target) || 1, poolLen);
       }
-      input.value = Math.max(1, val);
-      updatePreviewQuizPresetButtons(val);
-      onQuizQuestionCountChange();
+      val = Math.max(1, val);
+      input.value = val;
+
+      if (currentSelectionMode === 'random') {
+        applyRandomQuestionSelection(false);
+      } else {
+        // In manual mode, auto-select the first `val` questions so checkboxes immediately match!
+        selectedQuestionIds = new Set(currentCombinedPool.slice(0, val).map(q => q.id));
+        renderAiPreviewList();
+      }
+      renderAdaptivePreviewQuizPresetButtons(val);
     }
 
     function onQuizQuestionCountChange() {
       const input = document.getElementById('previewQuizQuestionCount');
-      const val = parseInt(input ? input.value : 10) || 10;
-      updatePreviewQuizPresetButtons(val);
-      if (currentSelectionMode === 'random') {
-        applyRandomQuestionSelection();
+      const poolLen = currentCombinedPool ? currentCombinedPool.length : 0;
+      let val = parseInt(input ? input.value : poolLen) || poolLen;
+      if (val > poolLen) {
+        val = poolLen;
+        if (input) input.value = val;
+        showToast(`Requested count exceeds question pool size (${poolLen}). Clamped to ${poolLen}.`, 'info');
       }
+      if (val < 1) {
+        val = 1;
+        if (input) input.value = val;
+      }
+      if (currentSelectionMode === 'random') {
+        applyRandomQuestionSelection(false);
+      } else {
+        selectedQuestionIds = new Set(currentCombinedPool.slice(0, val).map(q => q.id));
+        renderAiPreviewList();
+      }
+      renderAdaptivePreviewQuizPresetButtons(val);
     }
 
-    function applyRandomQuestionSelection() {
+    function onQuizQuestionCountInput(rawVal) {
+      const poolLen = currentCombinedPool ? currentCombinedPool.length : 0;
+      let val = parseInt(rawVal) || 0;
+      if (val > poolLen) {
+        val = poolLen;
+      }
+      renderAdaptivePreviewQuizPresetButtons(val);
+    }
+
+    function applyRandomQuestionSelection(showNotice = true) {
       const countInput = document.getElementById('previewQuizQuestionCount');
-      let requiredCount = parseInt(countInput ? countInput.value : 10) || 10;
-      requiredCount = Math.min(requiredCount, currentCombinedPool.length);
+      const poolLen = currentCombinedPool ? currentCombinedPool.length : 0;
+      let requiredCount = parseInt(countInput ? countInput.value : poolLen) || poolLen;
+      requiredCount = Math.max(1, Math.min(requiredCount, poolLen));
 
       // Randomly sample without duplicate questions
       const poolCopy = [...currentCombinedPool];
@@ -4984,7 +5421,9 @@
       const picked = poolCopy.slice(0, requiredCount);
       selectedQuestionIds = new Set(picked.map(q => q.id));
       renderAiPreviewList();
-      showToast(`Randomly selected ${picked.length} questions from pool!`, 'info');
+      if (showNotice) {
+        showToast(`Randomly selected ${picked.length} questions from pool!`, 'info');
+      }
     }
 
     // Inline Edit Handlers
@@ -5105,6 +5544,10 @@
       document.getElementById('aiGenPreviewStep').style.display = 'none';
       document.getElementById('aiGenReviewStep').style.display = 'none';
 
+      // Update top back button label
+      const backBtnText = document.getElementById('aiModalBackBtnText');
+      if (backBtnText) backBtnText.textContent = 'Exit / Close';
+
       // Show pool resume banner if questions already exist
       const resumeBanner = document.getElementById('aiPoolResumeBanner');
       const resumeCount = document.getElementById('aiPoolResumeCount');
@@ -5123,7 +5566,13 @@
       document.getElementById('aiGenConfigStep').style.display = 'none';
       document.getElementById('aiGenPreviewStep').style.display = 'flex';
       document.getElementById('aiGenReviewStep').style.display = 'none';
+
+      // Update top back button label
+      const backBtnText = document.getElementById('aiModalBackBtnText');
+      if (backBtnText) backBtnText.textContent = 'Back to Criteria';
+
       renderAiPreviewList();
+      renderAdaptivePreviewQuizPresetButtons(selectedQuestionIds.size);
     }
 
     // Step 3: Final Review Summary Card
@@ -5137,6 +5586,10 @@
       document.getElementById('aiGenConfigStep').style.display = 'none';
       document.getElementById('aiGenPreviewStep').style.display = 'none';
       document.getElementById('aiGenReviewStep').style.display = 'block';
+
+      // Update top back button label
+      const backBtnText = document.getElementById('aiModalBackBtnText');
+      if (backBtnText) backBtnText.textContent = 'Back to Preview';
 
       const subject = (document.getElementById('aiGenSubject').value || '').trim() || 'General';
       const unit = (document.getElementById('aiGenUnit').value || '').trim();

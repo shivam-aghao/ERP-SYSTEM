@@ -250,13 +250,7 @@ class AuthenticationService:
                            t.department_id, d.name as dept_name, d.code as dept_code
                     FROM teachers t
                     LEFT JOIN departments d ON t.department_id = d.id
-<<<<<<< HEAD
                     WHERE {where_sql}
-=======
-                    WHERE LOWER(t.emp_code) = LOWER(:uid) 
-                       OR LOWER(t.email) = LOWER(:uid) 
-                       OR CAST(t.id AS TEXT) = :uid
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
                     LIMIT 1
                 """), params).fetchone()
                 if teacher_row:
@@ -274,7 +268,6 @@ class AuthenticationService:
             except Exception:
                 db.rollback()
 
-<<<<<<< HEAD
         # Priority 3: Dynamic academic faculty auto-provisioning
         # If user identifier matches faculty conventions (e.g. EMP-..., T-..., FAC-...) or role hint
         if not teacher_dict and (
@@ -370,9 +363,6 @@ class AuthenticationService:
                     conn.close()
                 except Exception as _sq_e:
                     logger.debug("Auto-provision SQLite sync notice: %s", _sq_e)
-
-=======
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
         # Convenience fallback for faculty search by name if explicit faculty role hint provided
         if not teacher_dict and hint_role in ("teacher", "faculty", "employee"):
             try:
@@ -465,31 +455,6 @@ class AuthenticationService:
         student_dict = None
         student_row = None
         try:
-<<<<<<< HEAD
-            sb = get_supabase_client()
-            if sb:
-                cond = f"student_code.ilike.{uid},email.ilike.{uid}"
-                if uid.isdigit():
-                    cond += f",roll_no.eq.{int(uid)}"
-                if is_valid_uuid(uid):
-                    cond += f",id.eq.{uid}"
-                sb_res = sb.table("students").select("*").or_(cond).limit(1).execute()
-                if sb_res.data and len(sb_res.data) > 0:
-                    s_item = sb_res.data[0]
-                    student_dict = {
-                        "id": str(s_item.get("id")),
-                        "student_code": s_item.get("student_code") or uid,
-                        "password": s_item.get("password") or "ssgmce@123",
-                        "full_name": s_item.get("full_name") or "Student",
-                        "email": s_item.get("email") or "",
-                        "roll_no": s_item.get("roll_no") or 1,
-                        "class_name": s_item.get("class_name") or "2R1",
-                        "class_id": str(s_item.get("class_id") or ""),
-                        "division": s_item.get("division") or "A"
-                    }
-        except Exception as e:
-            logger.debug("Supabase student lookup notice: %s", e)
-=======
             student_row = db.execute(text("""
                 SELECT s.id, s.student_code, s.password, s.full_name, s.email, s.roll_no,
                        s.class_id, c.class_name, c.division as class_div
@@ -517,7 +482,6 @@ class AuthenticationService:
                 }
         except Exception:
             db.rollback()
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
 
         # Fallback to Supabase REST client if DB query failed or empty
         if not student_dict:

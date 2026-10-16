@@ -123,11 +123,7 @@ def get_all_quizzes(
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
-<<<<<<< HEAD
-              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
-=======
               AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])
@@ -350,6 +346,26 @@ def update_quiz_config(
     if payload.end_time is not None or payload.end_at is not None:
         updates.append("end_time = :end_time")
         params["end_time"] = payload.end_time or payload.end_at
+    if payload.class_id is not None:
+        c_val = str(payload.class_id).strip()
+        actual_cid = QuizService.resolve_uuid(c_val)
+        if not actual_cid:
+            c_row = db.execute(text("SELECT id FROM classes WHERE class_name = :c OR CAST(id AS TEXT) = :c LIMIT 1"), {"c": c_val}).fetchone()
+            if c_row:
+                actual_cid = str(c_row[0])
+        if actual_cid:
+            updates.append("class_id = :cls_id")
+            params["cls_id"] = actual_cid
+    if payload.subject_id is not None:
+        s_val = str(payload.subject_id).strip()
+        actual_sid = QuizService.resolve_uuid(s_val)
+        if not actual_sid:
+            s_row = db.execute(text("SELECT id FROM subjects WHERE name = :n OR code = :n OR CAST(id AS TEXT) = :n LIMIT 1"), {"n": s_val}).fetchone()
+            if s_row:
+                actual_sid = str(s_row[0])
+        if actual_sid:
+            updates.append("subject_id = :subj_id")
+            params["subj_id"] = actual_sid
     if payload.randomize_questions is not None or payload.shuffle_questions is not None:
         val = payload.randomize_questions if payload.randomize_questions is not None else payload.shuffle_questions
         updates.append("randomize_questions = :rq")
