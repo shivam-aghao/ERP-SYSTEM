@@ -237,9 +237,9 @@ def get_teacher_certifications(
     tid = None
     if t_input:
         row = db.execute(text("""
-            SELECT id FROM teachers WHERE id::text = :e OR emp_code = :e OR email = :e
+            SELECT id FROM teachers WHERE CAST(id AS TEXT) = :e OR emp_code = :e OR email = :e
             UNION
-            SELECT id FROM users WHERE id::text = :e OR email = :e
+            SELECT id FROM users WHERE CAST(id AS TEXT) = :e OR email = :e
             LIMIT 1
         """), {"e": str(t_input)}).fetchone()
         tid = str(row[0]) if row else str(t_input)
@@ -251,7 +251,7 @@ def get_teacher_certifications(
     rows = db.execute(text("""
         SELECT id, teacher_id, title, type, issuing_organization, year, credential_url, created_at
         FROM teacher_certifications
-        WHERE teacher_id::text = :tid
+        WHERE CAST(teacher_id AS TEXT) = :tid
         ORDER BY year DESC
     """), {"tid": tid}).fetchall()
 
@@ -270,9 +270,9 @@ def add_teacher_certification(
     tid = None
     if t_input:
         row = db.execute(text("""
-            SELECT id FROM teachers WHERE id::text = :e OR emp_code = :e OR email = :e
+            SELECT id FROM teachers WHERE CAST(id AS TEXT) = :e OR emp_code = :e OR email = :e
             UNION
-            SELECT id FROM users WHERE id::text = :e OR email = :e
+            SELECT id FROM users WHERE CAST(id AS TEXT) = :e OR email = :e
             LIMIT 1
         """), {"e": str(t_input)}).fetchone()
         tid = str(row[0]) if row else str(t_input)
@@ -309,7 +309,7 @@ def delete_teacher_certification(
     db: Session = Depends(get_db)
 ):
     """DELETE /api/v1/teachers/certifications/{cert_id} - Remove certification."""
-    db.execute(text("DELETE FROM teacher_certifications WHERE id::text = :cid"), {"cid": cert_id})
+    db.execute(text("DELETE FROM teacher_certifications WHERE CAST(id AS TEXT) = :cid"), {"cid": cert_id})
     db.commit()
     return success_response({"id": cert_id}, "Certification removed from wallet")
 
@@ -340,7 +340,7 @@ def get_teacher_classes_report(
         teacher_row = db.execute(text("""
             SELECT id, emp_code, full_name, designation, department_id
             FROM teachers
-            WHERE id::text = :e OR emp_code = :e OR email = :e
+            WHERE CAST(id AS TEXT) = :e OR emp_code = :e OR email = :e
             LIMIT 1
         """), {"e": str(t_input)}).fetchone()
 
@@ -366,7 +366,7 @@ def get_teacher_classes_report(
                subject_code, subject_name, topic_taught,
                present_count, total_students, attendance_rate
         FROM attendance_sessions
-        WHERE teacher_id::text = :tid
+        WHERE CAST(teacher_id AS TEXT) = :tid
     """
     params = {"tid": tid}
 

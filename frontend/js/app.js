@@ -1520,7 +1520,6 @@ const TeacherApp = {
                     </button>
                   ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
                 </div>
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
               </div>
             </div>
           `;
@@ -1528,7 +1527,6 @@ const TeacherApp = {
       }
     }
 
-<<<<<<< HEAD
     if (container && notifs) {
       container.innerHTML = notifs.slice(0, 5).map(notif => `
         <div class="notification-item ${!notif.is_read ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id || ''}')">
@@ -1543,9 +1541,7 @@ const TeacherApp = {
         </div>
       `).join('');
     }
-=======
     this.initLucideIcons();
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
   },
 
   async markAllTeacherNotificationsRead() {
@@ -1623,8 +1619,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-=======
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
   async handleNotificationClick(id) {
     const notif = TeacherERPData && TeacherERPData.notifications && TeacherERPData.notifications.find(n => n.id === id);
     if (notif) {

@@ -266,9 +266,9 @@ def get_day_wise_attendance(
     """GET /api/v1/attendance/student/{student_id}/day-wise - Day-wise attendance records."""
     # Resolve student UUID
     st_row = db.execute(text("""
-        SELECT id FROM users WHERE id::text = :s OR roll_no = :s OR email = :s
+        SELECT id FROM users WHERE CAST(id AS TEXT) = :s OR roll_no = :s OR email = :s
         UNION
-        SELECT id FROM students WHERE id::text = :s OR student_code = :s OR roll_no = :s
+        SELECT id FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s
         LIMIT 1
     """), {"s": student_id}).fetchone()
     
@@ -279,11 +279,11 @@ def get_day_wise_attendance(
                s.name as subject_name, s.code as subject_code
         FROM attendance a
         LEFT JOIN subjects s ON a.subject_id = s.id
-        WHERE a.student_id::text = :sid
+        WHERE CAST(a.student_id AS TEXT) = :sid
     """
     params = {"sid": sid}
     if subject_id:
-        query += " AND a.subject_id::text = :sub"
+        query += " AND CAST(a.subject_id AS TEXT) = :sub"
         params["sub"] = subject_id
     query += " ORDER BY a.date ASC"
 

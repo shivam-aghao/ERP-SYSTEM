@@ -205,7 +205,7 @@ class QuizSecurityEvent(Base):
     attempt_id = Column(String(36), nullable=False)
     event_type = Column(String(50), nullable=False)
     event_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    metadata = Column(JSON, nullable=True)
+    event_metadata = Column("metadata", JSON, nullable=True)
 
 
 class QuizRandomizationConfig(Base):

@@ -29,7 +29,7 @@ def _resolve_teacher_uuid(teacher_ident: str, db: Session) -> Optional[str]:
         return None
     tch = db.execute(text("""
         SELECT id FROM teachers
-        WHERE id::text = :tid OR LOWER(emp_code) = LOWER(:tid) OR LOWER(email) = LOWER(:tid)
+        WHERE CAST(id AS TEXT) = :tid OR LOWER(emp_code) = LOWER(:tid) OR LOWER(email) = LOWER(:tid)
         LIMIT 1
     """), {"tid": str(teacher_ident)}).fetchone()
     return str(tch._mapping["id"]) if tch else None
@@ -72,7 +72,7 @@ def get_all_quizzes(
                 FROM students s
                 LEFT JOIN classes c ON s.class_id = c.id
                 WHERE LOWER(s.student_code) = LOWER(:c)
-                   OR s.id::text = :c
+                   OR CAST(s.id AS TEXT) = :c
                    OR LOWER(s.roll_no) = LOWER(:c)
                    OR LOWER(COALESCE(s.email, '')) = LOWER(:c)
                 LIMIT 1
@@ -93,7 +93,7 @@ def get_all_quizzes(
         if class_id and class_id.strip() not in ("", "ALL", "null", "undefined"):
             req_cls = db.execute(text("""
                 SELECT id, class_name FROM classes
-                WHERE id::text = :c OR UPPER(class_name) = UPPER(:c)
+                WHERE CAST(id AS TEXT) = :c OR UPPER(class_name) = UPPER(:c)
                 LIMIT 1
             """), {"c": class_id.strip()}).fetchone()
             if req_cls and not st:
@@ -109,25 +109,21 @@ def get_all_quizzes(
                    COALESCE(q.result_published, TRUE) as is_result_released,
                    COALESCE(q.result_published, TRUE) as show_result_immediately,
                    (SELECT count(*) FROM quiz_questions WHERE quiz_id = q.id) as question_count,
-                   (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
+                   (SELECT qa.status FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND CAST(qa.student_id AS TEXT) = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_status,
                    CASE 
-                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.final_marks FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND CAST(qa.student_id AS TEXT) = :sid ORDER BY qa.created_at DESC LIMIT 1)
                        ELSE NULL
                    END as attempt_score,
                    CASE 
-                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1)
+                       WHEN COALESCE(q.result_published, TRUE) = TRUE THEN (SELECT qa.percentage FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND CAST(qa.student_id AS TEXT) = :sid ORDER BY qa.created_at DESC LIMIT 1)
                        ELSE NULL
                    END as attempt_percentage,
-                   (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND qa.student_id::text = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id
+                   (SELECT qa.id FROM quiz_attempts qa WHERE qa.quiz_id = q.id AND CAST(qa.student_id AS TEXT) = :sid ORDER BY qa.created_at DESC LIMIT 1) as attempt_id
             FROM quizzes q
             JOIN classes c ON q.class_id = c.id
             LEFT JOIN subjects s ON q.subject_id = s.id
-            WHERE (q.class_id::text = :cid OR UPPER(c.class_name) = UPPER(:cname))
-<<<<<<< HEAD
-              AND UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED')
-=======
+            WHERE (CAST(q.class_id AS TEXT) = :cid OR UPPER(c.class_name) = UPPER(:cname))
               AND (q.result_published = TRUE OR UPPER(q.status) IN ('ACTIVE', 'PUBLISHED', 'SCHEDULED'))
->>>>>>> 7095f894af9900f806c2a4cf307fef9717274ec1
             ORDER BY q.created_at DESC
         """), {"cid": str(stud_class_id or ""), "cname": str(stud_class_name or ""), "sid": str(sid or "")}).fetchall()
         return success_response([dict(r._mapping) for r in quizzes])
@@ -151,14 +147,14 @@ def get_all_quizzes(
             # Teacher identity could not be verified or not found in database -> return empty list
             return success_response([])
 
-        clause += " AND (q.teacher_id::text = :tid)"
+        clause += " AND (CAST(q.teacher_id AS TEXT) = :tid)"
         params["tid"] = actual_teacher_uuid
     else:
         # Admin can optionally filter by teacher_id if provided
         if teacher_id:
             actual_tid = _resolve_teacher_uuid(str(teacher_id), db)
             if actual_tid:
-                clause += " AND (q.teacher_id::text = :tid)"
+                clause += " AND (CAST(q.teacher_id AS TEXT) = :tid)"
                 params["tid"] = actual_tid
 
     # Optional class filter
@@ -240,7 +236,7 @@ def get_quiz_details(
             SELECT s.class_id, c.class_name
             FROM students s
             LEFT JOIN classes c ON s.class_id = c.id
-            WHERE s.student_code = :c OR s.id::text = :c LIMIT 1
+            WHERE s.student_code = :c OR CAST(s.id AS TEXT) = :c LIMIT 1
         """), {"c": str(sc)}).fetchone()
         if st:
             sm = st._mapping
