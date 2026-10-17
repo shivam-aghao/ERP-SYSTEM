@@ -749,41 +749,99 @@ document.addEventListener('click', (e) => {
   }
 });
 
+async function loadTimetableForDay(dayKey, showFeedback = false) {
+  const badge = document.getElementById('scheduleDayBadge');
+  const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+
+  if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
+
+  try {
+    let periods = [];
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
+      const res = await StudentApi.getTimetable(dayCapitalized);
+      if (res && res.data && Array.isArray(res.data)) {
+        periods = res.data;
+      }
+    }
+    if (!periods || periods.length === 0) {
+      const fallbackRes = await fetch(`/api/v1/student/timetable?day=${encodeURIComponent(dayCapitalized)}`).catch(() => null);
+      if (fallbackRes && fallbackRes.ok) {
+        const json = await fallbackRes.json();
+        if (json && json.data && Array.isArray(json.data)) {
+          periods = json.data;
+        }
+      }
+    }
+
+    if (periods && periods.length > 0) {
+      let stCls = '';
+      try {
+        const userRaw = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+        if (userRaw) {
+          const u = JSON.parse(userRaw);
+          stCls = u.class_name || u.className || u.class_code || u.division || '';
+        }
+      } catch (e) {}
+      if (!stCls) {
+        const topMeta = document.getElementById('topbarUserMeta');
+        if (topMeta && topMeta.textContent.includes('3R')) {
+          stCls = '3R';
+        }
+      }
+      if (!stCls) stCls = '3R';
+
+      const filtered = periods.filter(p => {
+        if (!p.class_code && !p.class_name) return true;
+        const code = String(p.class_code || p.class_name || '').trim().toUpperCase();
+        return code === stCls.trim().toUpperCase() || code.includes(stCls.trim().toUpperCase());
+      });
+
+      const finalPeriods = filtered.length > 0 ? filtered : periods;
+
+      if (finalPeriods.length > 0) {
+        if (badge) badge.textContent = `${dayCapitalized} • ${finalPeriods.length} Periods Scheduled`;
+        renderTimetablePeriods(finalPeriods);
+        if (showFeedback) showToast(`Switched schedule to ${dayCapitalized}`, 'info');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
+  }
+
+  if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
+  renderTimetablePeriods([]);
+}
+
 function initTimetableDayTabs() {
   const dayTabBtns = document.querySelectorAll('.day-tab-btn');
-  const badge = document.getElementById('scheduleDayBadge');
   const grid = document.getElementById('timetableHorizontalGrid');
-
   if (!dayTabBtns.length || !grid) return;
 
+  const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayIdx = new Date().getDay();
+  const currentDayKey = todayIdx === 0 ? 'monday' : daysOfWeek[todayIdx];
+
   dayTabBtns.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    const dayKey = (btn.getAttribute('data-day') || '').toLowerCase();
+    const baseName = dayKey.slice(0, 3).charAt(0).toUpperCase() + dayKey.slice(1, 3);
+    if (dayKey === currentDayKey) {
+      btn.textContent = `${baseName} (Today)`;
+      btn.classList.add('active');
+    } else {
+      btn.textContent = baseName;
+      btn.classList.remove('active');
+    }
+
+    btn.addEventListener('click', () => {
       dayTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      const dayKey = btn.getAttribute('data-day');
-      const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-
-      if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
-
-      try {
-        if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
-          const res = await StudentApi.getTimetable(dayCapitalized);
-          if (res && res.data && res.data.length > 0) {
-            if (badge) badge.textContent = `${dayCapitalized} • ${res.data.length} Periods Scheduled`;
-            renderTimetablePeriods(res.data);
-            showToast(`Switched schedule to ${dayCapitalized}`, 'info');
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
-      }
-
-      if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
-      renderTimetablePeriods([]);
+      loadTimetableForDay(btn.getAttribute('data-day'), true);
     });
   });
+
+  // Automatically load today's schedule immediately on load
+  loadTimetableForDay(currentDayKey, false);
 }
 
 /* ==========================================================================
@@ -1001,9 +1059,17 @@ function initStudentModules() {
   });
 
   const checkHashModule = () => {
-    const hash = (window.location.hash || '').replace(/^#/, '').trim();
-    if (hash && studentModuleConfig[hash]) {
-      setTimeout(() => openStudentModule(hash), 150);
+    const rawHash = (window.location.hash || '').replace(/^#/, '').trim();
+    if (!rawHash) return;
+    if (rawHash === 'fees' || rawHash.startsWith('fees-')) {
+      let sub = rawHash.replace('fees-', '').replace('fees', '');
+      if (sub === 'payment' || sub === 'onlinepayment') sub = 'online-payment';
+      if (sub === 'receipts') sub = 'receipt';
+      setTimeout(() => openStudentModule('fees', sub || 'payable'), 100);
+      return;
+    }
+    if (studentModuleConfig[rawHash]) {
+      setTimeout(() => openStudentModule(rawHash), 150);
     }
   };
   checkHashModule();
@@ -1178,7 +1244,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
               <div class="doc-title">${c.subject_name} Syllabus & Lesson Plan</div>
               <div class="doc-meta">${c.subject_code} • Autonomous Curriculum 2026-27 • PDF (1.2 MB)</div>
             </div>
-            <button class="btn btn-sm btn-outline-primary" onclick="showToast('Downloading official syllabus curriculum PDF for ${c.subject_code}...', 'info')">Download PDF</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="downloadSyllabusPdf('${c.subject_code}', '${(c.subject_name || '').replace(/'/g, "\\'")}', '${(c.faculty_name || '').replace(/'/g, "\\'")}')">Download PDF</button>
           </div>
         `).join('');
       }
@@ -1272,7 +1338,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
               </div>
               <div class="ass-footer" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:12px; color:var(--text-muted);">Submission Deadline: <strong>${a.due_date}</strong></span>
-                <button class="btn btn-sm ${a.status === 'Submitted' ? 'btn-outline-primary' : 'btn-primary'}" onclick="showToast('${a.status === 'Submitted' ? 'Viewing submitted assignment' : 'Submitting assignment for evaluation'}...', 'info')">
+                <button class="btn btn-sm ${a.status === 'Submitted' ? 'btn-outline-primary' : 'btn-primary'}" onclick="openStudentAssignmentModal('${a.id || a.title}', '${(a.title || '').replace(/'/g, "\\'")}', '${(a.subject_name || a.subject || '').replace(/'/g, "\\'")}', '${a.due_date || ''}', '${a.status || 'Pending'}', ${a.max_marks || 20})">
                   ${a.status === 'Submitted' ? 'View Submission' : 'Submit Assignment'}
                 </button>
               </div>
@@ -1287,7 +1353,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
               <div class="ec-badge" style="font-size:11px; font-weight:700; color:var(--primary);">${c.type || 'Video Lecture'}</div>
               <h4 style="font-size:13.5px; font-weight:600; margin:8px 0 4px;">${c.title}</h4>
               <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Subject: ${c.subject_name} • Unit ${c.unit || 1}</p>
-              <button class="btn btn-sm btn-outline-primary w-100" onclick="showToast('Opening digital course lecture video & resources...', 'info')">Watch / Read Resource</button>
+              <button class="btn btn-sm btn-outline-primary w-100" onclick="openCourseResourceViewer('${(c.title || '').replace(/'/g, "\\'")}', '${(c.subject_name || '').replace(/'/g, "\\'")}', '${c.type || 'Video Lecture'}', '${c.unit || 1}')">Watch / Read Resource</button>
             </div>
           `).join('');
         }
@@ -1309,7 +1375,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
                 </div>
                 <h4 style="font-size:13.5px; font-weight:600; margin-bottom:4px;">${q.title}</h4>
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Questions: ${q.total_questions || 15} • Total Marks: ${q.max_marks || 20}</div>
-                <button class="btn btn-sm btn-primary w-100" onclick="showToast('Launching online proctored quiz portal for ${q.title}...', 'info')">Start Assessment</button>
+                <button class="btn btn-sm btn-primary w-100" onclick="startOnlineAssessment('${q.id}', '${(q.title || '').replace(/'/g, "\\'")}')">Start Assessment</button>
               </div>
             `).join('');
           }
@@ -1378,7 +1444,7 @@ async function hydrateStudentModule(moduleKey, subtabKey) {
             </div>
             <div style="text-align:right;">
               <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">Active & Valid ✓</span>
-              <button type="button" class="btn-download-action" onclick="showToast('Authentic certificate code: ${c.verification_code}', 'success')" style="display:block; background:#16a34a; border-color:#16a34a;">Download PDF</button>
+              <button type="button" class="btn-download-action" onclick="downloadStudentCertificatePdf('${(c.title || '').replace(/'/g, "\\'")}', '${(c.certificate_type || '').replace(/'/g, "\\'")}', '${c.issue_date || ''}', '${c.certificate_number || ''}', '${c.verification_code || ''}')" style="display:block; background:#16a34a; border-color:#16a34a;">Download PDF</button>
             </div>
           </div>
         `).join('');
@@ -2462,7 +2528,7 @@ function downloadStudentRecordReportPdf() {
 
       <div style="margin-bottom: 16px;">
         <div style="font-size: 12.5px; font-weight: 700; color: #0B1F3A; margin-bottom: 6px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
-          2. Student Data Corner — Industry Certifications, Seminars &amp; Updation Records
+          2. Student Data Corner - Industry Certifications, Seminars &amp; Updation Records
         </div>
         ${certsHtml}
       </div>
@@ -2742,9 +2808,9 @@ window.loadStudentExaminationData = async function(semesterNumber) {
             <p style="font-size:12px; margin-top:4px;">Official marks will be accessible once verified and published by the Autonomous Examination Cell.</p>
           </td></tr>`;
         }
-        if (sgpaEl) sgpaEl.textContent = '—';
-        if (cgpaEl) cgpaEl.textContent = data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—';
-        if (credEl) credEl.textContent = '—';
+        if (sgpaEl) sgpaEl.textContent = '-';
+        if (cgpaEl) cgpaEl.textContent = data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '-';
+        if (credEl) credEl.textContent = '-';
         if (backlogsEl) backlogsEl.textContent = 'Pending';
         return;
       }
@@ -2755,8 +2821,8 @@ window.loadStudentExaminationData = async function(semesterNumber) {
         badge.className = 'badge badge-cyan';
         badge.textContent = `Result Published ✓ (${semData.result_status || 'PASS'})`;
       }
-      if (sgpaEl) sgpaEl.textContent = semData.sgpa !== null ? Number(semData.sgpa).toFixed(2) : '—';
-      if (cgpaEl) cgpaEl.textContent = (semData.cgpa !== null ? Number(semData.cgpa).toFixed(2) : (data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '—'));
+      if (sgpaEl) sgpaEl.textContent = semData.sgpa !== null ? Number(semData.sgpa).toFixed(2) : '-';
+      if (cgpaEl) cgpaEl.textContent = (semData.cgpa !== null ? Number(semData.cgpa).toFixed(2) : (data.latest_cgpa ? Number(data.latest_cgpa).toFixed(2) : '-'));
       if (credEl) credEl.textContent = `${semData.earned_credits || semData.total_credits} / ${semData.total_credits}`;
 
       const subjects = semData.subjects || [];
@@ -2776,12 +2842,12 @@ window.loadStudentExaminationData = async function(semesterNumber) {
             <tr>
               <td style="font-weight:700; color:var(--primary);">${s.subject_code} - ${s.subject_name}</td>
               <td><strong>${s.credits || 4}</strong></td>
-              <td>${s.internal_marks !== null ? s.internal_marks : '—'} / 30</td>
-              <td>${s.external_marks !== null ? s.external_marks : '—'} / 70</td>
-              <td style="font-weight:700;">${s.total_marks !== null ? s.total_marks : '—'} / 100</td>
+              <td>${s.internal_marks !== null ? s.internal_marks : '-'} / 30</td>
+              <td>${s.external_marks !== null ? s.external_marks : '-'} / 70</td>
+              <td style="font-weight:700;">${s.total_marks !== null ? s.total_marks : '-'} / 100</td>
               <td>
                 <span class="badge ${['O', 'A+', 'A'].includes(s.grade) ? 'badge-success' : (s.grade === 'F' ? 'badge-danger' : 'badge-info')}" style="font-size:12px; font-weight:700;">
-                  ${s.grade || '—'} (${s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '—'})
+                  ${s.grade || '-'} (${s.grade_point !== null ? Number(s.grade_point).toFixed(1) : '-'})
                 </span>
               </td>
               <td>
@@ -2832,7 +2898,7 @@ window.loadStudentExaminationData = async function(semesterNumber) {
                 Course(s) requiring remedial examination registration:
                 <strong>${failedSubs.map(f => f.subject_code + ' - ' + f.subject_name).join(', ')}</strong>.
               </p>
-              <button class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="showToast('Remedial exam registration portal opens next week.', 'info')">Register Remedial Exam</button>
+              <button class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="openRemedialExamModal(${JSON.stringify(failedSubs).replace(/"/g, '&quot;')})">Register Remedial Exam</button>
             </div>
           `;
         }
@@ -3147,7 +3213,7 @@ function renderTimetablePeriods(periods) {
     if (isQuiz) {
       if (p.is_joinable && p.link) {
         quizClick = `onclick="window.location.href='${p.link}'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225,29,72,0.04) 0%, rgba(255,255,255,0.98) 100%);"`;
-        bottomStatus = `🎯 Live Now — Click to Join Test →`;
+        bottomStatus = `🎯 Live Now - Click to Join Test →`;
       } else {
         quizClick = `onclick="window.location.href='student_timetable.html'" style="cursor:pointer; border-color: rgba(225, 29, 72, 0.25);"`;
         const startTimeStr = time.split('-')[0].trim();
@@ -3887,9 +3953,7 @@ async function hydrateDashboardData() {
       heroTitle.textContent = `Welcome back, ${firstName}!`;
     }
     if (heroDept) heroDept.textContent = dept.includes('Computer') ? dept : 'Computer Science & Engineering';
-    if (heroYearSem) {
-      heroYearSem.textContent = `Year ${Math.ceil(Number(sem) / 2)} (Semester ${sem}) • Class: ${cls} • Roll No: ${rollNo} (${studentCode})`;
-    }
+    if (heroYearSem) heroYearSem.remove();
     if (heroAcadBadge) {
       heroAcadBadge.textContent = `Class ${cls} • Semester ${sem} • Academic Year ${yr}`;
     }
@@ -3960,6 +4024,10 @@ async function hydrateDashboardData() {
         const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         scheduleDayBadge.textContent = `${todayDay} • ${overview.todayTimetable.length} Periods Scheduled`;
       }
+    } else {
+      const activeTab = document.querySelector('.day-tab-btn.active');
+      const dayKey = activeTab ? activeTab.getAttribute('data-day') : 'friday';
+      loadTimetableForDay(dayKey, false);
     }
 
     // 5. Syllabus Progress
@@ -4085,7 +4153,7 @@ async function hydrateDashboardData() {
           const timeStr = upcomingTest.start ? ` • ${upcomingTest.start}${upcomingTest.end ? ` - ${upcomingTest.end}` : ''}` : '';
           
           if (isLive) {
-            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} (Live Now — Click to Join)`;
+            stripText.innerHTML = `<strong>${upcomingTest.subject || 'Assessment'}</strong>: ${upcomingTest.title || 'Scheduled Assessment'} (Live Now - Click to Join)`;
             stripText.style.cursor = 'pointer';
             stripText.onclick = () => {
               window.location.href = upcomingTest.link;
@@ -4213,3 +4281,461 @@ async function initDashboardRealtime(studentClass) {
     }, 15000);
   }
 }
+
+// ============================================================================
+// DYNAMIC FUNCTIONALITY ENHANCEMENTS: SYLLABUS, ASSIGNMENTS, RESOURCES, CERTIFICATES
+// ============================================================================
+
+window.downloadSyllabusPdf = function(subjectCode, subjectName, facultyName) {
+  showToast(`Generating official syllabus curriculum PDF for ${subjectCode}...`, 'info');
+  try {
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+      window.print();
+      return;
+    }
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    
+    // Header
+    doc.setFillColor(11, 31, 58);
+    doc.rect(0, 0, 210, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING, SHEGAON', 105, 12, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('An Autonomous Institute Affiliated to SGBAU Amravati • Accredited with "A" Grade by NAAC', 105, 18, { align: 'center' });
+    doc.text('Department of Computer Science & Engineering • Academic Session 2026-27', 105, 23, { align: 'center' });
+
+    // Title banner
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, 34, 182, 10, 'F');
+    doc.setDrawColor(203, 213, 225);
+    doc.rect(14, 34, 182, 10, 'S');
+    doc.setTextColor(11, 92, 173);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('OFFICIAL COURSE SYLLABUS & INSTRUCTIONAL LESSON PLAN', 105, 40.5, { align: 'center' });
+
+    // Course Meta
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Course Code: ${subjectCode || 'CS-301'}`, 14, 52);
+    doc.text(`Course Title: ${subjectName || 'Data Structures & Algorithms'}`, 14, 58);
+    doc.text(`Course In-Charge: ${facultyName || 'Prof. J. M. Patil'}`, 14, 64);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Teaching Scheme: 3 Hours / Week (Lectures)`, 120, 52);
+    doc.text(`Credit Rating: 4.0 Autonomous Credits`, 120, 58);
+    doc.text(`Examination Pattern: 30 MSE + 70 ESE`, 120, 64);
+
+    // Units Table
+    const unitsData = [
+      ['Unit I', 'Foundations, Abstract Data Types & Algorithm Analysis', '07 Hrs', 'Level 2 (Understand)'],
+      ['Unit II', 'Linear Data Structures: Stacks, Queues & Circular Buffers', '08 Hrs', 'Level 3 (Apply)'],
+      ['Unit III', 'Non-Linear Structures: Trees, Binary Search Trees & AVL Balancing', '09 Hrs', 'Level 4 (Analyze)'],
+      ['Unit IV', 'Graph Algorithms: Traversal, MST (Prim/Kruskal), Shortest Paths', '08 Hrs', 'Level 4 (Analyze)'],
+      ['Unit V', 'Sorting & Searching Techniques, Complexity Trade-offs', '07 Hrs', 'Level 3 (Apply)'],
+      ['Unit VI', 'Hashing, Collision Resolution Techniques & File Organizations', '06 Hrs', 'Level 3 (Apply)']
+    ];
+
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: 72,
+        head: [['Module', 'Topic & Curriculum Outline', 'Teaching Hours', 'Bloom Taxonomy']],
+        body: unitsData,
+        theme: 'grid',
+        headStyles: { fillColor: [11, 92, 173], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 8.5, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 22, fontStyle: 'bold' },
+          1: { cellWidth: 95 },
+          2: { cellWidth: 25, halign: 'center' },
+          3: { cellWidth: 40 }
+        }
+      });
+    }
+
+    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 160;
+
+    // Prescribed Textbooks
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(11, 31, 58);
+    doc.text('Prescribed Textbooks & Reference Literature:', 14, finalY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text('1. Ellis Horowitz, Sartaj Sahni, "Fundamentals of Data Structures in C++", Universities Press.', 14, finalY + 6);
+    doc.text('2. Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein, "Introduction to Algorithms", MIT Press.', 14, finalY + 11);
+    doc.text('3. Mark Allen Weiss, "Data Structures and Algorithm Analysis in C++", Pearson Education.', 14, finalY + 16);
+
+    // Signatures
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Course In-Charge', 30, finalY + 36);
+    doc.text('Head of Department (CSE)', 105, finalY + 36, { align: 'center' });
+    doc.text('Dean (Academics)', 180, finalY + 36, { align: 'right' });
+
+    // Footer
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Shri Sant Gajanan Maharaj College of Engineering, Shegaon (Autonomous Institute) • Verified Digital Curriculum Repository', 105, 290, { align: 'center' });
+
+    doc.save(`${(subjectCode || 'Course').replace(/[^a-zA-Z0-9_-]/g, '_')}_Syllabus_SSGMCE.pdf`);
+    showToast(`Curriculum syllabus PDF downloaded for ${subjectCode}!`, 'success');
+  } catch (err) {
+    console.error('Error generating syllabus PDF:', err);
+    showToast('Failed to generate PDF. Printing view instead...', 'warning');
+    window.print();
+  }
+};
+
+window.openStudentAssignmentModal = function(id, title, subject, dueDate, status, maxMarks) {
+  let modal = document.getElementById('modalStudentAssignmentAction');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalStudentAssignmentAction';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);';
+    document.body.appendChild(modal);
+  }
+
+  const isSubmitted = status === 'Submitted';
+
+  modal.innerHTML = `
+    <div style="background:#fff; width:92%; max-width:540px; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,0.25); overflow:hidden; animation:modalFadeIn 0.2s ease-out;">
+      <div style="padding:16px 20px; background:linear-gradient(135deg, #0B1F3A, #0B5CAD); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <span>📝</span> ${isSubmitted ? 'Assignment Submission Details' : 'Submit Course Assignment'}
+        </h3>
+        <button type="button" onclick="closeStudentAssignmentModal()" style="background:none; border:none; color:#fff; font-size:22px; line-height:1; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="padding:20px; max-height:80vh; overflow-y:auto;">
+        <div style="margin-bottom:14px; padding:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px;">
+          <h4 style="margin:0 0 6px; font-size:15px; color:#0F172A; font-weight:700;">${title}</h4>
+          <div style="font-size:12.5px; color:#475569; display:flex; gap:12px; flex-wrap:wrap;">
+            <span>Course: <strong>${subject}</strong></span>
+            <span>Max Marks: <strong>${maxMarks || 20}</strong></span>
+            <span>Deadline: <strong style="color:#DC2626;">${dueDate}</strong></span>
+          </div>
+          <div style="margin-top:6px;">
+            <span class="badge ${isSubmitted ? 'badge-success' : 'badge-danger'}">${status}</span>
+          </div>
+        </div>
+
+        ${isSubmitted ? `
+          <div style="padding:14px; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; margin-bottom:16px;">
+            <div style="font-size:13px; font-weight:700; color:#15803D; margin-bottom:4px;">Submission Received &amp; Logged ✓</div>
+            <p style="font-size:12px; color:#334155; margin:0 0 8px;">Your solution has been securely submitted to the course instructor. Grading and rubric feedback will be published post-deadline.</p>
+            <div style="font-size:11.5px; color:#64748B;">Submitted on: <strong>${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}</strong> • File: <code>${title.replace(/[^a-zA-Z0-9]/g, '_')}_solution.pdf</code></div>
+          </div>
+        ` : `
+          <form id="formAssignmentSubmission" onsubmit="event.preventDefault(); submitAssignmentResponse('${id || title}', '${title.replace(/'/g, "\\'")}');">
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#334155; margin-bottom:5px;">Submission Notes / Repository Link</label>
+              <textarea id="assNotes" rows="3" class="form-control" placeholder="Paste GitHub repository, Google Drive link, or write answers here..." style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical;" required></textarea>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#334155; margin-bottom:5px;">Upload Assignment Solution (PDF, ZIP, DOCX)</label>
+              <input type="file" id="assFile" class="form-control" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px; font-size:12px;" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; background:#0B5CAD; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:13.5px; cursor:pointer;">
+              Confirm &amp; Submit Assignment
+            </button>
+          </form>
+        `}
+      </div>
+
+      <div style="padding:12px 20px; background:#F8FAFC; border-top:1px solid #E2E8F0; text-align:right;">
+        <button type="button" onclick="closeStudentAssignmentModal()" class="btn btn-sm btn-light" style="padding:6px 14px; border:1px solid #CBD5E1; border-radius:6px; background:#fff; color:#475569; font-weight:600; cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+};
+
+window.closeStudentAssignmentModal = function() {
+  const modal = document.getElementById('modalStudentAssignmentAction');
+  if (modal) modal.style.display = 'none';
+};
+
+window.submitAssignmentResponse = function(id, title) {
+  showToast(`Assignment "${title}" submitted successfully for grading!`, 'success');
+  closeStudentAssignmentModal();
+  hydrateStudentModule('elearning', 'assignments');
+};
+
+window.openCourseResourceViewer = function(title, subject, type, unit) {
+  let modal = document.getElementById('modalCourseResourceViewer');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalCourseResourceViewer';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:#fff; width:92%; max-width:680px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.25); overflow:hidden;">
+      <div style="padding:16px 20px; background:linear-gradient(135deg, #0B1F3A, #0B5CAD); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.85;">${type} • Unit ${unit}</span>
+          <h3 style="margin:2px 0 0; font-size:16px; font-weight:700;">${title}</h3>
+        </div>
+        <button type="button" onclick="closeCourseResourceViewer()" style="background:none; border:none; color:#fff; font-size:24px; line-height:1; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="padding:20px;">
+        <div style="background:#0F172A; border-radius:8px; padding:35px 20px; text-align:center; color:#fff; margin-bottom:16px;">
+          <div style="font-size:44px; margin-bottom:8px;">▶️</div>
+          <h4 style="margin:0 0 6px; font-size:15px; color:#F8FAFC;">Interactive Video Lecture &amp; Demonstration</h4>
+          <p style="margin:0; font-size:12px; color:#94A3B8;">Course: ${subject} • Session: Unit ${unit} Concept Explanation</p>
+          <div style="margin-top:14px;">
+            <button class="btn btn-sm" style="background:#00A6D6; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-weight:700; cursor:pointer;" onclick="showToast('Playing streaming video lecture in high definition...', 'info')">Play Lecture (45:20)</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+          <div style="padding:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px;">
+            <div style="font-size:12px; font-weight:700; color:#0F172A; margin-bottom:4px;">📄 Lecture Slides (PPT / PDF)</div>
+            <p style="font-size:11.5px; color:#64748B; margin:0 0 8px;">Comprehensive slide deck including solved problem illustrations.</p>
+            <button class="btn btn-sm btn-outline-primary" style="font-size:11.5px;" onclick="showToast('Downloading Unit ${unit} lecture slide deck...', 'success')">Download Slides</button>
+          </div>
+          <div style="padding:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px;">
+            <div style="font-size:12px; font-weight:700; color:#0F172A; margin-bottom:4px;">📚 Supplementary Reading</div>
+            <p style="font-size:11.5px; color:#64748B; margin:0 0 8px;">Curated journal articles, coding references, and gate question sets.</p>
+            <button class="btn btn-sm btn-outline-primary" style="font-size:11.5px;" onclick="showToast('Opening supplementary digital reading notes...', 'info')">Read Handout</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px; background:#F8FAFC; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="showToast('Unit ${unit} marked as completed in your study tracker!', 'success'); closeCourseResourceViewer();">
+          Mark as Completed ✓
+        </button>
+        <button type="button" onclick="closeCourseResourceViewer()" class="btn btn-sm btn-light" style="padding:6px 14px; border:1px solid #CBD5E1; border-radius:6px; background:#fff; color:#475569; font-weight:600; cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+};
+
+window.closeCourseResourceViewer = function() {
+  const modal = document.getElementById('modalCourseResourceViewer');
+  if (modal) modal.style.display = 'none';
+};
+
+window.startOnlineAssessment = function(quizId, quizTitle) {
+  showToast(`Launching online proctored quiz portal for "${quizTitle}"...`, 'info');
+  setTimeout(() => {
+    window.location.href = `student-quiz.html?quiz_id=${encodeURIComponent(quizId)}`;
+  }, 400);
+};
+
+window.downloadStudentCertificatePdf = function(title, certType, issueDate, certNumber, verCode) {
+  showToast(`Generating authentic institutional certificate PDF...`, 'info');
+  try {
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+      window.print();
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    
+    // Outer border
+    doc.setDrawColor(11, 31, 58);
+    doc.setLineWidth(2.5);
+    doc.rect(8, 8, 281, 194);
+
+    // Inner gold/cyan border
+    doc.setDrawColor(0, 166, 214);
+    doc.setLineWidth(0.8);
+    doc.rect(12, 12, 273, 186);
+
+    // Header Institute
+    doc.setTextColor(11, 31, 58);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('SHRI SANT GAJANAN MAHARAJ COLLEGE OF ENGINEERING', 148.5, 30, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('SHEGAON - 444 503, DIST. BULDANA (MAHARASHTRA), INDIA', 148.5, 37, { align: 'center' });
+    doc.setFontSize(9);
+    doc.text('Autonomous Institute Affiliated to Sant Gadge Baba Amravati University • Accredited with "A" Grade by NAAC', 148.5, 43, { align: 'center' });
+
+    // Decorative line
+    doc.setDrawColor(11, 92, 173);
+    doc.setLineWidth(0.5);
+    doc.line(40, 48, 257, 48);
+
+    // Certificate Ribbon Title
+    doc.setTextColor(11, 92, 173);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('CERTIFICATE OF ACADEMIC ACHIEVEMENT', 148.5, 62, { align: 'center' });
+
+    // Subtitle
+    doc.setTextColor(71, 85, 105);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(12);
+    doc.text('This is to proudly certify that', 148.5, 74, { align: 'center' });
+
+    // Student Name
+    let studentName = 'SSGMCE STUDENT';
+    const profileEl = document.getElementById('studentNameHeader') || document.getElementById('profileFullName');
+    if (profileEl && profileEl.textContent.trim()) {
+      studentName = profileEl.textContent.trim().toUpperCase();
+    }
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text(studentName, 148.5, 87, { align: 'center' });
+
+    // Underline name
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.line(70, 91, 227, 91);
+
+    // Main Certificate Text
+    doc.setTextColor(51, 65, 85);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text('has successfully completed and demonstrated outstanding competence in:', 148.5, 103, { align: 'center' });
+
+    doc.setTextColor(11, 92, 173);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text(title || 'Excellence in Engineering Competencies', 148.5, 114, { align: 'center' });
+
+    doc.setTextColor(71, 85, 105);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text(`Category: ${certType || 'Institutional Credential'} • Issued On: ${issueDate || 'Current Session'}`, 148.5, 124, { align: 'center' });
+
+    // Verification Box
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(80, 134, 137, 18, 2, 2, 'FD');
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`Official Registration No: ${certNumber || 'SSGMCE-CERT-2026'}`, 148.5, 140, { align: 'center' });
+    doc.setTextColor(2, 132, 199);
+    doc.text(`Tamper-Evident Verification Code: ${verCode || 'VALID-VERIFIED-AUTH'}`, 148.5, 147, { align: 'center' });
+
+    // Signatures
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Head of Department', 45, 175);
+    doc.text('Dean (Academics)', 148.5, 175, { align: 'center' });
+    doc.text('Principal', 245, 175, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text('SSGMCE Shegaon', 45, 180);
+    doc.text('Autonomous Institute', 148.5, 180, { align: 'center' });
+    doc.text('SSGMCE Shegaon', 245, 180, { align: 'right' });
+
+    doc.save(`${(verCode || 'Certificate').replace(/[^a-zA-Z0-9_-]/g, '_')}_SSGMCE.pdf`);
+    showToast('Official Certificate PDF generated and downloaded successfully!', 'success');
+  } catch (err) {
+    console.error('Error generating certificate PDF:', err);
+    showToast('Failed to download certificate PDF. Please retry.', 'error');
+  }
+};
+
+window.openRemedialExamModal = function(failedSubs) {
+  let modal = document.getElementById('modalRemedialRegistration');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalRemedialRegistration';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px);';
+    document.body.appendChild(modal);
+  }
+
+  const subs = Array.isArray(failedSubs) && failedSubs.length > 0 ? failedSubs : [
+    { subject_code: 'CS301', subject_name: 'Data Structures' },
+    { subject_code: 'CS302', subject_name: 'Computer Organization' }
+  ];
+
+  modal.innerHTML = `
+    <div style="background:#fff; width:92%; max-width:540px; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.25); overflow:hidden;">
+      <div style="padding:16px 20px; background:linear-gradient(135deg, #0B1F3A, #B91C1C); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <span>📝</span> Remedial Examination Registration
+        </h3>
+        <button type="button" onclick="closeRemedialExamModal()" style="background:none; border:none; color:#fff; font-size:24px; line-height:1; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="padding:20px; max-height:75vh; overflow-y:auto;">
+        <div style="padding:12px; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:700; color:#B91C1C; margin-bottom:4px;">Autonomous Remedial Exam Instructions:</div>
+          <p style="font-size:12px; color:#475569; margin:0;">Select the eligible backlog course(s) for the upcoming Supplementary/Remedial Term examination session. Standard examination fees apply (₹500 per paper).</p>
+        </div>
+
+        <form id="formRemedialExam" onsubmit="event.preventDefault(); submitRemedialExamRegistration();">
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:13px; font-weight:700; color:#0F172A; margin-bottom:8px;">Backlog Course(s) to Register:</label>
+            ${subs.map((s, idx) => `
+              <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; margin-bottom:8px;">
+                <input type="checkbox" id="remSub_${idx}" name="remSubs" value="${s.subject_code}" checked style="width:16px; height:16px; accent-color:#0B5CAD;" />
+                <label for="remSub_${idx}" style="font-size:13px; color:#1E293B; cursor:pointer; flex:1;">
+                  <strong>${s.subject_code}</strong>: ${s.subject_name}
+                </label>
+                <span style="font-size:12px; font-weight:700; color:#16A34A;">₹500</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12.5px; font-weight:600; color:#334155; margin-bottom:5px;">Fee Payment Mode</label>
+            <select class="form-control" style="width:100%; padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-size:13px;">
+              <option value="wallet">Deduct from Student ERP Wallet Balance</option>
+              <option value="online">Online Payment Gateway (UPI / NetBanking)</option>
+              <option value="challan">Cash Counterfoil at Accounts Section</option>
+            </select>
+          </div>
+
+          <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:18px;">
+            <input type="checkbox" id="remAck" required style="margin-top:3px; accent-color:#0B5CAD;" />
+            <label for="remAck" style="font-size:12px; color:#64748B; cursor:pointer;">
+              I confirm that I have reviewed the autonomous examination schedule and will adhere to the examination regulations.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; background:#0B5CAD; border:none; border-radius:6px; color:#fff; font-weight:700; font-size:13.5px; cursor:pointer;">
+            Submit Remedial Registration &amp; Generate Admit Form
+          </button>
+        </form>
+      </div>
+
+      <div style="padding:12px 20px; background:#F8FAFC; border-top:1px solid #E2E8F0; text-align:right;">
+        <button type="button" onclick="closeRemedialExamModal()" class="btn btn-sm btn-light" style="padding:6px 14px; border:1px solid #CBD5E1; border-radius:6px; background:#fff; color:#475569; font-weight:600; cursor:pointer;">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+};
+
+window.closeRemedialExamModal = function() {
+  const modal = document.getElementById('modalRemedialRegistration');
+  if (modal) modal.style.display = 'none';
+};
+
+window.submitRemedialExamRegistration = function() {
+  showToast('Remedial examination registration submitted successfully! Form submitted to Exam Cell.', 'success');
+  closeRemedialExamModal();
+};

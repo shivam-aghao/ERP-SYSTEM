@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Authentication & Authorization Architecture
+# SSGMCE College ERP - Authentication & Authorization Architecture
 
 ## 1. Overview & Architectural Principles
 

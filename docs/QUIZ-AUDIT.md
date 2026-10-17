@@ -1,8 +1,8 @@
-# SSGMCE College ERP — Quiz & Examination Module Audit Report
+# SSGMCE College ERP - Quiz & Examination Module Audit Report
 
 **Date of Audit**: October 10, 2026  
 **Auditor**: Senior Full-Stack Engineer & Assessment System Architect  
-**System**: Autonomous College ERP — Assessment & Online Examination Subsystem  
+**System**: Autonomous College ERP - Assessment & Online Examination Subsystem  
 **Database**: Supabase Cloud PostgreSQL (`aws-0-ap-southeast-1.pooler.supabase.com`)  
 **Backend**: FastAPI Unified Framework (`http://localhost:8000/api/v1`)  
 

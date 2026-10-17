@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Common UI Utilities
+ * SSGMCE College ERP - Common UI Utilities
  */
 (function (window) {
   'use strict';

@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Row Level Security (RLS) Matrix & Remediation Specification
+# SSGMCE College ERP - Row Level Security (RLS) Matrix & Remediation Specification
 
 **Institution:** Shri Sant Gajanan Maharaj College of Engineering, Shegaon  
 **Document:** Enterprise Database Security & Row Level Security (RLS) Specification  
@@ -231,7 +231,7 @@ Automated test execution results from [`tests/test_supabase_rls.py`](file:///d:/
 
 ```
 ======================================================================
-SSGMCE COLLEGE ERP — ROW LEVEL SECURITY (RLS) AUDIT SUITE
+SSGMCE COLLEGE ERP - ROW LEVEL SECURITY (RLS) AUDIT SUITE
 ======================================================================
  [PASS] 1. Unauthenticated anon SELECT completely blocked (0 rows across sensitive tables)
  [PASS] 2. Unauthenticated anon INSERT blocked with 42501 RLS violation

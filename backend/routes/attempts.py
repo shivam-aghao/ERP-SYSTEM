@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL ATTEMPTS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL ATTEMPTS ROUTER
 Namespace: /api/v1/attempts/...
 Authoritative Quiz Attempts, Answer Persistence, Auto-Grading & Proctoring
 ================================================================================

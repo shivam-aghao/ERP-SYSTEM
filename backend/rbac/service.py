@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Centralized RBAC Enforcement Service
+SSGMCE College ERP - Centralized RBAC Enforcement Service
 backend/rbac/service.py
 
 Provides authoritative permission checking, role evaluation, and

@@ -724,41 +724,99 @@ document.addEventListener('click', (e) => {
 /* ==========================================================================
    13. TIMETABLE DAY SWITCHER TABS (MONDAY - SATURDAY FULL SCHEDULE)
    ========================================================================== */
+async function loadTimetableForDay(dayKey, showFeedback = false) {
+  const badge = document.getElementById('scheduleDayBadge');
+  const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+
+  if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
+
+  try {
+    let periods = [];
+    if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
+      const res = await StudentApi.getTimetable(dayCapitalized);
+      if (res && res.data && Array.isArray(res.data)) {
+        periods = res.data;
+      }
+    }
+    if (!periods || periods.length === 0) {
+      const fallbackRes = await fetch(`/api/v1/student/timetable?day=${encodeURIComponent(dayCapitalized)}`).catch(() => null);
+      if (fallbackRes && fallbackRes.ok) {
+        const json = await fallbackRes.json();
+        if (json && json.data && Array.isArray(json.data)) {
+          periods = json.data;
+        }
+      }
+    }
+
+    if (periods && periods.length > 0) {
+      let stCls = '';
+      try {
+        const userRaw = sessionStorage.getItem('ssgmce_user') || localStorage.getItem('ssgmce_user');
+        if (userRaw) {
+          const u = JSON.parse(userRaw);
+          stCls = u.class_name || u.className || u.class_code || u.division || '';
+        }
+      } catch (e) {}
+      if (!stCls) {
+        const topMeta = document.getElementById('topbarUserMeta');
+        if (topMeta && topMeta.textContent.includes('3R')) {
+          stCls = '3R';
+        }
+      }
+      if (!stCls) stCls = '3R';
+
+      const filtered = periods.filter(p => {
+        if (!p.class_code && !p.class_name) return true;
+        const code = String(p.class_code || p.class_name || '').trim().toUpperCase();
+        return code === stCls.trim().toUpperCase() || code.includes(stCls.trim().toUpperCase());
+      });
+
+      const finalPeriods = filtered.length > 0 ? filtered : periods;
+
+      if (finalPeriods.length > 0) {
+        if (badge) badge.textContent = `${dayCapitalized} • ${finalPeriods.length} Periods Scheduled`;
+        renderTimetablePeriods(finalPeriods);
+        if (showFeedback) showToast(`Switched schedule to ${dayCapitalized}`, 'info');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
+  }
+
+  if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
+  renderTimetablePeriods([]);
+}
+
 function initTimetableDayTabs() {
   const dayTabBtns = document.querySelectorAll('.day-tab-btn');
-  const badge = document.getElementById('scheduleDayBadge');
   const grid = document.getElementById('timetableHorizontalGrid');
-
   if (!dayTabBtns.length || !grid) return;
 
+  const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayIdx = new Date().getDay();
+  const currentDayKey = todayIdx === 0 ? 'monday' : daysOfWeek[todayIdx];
+
   dayTabBtns.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    const dayKey = (btn.getAttribute('data-day') || '').toLowerCase();
+    const baseName = dayKey.slice(0, 3).charAt(0).toUpperCase() + dayKey.slice(1, 3);
+    if (dayKey === currentDayKey) {
+      btn.textContent = `${baseName} (Today)`;
+      btn.classList.add('active');
+    } else {
+      btn.textContent = baseName;
+      btn.classList.remove('active');
+    }
+
+    btn.addEventListener('click', () => {
       dayTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      const dayKey = btn.getAttribute('data-day');
-      const dayCapitalized = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
-
-      if (badge) badge.textContent = `Loading ${dayCapitalized} Schedule...`;
-
-      try {
-        if (typeof StudentApi !== 'undefined' && typeof StudentApi.getTimetable === 'function') {
-          const res = await StudentApi.getTimetable(dayCapitalized);
-          if (res && res.data && res.data.length > 0) {
-            if (badge) badge.textContent = `${dayCapitalized} • ${res.data.length} Periods Scheduled`;
-            renderTimetablePeriods(res.data);
-            showToast(`Switched schedule to ${dayCapitalized}`, 'info');
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn(`Dynamic timetable fetch failed for ${dayKey}:`, err);
-      }
-
-      if (badge) badge.textContent = `${dayCapitalized} • No Periods Scheduled`;
-      renderTimetablePeriods([]);
+      loadTimetableForDay(btn.getAttribute('data-day'), true);
     });
   });
+
+  // Automatically load today's schedule immediately on load
+  loadTimetableForDay(currentDayKey, false);
 }
 
 /* ==========================================================================
@@ -964,6 +1022,19 @@ function initStudentModules() {
 }
 
 function openStudentModule(moduleKey, requestedSubtab) {
+  if (moduleKey === 'fees') {
+    let target = 'payable';
+    if (requestedSubtab === 'online-payment' || requestedSubtab === 'payment') target = 'online-payment';
+    else if (requestedSubtab === 'payment-receipt' || requestedSubtab === 'receipt') target = 'receipt';
+    if (typeof window.openFeesView === 'function') {
+      window.openFeesView(target);
+      return;
+    }
+    const hashTarget = target === 'payable' ? '#fees' : '#fees-' + target;
+    window.location.href = 'student-dashboard.html' + hashTarget;
+    return;
+  }
+
   const modal = document.getElementById('studentModuleModal');
   const cfg = studentModuleConfig[moduleKey];
   if (!modal || !cfg) return;
@@ -1465,9 +1536,7 @@ async function hydrateDashboardData() {
       heroTitle.textContent = `Welcome back, ${firstName}!`;
     }
     if (heroDept) heroDept.textContent = s.department === 'CSE' ? 'Computer Science & Engineering' : (s.department || 'Engineering');
-    if (heroYearSem) {
-      heroYearSem.textContent = `Year ${s.semester ? Math.ceil(s.semester / 2) : 2} (Semester ${s.semester || 4}) • Class: ${s.className || '2R1'} • Roll No: ${s.rollNo || '--'} (${s.studentCode || s.prn || ''})`;
-    }
+    if (heroYearSem) heroYearSem.remove();
     if (heroAcadBadge) {
       heroAcadBadge.textContent = `${s.className ? s.className.split(' ')[0] + ' ' : ''}Semester ${s.semester || 4} • Academic Year ${s.academicYear || '2026-2027'}`;
     }
@@ -1538,6 +1607,10 @@ async function hydrateDashboardData() {
         const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
         scheduleDayBadge.textContent = `${todayDay} • ${overview.todayTimetable.length} Periods Scheduled`;
       }
+    } else {
+      const activeTab = document.querySelector('.day-tab-btn.active');
+      const dayKey = activeTab ? activeTab.getAttribute('data-day') : 'friday';
+      loadTimetableForDay(dayKey, false);
     }
 
     // 5. Syllabus Progress

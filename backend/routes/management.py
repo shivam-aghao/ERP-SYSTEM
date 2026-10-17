@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — STEP 8: TEACHER & ADMIN MANAGEMENT API ROUTES
+SSGMCE COLLEGE ERP - STEP 8: TEACHER & ADMIN MANAGEMENT API ROUTES
 FastAPI Endpoints for Teacher Tools, Admin Dashboard, RBAC & Workflows
 ================================================================================
 """

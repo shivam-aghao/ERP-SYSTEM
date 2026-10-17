@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Production-Ready Quiz System Architecture
+# SSGMCE College ERP - Production-Ready Quiz System Architecture
 
 **Institution:** Shri Sant Gajanan Maharaj College of Engineering (SSGMCE), Shegaon  
 **Database Target:** Cloud Supabase PostgreSQL (`gftqvclenyplnuoocbwe.supabase.co`)  

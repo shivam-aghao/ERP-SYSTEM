@@ -1,5 +1,5 @@
 """
-SSGMCE Autonomous College ERP — Assessment & Quiz Seeder
+SSGMCE Autonomous College ERP - Assessment & Quiz Seeder
 Seeds accredited quiz assessments and question banks into:
 1. Supabase Cloud PostgreSQL
 2. Local SQLite (backend/erp.db)
@@ -39,7 +39,7 @@ QUIZZES = [
         "class_id": CLASS_3R,
         "subject_id": "5CS220PC",
         "subject_name": "Database Management Systems",
-        "title": "DBMS Mid-Semester Assessment — Relational Algebra & SQL",
+        "title": "DBMS Mid-Semester Assessment - Relational Algebra & SQL",
         "description": "Comprehensive mid-semester assessment covering ER models, Relational Algebra, SQL subqueries, Normalization (1NF to BCNF), and ACID transactions.",
         "instructions": "1. Answer all questions within 30 minutes.\n2. Each correct MCQ awards 2 marks.\n3. Question navigation is enabled.\n4. Ensure steady network connectivity.",
         "start_at": start_time,
@@ -190,7 +190,7 @@ QUIZZES = [
         "class_id": CLASS_3R,
         "subject_id": "5CS221PC",
         "subject_name": "Operating Systems",
-        "title": "Operating Systems Assessment — Process Synchronization & Memory",
+        "title": "Operating Systems Assessment - Process Synchronization & Memory",
         "description": "Evaluation on CPU scheduling algorithms, Critical Section problem, Semaphores, Deadlock Avoidance, and Virtual Memory Paging.",
         "instructions": "1. 10 Questions, 25 minutes allotted.\n2. Total: 20 marks.\n3. Automatic evaluation on final submission.",
         "start_at": start_time,
@@ -341,7 +341,7 @@ QUIZZES = [
         "class_id": CLASS_3R,
         "subject_id": "5CS224PC",
         "subject_name": "Computer Networks",
-        "title": "Computer Networks Evaluation — OSI & TCP/IP Layer Protocols",
+        "title": "Computer Networks Evaluation - OSI & TCP/IP Layer Protocols",
         "description": "Assessment testing understanding of subnetting, IPv4/IPv6 headers, TCP 3-way handshake, Flow Control, and Congestion Avoidance.",
         "instructions": "1. 8 Questions, 20 minutes allotted.\n2. Total: 16 marks.",
         "start_at": start_time,
@@ -468,7 +468,7 @@ QUIZZES = [
         "class_id": CLASS_2R1,
         "subject_id": "3CS201PC",
         "subject_name": "Data Structures & Algorithms",
-        "title": "DSA Fundamental Test — Binary Trees & Graph Traversal",
+        "title": "DSA Fundamental Test - Binary Trees & Graph Traversal",
         "description": "Assessment for Semester III students covering Binary Search Trees, Tree Traversal Orders, and Graph Depth-First / Breadth-First search.",
         "instructions": "1. 10 Questions, 30 minutes allotted.\n2. Total: 20 marks.",
         "start_at": start_time,

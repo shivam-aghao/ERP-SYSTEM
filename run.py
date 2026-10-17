@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — MASTER UNIFIED BACKEND SERVER ENTRYPOINT
+SSGMCE COLLEGE ERP - MASTER UNIFIED BACKEND SERVER ENTRYPOINT
 Institution: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 ================================================================================
 Single command execution:
@@ -11,21 +11,21 @@ or
     python backend/main.py
 
 Boots the entire unified backend serving:
-  • /api/v1/auth          — Multi-persona Authentication, JWT Tokens & Sessions
-  • /api/v1/students      — Student Profiles, Records, E-Learning
-  • /api/v1/teachers      — Teacher Assignments, Rosters & Classes
-  • /api/v1/admin         — System Administration, Governance & Roster Control
-  • /api/v1/attendance    — Database-driven Attendance, Roster, Draft & Lock
-  • /api/v1/timetable     — Instructional Timetable & Scheduled Tests
-  • /api/v1/quizzes       — Autonomous Quiz Engine & Question Bank
-  • /api/v1/attempts      — Student Attempts & Server-Side Auto-Grading
-  • /api/v1/results       — Authoritative Marks Roster, SGPA/CGPA & Gazettes
-  • /api/v1/fees          — Fee Ledger, Online Payments & Official Receipts
-  • /api/v1/documents     — Private Supabase Storage Document Vault
-  • /api/v1/notifications — Real-time Multi-Channel Notifications
-  • /health               — System Health Check (DB + Supabase)
-  • /docs                 — OpenAPI / Swagger Interactive Documentation
-  • Frontend Static Apps  — Student, Teacher & Admin Dashboards & Login
+  • /api/v1/auth          - Multi-persona Authentication, JWT Tokens & Sessions
+  • /api/v1/students      - Student Profiles, Records, E-Learning
+  • /api/v1/teachers      - Teacher Assignments, Rosters & Classes
+  • /api/v1/admin         - System Administration, Governance & Roster Control
+  • /api/v1/attendance    - Database-driven Attendance, Roster, Draft & Lock
+  • /api/v1/timetable     - Instructional Timetable & Scheduled Tests
+  • /api/v1/quizzes       - Autonomous Quiz Engine & Question Bank
+  • /api/v1/attempts      - Student Attempts & Server-Side Auto-Grading
+  • /api/v1/results       - Authoritative Marks Roster, SGPA/CGPA & Gazettes
+  • /api/v1/fees          - Fee Ledger, Online Payments & Official Receipts
+  • /api/v1/documents     - Private Supabase Storage Document Vault
+  • /api/v1/notifications - Real-time Multi-Channel Notifications
+  • /health               - System Health Check (DB + Supabase)
+  • /docs                 - OpenAPI / Swagger Interactive Documentation
+  • Frontend Static Apps  - Student, Teacher & Admin Dashboards & Login
 ================================================================================
 """
 

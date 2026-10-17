@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION MASTER VERIFICATION & SECURITY AUDIT SUITE
+SSGMCE COLLEGE ERP - PRODUCTION MASTER VERIFICATION & SECURITY AUDIT SUITE
 ================================================================================
 Comprehensive Automated Test Suite covering all five institutional domains:
   1. AUTH: Login, Logout, Expired Session, Unauthorized Access, Role Escalation

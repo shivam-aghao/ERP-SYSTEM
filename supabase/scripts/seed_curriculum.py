@@ -35,8 +35,8 @@ courses = [
             'Understand ACID transactions, concurrency control protocols, and database recovery techniques.'
         ],
         'books': [
-            'Abraham Silberschatz, Henry Korth, S. Sudarshan — Database System Concepts (7th Edition, McGraw-Hill)',
-            'Ramez Elmasri, Shamkant B. Navathe — Fundamentals of Database Systems (7th Edition, Pearson)'
+            'Abraham Silberschatz, Henry Korth, S. Sudarshan - Database System Concepts (7th Edition, McGraw-Hill)',
+            'Ramez Elmasri, Shamkant B. Navathe - Fundamentals of Database Systems (7th Edition, Pearson)'
         ],
         'units': [
             (1, 'Unit I · Database Architecture & ER Modeling', 7, ['Database system concepts', 'Data models and schemas', 'ER diagrams', 'Relational constraints']),
@@ -56,8 +56,8 @@ courses = [
             'Implement basic block control flow graphs, code optimizations, and target machine code generation.'
         ],
         'books': [
-            'Alfred V. Aho, Monica S. Lam, Ravi Sethi, Jeffrey D. Ullman — Compilers: Principles, Techniques, and Tools (Dragon Book)',
-            'Kenneth C. Louden — Compiler Construction: Principles and Practice (Cengage Learning)'
+            'Alfred V. Aho, Monica S. Lam, Ravi Sethi, Jeffrey D. Ullman - Compilers: Principles, Techniques, and Tools (Dragon Book)',
+            'Kenneth C. Louden - Compiler Construction: Principles and Practice (Cengage Learning)'
         ],
         'units': [
             (1, 'Unit I · Lexical Analysis & Finite Automata', 7, ['Compiler phases overview', 'Regular expressions and Lex', 'DFA and NFA construction', 'Lexical errors']),
@@ -77,8 +77,8 @@ courses = [
             'Understand multi-core architectures, parallel processing paradigms, and interconnection networks.'
         ],
         'books': [
-            'David A. Patterson, John L. Hennessy — Computer Organization and Design: RISC-V Edition (Morgan Kaufmann)',
-            'William Stallings — Computer Organization and Architecture: Designing for Performance (Pearson)'
+            'David A. Patterson, John L. Hennessy - Computer Organization and Design: RISC-V Edition (Morgan Kaufmann)',
+            'William Stallings - Computer Organization and Architecture: Designing for Performance (Pearson)'
         ],
         'units': [
             (1, 'Unit I · Digital Logic & Computer Evolution', 6, ['Von Neumann architecture', 'Instruction execution cycle', 'Bus interconnection', 'Addressing modes']),
@@ -98,8 +98,8 @@ courses = [
             'Develop predictive regression models and classification analytics pipelines.'
         ],
         'books': [
-            'Jake VanderPlas — Python Data Science Handbook (O\'Reilly Media)',
-            'Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani — An Introduction to Statistical Learning (Springer)'
+            'Jake VanderPlas - Python Data Science Handbook (O\'Reilly Media)',
+            'Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani - An Introduction to Statistical Learning (Springer)'
         ],
         'units': [
             (1, 'Unit I · Foundations of Probability & Random Variables', 7, ['Sample space and probability rules', 'Discrete & continuous distributions (Binomial, Poisson, Normal)', 'Central Limit Theorem']),
@@ -132,7 +132,7 @@ courses = [
             'Develop parsing specifications using Bison/Yacc for arithmetic and syntax grammars.',
             'Generate intermediate code and construct syntax trees for programming constructs.'
         ],
-        'books': ['John Levine — flex & bison (O\'Reilly Media)'],
+        'books': ['John Levine - flex & bison (O\'Reilly Media)'],
         'units': [
             (1, 'Experiment 1-4: Lexical Analyzer with Lex/Flex', 10, ['Pattern matching for C tokens', 'Counting lines, words, characters', 'Lex specification design']),
             (2, 'Experiment 5-8: Syntax Parsers with Yacc/Bison', 12, ['Grammar validation for arithmetic expressions', 'Abstract syntax tree generation', 'Shift-reduce conflict debugging']),
@@ -149,8 +149,8 @@ courses = [
             'Synthesize divide-and-conquer, greedy, dynamic programming, and backtracking algorithms.'
         ],
         'books': [
-            'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein — Introduction to Algorithms (CLRS)',
-            'Mark Allen Weiss — Data Structures and Algorithm Analysis in C++ (Pearson)'
+            'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein - Introduction to Algorithms (CLRS)',
+            'Mark Allen Weiss - Data Structures and Algorithm Analysis in C++ (Pearson)'
         ],
         'units': [
             (1, 'Unit I · Algorithm Analysis & Linear Data Structures', 7, ['Asymptotic notation', 'Arrays and linked lists', 'Stacks and queues applications', 'Infix to postfix conversion']),
@@ -170,8 +170,8 @@ courses = [
             'Build interactive desktop and web services using modern Java features.'
         ],
         'books': [
-            'Herbert Schildt — Java: The Complete Reference (McGraw-Hill)',
-            'Joshua Bloch — Effective Java (Addison-Wesley)'
+            'Herbert Schildt - Java: The Complete Reference (McGraw-Hill)',
+            'Joshua Bloch - Effective Java (Addison-Wesley)'
         ],
         'units': [
             (1, 'Unit I · Java Fundamentals & OOP Architecture', 7, ['JVM, JRE, JDK architecture', 'Classes, objects, constructors', 'Access specifiers', 'Static keyword and memory']),
@@ -191,8 +191,8 @@ courses = [
             'Evaluate memory management schemes including paging, segmentation, and virtual memory.'
         ],
         'books': [
-            'Abraham Silberschatz, Peter B. Galvin, Greg Gagne — Operating System Concepts (Wiley)',
-            'Andrew S. Tanenbaum, Herbert Bos — Modern Operating Systems (Pearson)'
+            'Abraham Silberschatz, Peter B. Galvin, Greg Gagne - Operating System Concepts (Wiley)',
+            'Andrew S. Tanenbaum, Herbert Bos - Modern Operating Systems (Pearson)'
         ],
         'units': [
             (1, 'Unit I · Operating System Architecture', 7, ['Services and system calls', 'OS structures (Monolithic, Microkernel)', 'Dual mode operation', 'Bootstrapping']),
@@ -212,8 +212,8 @@ courses = [
             'Examine transport layer reliability (TCP handshakes, congestion control) and application protocols (HTTP, DNS).'
         ],
         'books': [
-            'Andrew S. Tanenbaum, David J. Wetherall — Computer Networks (Pearson)',
-            'James F. Kurose, Keith W. Ross — Computer Networking: A Top-Down Approach (Pearson)'
+            'Andrew S. Tanenbaum, David J. Wetherall - Computer Networks (Pearson)',
+            'James F. Kurose, Keith W. Ross - Computer Networking: A Top-Down Approach (Pearson)'
         ],
         'units': [
             (1, 'Unit I · Network Models & Physical Layer', 6, ['OSI reference model vs TCP/IP', 'Network topologies', 'Transmission media', 'Switching (Circuit, Packet)']),
@@ -233,8 +233,8 @@ courses = [
             'Formulate cloud security governance, data privacy, and SLA policies.'
         ],
         'books': [
-            'Rajkumar Buyya, Christian Vecchiola, S. Thamarai Selvi — Mastering Cloud Computing (McGraw-Hill)',
-            'Thomas Erl, Zaigham Mahmood, Ricardo Puttini — Cloud Computing: Concepts, Technology & Architecture (Prentice Hall)'
+            'Rajkumar Buyya, Christian Vecchiola, S. Thamarai Selvi - Mastering Cloud Computing (McGraw-Hill)',
+            'Thomas Erl, Zaigham Mahmood, Ricardo Puttini - Cloud Computing: Concepts, Technology & Architecture (Prentice Hall)'
         ],
         'units': [
             (1, 'Unit I · Cloud Computing Fundamentals', 6, ['NIST cloud computing definition', 'Cloud service models (IaaS, PaaS, SaaS)', 'Public, Private, Hybrid cloud deployment', 'Economics of cloud']),
@@ -254,8 +254,8 @@ courses = [
             'Develop classification and clustering models for big data discovery.'
         ],
         'books': [
-            'Jiawei Han, Micheline Kamber, Jian Pei — Data Mining: Concepts and Techniques (Morgan Kaufmann)',
-            'Paulraj Ponniah — Data Warehousing Fundamentals: A Comprehensive Guide for IT Professionals (Wiley)'
+            'Jiawei Han, Micheline Kamber, Jian Pei - Data Mining: Concepts and Techniques (Morgan Kaufmann)',
+            'Paulraj Ponniah - Data Warehousing Fundamentals: A Comprehensive Guide for IT Professionals (Wiley)'
         ],
         'units': [
             (1, 'Unit I · Data Warehouse Architecture & Modeling', 7, ['Operational databases vs Data warehouses', 'Multidimensional data models', 'Star schema, Snowflake schema, Fact constellation', 'Data cubes']),

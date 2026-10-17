@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — COMPREHENSIVE RBAC & PRIVILEGE ESCALATION TEST SUITE
+SSGMCE COLLEGE ERP - COMPREHENSIVE RBAC & PRIVILEGE ESCALATION TEST SUITE
 tests/test_rbac.py
 
 Validates Authoritative Enforcement across All 6 Roles:
@@ -329,7 +329,7 @@ def test_admin_and_super_admin_operations():
 # ==============================================================================
 if __name__ == "__main__":
     print("=" * 70)
-    print("SSGMCE COLLEGE ERP — ROLE-BASED ACCESS CONTROL (RBAC) TEST SUITE")
+    print("SSGMCE COLLEGE ERP - ROLE-BASED ACCESS CONTROL (RBAC) TEST SUITE")
     print("=" * 70)
 
     tests = [

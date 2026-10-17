@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL AUTHENTICATION ROUTER
+SSGMCE COLLEGE ERP - CANONICAL AUTHENTICATION ROUTER
 Namespace: /api/v1/auth/...
 Authoritative Supabase JWT Authentication & Server-Side Identity Verification
 ================================================================================

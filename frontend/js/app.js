@@ -1376,7 +1376,6 @@ const TeacherApp = {
   },
 
   // ----------------------------------------------------
-<<<<<<< HEAD
   // NOTIFICATIONS LIST & CLASS ANNOUNCEMENT DISPATCHER
   // ----------------------------------------------------
   async renderNotificationsList() {
@@ -1439,83 +1438,9 @@ const TeacherApp = {
                   </div>
                   <span class="activity-time" style="font-size:12px; color:#94A3B8;">${timeText}</span>
                 </div>
-                <span class="activity-desc" style="font-size:13px; color:#475569; display:block; margin-top:4px;">${n.message || ''}</span>
-=======
-  // NOTIFICATIONS HUB & ANNOUNCEMENT BROADCASTING
-  // ----------------------------------------------------
-  renderNotificationsList() {
-    const list = (TeacherERPData && TeacherERPData.notifications) || [];
-    const unreadCount = list.filter(n => n.unread).length;
-
-    // 1. Update unread badge counter in header
-    const badge = document.getElementById("notif-badge-count");
-    if (badge) {
-      if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.style.display = "inline-flex";
-      } else {
-        badge.style.display = "none";
-      }
-    }
-
-    // 2. Header dropdown list (#notification-items-list)
-    const container = document.getElementById("notification-items-list");
-    if (container) {
-      if (list.length === 0) {
-        container.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No notifications at this time</div>`;
-      } else {
-        container.innerHTML = list.slice(0, 8).map(notif => `
-          <div class="notification-item ${notif.unread ? 'unread' : ''}" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
-            <div class="notif-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EBF3FC'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-              <i data-lucide="${notif.icon || 'bell'}" style="width:16px;height:16px;"></i>
-            </div>
-            <div class="notif-content">
-              <div class="notif-title">${notif.title}</div>
-              <div class="notif-desc">${notif.description}</div>
-              <div class="notif-time">${notif.time}</div>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    // 3. Full Notifications Hub View (#notifications-full-list)
-    const fullContainer = document.getElementById("notifications-full-list");
-    if (fullContainer) {
-      if (list.length === 0) {
-        fullContainer.innerHTML = `
-          <div style="padding:48px; text-align:center; color:var(--text-muted);">
-            <i data-lucide="bell-off" style="width:40px;height:40px; opacity:0.4; margin-bottom:12px;"></i>
-            <h4 style="margin:0 0 6px 0; color:var(--dark-navy);">No Circulars or Notifications</h4>
-            <p style="margin:0; font-size:13px;">You have no active departmental notices or class alerts.</p>
-          </div>
-        `;
-      } else {
-        fullContainer.innerHTML = list.map(notif => {
-          const priorityBadge = notif.priority === 'urgent'
-            ? `<span class="badge" style="background:#FEE2E2; color:#DC2626; font-size:11px; font-weight:700;">URGENT</span>`
-            : (notif.priority === 'high'
-              ? `<span class="badge" style="background:#FEF3C7; color:#D97706; font-size:11px; font-weight:700;">HIGH PRIORITY</span>`
-              : `<span class="badge" style="background:#E2E8F0; color:#475569; font-size:11px; font-weight:700;">NORMAL</span>`);
-
-          return `
-            <div class="activity-item" style="padding:16px; border-bottom:1px solid #F1F5F9; background:${notif.unread ? '#F8FAFC' : '#ffffff'};">
-              <div class="activity-icon-box" style="background:${notif.priority === 'urgent' ? '#FEE2E2' : '#EFF6FF'}; color:${notif.priority === 'urgent' ? '#DC2626' : 'var(--primary-blue)'};">
-                <i data-lucide="${notif.icon || 'bell'}" style="width:18px;height:18px;"></i>
-              </div>
-              <div class="activity-content" style="flex:1;">
-                <div class="activity-title-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="activity-title" style="font-size:14px; font-weight:700; color:var(--dark-navy);">${notif.title}</span>
-                    ${priorityBadge}
-                    ${notif.unread ? '<span style="width:8px;height:8px;border-radius:50%;background:#00A6D6;display:inline-block;" title="Unread"></span>' : ''}
-                  </div>
-                  <span class="activity-time" style="font-size:12px; color:var(--text-muted);">${notif.time}</span>
-                </div>
-                <div class="activity-desc" style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:8px;">${notif.description}</div>
-                <div style="display:flex; gap:12px; align-items:center;">
-                  ${notif.unread ? `
-                    <button type="button" style="background:none; border:none; color:var(--primary-blue); font-size:12px; font-weight:600; cursor:pointer; padding:0;" onclick="TeacherApp.handleNotificationClick('${notif.id}')">
+                <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+                  ${!n.is_read ? `
+                    <button type="button" style="background:none; border:none; color:#005A9C; font-size:12px; font-weight:600; cursor:pointer; padding:0;" onclick="event.stopPropagation(); TeacherApp.markNotificationRead('${n.id || ''}')">
                       Mark as Read ✓
                     </button>
                   ` : '<span style="font-size:11.5px; color:#94A3B8;">✓ Read</span>'}
@@ -1565,7 +1490,6 @@ const TeacherApp = {
     this.renderNotificationsList();
   },
 
-<<<<<<< HEAD
   async dispatchClassAnnouncement() {
     const classVal = document.getElementById("teacherNotifClass")?.value || '3R';
     const priorityVal = document.getElementById("teacherNotifPriority")?.value || 'normal';
@@ -3365,7 +3289,7 @@ const TeacherApp = {
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Graded Entries</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
-            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">—</div>
+            <div id="statAvgMarks" style="font-size:22px; font-weight:800; color:#059669;">-</div>
             <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Class Average Marks</div>
           </div>
           <div class="result-stat-box" style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; text-align:center;">
@@ -3502,7 +3426,7 @@ const TeacherApp = {
     const avgEl = document.getElementById('statAvgMarks');
     if (totalEl) totalEl.textContent = students.length;
     if (gradedEl) gradedEl.textContent = gradedCount;
-    if (avgEl) avgEl.textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '—';
+    if (avgEl) avgEl.textContent = gradedCount > 0 ? (totalMarksSum / gradedCount).toFixed(1) : '-';
 
     if (students.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">No enrolled students found for class ${classId}.</td></tr>`;
@@ -3512,15 +3436,15 @@ const TeacherApp = {
     tbody.innerHTML = students.map(s => {
       const intVal = s.internal_marks !== null && s.internal_marks !== undefined ? s.internal_marks : '';
       const extVal = s.external_marks !== null && s.external_marks !== undefined ? s.external_marks : '';
-      const totVal = s.total_marks !== null && s.total_marks !== undefined ? s.total_marks : '—';
-      const gradeVal = s.grade || '—';
-      const gpVal = s.grade_point !== null && s.grade_point !== undefined ? Number(s.grade_point).toFixed(1) : '—';
-      const stVal = s.result_status || '—';
+      const totVal = s.total_marks !== null && s.total_marks !== undefined ? s.total_marks : '-';
+      const gradeVal = s.grade || '-';
+      const gpVal = s.grade_point !== null && s.grade_point !== undefined ? Number(s.grade_point).toFixed(1) : '-';
+      const stVal = s.result_status || '-';
       const disabledAttr = isLocked ? 'disabled' : '';
 
       return `
         <tr style="border-bottom:1px solid #e2e8f0;" data-student-id="${s.student_id}" data-student-code="${s.student_code}">
-          <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '—'}</td>
+          <td style="padding:10px 12px; font-weight:700; color:var(--primary-blue);">${s.roll_no || '-'}</td>
           <td style="padding:10px 12px; font-weight:600;">${s.full_name || 'Student'}</td>
           <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${s.student_code}</td>
           <td style="padding:8px 12px;">
@@ -3536,13 +3460,13 @@ const TeacherApp = {
                    oninput="TeacherApp.calcRosterRow(this)">
           </td>
           <td style="padding:10px 12px; font-weight:700; color:var(--dark-navy);" class="roster-total-cell">
-            ${totVal !== '—' ? totVal + ' / 100' : '—'}
+            ${totVal !== '-' ? totVal + ' / 100' : '-'}
           </td>
           <td style="padding:10px 12px;" class="roster-grade-cell">
-            ${gradeVal !== '—' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-completed' : 'badge-cyan'}">${gradeVal} (${gpVal})</span>` : '—'}
+            ${gradeVal !== '-' ? `<span class="badge ${['O', 'A+', 'A'].includes(gradeVal) ? 'badge-completed' : 'badge-cyan'}">${gradeVal} (${gpVal})</span>` : '-'}
           </td>
           <td style="padding:10px 12px;" class="roster-status-cell">
-            ${stVal !== '—' ? `<span class="badge ${stVal === 'PASS' ? 'badge-completed' : 'badge-pending'}">${stVal}</span>` : '—'}
+            ${stVal !== '-' ? `<span class="badge ${stVal === 'PASS' ? 'badge-completed' : 'badge-pending'}">${stVal}</span>` : '-'}
           </td>
         </tr>
       `;
@@ -3572,9 +3496,9 @@ const TeacherApp = {
     }
 
     if (isNaN(intVal) && isNaN(extVal)) {
-      totalCell.textContent = '—';
-      gradeCell.textContent = '—';
-      statusCell.textContent = '—';
+      totalCell.textContent = '-';
+      gradeCell.textContent = '-';
+      statusCell.textContent = '-';
       return;
     }
 
@@ -4660,11 +4584,11 @@ const TeacherApp = {
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Designation</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.designation || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.designation || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Department</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.department || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.department || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Date of Joining</span>
@@ -4685,11 +4609,11 @@ const TeacherApp = {
             <div style="display: flex; flex-direction: column; gap: 14px;">
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Official Email</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0B5CAD;">${p.email || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0B5CAD;">${p.email || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Phone / Mobile</span>
-                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.phone || '—'}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #0F172A;">${p.phone || '-'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 10px;">
                 <span style="font-size: 13px; color: #64748B;">Academic Block / Cabin</span>
@@ -5519,7 +5443,7 @@ const TeacherApp = {
                   <div>
                     <div style="display:flex; align-items:center; gap:8px;">
                       <h4 style="font-size:15px; font-weight:800; color:#0B1F3A; margin:0;">${exp.designation || 'Position'}</h4>
-                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${exp.fromDate || ''} – ${exp.toDate || 'Present'}</span>
+                      <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:#EFF6FF; color:#1D4ED8; font-weight:700; border:1px solid #BFDBFE;">${exp.fromDate || ''} - ${exp.toDate || 'Present'}</span>
                     </div>
                     <p style="font-size:13px; color:#0B5CAD; font-weight:600; margin:4px 0 2px 0;">${exp.organization || 'Organization'}</p>
                     <p style="font-size:12.5px; color:#475569; margin:4px 0 0 0; line-height:1.5;">${exp.responsibilities || 'Key responsibilities not specified'}</p>
@@ -5924,7 +5848,7 @@ const TeacherApp = {
               </div>
             </div>
             <div style="display:inline-block; background:#0B1F3A; color:#FFFFFF; padding:4px 16px; border-radius:20px; font-size:12px; font-weight:700; margin-top:6px;">
-              ANNUAL FACULTY ACTIVITY & APPRAISAL DOSSIER — ACADEMIC YEAR ${report?.academicYear || '2026-2027'}
+              ANNUAL FACULTY ACTIVITY & APPRAISAL DOSSIER - ACADEMIC YEAR ${report?.academicYear || '2026-2027'}
             </div>
           </div>
 

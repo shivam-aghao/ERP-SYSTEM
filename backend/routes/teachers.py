@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL TEACHERS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL TEACHERS ROUTER
 Namespace: /api/v1/teachers/...
 Authoritative Faculty Roster, Profiles, Dashboard & Instructional Workload
 ================================================================================

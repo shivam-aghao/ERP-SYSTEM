@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Isolated Student-Side Quiz Security Module
+ * SSGMCE College ERP - Isolated Student-Side Quiz Security Module
  * Applies strictly during an active student quiz attempt inside #view-runner.
  * Preserves all existing teacher, admin, and non-quiz student ERP functionality.
  */
@@ -186,7 +186,7 @@
           '</div>' +
           '<div style="display:flex; justify-content:flex-end; gap:0.65rem; flex-wrap:wrap;">' +
             '<button type="button" id="quizSecReenterFsBtn" class="btn btn-secondary" style="display:none; font-size:0.82rem;">Re-Enter Full Screen</button>' +
-            '<button type="button" id="quizSecAckBtn" class="btn btn-primary" style="font-size:0.85rem;">I Understand — Resume Quiz</button>' +
+            '<button type="button" id="quizSecAckBtn" class="btn btn-primary" style="font-size:0.85rem;">I Understand - Resume Quiz</button>' +
           '</div>' +
         '</div>';
       document.body.appendChild(warnModal);
@@ -308,7 +308,7 @@
 
     if (badgeEl) {
       if (isLimitReached) {
-        badgeEl.textContent = 'Recorded Warning ' + maxV + ' of ' + maxV + ' — Limit Reached';
+        badgeEl.textContent = 'Recorded Warning ' + maxV + ' of ' + maxV + ' - Limit Reached';
         badgeEl.style.color = '#DC2626';
         badgeEl.style.fontWeight = '800';
       } else {
@@ -346,7 +346,7 @@
         ackBtn.className = 'btn btn-primary';
         ackBtn.disabled = false;
         ackBtn.style.cursor = 'pointer';
-        ackBtn.textContent = 'I Understand — Resume Quiz';
+        ackBtn.textContent = 'I Understand - Resume Quiz';
       }
     }
 

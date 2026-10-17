@@ -95,7 +95,7 @@
           ${p.class || 'TY B.E. Computer Science and Engineering-A'}
         </span>
         <span class="att-meta-chip" style="background:#EFF6FF; color:#1D4ED8; border-color:#DBEAFE;">
-          A.Y. ${p.academicYear || '2026–2027'} • Sem ${p.semester || 'V'}
+          A.Y. ${p.academicYear || '2026-2027'} • Sem ${p.semester || 'V'}
         </span>
       `;
     }
@@ -280,13 +280,13 @@
       },
       {
         label: 'Highest Attendance',
-        val: ins.highestSubject ? `${ins.highestSubject.percentage}%` : '—',
+        val: ins.highestSubject ? `${ins.highestSubject.percentage}%` : '-',
         sub: ins.highestSubject ? (ins.highestSubject.subject || ins.highestSubject.name || ins.highestSubject.code || '').split('-')[0].trim() : 'None',
         color: '#10B981'
       },
       {
         label: 'Lowest Attendance',
-        val: ins.lowestSubject ? `${ins.lowestSubject.percentage}%` : '—',
+        val: ins.lowestSubject ? `${ins.lowestSubject.percentage}%` : '-',
         sub: ins.lowestSubject ? (ins.lowestSubject.subject || ins.lowestSubject.name || ins.lowestSubject.code || '').split('-')[0].trim() : 'None',
         color: '#EF4444'
       }

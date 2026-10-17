@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — ATTENDANCE SCHEMAS
+SSGMCE COLLEGE ERP - ATTENDANCE SCHEMAS
 Comprehensive schemas for Attendance Sessions, Marking, Audit, and Governance
 ================================================================================
 """

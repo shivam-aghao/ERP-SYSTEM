@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION ATTENDANCE SERVICE
+SSGMCE COLLEGE ERP - PRODUCTION ATTENDANCE SERVICE
 Authoritative Database-Driven Attendance Architecture & Role Security
 ================================================================================
 """
@@ -454,11 +454,36 @@ class AttendanceService:
         # Remove existing records for this session if it was previously a draft
         db.execute(text("DELETE FROM attendance_records WHERE session_id = :sid"), {"sid": sess_id})
 
-        # Insert student attendance records
+        # Helper: Resolve student UUID and student_code
+        stu_cache = {}
+        def resolve_stu(raw_ident: str):
+            k = str(raw_ident).strip()
+            if k in stu_cache:
+                return stu_cache[k]
+            st = db.execute(text("""
+                SELECT id, student_code, roll_no FROM students
+                WHERE id::text = :s OR student_code = :s OR roll_no = :s
+                LIMIT 1
+            """), {"s": k}).fetchone()
+            if st:
+                res = (str(st[0]), str(st[1]) if st[1] else k)
+            else:
+                is_u = len(k) == 36
+                res = (k if is_u else None, k if not is_u else None)
+            stu_cache[k] = res
+            return res
+
+        # Insert student attendance records and prepare student notifications
+        notif_items = []
         for sid in present_set:
             rec_id = str(uuid.uuid4())
-            # Check if sid is UUID or student_code
-            is_uuid = len(sid) == 36
+            stu_uuid, stu_code = resolve_stu(sid)
+            notif_items.append({
+                "student_id": stu_uuid,
+                "student_code": stu_code,
+                "is_present": True
+            })
+
             db.execute(text("""
                 INSERT INTO attendance_records (
                     id, session_id, student_id, student_code, is_present, status, marked_at, created_at
@@ -468,23 +493,66 @@ class AttendanceService:
             """), {
                 "id": rec_id,
                 "sess_id": sess_id,
-                "sid": sid if is_uuid else None,
-                "scode": sid if not is_uuid else None
+                "sid": stu_uuid,
+                "scode": stu_code
             })
 
             # Atomically increment student subject attendance stats
-            db.execute(text("""
+            upd_res = db.execute(text("""
                 UPDATE student_attendance_subjects
                 SET present_periods = COALESCE(present_periods, 0) + 1,
                     total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
-                  AND (subject_code = :scode OR subject_name = :sname)
-            """), {"sid": sid, "scode": subject_code, "sname": subject_name})
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :scode OR student_code = :orig)
+                  AND (subject_code = :scode_val OR subject_name = :sname OR subject_code ILIKE :scode_val)
+            """), {"sid": stu_uuid or "", "scode": stu_code or "", "orig": str(sid), "scode_val": subject_code, "sname": subject_name})
+
+            if upd_res.rowcount == 0 and stu_code:
+                try:
+                    db.execute(text("""
+                        INSERT INTO student_attendance_subjects (
+                            id, student_id, student_code, subject_code, subject_name,
+                            subject_type, present_periods, total_periods, created_at, updated_at
+                        ) VALUES (
+                            :id, CAST(:sid AS UUID), :scode, :scode_val, :sname,
+                            :stype, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid if (stu_uuid and len(stu_uuid) == 36) else None,
+                        "scode": stu_code,
+                        "scode_val": subject_code,
+                        "sname": subject_name,
+                        "stype": payload.session_type or "THEORY"
+                    })
+                except Exception as e_ins:
+                    logger.debug("Notice inserting student_attendance_subjects: %s", e_ins)
+
+            # Sync to legacy attendance table
+            if stu_uuid and actual_subject_id:
+                try:
+                    db.execute(text("""
+                        INSERT INTO attendance (id, student_id, subject_id, date, status, period_type, created_at)
+                        VALUES (CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:sub_id AS UUID), :sdate, 'PRESENT', :stype, CURRENT_TIMESTAMP)
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid,
+                        "sub_id": actual_subject_id,
+                        "sdate": payload.session_date,
+                        "stype": payload.session_type or "Theory"
+                    })
+                except Exception as e_att:
+                    logger.debug("Notice syncing legacy attendance row: %s", e_att)
 
         for sid in absent_set:
             rec_id = str(uuid.uuid4())
-            is_uuid = len(sid) == 36
+            stu_uuid, stu_code = resolve_stu(sid)
+            notif_items.append({
+                "student_id": stu_uuid,
+                "student_code": stu_code,
+                "is_present": False
+            })
+
             db.execute(text("""
                 INSERT INTO attendance_records (
                     id, session_id, student_id, student_code, is_present, status, marked_at, created_at
@@ -494,18 +562,93 @@ class AttendanceService:
             """), {
                 "id": rec_id,
                 "sess_id": sess_id,
-                "sid": sid if is_uuid else None,
-                "scode": sid if not is_uuid else None
+                "sid": stu_uuid,
+                "scode": stu_code
             })
 
             # Increment only total periods for absent student
-            db.execute(text("""
+            upd_res = db.execute(text("""
                 UPDATE student_attendance_subjects
                 SET total_periods = COALESCE(total_periods, 0) + 1,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :sid)
-                  AND (subject_code = :scode OR subject_name = :sname)
-            """), {"sid": sid, "scode": subject_code, "sname": subject_name})
+                WHERE (CAST(student_id AS TEXT) = :sid OR student_code = :scode OR student_code = :orig)
+                  AND (subject_code = :scode_val OR subject_name = :sname OR subject_code ILIKE :scode_val)
+            """), {"sid": stu_uuid or "", "scode": stu_code or "", "orig": str(sid), "scode_val": subject_code, "sname": subject_name})
+
+            if upd_res.rowcount == 0 and stu_code:
+                try:
+                    db.execute(text("""
+                        INSERT INTO student_attendance_subjects (
+                            id, student_id, student_code, subject_code, subject_name,
+                            subject_type, present_periods, total_periods, created_at, updated_at
+                        ) VALUES (
+                            :id, CAST(:sid AS UUID), :scode, :scode_val, :sname,
+                            :stype, 0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid if (stu_uuid and len(stu_uuid) == 36) else None,
+                        "scode": stu_code,
+                        "scode_val": subject_code,
+                        "sname": subject_name,
+                        "stype": payload.session_type or "THEORY"
+                    })
+                except Exception as e_ins:
+                    logger.debug("Notice inserting student_attendance_subjects: %s", e_ins)
+
+            # Sync to legacy attendance table
+            if stu_uuid and actual_subject_id:
+                try:
+                    db.execute(text("""
+                        INSERT INTO attendance (id, student_id, subject_id, date, status, period_type, created_at)
+                        VALUES (CAST(:id AS UUID), CAST(:sid AS UUID), CAST(:sub_id AS UUID), :sdate, 'ABSENT', :stype, CURRENT_TIMESTAMP)
+                    """), {
+                        "id": str(uuid.uuid4()),
+                        "sid": stu_uuid,
+                        "sub_id": actual_subject_id,
+                        "sdate": payload.session_date,
+                        "stype": payload.session_type or "Theory"
+                    })
+                except Exception as e_att:
+                    logger.debug("Notice syncing legacy attendance row: %s", e_att)
+
+        # Sync attendance stats and dispatch automated student notifications
+        dispatched_count = 0
+        try:
+            stats_rows = db.execute(text("""
+                SELECT student_code, CAST(student_id AS TEXT), present_periods, total_periods
+                FROM student_attendance_subjects
+                WHERE (subject_code = :scode_val OR subject_name = :sname)
+            """), {"scode_val": subject_code, "sname": subject_name}).fetchall()
+            stats_map = {}
+            for r in stats_rows:
+                pct = round((r[2] / r[3] * 100), 1) if (r[3] and r[3] > 0) else None
+                if r[0]:
+                    stats_map[str(r[0])] = pct
+                if r[1]:
+                    stats_map[str(r[1])] = pct
+
+            for it in notif_items:
+                sc = it.get("student_code")
+                su = it.get("student_id")
+                it["percentage"] = stats_map.get(str(sc)) or stats_map.get(str(su))
+
+            from backend.services.notification_service import NotificationService
+            dispatched_count = NotificationService.dispatch_attendance_notifications(
+                session_id=sess_id,
+                class_id=actual_class_id,
+                class_name=class_name,
+                subject_id=actual_subject_id,
+                subject_code=subject_code,
+                subject_name=subject_name,
+                session_date=payload.session_date,
+                period_number=payload.period_number,
+                attendance_items=notif_items,
+                teacher_id=teacher_uuid,
+                db=db
+            )
+        except Exception as e_notif:
+            logger.warning("Notice on dispatching attendance notifications: %s", e_notif)
 
         db.commit()
 
@@ -521,7 +664,8 @@ class AttendanceService:
                 "status": "SUBMITTED",
                 "present_count": pres_count,
                 "absent_count": abs_count,
-                "rate": rate
+                "rate": rate,
+                "notifications_dispatched": dispatched_count
             },
             reason=f"Attendance submitted for {class_name} - {subject_code} (Period {payload.period_number})",
             db=db
@@ -535,7 +679,8 @@ class AttendanceService:
             "total_students": total_count,
             "present_count": pres_count,
             "absent_count": abs_count,
-            "attendance_rate": rate
+            "attendance_rate": rate,
+            "notifications_dispatched": dispatched_count
         }
 
     # =========================================================================
@@ -691,9 +836,19 @@ class AttendanceService:
         st_row = db.execute(text("""
             SELECT id, student_code, full_name, roll_no, class_name
             FROM students
-            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc
+            WHERE student_code = :sc OR CAST(id AS TEXT) = :sc OR roll_no = :sc OR email = :sc OR LOWER(full_name) = LOWER(:sc) OR LOWER(full_name) LIKE LOWER(:sp)
             LIMIT 1
-        """), {"sc": target_code}).fetchone()
+        """), {"sc": target_code, "sp": f"%{target_code}%"}).fetchone()
+
+        if not st_row:
+            u_row = db.execute(text("""
+                SELECT id, roll_no as student_code, full_name, roll_no, '2R1' as class_name
+                FROM users
+                WHERE CAST(id AS TEXT) = :sc OR roll_no = :sc OR email = :sc OR LOWER(full_name) = LOWER(:sc) OR LOWER(full_name) LIKE LOWER(:sp)
+                LIMIT 1
+            """), {"sc": target_code, "sp": f"%{target_code}%"}).fetchone()
+            if u_row:
+                st_row = u_row
 
         student_uuid = str(st_row[0]) if st_row else None
         student_name = st_row[2] if st_row else "Student"
@@ -756,6 +911,60 @@ class AttendanceService:
             if is_sub_shortage:
                 shortage_subjects.append(sub_item)
 
+        if not subjects_list and student_uuid:
+            live_sub_rows = db.execute(text("""
+                SELECT s.id, s.code as subject_code, s.name as subject_name,
+                       COUNT(a.id) as total_periods,
+                       SUM(CASE WHEN UPPER(a.status) = 'PRESENT' THEN 1 ELSE 0 END) as present_periods
+                FROM attendance a
+                JOIN subjects s ON a.subject_id = s.id
+                WHERE a.student_id = CAST(:suid AS UUID)
+                GROUP BY s.id, s.code, s.name
+                ORDER BY s.code ASC
+            """), {"suid": student_uuid}).fetchall()
+
+            for sr in live_sub_rows:
+                sm = dict(sr._mapping)
+                t_per = int(sm["total_periods"])
+                p_per = int(sm["present_periods"])
+                a_per = max(0, t_per - p_per)
+                pct = round((p_per / t_per * 100), 2) if t_per > 0 else 100.0
+                is_sub_shortage = pct < 75.0
+                sub_classes_needed = max(0, math.ceil(3 * t_per - 4 * p_per)) if is_sub_shortage else 0
+                sub_item = {
+                    "id": str(sm["id"]),
+                    "subject_code": sm["subject_code"],
+                    "subject_name": sm["subject_name"],
+                    "subject_type": "THEORY",
+                    "faculty_name": "Faculty",
+                    "total_periods": t_per,
+                    "present_periods": p_per,
+                    "absent_periods": a_per,
+                    "attendance_percentage": pct,
+                    "status": "ELIGIBLE" if not is_sub_shortage else "SHORTAGE",
+                    "classes_needed_to_75": sub_classes_needed,
+                    "code": sm["subject_code"],
+                    "name": sm["subject_name"],
+                    "total": t_per,
+                    "present": p_per,
+                    "attended": p_per,
+                    "absent": a_per,
+                    "percentage": pct,
+                    "faculty": "Faculty",
+                    "type": "TH",
+                    "typeName": "Theory"
+                }
+                subjects_list.append(sub_item)
+                tot_conducted += t_per
+                tot_attended += p_per
+                if is_sub_shortage:
+                    shortage_subjects.append(sub_item)
+
+            if tot_conducted > 0:
+                overall_pct = round((tot_attended / tot_conducted * 100), 2)
+                overall_shortage = overall_pct < 75.0
+                classes_needed_overall = max(0, math.ceil(3 * tot_conducted - 4 * tot_attended)) if overall_shortage else 0
+
         overall_pct = round((tot_attended / tot_conducted * 100), 2) if tot_conducted > 0 else 0.0
         overall_shortage = overall_pct < 75.0
         classes_needed_overall = max(0, math.ceil(3 * tot_conducted - 4 * tot_attended)) if overall_shortage else 0
@@ -812,6 +1021,32 @@ class AttendanceService:
                 "is_present": bool(h["is_present"]),
                 "status": h.get("status") or ("PRESENT" if h["is_present"] else "ABSENT")
             })
+
+        if not lecture_history and student_uuid:
+            direct_hist = db.execute(text("""
+                SELECT a.id as session_id, a.date as session_date, 1 as period_number,
+                       s.code as subject_code, s.name as subject_name,
+                       a.period_type as session_type,
+                       (CASE WHEN UPPER(a.status) = 'PRESENT' THEN true ELSE false END) as is_present,
+                       a.status
+                FROM attendance a
+                JOIN subjects s ON a.subject_id = s.id
+                WHERE a.student_id = CAST(:suid AS UUID)
+                ORDER BY a.date DESC
+                LIMIT 50
+            """), {"suid": student_uuid}).fetchall()
+            for hr in direct_hist:
+                h = dict(hr._mapping)
+                lecture_history.append({
+                    "session_id": str(h["session_id"]),
+                    "session_date": str(h["session_date"]),
+                    "period_number": h["period_number"],
+                    "subject_code": h["subject_code"],
+                    "subject_name": h["subject_name"],
+                    "session_type": h.get("session_type") or "theory",
+                    "is_present": bool(h["is_present"]),
+                    "status": h.get("status") or ("PRESENT" if h["is_present"] else "ABSENT")
+                })
 
         # Shortage Warning Message
         shortage_warning = overall_shortage or len(shortage_subjects) > 0

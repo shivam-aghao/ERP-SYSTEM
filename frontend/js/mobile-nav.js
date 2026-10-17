@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * SSGMCE College ERP — Professional Role-Based Mobile Bottom Navigation
+ * SSGMCE College ERP - Professional Role-Based Mobile Bottom Navigation
  * ==============================================================================
  * Displays a 5-tab fixed navigation bar on mobile screens (viewport <= 768px):
  * 1. Home

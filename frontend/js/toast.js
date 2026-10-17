@@ -1,5 +1,5 @@
 /**
- * SSGMCE College ERP — Central Toast Notification Engine
+ * SSGMCE College ERP - Central Toast Notification Engine
  * Replaces native alert() with sleek, animated, non-blocking toast notifications.
  *
  * Usage:

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — PRODUCTION QUIZ & ASSESSMENT SERVICE
+SSGMCE COLLEGE ERP - PRODUCTION QUIZ & ASSESSMENT SERVICE
 Authoritative Server-Side Evaluation, Proctoring, Anti-Cheat, Analytics & Exports
 ================================================================================
 """

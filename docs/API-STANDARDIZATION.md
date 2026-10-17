@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Canonical API Standardization & Specification
+# SSGMCE College ERP - Canonical API Standardization & Specification
 
 **Document Version:** 1.0.0  
 **Effective Date:** 2026-10-08  

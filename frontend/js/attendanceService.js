@@ -49,7 +49,7 @@
                 department: p.department || p.department_name || 'Computer Science & Engineering',
                 semester: p.semester || p.current_semester || 'V',
                 division: p.division || 'A',
-                academicYear: p.academicYear || p.academic_year || '2026–2027',
+                academicYear: p.academicYear || p.academic_year || '2026-2027',
                 prn: p.prn || studentCode,
                 facultyMentor: p.facultyMentor || p.faculty_mentor || 'Dr. J. M. Patil',
                 email: p.email || p.institutional_email || '308637@ssgmce.ac.in',
@@ -84,7 +84,7 @@
             department: 'Computer Science & Engineering',
             semester: 'V',
             division: 'A',
-            academicYear: '2026–2027',
+            academicYear: '2026-2027',
             prn: u.prn || studentCode
           }
         };

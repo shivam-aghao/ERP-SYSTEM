@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SSGMCE COLLEGE ERP — STEP 8: ADMIN DASHBOARD CONTROLLER
+ * SSGMCE COLLEGE ERP - STEP 8: ADMIN DASHBOARD CONTROLLER
  * Real-time Admin Portal Controller interacting with /api/v1/management APIs
  * ============================================================================
  */
@@ -558,7 +558,7 @@ const AdminController = {
           if (s.result_status === 'PASS') passCount++;
         });
 
-        const passRate = gradedCount > 0 ? ((passCount / gradedCount) * 100).toFixed(1) + '%' : '—';
+        const passRate = gradedCount > 0 ? ((passCount / gradedCount) * 100).toFixed(1) + '%' : '-';
 
         document.getElementById('adminStatEnrolled').textContent = students.length;
         document.getElementById('adminStatGraded').textContent = gradedCount;
@@ -730,14 +730,14 @@ const AdminController = {
           <td><strong>${r.subject_code}</strong></td>
           <td>Sem ${r.semester_number}</td>
           <td>${r.previous_external_marks} / 70</td>
-          <td>${r.revised_external_marks !== null ? `<strong>${r.revised_external_marks} / 70</strong>` : '—'}</td>
+          <td>${r.revised_external_marks !== null ? `<strong>${r.revised_external_marks} / 70</strong>` : '-'}</td>
           <td>
             <span class="badge ${r.status === 'APPROVED' ? 'badge-success' : (r.status === 'REJECTED' ? 'badge-danger' : 'badge-warning')}">
               ${r.status}
             </span>
           </td>
           <td style="font-size:12px; max-width:200px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${r.reason}">
-            ${r.reason || '—'}
+            ${r.reason || '-'}
           </td>
           <td>
             ${r.status === 'PENDING' ? `

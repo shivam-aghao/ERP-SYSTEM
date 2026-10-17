@@ -1,16 +1,13 @@
 import os
+import socket
 import logging
 import urllib.parse
 from typing import Optional
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from backend.config.settings import settings
 
 logger = logging.getLogger("ssgmce_erp_backend.database")
-
-import socket
-import urllib.parse
-from sqlalchemy import text
 
 # Resilient Supabase pooler host-to-IP map (AWS Singapore region)
 KNOWN_POOLER_IPS = {
@@ -35,18 +32,26 @@ socket.getaddrinfo = _resilient_getaddrinfo
 
 
 def _create_resilient_engine():
-    db_url = settings.DATABASE_URL
-    if db_url and db_url.startswith(("postgres://", "postgresql://", "postgresql+psycopg2://")):
-        parsed = urllib.parse.urlparse(db_url)
+    raw_url = (settings.DATABASE_URL or "").strip()
+    if (raw_url.startswith('"') and raw_url.endswith('"')) or (raw_url.startswith("'") and raw_url.endswith("'")):
+        raw_url = raw_url[1:-1].strip()
+
+    # Clean libpq-incompatible query parameters (e.g. pgbouncer=true used by Prisma)
+    clean_url = raw_url
+    if "pgbouncer=true" in clean_url:
+        clean_url = clean_url.replace("?pgbouncer=true&", "?").replace("&pgbouncer=true", "").replace("?pgbouncer=true", "")
+
+    if clean_url and clean_url.startswith(("postgres://", "postgresql://", "postgresql+psycopg2://", "postgresql+psycopg://")):
+        parsed = urllib.parse.urlparse(clean_url)
         host = parsed.hostname
         port = parsed.port or 6543
-        
+
         candidates = []
         try:
             candidates.extend(socket.gethostbyname_ex(host)[2])
         except Exception:
             pass
-        
+
         if host in KNOWN_POOLER_IPS:
             for fb in KNOWN_POOLER_IPS[host]:
                 if fb not in candidates:
@@ -61,7 +66,7 @@ def _create_resilient_engine():
                 s.close()
 
                 eng = create_engine(
-                    db_url,
+                    clean_url,
                     connect_args={
                         "hostaddr": ip,
                         "connect_timeout": 10,
@@ -83,28 +88,39 @@ def _create_resilient_engine():
 
     # Fallback to direct creation or SQLite if offline
     try:
-        eng = create_engine(
-            db_url,
-            pool_pre_ping=True,
-            pool_recycle=300,
-            echo=False
-        )
-        with eng.connect() as conn:
-            pass
-        return eng
+        if clean_url and clean_url.startswith(("postgres://", "postgresql://", "postgresql+psycopg://")):
+            eng = create_engine(
+                clean_url,
+                pool_pre_ping=True,
+                pool_recycle=300,
+                echo=False
+            )
+            with eng.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            logger.info("Connected directly to Supabase PostgreSQL database.")
+            return eng
     except Exception as e:
         logger.warning("PostgreSQL direct connection fallback: %s. Using SQLite engine.", e)
-        sqlite_path = os.path.join(settings.BASE_DIR, "erp.db")
-        return create_engine(
-            f"sqlite:///{sqlite_path}",
-            connect_args={"check_same_thread": False},
-            echo=False
-        )
+
+    sqlite_path = os.path.join(settings.BASE_DIR, "erp.db")
+    try:
+        from backend.utils.db_sync import ensure_sqlite_schema, sync_supabase_to_local
+        ensure_sqlite_schema()
+    except Exception as e:
+        logger.debug("Schema sync notice: %s", e)
+
+    return create_engine(
+        f"sqlite:///{sqlite_path}",
+        connect_args={"check_same_thread": False},
+        echo=False
+    )
+
 
 engine = _create_resilient_engine()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 def get_db():
     """Dependency that yields a database session connected directly to Supabase PostgreSQL."""
@@ -113,6 +129,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 # Supabase REST Client singleton
 supabase_client = None
@@ -131,4 +148,3 @@ def get_supabase_client():
         except Exception as e:
             logger.warning("Supabase direct client notice: %s", e)
     return supabase_client
-

@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL ATTENDANCE ROUTER
+SSGMCE COLLEGE ERP - CANONICAL ATTENDANCE ROUTER
 Namespace: /api/v1/attendance/...
 Authoritative Attendance Roster, Session Tracking, Marking, Audit & Governance
 ================================================================================
@@ -264,30 +264,52 @@ def get_day_wise_attendance(
     db: Session = Depends(get_db)
 ):
     """GET /api/v1/attendance/student/{student_id}/day-wise - Day-wise attendance records."""
-    # Resolve student UUID
+    # Resolve student UUID and student_code
     st_row = db.execute(text("""
-        SELECT id FROM users WHERE CAST(id AS TEXT) = :s OR roll_no = :s OR email = :s
+        SELECT id, student_code FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s OR LOWER(full_name) = LOWER(:s)
         UNION
-        SELECT id FROM students WHERE CAST(id AS TEXT) = :s OR student_code = :s OR roll_no = :s
+        SELECT id, roll_no FROM users WHERE CAST(id AS TEXT) = :s OR roll_no = :s OR email = :s OR LOWER(full_name) = LOWER(:s)
         LIMIT 1
-    """), {"s": student_id}).fetchone()
+    """), {"s": str(student_id).strip()}).fetchone()
     
-    sid = str(st_row[0]) if st_row else student_id
+    sid = str(st_row[0]) if st_row else str(student_id).strip()
+    scode = str(st_row[1]) if (st_row and len(st_row) > 1 and st_row[1]) else str(student_id).strip()
 
-    query = """
-        SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
-               s.name as subject_name, s.code as subject_code
-        FROM attendance a
-        LEFT JOIN subjects s ON a.subject_id = s.id
-        WHERE CAST(a.student_id AS TEXT) = :sid
+    # Query attendance_records joined with attendance_sessions (authoritative live source)
+    query_records = """
+        SELECT ar.id, ass.session_date as date, ar.status, 
+               COALESCE(ass.session_type, 'Theory') as period_type, 
+               ass.subject_id, ass.subject_name, ass.subject_code,
+               ass.period_number
+        FROM attendance_records ar
+        JOIN attendance_sessions ass ON ar.session_id = ass.id
+        WHERE (CAST(ar.student_id AS TEXT) = :sid OR ar.student_code = :scode OR ar.student_code = :orig)
     """
-    params = {"sid": sid}
+    params = {"sid": sid, "scode": scode, "orig": str(student_id).strip()}
     if subject_id:
-        query += " AND CAST(a.subject_id AS TEXT) = :sub"
+        query_records += " AND (CAST(ass.subject_id AS TEXT) = :sub OR ass.subject_code = :sub OR ass.subject_name ILIKE :sub_like)"
         params["sub"] = subject_id
-    query += " ORDER BY a.date ASC"
+        params["sub_like"] = f"%{subject_id}%"
+    query_records += " ORDER BY ass.session_date ASC, ass.period_number ASC"
 
-    rows = db.execute(text(query), params).fetchall()
+    rows = db.execute(text(query_records), params).fetchall()
+    
+    # If no records found in attendance_records, fallback to legacy attendance table
+    if not rows:
+        legacy_query = """
+            SELECT a.id, a.date, a.status, a.period_type, a.subject_id,
+                   s.name as subject_name, s.code as subject_code
+            FROM attendance a
+            LEFT JOIN subjects s ON a.subject_id = s.id
+            WHERE a.student_id::text = :sid
+        """
+        leg_params = {"sid": sid}
+        if subject_id:
+            legacy_query += " AND (a.subject_id::text = :sub OR s.code = :sub)"
+            leg_params["sub"] = subject_id
+        legacy_query += " ORDER BY a.date ASC"
+        rows = db.execute(text(legacy_query), leg_params).fetchall()
+
     return success_response([dict(r._mapping) for r in rows])
 
 
@@ -423,22 +445,22 @@ def get_attendance_sessions(
     params = {"tid": teacher_id} if teacher_id else {}
     rows = db.execute(text(f"""
         SELECT ass.id,
-               COALESCE(c.class_name, ass.class_id) AS class_name,
-               COALESCE(sub.name, ass.subject_id) AS subject_name,
-               COALESCE(sub.code, ass.subject_id) AS subject_code,
+               COALESCE(c.class_name, CAST(ass.class_id AS VARCHAR)) AS class_name,
+               COALESCE(sub.name, CAST(ass.subject_id AS VARCHAR)) AS subject_name,
+               COALESCE(sub.code, CAST(ass.subject_id AS VARCHAR)) AS subject_code,
                ass.session_date,
                ass.period_number,
                ass.status,
                ass.session_type,
                COUNT(ar.id) AS total_students,
-               SUM(CASE WHEN ar.is_present = 1 THEN 1 ELSE 0 END) AS present_count,
-               SUM(CASE WHEN ar.is_present = 0 THEN 1 ELSE 0 END) AS absent_count
+               SUM(CASE WHEN ar.is_present IS TRUE THEN 1 ELSE 0 END) AS present_count,
+               SUM(CASE WHEN ar.is_present IS FALSE THEN 1 ELSE 0 END) AS absent_count
         FROM attendance_sessions ass
         LEFT JOIN classes c ON ass.class_id = c.id
         LEFT JOIN subjects sub ON ass.subject_id = sub.id
         LEFT JOIN attendance_records ar ON ar.session_id = ass.id
         {clause}
-        GROUP BY ass.id
+        GROUP BY ass.id, c.class_name, ass.class_id, sub.name, sub.code, ass.subject_id, ass.session_date, ass.period_number, ass.status, ass.session_type, ass.created_at
         ORDER BY ass.session_date DESC, ass.created_at DESC
         LIMIT 100
     """), params).fetchall()
@@ -474,10 +496,13 @@ def get_attendance_records(
     class_name: Optional[str] = None,
     teacher_id: Optional[str] = None,
     subject_code: Optional[str] = None,
+    date: Optional[str] = None,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
     limit: int = 50,
     db: Session = Depends(get_db)
 ):
-    """GET /api/v1/attendance/records - List detailed attendance session records."""
+    """GET /api/v1/attendance/records - List detailed attendance session records with dynamic search/filters."""
     target_class = class_name or class_id
     clauses = []
     params = {"lim": limit}
@@ -490,6 +515,15 @@ def get_attendance_records(
     if subject_code:
         clauses.append("ass.subject_code = :scode")
         params["scode"] = subject_code
+    if date:
+        clauses.append("CAST(ass.session_date AS TEXT) LIKE :dt")
+        params["dt"] = f"{date}%"
+    if status and status.lower() != "all":
+        clauses.append("LOWER(ass.status) = :st")
+        params["st"] = status.lower()
+    if search:
+        clauses.append("(ass.class_name ILIKE :sq OR ass.subject_code ILIKE :sq OR ass.topic_taught ILIKE :sq OR CAST(ass.id AS TEXT) ILIKE :sq)")
+        params["sq"] = f"%{search}%"
 
     where_str = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = db.execute(text(f"""

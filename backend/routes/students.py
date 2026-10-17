@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL STUDENTS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL STUDENTS ROUTER
 Namespace: /api/v1/students/...
 Authoritative Student Profile, Enrollment & Academic Information
 ================================================================================
@@ -43,32 +43,61 @@ def resolve_student_code(
 
 @router.get("")
 @router.get("/")
+@router.get("")
 def get_all_students(
     class_name: Optional[str] = Query(None),
     class_id: Optional[str] = Query(None),
     class_code: Optional[str] = Query(None),
     classCode: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+    limit: int = Query(500, ge=1, le=1000),
     db: Session = Depends(get_db)
 ):
     """
     GET /api/v1/students
-    List enrolled students with optional class filter.
+    List enrolled students with optional class filter or search query.
     """
     target = class_name or class_id or class_code or classCode
-    clause = ""
-    params = {}
+    query_str = (search or q or "").strip().lower()
+    conditions = []
+    params = {"lim": limit}
     if target:
-        clause = "WHERE c.class_name = :target OR s.class_name = :target OR CAST(s.class_id AS TEXT) = :target OR CAST(c.id AS TEXT) = :target"
+        conditions.append("(c.class_name = :target OR s.class_name = :target OR CAST(s.class_id AS TEXT) = :target OR CAST(c.id AS TEXT) = :target)")
         params["target"] = target
+    if query_str:
+        conditions.append("(LOWER(s.full_name) LIKE :q OR LOWER(s.roll_no) LIKE :q OR LOWER(s.student_code) LIKE :q OR LOWER(s.email) LIKE :q OR CAST(s.id AS TEXT) = :q_exact)")
+        params["q"] = f"%{query_str}%"
+        params["q_exact"] = query_str
+
+    clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     rows = db.execute(text(f"""
-        SELECT s.*, c.class_name, c.division
+        SELECT s.*, c.class_name as class_ref, c.division
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
         {clause}
         ORDER BY s.roll_no ASC, s.full_name ASC
+        LIMIT :lim
     """), params).fetchall()
-    return success_response([dict(r._mapping) for r in rows])
+
+    data = [dict(r._mapping) for r in rows]
+
+    if query_str and len(data) == 0:
+        u_rows = db.execute(text("""
+            SELECT id, full_name, roll_no, email, 'student' as role, '2R1' as class_name
+            FROM users
+            WHERE (LOWER(role) = 'student' OR roll_no IS NOT NULL)
+              AND (LOWER(full_name) LIKE :q OR LOWER(roll_no) LIKE :q OR LOWER(email) LIKE :q OR CAST(id AS TEXT) = :q_exact)
+            ORDER BY roll_no ASC, full_name ASC
+            LIMIT :lim
+        """), params).fetchall()
+        for ur in u_rows:
+            m = dict(ur._mapping)
+            m["student_code"] = m["roll_no"]
+            data.append(m)
+
+    return success_response(data)
 
 
 @router.get("/class/{class_id}")

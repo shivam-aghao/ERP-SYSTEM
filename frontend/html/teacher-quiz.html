@@ -1219,6 +1219,19 @@
               </a>
             </li>
 
+            <!-- 9c. Fees & Accounts -->
+            <li class="sidebar-item">
+              <a href="teacher-dashboard.html#fees" class="nav-item sidebar-link" data-view="fees">
+                <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                  <circle cx="7" cy="15" r="1"></circle>
+                </svg>
+                <span class="nav-label">Fees &amp; Accounts</span>
+                <span class="nav-badge" style="background:#10B981; color:white;">Clear</span>
+              </a>
+            </li>
+
             <!-- Preferences & Info Divider -->
             <li class="sidebar-item">
               <div class="sidebar-section-divider"></div>
@@ -1698,7 +1711,7 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 1.25rem;">
-              <label for="studioQExplanation">Solution Explanation / Answer Note (Optional — shown when results are released)</label>
+              <label for="studioQExplanation">Solution Explanation / Answer Note (Optional - shown when results are released)</label>
               <input type="text" id="studioQExplanation" class="form-control" placeholder="e.g. SJF (Shortest Job First) selects the waiting process with the smallest execution time.">
             </div>
 
@@ -3528,13 +3541,13 @@
       if (!sel) return;
       const prevVal = sel.value;
       if (quizzes.length === 0) {
-        sel.innerHTML = `<option value="">No Quizzes Created Yet — Click '+ New Quiz'</option>`;
+        sel.innerHTML = `<option value="">No Quizzes Created Yet - Click '+ New Quiz'</option>`;
         onStudioQuizChange();
         return;
       }
       sel.innerHTML = quizzes.map(q => {
         const qCount = q.question_count !== undefined ? q.question_count : (q.total_questions || 0);
-        return `<option value="${q.id}">${q.title} — Class ${q.class_name} (${qCount} Qs)</option>`;
+        return `<option value="${q.id}">${q.title} - Class ${q.class_name} (${qCount} Qs)</option>`;
       }).join('');
 
       if (prevVal && quizzes.some(q => q.id === prevVal)) {
@@ -4222,7 +4235,7 @@
         if (targetQuiz) {
           badge.innerHTML = `<span class="badge" style="background: #EFF6FF; color: var(--primary); font-weight: 700; border: 1px solid #BFDBFE;">Target: ${escapeHtmlSafe(targetQuiz.title)} (${escapeHtmlSafe(targetQuiz.class_name || '')})</span>`;
         } else {
-          badge.innerHTML = `<span class="badge" style="background: #FEF3C7; color: #92400E;">No Quiz Selected — will save to selected quiz</span>`;
+          badge.innerHTML = `<span class="badge" style="background: #FEF3C7; color: #92400E;">No Quiz Selected - will save to selected quiz</span>`;
         }
       }
 
@@ -4314,44 +4327,44 @@
           {
             subject_name: 'Data Structures & Algorithms',
             units: [
-              { unit_number: 1, unit_title: 'Unit I — Algorithm Analysis & Linear Data Structures', topics: ['Asymptotic notation', 'Arrays and linked lists', 'Stacks and queues applications', 'Infix to postfix conversion'] },
-              { unit_number: 2, unit_title: 'Unit II — Trees & Binary Search Trees', topics: ['Binary tree traversals', 'Binary search trees (BST)', 'AVL balanced trees', 'B-Trees and Heaps'] },
-              { unit_number: 3, unit_title: 'Unit III — Graph Algorithms', topics: ['Graph representations', 'BFS and DFS traversal', 'Minimum Spanning Trees (Prim, Kruskal)', 'Shortest Path (Dijkstra, Bellman-Ford)'] },
-              { unit_number: 4, unit_title: 'Unit IV — Sorting, Searching & Hashing', topics: ['Divide and conquer sorting (Merge, Quick)', 'Hash functions and collision resolution', 'Universal hashing'] },
-              { unit_number: 5, unit_title: 'Unit V — Dynamic Programming & Greedy Algorithms', topics: ['Greedy choice property (Huffman, Fractional Knapsack)', 'Dynamic programming (0/1 Knapsack, LCS)', 'Backtracking'] }
+              { unit_number: 1, unit_title: 'Unit I - Algorithm Analysis & Linear Data Structures', topics: ['Asymptotic notation', 'Arrays and linked lists', 'Stacks and queues applications', 'Infix to postfix conversion'] },
+              { unit_number: 2, unit_title: 'Unit II - Trees & Binary Search Trees', topics: ['Binary tree traversals', 'Binary search trees (BST)', 'AVL balanced trees', 'B-Trees and Heaps'] },
+              { unit_number: 3, unit_title: 'Unit III - Graph Algorithms', topics: ['Graph representations', 'BFS and DFS traversal', 'Minimum Spanning Trees (Prim, Kruskal)', 'Shortest Path (Dijkstra, Bellman-Ford)'] },
+              { unit_number: 4, unit_title: 'Unit IV - Sorting, Searching & Hashing', topics: ['Divide and conquer sorting (Merge, Quick)', 'Hash functions and collision resolution', 'Universal hashing'] },
+              { unit_number: 5, unit_title: 'Unit V - Dynamic Programming & Greedy Algorithms', topics: ['Greedy choice property (Huffman, Fractional Knapsack)', 'Dynamic programming (0/1 Knapsack, LCS)', 'Backtracking'] }
             ]
           },
           {
             subject_name: 'Operating Systems',
             units: [
-              { unit_number: 1, unit_title: 'Unit I — OS Fundamentals & Process Management', topics: ['Process states and PCB', 'CPU scheduling algorithms (FCFS, SJF, RR, Priority)', 'Threads and concurrency'] },
-              { unit_number: 2, unit_title: 'Unit II — Synchronization & Deadlocks', topics: ['Critical section problem', 'Semaphores and Mutexes', 'Banker algorithm for deadlock avoidance', 'Deadlock detection and recovery'] },
-              { unit_number: 3, unit_title: 'Unit III — Memory Management', topics: ['Paging and segmentation', 'Page replacement algorithms (FIFO, LRU, Optimal)', 'Virtual memory and thrashing'] },
-              { unit_number: 4, unit_title: 'Unit IV — File Systems & Storage', topics: ['File allocation methods', 'Disk scheduling algorithms (SSTF, SCAN, LOOK)'] }
+              { unit_number: 1, unit_title: 'Unit I - OS Fundamentals & Process Management', topics: ['Process states and PCB', 'CPU scheduling algorithms (FCFS, SJF, RR, Priority)', 'Threads and concurrency'] },
+              { unit_number: 2, unit_title: 'Unit II - Synchronization & Deadlocks', topics: ['Critical section problem', 'Semaphores and Mutexes', 'Banker algorithm for deadlock avoidance', 'Deadlock detection and recovery'] },
+              { unit_number: 3, unit_title: 'Unit III - Memory Management', topics: ['Paging and segmentation', 'Page replacement algorithms (FIFO, LRU, Optimal)', 'Virtual memory and thrashing'] },
+              { unit_number: 4, unit_title: 'Unit IV - File Systems & Storage', topics: ['File allocation methods', 'Disk scheduling algorithms (SSTF, SCAN, LOOK)'] }
             ]
           },
           {
             subject_name: 'Database Management Systems',
             units: [
-              { unit_number: 1, unit_title: 'Unit I — ER Modeling & Relational Algebra', topics: ['Entity-Relationship (ER) model', 'Relational algebra and tuple relational calculus'] },
-              { unit_number: 2, unit_title: 'Unit II — SQL & Normalization', topics: ['Complex SQL queries, joins and aggregations', 'Functional dependencies', 'Normal forms (1NF, 2NF, 3NF, BCNF)'] },
-              { unit_number: 3, unit_title: 'Unit III — Transaction & Concurrency Control', topics: ['ACID properties', 'Serializability', 'Two-Phase Locking (2PL)', 'Timestamp ordering'] }
+              { unit_number: 1, unit_title: 'Unit I - ER Modeling & Relational Algebra', topics: ['Entity-Relationship (ER) model', 'Relational algebra and tuple relational calculus'] },
+              { unit_number: 2, unit_title: 'Unit II - SQL & Normalization', topics: ['Complex SQL queries, joins and aggregations', 'Functional dependencies', 'Normal forms (1NF, 2NF, 3NF, BCNF)'] },
+              { unit_number: 3, unit_title: 'Unit III - Transaction & Concurrency Control', topics: ['ACID properties', 'Serializability', 'Two-Phase Locking (2PL)', 'Timestamp ordering'] }
             ]
           },
           {
             subject_name: 'Computer Networks',
             units: [
-              { unit_number: 1, unit_title: 'Unit I — OSI & TCP/IP Reference Models', topics: ['Layering architecture', 'Physical and Data Link layers', 'Framing and error detection (CRC)'] },
-              { unit_number: 2, unit_title: 'Unit II — Network Layer & Routing', topics: ['IPv4 and IPv6 addressing and subnetting', 'Distance Vector routing (RIP)', 'Link State routing (OSPF)', 'BGP'] },
-              { unit_number: 3, unit_title: 'Unit III — Transport & Application Layers', topics: ['TCP 3-way handshake and flow control', 'Congestion control algorithms', 'DNS, HTTP/HTTPS, FTP'] }
+              { unit_number: 1, unit_title: 'Unit I - OSI & TCP/IP Reference Models', topics: ['Layering architecture', 'Physical and Data Link layers', 'Framing and error detection (CRC)'] },
+              { unit_number: 2, unit_title: 'Unit II - Network Layer & Routing', topics: ['IPv4 and IPv6 addressing and subnetting', 'Distance Vector routing (RIP)', 'Link State routing (OSPF)', 'BGP'] },
+              { unit_number: 3, unit_title: 'Unit III - Transport & Application Layers', topics: ['TCP 3-way handshake and flow control', 'Congestion control algorithms', 'DNS, HTTP/HTTPS, FTP'] }
             ]
           },
           {
             subject_name: 'Artificial Intelligence & Machine Learning',
             units: [
-              { unit_number: 1, unit_title: 'Unit I — Search & Knowledge Representation', topics: ['Informed and Uninformed Search (A*, Heuristics)', 'Propositional and First-Order Logic', 'Adversarial Search (Minimax, Alpha-Beta)'] },
-              { unit_number: 2, unit_title: 'Unit II — Supervised Learning', topics: ['Linear and Logistic Regression', 'Decision Trees and Random Forests', 'Support Vector Machines (SVM)'] },
-              { unit_number: 3, unit_title: 'Unit III — Neural Networks & Deep Learning', topics: ['Perceptrons and Multilayer Perceptrons', 'Backpropagation and Gradient Descent', 'Convolutional Neural Networks (CNN)'] }
+              { unit_number: 1, unit_title: 'Unit I - Search & Knowledge Representation', topics: ['Informed and Uninformed Search (A*, Heuristics)', 'Propositional and First-Order Logic', 'Adversarial Search (Minimax, Alpha-Beta)'] },
+              { unit_number: 2, unit_title: 'Unit II - Supervised Learning', topics: ['Linear and Logistic Regression', 'Decision Trees and Random Forests', 'Support Vector Machines (SVM)'] },
+              { unit_number: 3, unit_title: 'Unit III - Neural Networks & Deep Learning', topics: ['Perceptrons and Multilayer Perceptrons', 'Backpropagation and Gradient Descent', 'Convolutional Neural Networks (CNN)'] }
             ]
           }
         ];

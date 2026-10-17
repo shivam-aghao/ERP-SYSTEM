@@ -19,7 +19,6 @@
 
   <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="../css/fees-module.css">
-  <link rel="stylesheet" href="../css/mobile-nav.css">
   <link rel="stylesheet" href="../css/toast.css">
   <script src="../js/toast.js"></script>
   <!-- Authentication Guard -->
@@ -32,6 +31,7 @@
       window.ERP_AUTH.requireAuth('student');
     }
   </script>
+  <link rel="stylesheet" href="../css/mobile-nav.css">
 </head>
 <body class="dashboard-body">
 
@@ -747,7 +747,6 @@
               </div>
               <h1 class="hero-title" id="heroGreetingTitle">Welcome back!</h1>
               <div class="hero-dept-title" id="heroDeptTitle">Computer Science &amp; Engineering</div>
-              <div class="hero-year-sem" id="heroYearSemRoll">Loading student identity...</div>
               <div class="hero-accent-bar" aria-hidden="true"></div>
               <p class="hero-motto-quote">“Knowledge for a Better Tomorrow”</p>
 
@@ -805,7 +804,7 @@
             <button type="button" class="day-tab-btn" data-day="monday">Mon</button>
             <button type="button" class="day-tab-btn" data-day="tuesday">Tue</button>
             <button type="button" class="day-tab-btn" data-day="wednesday">Wed</button>
-            <button type="button" class="day-tab-btn active" data-day="thursday">Thu (Today)</button>
+            <button type="button" class="day-tab-btn" data-day="thursday">Thu</button>
             <button type="button" class="day-tab-btn" data-day="friday">Fri</button>
             <button type="button" class="day-tab-btn" data-day="saturday">Sat</button>
           </div>
@@ -3242,6 +3241,10 @@
   <!-- Toast Notification Container -->
 
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <!-- Client-side PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
   <!-- Central Student API Client & Dashboard Engine -->
   <script src="../js/student-api.js"></script>

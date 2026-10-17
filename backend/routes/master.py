@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL MASTER DATA & SYSTEM DIAGNOSTICS ROUTER
+SSGMCE COLLEGE ERP - CANONICAL MASTER DATA & SYSTEM DIAGNOSTICS ROUTER
 Namespace: /api/v1/... (Master Data & Institutional Metadata)
 ================================================================================
 """

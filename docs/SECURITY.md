@@ -1,4 +1,4 @@
-# SSGMCE College ERP — Security Specification & Secrets Management Guide
+# SSGMCE College ERP - Security Specification & Secrets Management Guide
 
 ## 1. Executive Summary & Incident Remediation
 

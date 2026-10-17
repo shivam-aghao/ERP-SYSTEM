@@ -17,7 +17,6 @@
     <!-- SSGMCE Design System & Syllabus CSS -->
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/syllabus.css">
-    <link rel="stylesheet" href="../css/mobile-nav.css">
     <link rel="icon" type="image/png" href="../images/logo.png">
 
     <!-- Central Config & Auth Guard -->
@@ -36,6 +35,7 @@
             window.ERPAuth.guard('student');
         }
     </script>
+  <link rel="stylesheet" href="../css/mobile-nav.css">
 </head>
 
 <body class="dashboard-body">
@@ -101,14 +101,14 @@
                             <span class="notif-bullet bg-error"></span>
                             <div class="notif-info">
                                 <p class="notif-msg">Mid-Semester Exam Schedule released for CSE Sem IV.</p>
-                                <span class="notif-time">10 mins ago â€¢ Examination Cell</span>
+                                <span class="notif-time">10 mins ago * Examination Cell</span>
                             </div>
                         </li>
                         <li class="notif-item unread">
                             <span class="notif-bullet bg-warning"></span>
                             <div class="notif-info">
                                 <p class="notif-msg">Computer Networks attendance is at 72% (&lt; 75% threshold).</p>
-                                <span class="notif-time">2 hours ago â€¢ Academic Cell</span>
+                                <span class="notif-time">2 hours ago * Academic Cell</span>
                             </div>
                         </li>
                         <li class="notif-item unread">
@@ -253,16 +253,39 @@
                             </a>
                         </li>
 
-                        <!-- Fees -->
-                        <li class="sidebar-item" data-module="fees">
-                            <a href="javascript:void(0)" class="sidebar-link" data-nav="fees">
+                        <!-- Fees (Interactive Submenu with Payable, Fee Online Payment, Receipt) -->
+                        <li class="sidebar-item has-submenu" data-module="fees" id="sidebarItemFees">
+                            <a href="student-dashboard.html#fees" class="sidebar-link" data-nav="fees" id="feesMenuToggle" aria-expanded="false" aria-haspopup="true">
                                 <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                                     <line x1="2" y1="10" x2="22" y2="10"></line>
                                     <circle cx="7" cy="15" r="1"></circle>
                                 </svg>
                                 <span class="nav-label">Fees</span>
+                                <svg class="nav-expand-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
                             </a>
+                            <ul class="sidebar-submenu" id="feesSubmenu" aria-label="Fees Submenu">
+                                <li class="sidebar-subitem">
+                                    <a href="student-dashboard.html#fees-payable" class="submenu-link" data-fees-tab="payable" id="sublinkPayable">
+                                        <span class="submenu-dot"></span>
+                                        <span class="submenu-text">Payable</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="student-dashboard.html#fees-online-payment" class="submenu-link" data-fees-tab="online-payment" id="sublinkOnlinePayment">
+                                        <span class="submenu-dot"></span>
+                                        <span class="submenu-text">Fee Online Payment</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="student-dashboard.html#fees-receipt" class="submenu-link" data-fees-tab="receipt" id="sublinkReceipt">
+                                        <span class="submenu-dot"></span>
+                                        <span class="submenu-text">Receipt</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
                         <!-- Profile -->
@@ -455,9 +478,9 @@
                     </div>
                     <div class="sidebar-motto-text">
                         <span>Discipline</span>
-                        <span class="dot">â€¢</span>
+                        <span class="dot">*</span>
                         <span>Development</span>
-                        <span class="dot">â€¢</span>
+                        <span class="dot">*</span>
                         <span>Dedication</span>
                     </div>
                 </div>
@@ -483,7 +506,7 @@
 
                     <a href="student-dashboard.html" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:600; text-decoration:none; padding:7px 14px; border-radius:8px; border:1px solid #CBD5E1; color:var(--navy); background:#FFFFFF; transition:all 0.2s;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        <span>â† Back to Dashboard</span>
+                        <span><- Back to Dashboard</span>
                     </a>
                 </div>
 
@@ -496,7 +519,7 @@
                     </div>
                     <div class="session-badge">
                         <i class="fa-regular fa-calendar"></i>
-                        <span>2026â€“27</span>
+                        <span>2026-27</span>
                     </div>
                 </div>
 
@@ -667,6 +690,7 @@
         <!-- Syllabus Module JavaScript -->
     <script src="../js/student-api.js"></script>
     <script src="../js/student-syllabus.js"></script>
-    <script src="../js/mobile-nav.js"></script>
+
+  <script src="../js/mobile-nav.js"></script>
 </body>
 </html>

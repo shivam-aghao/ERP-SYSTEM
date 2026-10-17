@@ -1,5 +1,5 @@
 /* ========================================================
-   SSGMCE TEACHER ERP — TEST & ASSESSMENT SCHEDULER MODULE
+   SSGMCE TEACHER ERP - TEST & ASSESSMENT SCHEDULER MODULE
    teacher-test-schedule.js / teacher_test_schedule.js
    Shri Sant Gajanan Maharaj College of Engineering, Shegaon
    Standalone Reusable Module for Test, Quiz, Assignment & TEC Scheduling
@@ -512,7 +512,7 @@ const TeacherTestScheduler = {
       defaultSubjects = [
         { code: "3CS201PC", name: "Object Oriented Programming (OOP)", class_code: "2R2", semester: "III" },
         { code: "3CS203PC", name: "Object Oriented Programming Lab (OOP_LAB)", class_code: "2R2", semester: "III" },
-        { code: "5KS04", name: "PE – I (ICS)", class_code: "3R", semester: "V" },
+        { code: "5KS04", name: "PE - I (ICS)", class_code: "3R", semester: "V" },
         { code: "5KS08", name: "ET LAB-I (ICS)", class_code: "3R", semester: "V" }
       ];
     } else if (isMankar) {
@@ -1020,7 +1020,7 @@ const TeacherTestScheduler = {
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="clock" style="width:14px;height:14px;"></i> Timing:</span>
-            <span class="detail-val">${start12} – ${end12}</span>
+            <span class="detail-val">${start12} - ${end12}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label"><i data-lucide="activity" style="width:14px;height:14px;"></i> Status:</span>
@@ -1342,7 +1342,7 @@ const TeacherTestScheduler = {
                       </div>
                       <div class="assess-time-val">
                         <i data-lucide="clock" style="width:12px;height:12px;"></i>
-                        <span>${start12} – ${end12} (${slotLabel})</span>
+                        <span>${start12} - ${end12} (${slotLabel})</span>
                       </div>
                     </div>
                   </td>

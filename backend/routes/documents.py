@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — CANONICAL DOCUMENTS & DIGITAL WALLET ROUTER
+SSGMCE COLLEGE ERP - CANONICAL DOCUMENTS & DIGITAL WALLET ROUTER
 Namespace: /api/v1/documents/...
 Private Supabase Storage, Zero-Trust Access, Signed URLs, and Governance
 ================================================================================

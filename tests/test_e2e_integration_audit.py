@@ -1,6 +1,6 @@
 """
 ================================================================================
-SSGMCE COLLEGE ERP — COMPLETE END-TO-END INTEGRATION AUDIT SUITE
+SSGMCE COLLEGE ERP - COMPLETE END-TO-END INTEGRATION AUDIT SUITE
 Institutional Verification: Shri Sant Gajanan Maharaj College of Engineering, Shegaon
 Database Target: Cloud Supabase PostgreSQL (gftqvclenyplnuoocbwe.supabase.co)
 
@@ -835,7 +835,7 @@ class TestLifecycleAndStateTransitions:
 
 if __name__ == "__main__":
     print("=" * 80)
-    print("  SSGMCE COLLEGE ERP — COMPLETE END-TO-END INTEGRATION AUDIT")
+    print("  SSGMCE COLLEGE ERP - COMPLETE END-TO-END INTEGRATION AUDIT")
     print("  Target Institution: Shri Sant Gajanan Maharaj College of Engineering")
     print("  Live Cloud Supabase: https://gftqvclenyplnuoocbwe.supabase.co")
     print("=" * 80)

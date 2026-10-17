@@ -1,5 +1,5 @@
 """
-SSGMCE College ERP — Authentication Data Models
+SSGMCE College ERP - Authentication Data Models
 Provides structured Pydantic models for authentication, tokens, and verified user profiles.
 """
 
